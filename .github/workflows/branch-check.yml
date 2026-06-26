@@ -1,0 +1,30 @@
+name: Branch Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-branch-name:
+    name: Validar nombre de rama
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validar prefijo de rama
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          PATTERN='^(fix|feat|refactor|docs|chore|style|test)/.+$|^release/v[0-9]+\.[0-9]+\.[0-9]+$'
+
+          if [[ ! "${BRANCH_NAME}" =~ ${PATTERN} ]]; then
+            echo "::error::Rama invalida: '${BRANCH_NAME}'"
+            echo ""
+            echo "Prefijos permitidos:"
+            echo "  fix/, feat/, refactor/, docs/, chore/, style/, test/"
+            echo "  release/vX.Y.Z (ejemplo: release/v1.0.0)"
+            echo ""
+            echo "Todas las ramas deben crearse desde main."
+            exit 1
+          fi
+
+          echo "Rama valida: ${BRANCH_NAME}"
