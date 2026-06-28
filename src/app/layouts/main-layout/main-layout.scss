@@ -1,0 +1,48 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.layout-body {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  height: calc(100% - 64px);
+  position: relative;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  background-color: var(--bg-color);
+  box-sizing: border-box;
+  padding: 24px;
+  position: relative;
+  transition: background-color 0.3s ease;
+  
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    
+    &:hover {
+      background: var(--scrollbar-thumb-hover);
+    }
+  }
+}

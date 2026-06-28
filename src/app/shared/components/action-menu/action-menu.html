@@ -1,0 +1,31 @@
+<div class="action-menu" (appClickOutside)="close()">
+  <button
+    type="button"
+    class="action-menu__trigger"
+    (click)="toggle($event)"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="menu"
+    aria-label="Abrir menú de acciones"
+  >
+    <span class="material-icons" aria-hidden="true">more_vert</span>
+  </button>
+
+  @if (isOpen()) {
+    <div class="action-menu__dropdown" role="menu">
+      @for (action of actions(); track action.id) {
+        <button
+          type="button"
+          class="action-menu__item"
+          [class.action-menu__item--danger]="action.danger"
+          role="menuitem"
+          (click)="select($event, action)"
+        >
+          @if (action.icon) {
+            <span class="material-icons" aria-hidden="true">{{ action.icon }}</span>
+          }
+          <span>{{ action.label }}</span>
+        </button>
+      }
+    </div>
+  }
+</div>

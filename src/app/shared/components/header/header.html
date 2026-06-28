@@ -1,0 +1,25 @@
+<div class="header-left">
+  <button class="header-icon-btn toggle-btn" (click)="onMenuClick()" aria-label="Toggle Sidebar Menu">
+    <span class="material-icons">menu</span>
+  </button>
+  <span class="header-title">{{ title() }}</span>
+</div>
+
+<div class="header-spacer"></div>
+
+<div class="header-right">
+  <button class="header-icon-btn notification-btn" aria-label="View Notifications">
+    <span class="material-icons">notifications</span>
+    <span class="notification-badge">3</span>
+  </button>
+  
+  <div class="header-user-profile">
+    <div class="user-info">
+      <span class="user-name">Admin</span>
+      <span class="user-role">Administrator</span>
+    </div>
+    <div class="user-avatar">
+      <span class="material-icons">person</span>
+    </div>
+  </div>
+</div>

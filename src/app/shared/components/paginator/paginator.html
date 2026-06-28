@@ -1,0 +1,38 @@
+<div class="paginator__size">
+  <label class="paginator__label" for="paginator-size">Items por página:</label>
+  <select
+    id="paginator-size"
+    class="paginator__select"
+    [value]="pageSize()"
+    (change)="onSizeChange($any($event.target).value)"
+  >
+    @for (option of pageSizeOptions(); track option) {
+      <option [value]="option">{{ option }}</option>
+    }
+  </select>
+</div>
+
+<div class="paginator__range" aria-live="polite">
+  {{ rangeStart() }} – {{ rangeEnd() }} de {{ total() }}
+</div>
+
+<div class="paginator__nav">
+  <button
+    type="button"
+    class="paginator__btn"
+    [disabled]="!canPrev()"
+    (click)="prev()"
+    aria-label="Página anterior"
+  >
+    <span class="material-icons" aria-hidden="true">chevron_left</span>
+  </button>
+  <button
+    type="button"
+    class="paginator__btn"
+    [disabled]="!canNext()"
+    (click)="next()"
+    aria-label="Página siguiente"
+  >
+    <span class="material-icons" aria-hidden="true">chevron_right</span>
+  </button>
+</div>

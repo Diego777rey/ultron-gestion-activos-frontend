@@ -1,0 +1,56 @@
+<div class="data-table__scroll">
+  <table class="data-table">
+    <thead>
+      <tr>
+        @for (column of visibleColumns(); track column.key) {
+          <th
+            class="data-table__th"
+            [style.width]="column.width"
+            [style.text-align]="column.align || 'left'"
+          >
+            {{ column.header }}
+          </th>
+        }
+      </tr>
+    </thead>
+
+    <tbody>
+      @if (loading()) {
+        @for (skeleton of [1, 2, 3, 4, 5]; track skeleton) {
+          <tr class="data-table__row data-table__row--skeleton">
+            @for (column of visibleColumns(); track column.key) {
+              <td class="data-table__td"><span class="data-table__skeleton"></span></td>
+            }
+          </tr>
+        }
+      } @else if (data().length === 0) {
+        <tr>
+          <td class="data-table__empty" [attr.colspan]="visibleColumns().length">
+            <span class="material-icons" aria-hidden="true">inbox</span>
+            <span>{{ emptyMessage() }}</span>
+          </td>
+        </tr>
+      } @else {
+        @for (row of data(); track trackRow($index, row); let i = $index) {
+          <tr class="data-table__row" (click)="onRowClick(row)">
+            @for (column of visibleColumns(); track column.key) {
+              <td
+                class="data-table__td"
+                [style.text-align]="column.align || 'left'"
+              >
+                @if (templateFor(column.key); as tpl) {
+                  <ng-container
+                    [ngTemplateOutlet]="tpl"
+                    [ngTemplateOutletContext]="context(row, i)"
+                  ></ng-container>
+                } @else {
+                  {{ cellValue(column, row) }}
+                }
+              </td>
+            }
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>

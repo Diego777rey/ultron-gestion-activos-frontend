@@ -1,0 +1,28 @@
+<div class="search-bar__field">
+  <span class="material-icons search-bar__icon" aria-hidden="true">search</span>
+
+  <input
+    #input
+    type="text"
+    class="search-bar__input"
+    [placeholder]="placeholder()"
+    [value]="value()"
+    (input)="onInput(input.value)"
+    [attr.aria-label]="placeholder()"
+  />
+
+  @if (value()) {
+    <button
+      type="button"
+      class="search-bar__clear"
+      (click)="clear()"
+      aria-label="Limpiar búsqueda"
+    >
+      <span class="material-icons" aria-hidden="true">close</span>
+    </button>
+  }
+</div>
+
+<div class="search-bar__suffix">
+  <ng-content></ng-content>
+</div>
