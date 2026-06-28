@@ -31,3 +31,4 @@ jobs:
 
       - name: Tests
         run: npm run test -- --watch=false
+
