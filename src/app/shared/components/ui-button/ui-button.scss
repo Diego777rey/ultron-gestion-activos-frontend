@@ -1,0 +1,112 @@
+:host {
+  display: inline-flex;
+}
+
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  white-space: nowrap;
+  outline: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    box-shadow 0.2s ease, transform 0.1s ease;
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--primary-glow);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .ui-btn__icon,
+  .ui-btn__spinner {
+    font-size: 18px;
+  }
+
+  .ui-btn__spinner {
+    animation: ui-btn-spin 0.9s linear infinite;
+  }
+}
+
+.ui-btn--sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.ui-btn--icon-only {
+  width: 40px;
+  padding: 0;
+  border-radius: 10px;
+
+  &.ui-btn--sm {
+    width: 32px;
+  }
+}
+
+.ui-btn--primary {
+  background: linear-gradient(135deg, var(--primary-color), #00b8d4);
+  color: var(--avatar-text);
+  box-shadow: 0 0 14px var(--primary-glow);
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 0 20px var(--primary-glow);
+    filter: brightness(1.05);
+  }
+}
+
+.ui-btn--outline {
+  background: transparent;
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+
+  &:hover:not(:disabled) {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--active-bg);
+  }
+}
+
+.ui-btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+
+  &:hover:not(:disabled) {
+    background: var(--hover-color);
+    color: var(--text-primary);
+  }
+}
+
+.ui-btn--danger {
+  background: transparent;
+  border-color: rgba(255, 61, 113, 0.4);
+  color: #ff6b8b;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 61, 113, 0.12);
+    border-color: var(--badge-bg);
+    color: #ff8aa3;
+  }
+}
+
+@keyframes ui-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

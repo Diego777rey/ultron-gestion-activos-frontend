@@ -1,0 +1,23 @@
+<div class="sidebar-header">
+  <span class="material-icons sidebar-header-icon">{{ icon() }}</span>
+</div>
+
+<div class="sidebar-menu">
+  @for (group of groupedItems(); track group.category) {
+    @if (group.category) {
+      <div class="sidebar-category-header">{{ group.category }}</div>
+    }
+    
+    @for (item of group.items; track item.label) {
+      <a 
+        class="sidebar-item" 
+        [routerLink]="item.route || '/'" 
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.route === '/' || item.route === '' || !item.route }"
+      >
+        <span class="material-icons sidebar-item-icon">{{ item.icon }}</span>
+        <span class="sidebar-item-label">{{ item.label }}</span>
+      </a>
+    }
+  }
+</div>

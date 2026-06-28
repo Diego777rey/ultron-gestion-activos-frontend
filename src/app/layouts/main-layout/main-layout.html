@@ -1,0 +1,11 @@
+<app-header (toggleSidebar)="toggleSidebar()"></app-header>
+
+<div class="layout-body">
+  @if (sidebarOpen()) {
+    <app-sidebar [items]="menuItems" icon="build" title="CH SERVICE"></app-sidebar>
+  }
+  
+  <main class="main-content">
+    <router-outlet />
+  </main>
+</div>
