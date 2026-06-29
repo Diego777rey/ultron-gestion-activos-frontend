@@ -23,16 +23,29 @@
   }
 }
 
-.clientes-page__card {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+.clientes-page__content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0 -24px;
+}
+
+.clientes-page__header-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
 }
 
 .clientes-page__toolbar {
-  padding: 18px 18px 6px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-color);
+  
+  app-search-bar {
+    display: block;
+    max-width: 400px;
+    width: 100%;
+  }
 }
 
 /* ---- Celdas personalizadas ---- */

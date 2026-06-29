@@ -18,6 +18,7 @@
   cursor: pointer;
   white-space: nowrap;
   outline: none;
+  min-width: 160px;
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease,
     box-shadow 0.2s ease, transform 0.1s ease;
 
@@ -45,13 +46,17 @@
 }
 
 .ui-btn--sm {
-  height: 32px;
-  padding: 0 12px;
+  height: auto;
+  min-height: 30px;
+  padding: 4px 8px;
   font-size: 12px;
+  border-radius: 4px;
+  box-shadow: none;
 }
 
 .ui-btn--icon-only {
   width: 40px;
+  min-width: auto;
   padding: 0;
   border-radius: 10px;
 
@@ -61,13 +66,18 @@
 }
 
 .ui-btn--primary {
-  background: linear-gradient(135deg, var(--primary-color), #00b8d4);
-  color: var(--avatar-text);
-  box-shadow: 0 0 14px var(--primary-glow);
+  background: var(--primary-color);
+  color: var(--on-primary-color);
+  box-shadow:
+    0 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0 4px 5px 0 rgba(0, 0, 0, 0.14);
 
   &:hover:not(:disabled) {
-    box-shadow: 0 0 20px var(--primary-glow);
-    filter: brightness(1.05);
+    background: var(--primary-color-dark);
+    box-shadow:
+      0 3px 5px -1px rgba(0, 0, 0, 0.2),
+      0 6px 10px 0 rgba(0, 0, 0, 0.14);
+    filter: none;
   }
 }
 

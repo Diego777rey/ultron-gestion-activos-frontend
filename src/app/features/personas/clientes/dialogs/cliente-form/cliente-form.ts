@@ -1,45 +1,27 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  output,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ModalComponent } from '../../../../../shared/components/modal/modal';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
 import { ClienteInput, ClienteOutput } from '../../interfaces/cliente.interface';
+import { ClienteService } from '../../services/cliente.service';
 
-/**
- * Diálogo de formulario para registrar o editar un cliente.
- * Reutiliza el modal, los botones y la directiva de autofoco genéricos.
- */
 @Component({
   selector: 'app-cliente-form',
-  imports: [ReactiveFormsModule, ModalComponent, UiButtonComponent, AutofocusDirective],
+  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective],
   templateUrl: './cliente-form.html',
   styleUrl: './cliente-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClienteFormComponent {
   private readonly fb = inject(FormBuilder);
+  private readonly clienteService = inject(ClienteService);
 
-  /** Controla la visibilidad del diálogo. */
-  readonly open = input<boolean>(false);
-  /** Cliente a editar; `null` para alta nueva. */
   readonly cliente = input<ClienteOutput | null>(null);
-  /** Indica que se está guardando (deshabilita acciones). */
-  readonly saving = input<boolean>(false);
+  readonly saved = output<void>();
 
-  /** Emite el payload listo para enviar al backend. */
-  readonly save = output<ClienteInput>();
-  /** Emite al cerrar/cancelar. */
-  readonly closed = output<void>();
-
-  protected readonly isEdit = computed(() => !!this.cliente()?.id_cliente);
+  protected saving = false;
+  protected error: string | null = null;
+  protected isEdit = false;
 
   protected readonly tiposCliente = ['Persona Física', 'Empresa', 'Gobierno'];
 
@@ -52,20 +34,15 @@ export class ClienteFormComponent {
     direccion: [''],
     ruc: [''],
     tipoCliente: ['Persona Física'],
-    limiteCredito: [0],
-    fechaRegistro: [''],
     observaciones: [''],
     estado: [true],
   });
 
   constructor() {
     effect(() => {
-      // Repuebla el formulario cada vez que cambia el cliente o se abre el diálogo.
-      if (!this.open()) {
-        return;
-      }
       const c = this.cliente();
       if (c) {
+        this.isEdit = !!c.id_cliente;
         this.form.reset({
           nombre: c.persona?.nombre ?? '',
           apellido: c.persona?.apellido ?? '',
@@ -75,12 +52,11 @@ export class ClienteFormComponent {
           direccion: c.persona?.direccion ?? '',
           ruc: c.ruc ?? '',
           tipoCliente: c.tipoCliente ?? 'Persona Física',
-          limiteCredito: c.limiteCredito ?? 0,
-          fechaRegistro: c.fechaRegistro ?? '',
           observaciones: c.observaciones ?? '',
           estado: c.estado ?? true,
         });
       } else {
+        this.isEdit = false;
         this.form.reset({
           nombre: '',
           apellido: '',
@@ -90,8 +66,6 @@ export class ClienteFormComponent {
           direccion: '',
           ruc: '',
           tipoCliente: 'Persona Física',
-          limiteCredito: 0,
-          fechaRegistro: this.today(),
           observaciones: '',
           estado: true,
         });
@@ -105,6 +79,8 @@ export class ClienteFormComponent {
       return;
     }
     const v = this.form.getRawValue();
+    const c = this.cliente();
+    const isUpdate = !!(c && c.id_cliente);
     const payload: ClienteInput = {
       persona: {
         nombre: v.nombre.trim(),
@@ -117,16 +93,27 @@ export class ClienteFormComponent {
       },
       ruc: v.ruc?.trim() || null,
       tipoCliente: v.tipoCliente || null,
-      limiteCredito: Number(v.limiteCredito) || 0,
-      fechaRegistro: v.fechaRegistro || null,
+      limiteCredito: isUpdate ? (c.limiteCredito ?? 0) : 0,
+      fechaRegistro: isUpdate ? (c.fechaRegistro ?? null) : this.today(),
       observaciones: v.observaciones?.trim() || null,
       estado: v.estado,
     };
-    this.save.emit(payload);
-  }
 
-  protected onClose(): void {
-    this.closed.emit();
+    this.saving = true;
+    const request = (c && c.id_cliente) 
+      ? this.clienteService.update(c.id_cliente, payload)
+      : this.clienteService.create(payload);
+
+    request.subscribe({
+      next: () => {
+        this.saving = false;
+        this.saved.emit();
+      },
+      error: (err: Error) => {
+        this.saving = false;
+        this.error = err.message || 'No se pudo guardar el cliente';
+      },
+    });
   }
 
   private today(): string {
