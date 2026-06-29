@@ -21,6 +21,15 @@
     type="button"
     class="paginator__btn"
     [disabled]="!canPrev()"
+    (click)="first()"
+    aria-label="Primera página"
+  >
+    <span class="material-icons" aria-hidden="true">first_page</span>
+  </button>
+  <button
+    type="button"
+    class="paginator__btn"
+    [disabled]="!canPrev()"
     (click)="prev()"
     aria-label="Página anterior"
   >
@@ -34,5 +43,14 @@
     aria-label="Página siguiente"
   >
     <span class="material-icons" aria-hidden="true">chevron_right</span>
+  </button>
+  <button
+    type="button"
+    class="paginator__btn"
+    [disabled]="!canNext()"
+    (click)="last()"
+    aria-label="Última página"
+  >
+    <span class="material-icons" aria-hidden="true">last_page</span>
   </button>
 </div>

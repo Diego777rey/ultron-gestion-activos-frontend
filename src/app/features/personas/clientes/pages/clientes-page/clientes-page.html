@@ -1,11 +1,13 @@
-<app-page-header [title]="'Gestión de Clientes'" [subtitle]="subtitle()">
-  <app-ui-button
-    label="Generar PDF"
-    icon="picture_as_pdf"
-    variant="outline"
-    (clicked)="generatePdf()"
-  />
-  <app-ui-button label="Nuevo Cliente" icon="add" variant="primary" (clicked)="openNew()" />
+<app-page-header [title]="''">
+  <div class="clientes-page__header-actions">
+    <app-ui-button label="Nuevo Cliente" icon="add" variant="primary" (clicked)="openNew()" />
+    <app-ui-button
+      label="Generar PDF"
+      icon="picture_as_pdf"
+      variant="outline"
+      (clicked)="generatePdf()"
+    />
+  </div>
 </app-page-header>
 
 @if (error()) {
@@ -16,19 +18,13 @@
   </div>
 }
 
-<section class="clientes-page__card">
+<section class="clientes-page__content">
   <div class="clientes-page__toolbar">
     <app-search-bar
       placeholder="Buscar por nombre, documento o teléfono"
       [value]="search()"
       (search)="onSearch($event)"
     >
-      <app-ui-button
-        icon="grid_view"
-        variant="outline"
-        [iconOnly]="true"
-        ariaLabel="Vista de cuadrícula"
-      />
     </app-search-bar>
   </div>
 

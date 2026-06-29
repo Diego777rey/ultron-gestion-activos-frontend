@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, output } from '@angular/core';
 
 @Component({
   selector: 'app-header',
@@ -11,7 +11,6 @@ import { Component, ChangeDetectionStrategy, input, output } from '@angular/core
   }
 })
 export class HeaderComponent {
-  title = input<string>('Gestión de Activos');
   toggleSidebar = output<void>();
 
   onMenuClick() {

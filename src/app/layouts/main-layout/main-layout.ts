@@ -19,16 +19,13 @@ export class MainLayoutComponent {
 
   menuItems: MenuItem[] = [
     {
-      label: 'Home',
-      icon: 'home',
-      route: '/pantalla-principal',
-      category: 'GENERAL'
-    },
-    {
-      label: 'Clientes',
-      icon: 'groups',
-      route: '/personas/clientes',
-      category: 'PERSONAS'
+      label: 'R.R.H.H.',
+      icon: 'people',
+      children: [
+        { label: 'Clientes', icon: 'person', route: '/personas/clientes' },
+        { label: 'Funcionarios', icon: 'badge', route: '/personas/funcionarios' },
+        { label: 'Usuarios', icon: 'manage_accounts', route: '/personas/usuarios' },
+      ]
     }
   ];
 

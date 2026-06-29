@@ -5,61 +5,61 @@
 
 .data-table__scroll {
   width: 100%;
-  overflow-x: auto;
-
-  &::-webkit-scrollbar {
-    height: 8px;
-  }
-  &::-webkit-scrollbar-track {
-    background: var(--scrollbar-track);
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
-    border-radius: 4px;
-  }
+  overflow: visible;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  table-layout: auto;
+  font-size: 14px;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  background-color: rgb(70, 70, 70);
 }
 
 .data-table__th {
-  padding: 14px 18px;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border-color);
+  padding: 0 16px;
+  height: 48px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   white-space: nowrap;
-  background: var(--surface-color);
+  background: #3c3c3c;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .data-table__row {
+  height: 48px;
+  cursor: pointer;
   transition: background-color 0.15s ease;
 
   &:hover {
-    background: var(--hover-color);
+    background: #3b883f !important;
   }
 
-  &:not(:last-child) .data-table__td {
-    border-bottom: 1px solid var(--border-color);
+  .data-table__td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   }
 }
 
 .data-table__td {
-  padding: 14px 18px;
-  color: var(--text-secondary);
+  padding: 0 16px;
+  height: 48px;
+  color: #fff;
   vertical-align: middle;
+  font-size: 14px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .data-table__empty {
-  padding: 48px 18px;
+  padding: 48px 16px;
   text-align: center;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.5);
 
   .material-icons {
     display: block;
@@ -76,12 +76,12 @@
 .data-table__skeleton {
   display: block;
   height: 14px;
-  border-radius: 6px;
+  border-radius: 4px;
   background: linear-gradient(
     90deg,
-    var(--border-color) 25%,
-    var(--hover-color) 50%,
-    var(--border-color) 75%
+    rgba(255, 255, 255, 0.06) 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 75%
   );
   background-size: 200% 100%;
   animation: data-table-shimmer 1.3s ease-in-out infinite;

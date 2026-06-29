@@ -1,108 +1,72 @@
-<app-modal
-  [open]="open()"
-  [title]="isEdit() ? 'Editar Cliente' : 'Nuevo Cliente'"
-  [subtitle]="isEdit() ? 'Modifica los datos del cliente' : 'Completa los datos para registrar un cliente'"
-  maxWidth="640px"
-  (closed)="onClose()"
->
-  <form class="cliente-form" [formGroup]="form" (ngSubmit)="onSubmit()">
-    <div class="cliente-form__section">
-      <h3 class="cliente-form__section-title">Datos personales</h3>
-      <div class="cliente-form__grid">
-        <div class="field">
-          <label class="field__label" for="nombre">Nombre <span>*</span></label>
-          <input id="nombre" class="field__input" type="text" formControlName="nombre" appAutofocus />
-          @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
-            <span class="field__error">El nombre es obligatorio</span>
-          }
-        </div>
-
-        <div class="field">
-          <label class="field__label" for="apellido">Apellido <span>*</span></label>
-          <input id="apellido" class="field__input" type="text" formControlName="apellido" />
-          @if (form.controls.apellido.touched && form.controls.apellido.invalid) {
-            <span class="field__error">El apellido es obligatorio</span>
-          }
-        </div>
-
-        <div class="field">
-          <label class="field__label" for="documento">Documento <span>*</span></label>
-          <input id="documento" class="field__input" type="text" formControlName="documento" />
-          @if (form.controls.documento.touched && form.controls.documento.invalid) {
-            <span class="field__error">El documento es obligatorio</span>
-          }
-        </div>
-
-        <div class="field">
-          <label class="field__label" for="telefono">Teléfono</label>
-          <input id="telefono" class="field__input" type="text" formControlName="telefono" />
-        </div>
-
-        <div class="field field--full">
-          <label class="field__label" for="email">Email</label>
-          <input id="email" class="field__input" type="email" formControlName="email" />
-          @if (form.controls.email.touched && form.controls.email.invalid) {
-            <span class="field__error">Email inválido</span>
-          }
-        </div>
-
-        <div class="field field--full">
-          <label class="field__label" for="direccion">Dirección</label>
-          <input id="direccion" class="field__input" type="text" formControlName="direccion" />
-        </div>
-      </div>
-    </div>
-
-    <div class="cliente-form__section">
-      <h3 class="cliente-form__section-title">Datos comerciales</h3>
-      <div class="cliente-form__grid">
-        <div class="field">
-          <label class="field__label" for="ruc">RUC</label>
-          <input id="ruc" class="field__input" type="text" formControlName="ruc" />
-        </div>
-
-        <div class="field">
-          <label class="field__label" for="tipoCliente">Tipo de cliente</label>
-          <select id="tipoCliente" class="field__input" formControlName="tipoCliente">
-            @for (tipo of tiposCliente; track tipo) {
-              <option [value]="tipo">{{ tipo }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="field">
-          <label class="field__label" for="limiteCredito">Límite de crédito</label>
-          <input id="limiteCredito" class="field__input" type="number" min="0" formControlName="limiteCredito" />
-        </div>
-
-        <div class="field">
-          <label class="field__label" for="fechaRegistro">Fecha de registro</label>
-          <input id="fechaRegistro" class="field__input" type="date" formControlName="fechaRegistro" />
-        </div>
-
-        <div class="field field--full">
-          <label class="field__label" for="observaciones">Observaciones</label>
-          <textarea id="observaciones" class="field__input" rows="3" formControlName="observaciones"></textarea>
-        </div>
-
-        <div class="field field--full">
-          <label class="field__checkbox">
-            <input type="checkbox" formControlName="estado" />
-            <span>Cliente activo</span>
-          </label>
-        </div>
-      </div>
-    </div>
-  </form>
-
-  <div modal-footer>
-    <app-ui-button label="Cancelar" variant="ghost" [disabled]="saving()" (clicked)="onClose()" />
-    <app-ui-button
-      [label]="isEdit() ? 'Guardar cambios' : 'Guardar cliente'"
-      icon="save"
-      variant="primary"
-      [loading]="saving()"
-      (clicked)="onSubmit()"
-    />
+@if (error) {
+  <div class="cliente-form__error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ error }}</span>
   </div>
-</app-modal>
+}
+
+<form class="cliente-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="cliente-form__grid">
+    <div class="field">
+      <input id="nombre" class="field__input" type="text" formControlName="nombre" appAutofocus placeholder=" " />
+      <label class="field__label" for="nombre">Nombre**</label>
+      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <span class="field__error">El nombre es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="apellido" class="field__input" type="text" formControlName="apellido" placeholder=" " />
+      <label class="field__label" for="apellido">Apellido*</label>
+      @if (form.controls.apellido.touched && form.controls.apellido.invalid) {
+        <span class="field__error">El apellido es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="documento" class="field__input" type="text" formControlName="documento" placeholder=" " />
+      <label class="field__label" for="documento">CI/RUC**</label>
+      @if (form.controls.documento.touched && form.controls.documento.invalid) {
+        <span class="field__error">El documento es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="telefono" class="field__input" type="text" formControlName="telefono" placeholder=" " />
+      <label class="field__label" for="telefono">Teléfono**</label>
+    </div>
+
+    <div class="field field--full">
+      <input id="direccion" class="field__input" type="text" formControlName="direccion" placeholder=" " />
+      <label class="field__label" for="direccion">Dirección</label>
+    </div>
+
+    <div class="field">
+      <input id="email" class="field__input" type="email" formControlName="email" placeholder=" " />
+      <label class="field__label" for="email">Email</label>
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <span class="field__error">Email inválido</span>
+      }
+    </div>
+
+    <div class="field">
+      <select id="tipoCliente" class="field__input" formControlName="tipoCliente">
+        @for (tipo of tiposCliente; track tipo) {
+          <option [value]="tipo">{{ tipo }}</option>
+        }
+      </select>
+      <label class="field__label" for="tipoCliente">Tipo*</label>
+    </div>
+
+  </div>
+</form>
+
+<div class="cliente-form-footer">
+  <app-ui-button
+    [label]="isEdit ? 'Guardar Cambios' : 'Registrar Cliente'"
+    icon="save"
+    variant="primary"
+    [loading]="saving"
+    (clicked)="onSubmit()"
+  />
+</div>

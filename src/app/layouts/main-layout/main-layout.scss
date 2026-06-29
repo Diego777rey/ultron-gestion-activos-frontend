@@ -22,27 +22,34 @@
 .main-content {
   flex: 1;
   height: 100%;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: hidden;
   background-color: var(--bg-color);
   box-sizing: border-box;
-  padding: 24px;
+  padding: 0;
   position: relative;
-  transition: background-color 0.3s ease;
-  
-  /* Custom scrollbar */
-  &::-webkit-scrollbar {
-    width: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content__outlet {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  router-outlet {
+    display: contents;
   }
-  &::-webkit-scrollbar-track {
-    background: var(--scrollbar-track);
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-    
-    &:hover {
-      background: var(--scrollbar-thumb-hover);
-    }
+
+  /* Componente enrutado (dentro o junto al outlet) */
+  > * {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
   }
 }

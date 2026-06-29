@@ -1,23 +1,79 @@
-<div class="sidebar-header">
-  <span class="material-icons sidebar-header-icon">{{ icon() }}</span>
-</div>
+<div class="side-nav-content">
+  <!-- Profile Section -->
+  <div class="sidebar-user">
+    <div class="sidebar-user__avatar" [class.mini]="!isExpanded()">
+      <span class="material-icons">person_outline</span>
+    </div>
+    @if (isExpanded()) {
+      <div class="sidebar-user__info">
+        <h3>{{ userName() }}</h3>
+      </div>
+    }
+  </div>
 
-<div class="sidebar-menu">
-  @for (group of groupedItems(); track group.category) {
-    @if (group.category) {
-      <div class="sidebar-category-header">{{ group.category }}</div>
+  <!-- Navigation Menu -->
+  <nav class="sidebar-nav" aria-label="Menú principal">
+    @for (item of items(); track item.label) {
+      @if (item.children && item.children.length > 0) {
+        <!-- Parent item with dropdown -->
+        <div class="sidebar-nav-group">
+          <button
+            class="sidebar-item sidebar-item--parent"
+            [class.sidebar-item--expanded]="isExpanded() && isMenuExpanded(item)"
+            (click)="toggleSubmenu(item, $event)"
+            [attr.aria-expanded]="isMenuExpanded(item)"
+            type="button"
+          >
+            <span class="material-icons sidebar-item__icon">{{ item.icon }}</span>
+            @if (isExpanded()) {
+              <span class="sidebar-item__label">{{ item.label }}</span>
+              <span class="material-icons sidebar-item__arrow">
+                {{ isMenuExpanded(item) ? 'expand_less' : 'expand_more' }}
+              </span>
+            }
+          </button>
+
+          @if (isExpanded() && isMenuExpanded(item)) {
+            <div class="sidebar-submenu">
+              @for (child of item.children; track child.label) {
+                <a
+                  class="sidebar-item sidebar-item--child"
+                  [routerLink]="child.route || '/'"
+                  routerLinkActive="active"
+                  [routerLinkActiveOptions]="{ exact: child.route === '/' || child.route === '' || !child.route }"
+                  (click)="onChildClick($event)"
+                >
+                  <span class="material-icons sidebar-item__icon">{{ child.icon }}</span>
+                  <span class="sidebar-item__label">{{ child.label }}</span>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- Simple item (no children) -->
+        <a
+          class="sidebar-item"
+          [routerLink]="item.route || '/'"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.route === '/' || item.route === '' }"
+        >
+          <span class="material-icons sidebar-item__icon">{{ item.icon }}</span>
+          @if (isExpanded()) {
+            <span class="sidebar-item__label">{{ item.label }}</span>
+          }
+        </a>
+      }
     }
-    
-    @for (item of group.items; track item.label) {
-      <a 
-        class="sidebar-item" 
-        [routerLink]="item.route || '/'" 
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: item.route === '/' || item.route === '' || !item.route }"
-      >
-        <span class="material-icons sidebar-item-icon">{{ item.icon }}</span>
-        <span class="sidebar-item-label">{{ item.label }}</span>
-      </a>
-    }
-  }
+  </nav>
+
+  <!-- Footer: Logout -->
+  <div class="sidebar-footer" [class.mini]="!isExpanded()">
+    <button class="sidebar-item sidebar-item--logout" type="button" aria-label="Cerrar sesión">
+      <span class="material-icons sidebar-item__icon">logout</span>
+      @if (isExpanded()) {
+        <span class="sidebar-item__label">SALIR</span>
+      }
+    </button>
+  </div>
 </div>

@@ -21,7 +21,7 @@ export class PaginatorComponent {
   /** Elementos por página. */
   readonly pageSize = input<number>(10);
   /** Opciones de tamaño de página. */
-  readonly pageSizeOptions = input<number[]>([5, 10, 25, 50]);
+  readonly pageSizeOptions = input<number[]>([15, 25, 50, 100]);
 
   /** Emite cuando cambia la página o el tamaño. */
   readonly pageChange = output<PageChange>();
@@ -45,6 +45,12 @@ export class PaginatorComponent {
     this.pageChange.emit({ pageIndex: 0, pageSize: Number(value) });
   }
 
+  protected first(): void {
+    if (this.canPrev()) {
+      this.pageChange.emit({ pageIndex: 0, pageSize: this.pageSize() });
+    }
+  }
+
   protected prev(): void {
     if (this.canPrev()) {
       this.pageChange.emit({ pageIndex: this.pageIndex() - 1, pageSize: this.pageSize() });
@@ -54,6 +60,12 @@ export class PaginatorComponent {
   protected next(): void {
     if (this.canNext()) {
       this.pageChange.emit({ pageIndex: this.pageIndex() + 1, pageSize: this.pageSize() });
+    }
+  }
+
+  protected last(): void {
+    if (this.canNext()) {
+      this.pageChange.emit({ pageIndex: this.totalPages() - 1, pageSize: this.pageSize() });
     }
   }
 }

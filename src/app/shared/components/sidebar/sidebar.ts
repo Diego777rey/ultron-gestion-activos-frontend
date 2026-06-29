@@ -1,5 +1,7 @@
-import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, ChangeDetectionStrategy, input, output, signal, inject, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { MenuItem } from '../../models/menu-item.model';
 
@@ -10,38 +12,88 @@ import { MenuItem } from '../../models/menu-item.model';
   styleUrl: './sidebar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '[@slideInOut]': '',
-    class: 'sidebar-container'
-  },
-  animations: [
-    trigger('slideInOut', [
-      transition(':enter', [
-        style({ transform: 'translateX(-100%)', width: '0px', opacity: 0 }),
-        animate('250ms cubic-bezier(0.4, 0, 0.2, 1)', style({ transform: 'translateX(0)', width: '260px', opacity: 1 }))
-      ]),
-      transition(':leave', [
-        animate('200ms cubic-bezier(0.4, 0, 0.2, 1)', style({ transform: 'translateX(-100%)', width: '0px', opacity: 0 }))
-      ])
-    ])
-  ]
+    '[class.expanded]': 'isExpanded()',
+    '(click)': 'onSideNavClick()'
+  }
 })
-export class SidebarComponent {
-  items = input<MenuItem[]>([]);
-  title = input<string>('CH SERVICE');
-  icon = input<string>('engineering');
+export class SidebarComponent implements OnInit {
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
-  groupedItems = computed(() => {
-    const list = this.items();
-    const groups: { category: string; items: MenuItem[] }[] = [];
-    list.forEach((item) => {
-      const cat = item.category || '';
-      let group = groups.find((g) => g.category === cat);
-      if (!group) {
-        group = { category: cat, items: [] };
-        groups.push(group);
+  items = input<MenuItem[]>([]);
+  userName = input<string>('Diego Paulinho Amarilla Mercado');
+  
+  isExpanded = input<boolean>(true);
+  isExpandedChange = output<boolean>();
+
+  /** Tracks which parent menu items are expanded. Key = item label. */
+  expandedMenus = signal<Set<string>>(new Set<string>());
+
+  ngOnInit(): void {
+    this.syncExpandedMenus(this.router.url);
+
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((event) => {
+        this.syncExpandedMenus((event as NavigationEnd).urlAfterRedirects);
+      });
+  }
+
+  onSideNavClick(): void {
+    if (!this.isExpanded()) {
+      this.isExpandedChange.emit(true);
+    }
+  }
+
+  toggleSubmenu(item: MenuItem, event: Event): void {
+    event.stopPropagation();
+
+    if (!this.isExpanded()) {
+      this.isExpandedChange.emit(true);
+      this.expandedMenus.set(new Set([item.label]));
+      this.navigateToFirstChild(item);
+      return;
+    }
+
+    this.expandedMenus.update((set) => {
+      const copy = new Set(set);
+      if (copy.has(item.label)) {
+        copy.delete(item.label);
+      } else {
+        copy.clear();
+        copy.add(item.label);
       }
-      group.items.push(item);
+      return copy;
     });
-    return groups;
-  });
+  }
+
+  onChildClick(event: Event): void {
+    event.stopPropagation();
+  }
+
+  isMenuExpanded(item: MenuItem): boolean {
+    return this.expandedMenus().has(item.label);
+  }
+
+  private syncExpandedMenus(url: string): void {
+    for (const item of this.items()) {
+      const matchesChild = item.children?.some(
+        (child) => child.route && url.startsWith(child.route)
+      );
+      if (matchesChild) {
+        this.expandedMenus.update((set) => new Set([...set, item.label]));
+        return;
+      }
+    }
+  }
+
+  private navigateToFirstChild(item: MenuItem): void {
+    const firstRoute = item.children?.find((child) => child.route)?.route;
+    if (firstRoute && !this.router.url.startsWith(firstRoute)) {
+      void this.router.navigateByUrl(firstRoute);
+    }
+  }
 }
