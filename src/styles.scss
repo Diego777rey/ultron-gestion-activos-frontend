@@ -23,29 +23,6 @@
   --scrollbar-thumb-hover: #4a4a4a;
 }
 
-/* 
-Future Light Theme styling placeholder:
-.light-theme {
-  --bg-color: #f8f9fa;
-  --surface-color: #ffffff;
-  --border-color: #e9ecef;
-  --text-primary: #212529;
-  --text-secondary: #495057;
-  --text-muted: #adb5bd;
-  --primary-color: #1976d2;
-  --primary-color-dark: #1565c0;
-  --primary-glow: rgba(25, 118, 210, 0.25);
-  --hover-color: rgba(0, 0, 0, 0.04);
-  --active-bg: rgba(25, 118, 210, 0.1);
-  --on-primary-color: #ffffff;
-  --avatar-text: #ffffff;
-  --badge-bg: #ff3d71;
-  --scrollbar-track: #f8f9fa;
-  --scrollbar-thumb: #ced4da;
-  --scrollbar-thumb-hover: #adb5bd;
-}
-*/
-
 html, body {
   margin: 0;
   padding: 0;
@@ -69,4 +46,43 @@ app-root {
   margin: 0;
   padding: 0;
   overflow: hidden;
+}
+
+/*
+ * El componente enrutado se inserta junto al router-outlet (display: contents).
+ * Debe ir en estilos globales: la encapsulación de main-layout no lo alcanza.
+ */
+.main-content__outlet > * {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+app-generic-list-page,
+app-tabs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Pantallas de listado CRUD dentro de pestañas */
+.app-list-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+
+  > app-generic-list {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
 }

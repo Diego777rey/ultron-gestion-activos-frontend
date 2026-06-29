@@ -43,7 +43,20 @@ export class DataTableComponent<T = Record<string, unknown>> {
   /** Se emite al hacer click sobre una fila. */
   readonly rowClick = output<T>();
 
-  private readonly cellTemplates = contentChildren(TableCellDirective);
+  /**
+   * Plantillas de celda reenviadas por un contenedor padre (ej. `app-generic-list`).
+   * Si no se proveen, se usan las definidas como hijos directos de esta tabla.
+   */
+  readonly cellTemplates = input<readonly TableCellDirective<unknown>[] | undefined>(
+    undefined
+  );
+
+  private readonly localCellTemplates = contentChildren(TableCellDirective);
+
+  private readonly resolvedCellTemplates = computed(() => {
+    const forwarded = this.cellTemplates();
+    return forwarded?.length ? forwarded : this.localCellTemplates();
+  });
 
   /** Columnas visibles (excluye las marcadas como ocultas). */
   protected readonly visibleColumns = computed(() =>
@@ -52,7 +65,7 @@ export class DataTableComponent<T = Record<string, unknown>> {
 
   /** Devuelve la plantilla personalizada de una columna, si existe. */
   protected templateFor(key: string) {
-    return this.cellTemplates().find((t) => t.appTableCell() === key)?.template ?? null;
+    return this.resolvedCellTemplates().find((t) => t.appTableCell() === key)?.template ?? null;
   }
 
   /** Resuelve el valor textual por defecto de una celda. */

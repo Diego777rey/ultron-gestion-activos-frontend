@@ -5,6 +5,7 @@ export * from './models/table-column.model';
 export * from './models/pagination.model';
 export * from './models/crud-config.model';
 export * from './models/menu-item.model';
+export * from './models/list-toolbar-action.model';
 
 // Servicios genéricos
 export * from './services/graphql.service';
@@ -27,3 +28,9 @@ export * from './components/data-table/table-cell.directive';
 export * from './components/paginator/paginator';
 export * from './components/modal/modal';
 export * from './components/action-menu/action-menu';
+export * from './components/generic-list/generic-list';
+export * from './components/generic-list-page/generic-list-page';
+
+// Utilidades
+export * from './utils/list-pagination.util';
+export * from './utils/search.util';

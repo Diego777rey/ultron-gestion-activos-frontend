@@ -105,24 +105,20 @@ import { TabService } from '../../services/tab.service';
     .tabs-content {
       flex: 1;
       min-height: 0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      background: #212121;
       position: relative;
-      padding-top: 0;
+      overflow: hidden;
+      background: rgb(70, 70, 70);
     }
     .tab-pane {
       display: none;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
     }
     .tab-pane.active {
+      position: absolute;
+      inset: 0;
       display: flex;
       flex-direction: column;
-      flex: 1;
       min-height: 0;
+      overflow: hidden;
     }
     .tab-pane.active > * {
       flex: 1;

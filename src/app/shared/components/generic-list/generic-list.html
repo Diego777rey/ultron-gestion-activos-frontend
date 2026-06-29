@@ -1,0 +1,66 @@
+<div class="generic-list">
+  <div class="generic-list__filters">
+    <div class="generic-list__filters-body">
+      <ng-content select="[genericListFilters]">
+        @if (searchLabel()) {
+          <div class="filter-field">
+            <label [for]="searchInputId">{{ searchLabel() }}</label>
+            <input
+              [id]="searchInputId"
+              type="text"
+              [value]="searchValue()"
+              (input)="onSearchInput($event)"
+              (keyup.enter)="onSearchEnter()"
+            />
+          </div>
+        }
+      </ng-content>
+    </div>
+
+    <div class="generic-list__filters-actions">
+      <ng-content select="[genericListActions]">
+        @for (action of toolbarActions(); track action.id) {
+          <div class="action-btn">
+            <app-ui-button
+              [label]="action.label"
+              [variant]="action.variant ?? 'primary'"
+              size="sm"
+              (clicked)="onActionClick(action.id)"
+            />
+          </div>
+        }
+      </ng-content>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="error-alert">
+      <span class="material-icons">error_outline</span>
+      <span>{{ error() }}</span>
+      <button type="button" (click)="onRetry()">Reintentar</button>
+    </div>
+  }
+
+  <div class="generic-list__body">
+    <div class="generic-list__table-area">
+      <div class="table-scroll">
+        <app-data-table
+          [columns]="columns()"
+          [data]="data()"
+          [loading]="loading()"
+          [trackBy]="trackBy()"
+          [emptyMessage]="emptyMessage()"
+          [cellTemplates]="cellTemplates()"
+        />
+      </div>
+
+      <app-paginator
+        [total]="total()"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="pageSizeOptions()"
+        (pageChange)="pageChange.emit($event)"
+      />
+    </div>
+  </div>
+</div>

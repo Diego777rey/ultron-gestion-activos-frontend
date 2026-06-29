@@ -1,9 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
-import { DataTableComponent } from '../../../../../shared/components/data-table/data-table';
+import { GenericListComponent } from '../../../../../shared/components/generic-list/generic-list';
 import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
-import { PaginatorComponent } from '../../../../../shared/components/paginator/paginator';
 import {
   ActionMenuComponent,
   MenuAction,
@@ -11,7 +9,9 @@ import {
 import { DefaultEmptyPipe } from '../../../../../shared/pipes/default-empty.pipe';
 import { ModalComponent } from '../../../../../shared/components/modal/modal';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
-import { PageChange } from '../../../../../shared/models/pagination.model';
+import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-action.model';
+import { createListPagination } from '../../../../../shared/utils/list-pagination.util';
+import { normalizeSearchTerm } from '../../../../../shared/utils/search.util';
 import { ClienteService } from '../../services/cliente.service';
 import { ClienteOutput } from '../../interfaces/cliente.interface';
 import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
@@ -20,19 +20,16 @@ import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
   selector: 'app-clientes-list',
   imports: [
     CommonModule,
-    UiButtonComponent,
-    DataTableComponent,
+    GenericListComponent,
     TableCellDirective,
-    PaginatorComponent,
     ActionMenuComponent,
     DefaultEmptyPipe,
     ModalComponent,
     ClienteFormComponent,
   ],
   templateUrl: './clientes-list.html',
-  styleUrl: './clientes-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'clientes-list-host' },
+  host: { class: 'app-list-view' },
 })
 export class ClientesListComponent {
   private readonly clienteService = inject(ClienteService);
@@ -41,8 +38,6 @@ export class ClientesListComponent {
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
-  protected readonly pageIndex = signal(0);
-  protected readonly pageSize = signal(15);
   protected readonly dialogOpen = signal(false);
   protected readonly selectedCliente = signal<ClienteOutput | null>(null);
 
@@ -65,16 +60,22 @@ export class ClientesListComponent {
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
 
+  protected readonly toolbarActions: ListToolbarAction[] = [
+    { id: 'search', label: 'Buscar' },
+    { id: 'clear', label: 'Limpiar Filtro' },
+    { id: 'add', label: '+ Adicionar' },
+  ];
+
   protected readonly rowActions: MenuAction[] = [
     { id: 'edit', label: 'Editar', icon: 'edit' },
     { id: 'ver', label: 'Ver movimientos', icon: 'visibility' },
   ];
 
   protected readonly filtered = computed(() => {
-    const term = this.normalize(this.search());
+    const term = normalizeSearchTerm(this.search());
     const list = this.clientes();
     if (!term) return list;
-    
+
     return list.filter((c) => {
       const haystack = [
         c.persona?.nombre,
@@ -85,17 +86,14 @@ export class ClientesListComponent {
         c.persona?.direccion,
         c.ruc,
         c.tipoCliente,
-      ].map((v) => this.normalize(v ?? '')).join(' ');
+      ]
+        .map((v) => normalizeSearchTerm(v ?? ''))
+        .join(' ');
       return haystack.includes(term);
     });
   });
 
-  protected readonly total = computed(() => this.filtered().length);
-
-  protected readonly paged = computed(() => {
-    const start = this.pageIndex() * this.pageSize();
-    return this.filtered().slice(start, start + this.pageSize());
-  });
+  protected readonly pagination = createListPagination(this.filtered);
 
   constructor() {
     this.load();
@@ -116,19 +114,19 @@ export class ClientesListComponent {
     });
   }
 
-  protected onSearchInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.search.set(input.value);
-  }
-
-  protected onSearch(term: string): void {
-    this.search.set(term);
-    this.pageIndex.set(0);
-  }
-
-  protected onPageChange(event: PageChange): void {
-    this.pageIndex.set(event.pageIndex);
-    this.pageSize.set(event.pageSize);
+  protected onToolbarAction(actionId: string): void {
+    switch (actionId) {
+      case 'search':
+        this.pagination.resetPage();
+        break;
+      case 'clear':
+        this.search.set('');
+        this.pagination.resetPage();
+        break;
+      case 'add':
+        this.openNewDialog();
+        break;
+    }
   }
 
   protected openNewDialog(): void {
@@ -162,8 +160,4 @@ export class ClientesListComponent {
   }
 
   protected trackById = (c: ClienteOutput): unknown => c.id_cliente;
-
-  private normalize(value: string): string {
-    return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-  }
 }
