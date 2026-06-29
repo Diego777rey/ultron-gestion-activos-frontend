@@ -1,89 +1,50 @@
-<!-- Estructura idéntica a app-generic-list de FRC -->
-<div class="generic-list">
-  <div class="generic-list__filters">
-    <div class="generic-list__filters-body">
-      <div class="filter-field">
-        <label for="cliente-search">Nombre, código o documento</label>
-        <input
-          id="cliente-search"
-          type="text"
-          [value]="search()"
-          (input)="onSearchInput($event)"
-          (keyup.enter)="onSearch(search())"
-        />
-      </div>
-    </div>
+<app-generic-list
+  [columns]="columns"
+  [data]="pagination.paged()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="pagination.total()"
+  [pageIndex]="pagination.pageIndex()"
+  [pageSize]="pagination.pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Nombre, código o documento"
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="No hay clientes que coincidan con la búsqueda"
+  [trackBy]="trackById"
+  (pageChange)="pagination.onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pagination.resetPage()"
+>
+  <ng-template appTableCell="id" [appTableCellFrom]="pagination.paged()" let-cliente>
+    {{ cliente.id_cliente }}
+  </ng-template>
 
-    <div class="generic-list__filters-actions">
-      <div class="action-btn">
-        <app-ui-button label="Buscar" variant="primary" size="sm" (clicked)="onSearch(search())" />
-      </div>
-      <div class="action-btn">
-        <app-ui-button label="Limpiar Filtro" variant="primary" size="sm" (clicked)="onSearch('')" />
-      </div>
-      <div class="action-btn">
-        <app-ui-button label="+ Adicionar" variant="primary" size="sm" (clicked)="openNewDialog()" />
-      </div>
-    </div>
-  </div>
+  <ng-template appTableCell="nombre" [appTableCellFrom]="pagination.paged()" let-cliente>
+    {{ fullName(cliente) }}
+  </ng-template>
 
-  @if (error()) {
-    <div class="error-alert">
-      <span class="material-icons">error_outline</span>
-      <span>{{ error() }}</span>
-      <button type="button" (click)="load()">Reintentar</button>
-    </div>
-  }
+  <ng-template appTableCell="direccion" [appTableCellFrom]="pagination.paged()" let-cliente>
+    {{ cliente.persona?.direccion | defaultEmpty }}
+  </ng-template>
 
-  <div class="generic-list__body">
-    <div class="generic-list__table-area">
-      <div class="table-scroll">
-        <app-data-table
-          [columns]="columns"
-          [data]="paged()"
-          [loading]="loading()"
-          [trackBy]="trackById"
-          emptyMessage="No hay clientes que coincidan con la búsqueda"
-        >
-          <ng-template appTableCell="id" [appTableCellFrom]="paged()" let-cliente>
-            {{ cliente.id_cliente }}
-          </ng-template>
+  <ng-template appTableCell="telefono" [appTableCellFrom]="pagination.paged()" let-cliente>
+    {{ cliente.persona?.telefono | defaultEmpty }}
+  </ng-template>
 
-          <ng-template appTableCell="nombre" [appTableCellFrom]="paged()" let-cliente>
-            {{ fullName(cliente) }}
-          </ng-template>
+  <ng-template appTableCell="email" [appTableCellFrom]="pagination.paged()" let-cliente>
+    {{ cliente.persona?.email | defaultEmpty }}
+  </ng-template>
 
-          <ng-template appTableCell="direccion" [appTableCellFrom]="paged()" let-cliente>
-            {{ cliente.persona?.direccion | defaultEmpty }}
-          </ng-template>
-
-          <ng-template appTableCell="telefono" [appTableCellFrom]="paged()" let-cliente>
-            {{ cliente.persona?.telefono | defaultEmpty }}
-          </ng-template>
-
-          <ng-template appTableCell="email" [appTableCellFrom]="paged()" let-cliente>
-            {{ cliente.persona?.email | defaultEmpty }}
-          </ng-template>
-
-          <ng-template appTableCell="acciones" [appTableCellFrom]="paged()" let-cliente>
-            <app-action-menu
-              [actions]="rowActions"
-              (actionSelected)="onRowAction($event, cliente)"
-            />
-          </ng-template>
-        </app-data-table>
-      </div>
-
-      <app-paginator
-        [total]="total()"
-        [pageIndex]="pageIndex()"
-        [pageSize]="pageSize()"
-        [pageSizeOptions]="[15, 25, 50, 100]"
-        (pageChange)="onPageChange($event)"
-      />
-    </div>
-  </div>
-</div>
+  <ng-template appTableCell="acciones" [appTableCellFrom]="pagination.paged()" let-cliente>
+    <app-action-menu
+      [actions]="rowActions"
+      (actionSelected)="onRowAction($event, cliente)"
+    />
+  </ng-template>
+</app-generic-list>
 
 <app-modal
   [open]="dialogOpen()"

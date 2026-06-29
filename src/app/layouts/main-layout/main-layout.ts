@@ -22,9 +22,10 @@ export class MainLayoutComponent {
       label: 'R.R.H.H.',
       icon: 'people',
       children: [
-        { label: 'Clientes', icon: 'person', route: '/personas/clientes' },
-        { label: 'Funcionarios', icon: 'badge', route: '/personas/funcionarios' },
-        { label: 'Usuarios', icon: 'manage_accounts', route: '/personas/usuarios' },
+        { label: 'Clientes', icon: 'groups', route: '/personas/clientes' },
+        { label: 'Funcionarios', icon: 'recent_actors', route: '/personas/funcionarios' },
+        { label: 'Usuarios', icon: 'account_circle', route: '/personas/usuarios' },
+        { label: 'Roles', icon: 'shield', route: '/personas/roles' },
       ]
     }
   ];
