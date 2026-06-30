@@ -42,6 +42,12 @@ export class UsuarioFormComponent implements OnInit {
   protected isEdit = false;
   protected loadingCatalogs = true;
 
+  protected readonly passwordVisible = signal(false);
+
+  protected togglePasswordVisibility(): void {
+    this.passwordVisible.update((v) => !v);
+  }
+
   protected readonly roles = signal<RoleOutput[]>([]);
   protected readonly funcionarios = signal<FuncionarioOutput[]>([]);
   protected readonly funcionariosOcupados = signal<Set<string>>(new Set());
