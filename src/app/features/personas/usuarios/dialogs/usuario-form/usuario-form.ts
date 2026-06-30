@@ -13,6 +13,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
+import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { FuncionarioOutput } from '../../../funcionarios/interfaces/funcionario.interface';
 import { FuncionarioService } from '../../../funcionarios/services/funcionario.service';
 import { RoleOutput } from '../../../roles/interfaces/role.interface';
@@ -22,7 +23,7 @@ import { UsuarioService } from '../../services/usuario.service';
 
 @Component({
   selector: 'app-usuario-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective],
+  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './usuario-form.html',
   styleUrl: './usuario-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

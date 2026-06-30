@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, Component, effect, inject, input, output } fro
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
+import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { RoleInput, RoleOutput } from '../../interfaces/role.interface';
 import { RoleService } from '../../services/role.service';
 
 @Component({
   selector: 'app-role-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective],
+  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './role-form.html',
   styleUrl: './role-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

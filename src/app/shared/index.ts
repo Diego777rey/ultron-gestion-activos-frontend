@@ -18,6 +18,7 @@ export * from './pipes/default-empty.pipe';
 // Directivas
 export * from './directives/click-outside.directive';
 export * from './directives/autofocus.directive';
+export * from './directives/uppercase.directive';
 
 // Componentes genéricos
 export * from './components/ui-button/ui-button';

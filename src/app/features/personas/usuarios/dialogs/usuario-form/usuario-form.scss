@@ -122,7 +122,8 @@
   color: var(--text-secondary);
 }
 
-.role-check {
+.role-check,
+.checkbox-label {
   display: inline-flex;
   align-items: center;
   gap: 8px;
