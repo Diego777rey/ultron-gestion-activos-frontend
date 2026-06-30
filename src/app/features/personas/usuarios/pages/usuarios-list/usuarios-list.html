@@ -1,0 +1,66 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="usuarios()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Usuario, funcionario o rol"
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="No hay usuarios que coincidan con la búsqueda"
+  [trackBy]="trackById"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()"
+>
+  <ng-template appTableCell="id" [appTableCellFrom]="usuarios()" let-usuario>
+    {{ usuario.id }}
+  </ng-template>
+
+  <ng-template appTableCell="username" [appTableCellFrom]="usuarios()" let-usuario>
+    {{ usuario.username | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="funcionario" [appTableCellFrom]="usuarios()" let-usuario>
+    {{ funcionarioNombre(usuario) }}
+  </ng-template>
+
+  <ng-template appTableCell="roles" [appTableCellFrom]="usuarios()" let-usuario>
+    {{ rolesLabel(usuario) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="email" [appTableCellFrom]="usuarios()" let-usuario>
+    {{ usuario.email | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="activo" [appTableCellFrom]="usuarios()" let-usuario>
+    {{ activoLabel(usuario) }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="usuarios()" let-usuario>
+    <app-action-menu
+      [actions]="rowActions"
+      (actionSelected)="onRowAction($event, usuario)"
+    />
+  </ng-template>
+</app-generic-list>
+
+<app-modal
+  [open]="dialogOpen()"
+  [title]="dialogTitle()"
+  [subtitle]="dialogSubtitle()"
+  maxWidth="760px"
+  (closed)="closeDialog()"
+>
+  @if (dialogOpen()) {
+    <app-usuario-form
+      [usuario]="selectedUsuario()"
+      (saved)="onUsuarioSaved()"
+    />
+  }
+</app-modal>

@@ -1,0 +1,86 @@
+@if (error) {
+  <div class="usuario-form__error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ error }}</span>
+  </div>
+}
+
+<form class="usuario-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="usuario-form__grid">
+    <div class="field">
+      <input id="username" class="field__input" type="text" formControlName="username" appAutofocus placeholder=" " />
+      <label class="field__label" for="username">Usuario**</label>
+      @if (form.controls.username.touched && form.controls.username.invalid) {
+        <span class="field__error">El usuario es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input
+        id="password"
+        class="field__input"
+        type="password"
+        formControlName="password"
+        placeholder=" "
+        [attr.autocomplete]="isEdit ? 'new-password' : 'new-password'"
+      />
+      <label class="field__label" for="password">{{ isEdit ? 'Nueva contraseña' : 'Contraseña**' }}</label>
+      @if (!isEdit && form.controls.password.touched && form.controls.password.invalid) {
+        <span class="field__error">La contraseña es obligatoria</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="email" class="field__input" type="email" formControlName="email" placeholder=" " />
+      <label class="field__label" for="email">Email</label>
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <span class="field__error">Email inválido</span>
+      }
+    </div>
+
+    <div class="field">
+      <select id="id_funcionario" class="field__input" formControlName="id_funcionario" [disabled]="loadingCatalogs">
+        <option value="" disabled>Seleccionar funcionario</option>
+        @for (f of funcionariosDisponibles(); track f.id_funcionario) {
+          <option [value]="f.id_funcionario">{{ funcionarioLabel(f) }}</option>
+        }
+      </select>
+      <label class="field__label" for="id_funcionario">Funcionario*</label>
+      @if (form.controls.id_funcionario.touched && form.controls.id_funcionario.invalid) {
+        <span class="field__error">Debe seleccionar un funcionario</span>
+      }
+    </div>
+
+    <div class="field field--full">
+      <span class="field__section-label" id="roles-label">Roles asignados</span>
+      <div class="role-checks" role="group" aria-labelledby="roles-label">
+        @if (loadingCatalogs) {
+          <span class="role-checks__hint">Cargando roles...</span>
+        } @else if (roles().length === 0) {
+          <span class="role-checks__hint">No hay roles registrados</span>
+        } @else {
+          @for (role of roles(); track role.id) {
+            <label class="role-check">
+              <input
+                type="checkbox"
+                [checked]="isRoleSelected(role.id!)"
+                (change)="toggleRole(role.id!, $event)"
+              />
+              <span>{{ role.descripcion }}</span>
+            </label>
+          }
+        }
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="usuario-form-footer">
+  <app-ui-button
+    [label]="isEdit ? 'Guardar Cambios' : 'Registrar Usuario'"
+    icon="save"
+    variant="primary"
+    [loading]="saving"
+    (clicked)="onSubmit()"
+  />
+</div>

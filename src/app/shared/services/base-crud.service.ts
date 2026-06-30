@@ -28,6 +28,29 @@ export abstract class BaseCrudService<TOutput, TInput> {
       .pipe(map((data) => data[op] ?? []));
   }
 
+  /** Lista los registros de la entidad de forma paginada. */
+  findPaginated(page: number, size: number): Observable<import('../models/pagination.model').PageResponse<TOutput>> {
+    const op = this.config.operations.listPaginated;
+    if (!op) {
+      throw new Error('listPaginated operation not defined in config');
+    }
+    const document = `query($page: Int!, $size: Int!) { 
+      ${op}(page: $page, size: $size) {
+        content ${this.config.selectionSet}
+        pageInfo {
+          pageNumber
+          pageSize
+          totalElements
+          totalPages
+          last
+        }
+      } 
+    }`;
+    return this.gql
+      .query<Record<string, import('../models/pagination.model').PageResponse<TOutput>>>(document, { page, size })
+      .pipe(map((data) => data[op]));
+  }
+
   /** Busca un registro por su identificador. */
   findById(id: string | number): Observable<TOutput | null> {
     const op = this.config.operations.getById;

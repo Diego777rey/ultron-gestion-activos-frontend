@@ -1,11 +1,11 @@
 <app-generic-list
   [columns]="columns"
-  [data]="pagination.paged()"
+  [data]="clientes()"
   [loading]="loading()"
   [error]="error()"
-  [total]="pagination.total()"
-  [pageIndex]="pagination.pageIndex()"
-  [pageSize]="pagination.pageSize()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
   [pageSizeOptions]="[15, 25, 50, 100]"
   searchLabel="Nombre, código o documento"
   [searchValue]="search()"
@@ -13,32 +13,32 @@
   [toolbarActions]="toolbarActions"
   emptyMessage="No hay clientes que coincidan con la búsqueda"
   [trackBy]="trackById"
-  (pageChange)="pagination.onPageChange($event)"
+  (pageChange)="onPageChange($event)"
   (retry)="load()"
   (actionClicked)="onToolbarAction($event)"
-  (searchSubmit)="pagination.resetPage()"
+  (searchSubmit)="pageIndex.set(0); load()"
 >
-  <ng-template appTableCell="id" [appTableCellFrom]="pagination.paged()" let-cliente>
+  <ng-template appTableCell="id" [appTableCellFrom]="clientes()" let-cliente>
     {{ cliente.id_cliente }}
   </ng-template>
 
-  <ng-template appTableCell="nombre" [appTableCellFrom]="pagination.paged()" let-cliente>
+  <ng-template appTableCell="nombre" [appTableCellFrom]="clientes()" let-cliente>
     {{ fullName(cliente) }}
   </ng-template>
 
-  <ng-template appTableCell="direccion" [appTableCellFrom]="pagination.paged()" let-cliente>
+  <ng-template appTableCell="direccion" [appTableCellFrom]="clientes()" let-cliente>
     {{ cliente.persona?.direccion | defaultEmpty }}
   </ng-template>
 
-  <ng-template appTableCell="telefono" [appTableCellFrom]="pagination.paged()" let-cliente>
+  <ng-template appTableCell="telefono" [appTableCellFrom]="clientes()" let-cliente>
     {{ cliente.persona?.telefono | defaultEmpty }}
   </ng-template>
 
-  <ng-template appTableCell="email" [appTableCellFrom]="pagination.paged()" let-cliente>
+  <ng-template appTableCell="email" [appTableCellFrom]="clientes()" let-cliente>
     {{ cliente.persona?.email | defaultEmpty }}
   </ng-template>
 
-  <ng-template appTableCell="acciones" [appTableCellFrom]="pagination.paged()" let-cliente>
+  <ng-template appTableCell="acciones" [appTableCellFrom]="clientes()" let-cliente>
     <app-action-menu
       [actions]="rowActions"
       (actionSelected)="onRowAction($event, cliente)"

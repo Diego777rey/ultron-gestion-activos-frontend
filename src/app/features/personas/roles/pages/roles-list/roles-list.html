@@ -1,0 +1,54 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="roles()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Descripción o estado"
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="No hay roles que coincidan con la búsqueda"
+  [trackBy]="trackById"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()"
+>
+  <ng-template appTableCell="id" [appTableCellFrom]="roles()" let-role>
+    {{ role.id }}
+  </ng-template>
+
+  <ng-template appTableCell="descripcion" [appTableCellFrom]="roles()" let-role>
+    {{ role.descripcion | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="activo" [appTableCellFrom]="roles()" let-role>
+    {{ role.activo | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="roles()" let-role>
+    <app-action-menu
+      [actions]="rowActions"
+      (actionSelected)="onRowAction($event, role)"
+    />
+  </ng-template>
+</app-generic-list>
+
+<app-modal
+  [open]="dialogOpen()"
+  [title]="dialogTitle()"
+  [subtitle]="dialogSubtitle()"
+  maxWidth="560px"
+  (closed)="closeDialog()"
+>
+  @if (dialogOpen()) {
+    <app-role-form
+      [role]="selectedRole()"
+      (saved)="onRoleSaved()"
+    />
+  }
+</app-modal>

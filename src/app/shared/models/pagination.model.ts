@@ -13,3 +13,16 @@ export interface PageChange {
   pageIndex: number;
   pageSize: number;
 }
+
+export interface PageInfo {
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  pageInfo: PageInfo;
+}

@@ -11,12 +11,12 @@ import { ModalComponent } from '../../../../../shared/components/modal/modal';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
-import { ClienteService } from '../../services/cliente.service';
-import { ClienteOutput } from '../../interfaces/cliente.interface';
-import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
+import { UsuarioService } from '../../services/usuario.service';
+import { UsuarioOutput } from '../../interfaces/usuario.interface';
+import { UsuarioFormComponent } from '../../dialogs/usuario-form/usuario-form';
 
 @Component({
-  selector: 'app-clientes-list',
+  selector: 'app-usuarios-list',
   imports: [
     CommonModule,
     GenericListComponent,
@@ -24,42 +24,43 @@ import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
     ActionMenuComponent,
     DefaultEmptyPipe,
     ModalComponent,
-    ClienteFormComponent,
+    UsuarioFormComponent,
   ],
-  templateUrl: './clientes-list.html',
+  templateUrl: './usuarios-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'app-list-view' },
 })
-export class ClientesListComponent {
-  private readonly clienteService = inject(ClienteService);
+export class UsuariosListComponent {
+  private readonly usuarioService = inject(UsuarioService);
 
-  protected readonly clientes = signal<ClienteOutput[]>([]);
+  protected readonly usuarios = signal<UsuarioOutput[]>([]);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
   protected readonly dialogOpen = signal(false);
-  protected readonly selectedCliente = signal<ClienteOutput | null>(null);
+  protected readonly selectedUsuario = signal<UsuarioOutput | null>(null);
 
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
   protected readonly totalElements = signal(0);
 
   protected readonly dialogTitle = computed(() =>
-    this.selectedCliente() ? 'Editar Cliente' : 'Nuevo Cliente'
+    this.selectedUsuario() ? 'Editar Usuario' : 'Nuevo Usuario'
   );
 
   protected readonly dialogSubtitle = computed(() =>
-    this.selectedCliente()
-      ? 'Modifica los datos del cliente'
-      : 'Completa los datos para registrar un cliente'
+    this.selectedUsuario()
+      ? 'Modifica los datos del usuario'
+      : 'Completa los datos para registrar un usuario'
   );
 
-  protected readonly columns: TableColumn<ClienteOutput>[] = [
+  protected readonly columns: TableColumn<UsuarioOutput>[] = [
     { key: 'id', header: 'Id', width: '80px', align: 'center' },
-    { key: 'nombre', header: 'Nombre', width: '220px' },
-    { key: 'direccion', header: 'Dirección', width: '220px' },
-    { key: 'telefono', header: 'Teléfono', width: '140px' },
-    { key: 'email', header: 'Gmail', width: '200px' },
+    { key: 'username', header: 'Usuario', width: '160px' },
+    { key: 'funcionario', header: 'Funcionario', width: '220px' },
+    { key: 'roles', header: 'Roles', width: '220px' },
+    { key: 'email', header: 'Email', width: '200px' },
+    { key: 'activo', header: 'Activo', width: '90px', align: 'center' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
 
@@ -80,9 +81,9 @@ export class ClientesListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.clienteService.findPaginated(this.pageIndex(), this.pageSize()).subscribe({
+    this.usuarioService.findPaginated(this.pageIndex(), this.pageSize()).subscribe({
       next: (response) => {
-        this.clientes.set(response.content);
+        this.usuarios.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);
         this.loading.set(false);
       },
@@ -117,34 +118,43 @@ export class ClientesListComponent {
   }
 
   protected openNewDialog(): void {
-    this.selectedCliente.set(null);
+    this.selectedUsuario.set(null);
     this.dialogOpen.set(true);
   }
 
-  protected openEditDialog(cliente: ClienteOutput): void {
-    this.selectedCliente.set(cliente);
+  protected openEditDialog(usuario: UsuarioOutput): void {
+    this.selectedUsuario.set(usuario);
     this.dialogOpen.set(true);
   }
 
   protected closeDialog(): void {
     this.dialogOpen.set(false);
-    this.selectedCliente.set(null);
+    this.selectedUsuario.set(null);
   }
 
-  protected onClienteSaved(): void {
+  protected onUsuarioSaved(): void {
     this.closeDialog();
     this.load();
   }
 
-  protected onRowAction(actionId: string, cliente: ClienteOutput): void {
+  protected onRowAction(actionId: string, usuario: UsuarioOutput): void {
     if (actionId === 'edit') {
-      this.openEditDialog(cliente);
+      this.openEditDialog(usuario);
     }
   }
 
-  protected fullName(c: ClienteOutput): string {
-    return `${c.persona?.nombre ?? ''} ${c.persona?.apellido ?? ''}`.trim() || 'Sin nombre';
+  protected funcionarioNombre(u: UsuarioOutput): string {
+    const p = u.funcionario?.persona;
+    return `${p?.nombre ?? ''} ${p?.apellido ?? ''}`.trim() || 'Sin funcionario';
   }
 
-  protected trackById = (c: ClienteOutput): unknown => c.id_cliente;
+  protected rolesLabel(u: UsuarioOutput): string {
+    return (u.roles ?? []).map((r) => r.descripcion).filter(Boolean).join(', ');
+  }
+
+  protected activoLabel(u: UsuarioOutput): string {
+    return u.activo ? 'Sí' : 'No';
+  }
+
+  protected trackById = (u: UsuarioOutput): unknown => u.id;
 }
