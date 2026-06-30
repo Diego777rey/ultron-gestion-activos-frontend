@@ -4,8 +4,11 @@ import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { FuncionarioInput, FuncionarioOutput } from '../../interfaces/funcionario.interface';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { FuncionarioService } from '../../services/funcionario.service';
-
+import { PersonaService } from '../../../shared/services/persona.service';
 @Component({
   selector: 'app-funcionario-form',
   imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
@@ -37,6 +40,8 @@ export class FuncionarioFormComponent {
     facePrueba: [false],
     estado: [true],
   });
+
+  private readonly personaService = inject(PersonaService);
 
   constructor() {
     effect(() => {
@@ -70,6 +75,29 @@ export class FuncionarioFormComponent {
           fechaIngreso: this.today(),
           facePrueba: false,
           estado: true,
+        });
+      }
+    });
+
+    this.form.controls.documento.valueChanges.pipe(
+      takeUntilDestroyed(),
+      debounceTime(500),
+      distinctUntilChanged(),
+      switchMap(doc => {
+        if (!doc || doc.trim().length === 0) return of(null);
+        return this.personaService.buscarPorDocumento(doc).pipe(
+          catchError(() => of(null))
+        );
+      })
+    ).subscribe(data => {
+      const persona = data?.buscarPersonaPorDocumento;
+      if (persona && !this.isEdit) {
+        this.form.patchValue({
+          nombre: persona.nombre || '',
+          apellido: persona.apellido || '',
+          email: persona.email || '',
+          telefono: persona.telefono || '',
+          direccion: persona.direccion || ''
         });
       }
     });
