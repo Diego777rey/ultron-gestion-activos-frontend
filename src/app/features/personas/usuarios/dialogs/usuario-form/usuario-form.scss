@@ -104,6 +104,50 @@
   }
 }
 
+.field__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  .field__input {
+    padding-right: 40px;
+  }
+
+  .field__label {
+    top: 8px; // Adjusted since it's now inside the wrapper which doesn't have the 16px top padding
+  }
+
+  .field__input:focus ~ .field__label,
+  .field__input:not(:placeholder-shown) ~ .field__label {
+    top: -16px;
+  }
+}
+
+.field__icon-btn {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  background: none;
+  border: none;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+
+  &:hover {
+    color: var(--text-primary);
+  }
+
+  .material-icons {
+    font-size: 20px;
+  }
+}
+
 .field__error {
   font-size: 11px;
   color: #ff6b8b;
