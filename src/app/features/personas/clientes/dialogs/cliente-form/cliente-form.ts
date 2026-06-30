@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, Component, effect, inject, input, output } fro
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
+import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { ClienteInput, ClienteOutput } from '../../interfaces/cliente.interface';
 import { ClienteService } from '../../services/cliente.service';
 
 @Component({
   selector: 'app-cliente-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective],
+  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './cliente-form.html',
   styleUrl: './cliente-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

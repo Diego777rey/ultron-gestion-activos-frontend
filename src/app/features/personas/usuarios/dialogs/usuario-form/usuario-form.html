@@ -8,7 +8,7 @@
 <form class="usuario-form" [formGroup]="form" (ngSubmit)="onSubmit()">
   <div class="usuario-form__grid">
     <div class="field">
-      <input id="username" class="field__input" type="text" formControlName="username" appAutofocus placeholder=" " />
+      <input id="username" class="field__input" type="text" formControlName="username" appAutofocus appUppercase placeholder=" " />
       <label class="field__label" for="username">Usuario**</label>
       @if (form.controls.username.touched && form.controls.username.invalid) {
         <span class="field__error">El usuario es obligatorio</span>
@@ -31,7 +31,7 @@
     </div>
 
     <div class="field">
-      <input id="email" class="field__input" type="email" formControlName="email" placeholder=" " />
+      <input id="email" class="field__input" type="email" formControlName="email" appUppercase placeholder=" " />
       <label class="field__label" for="email">Email</label>
       @if (form.controls.email.touched && form.controls.email.invalid) {
         <span class="field__error">Email inválido</span>
@@ -51,26 +51,11 @@
       }
     </div>
 
-    <div class="field field--full">
-      <span class="field__section-label" id="roles-label">Roles asignados</span>
-      <div class="role-checks" role="group" aria-labelledby="roles-label">
-        @if (loadingCatalogs) {
-          <span class="role-checks__hint">Cargando roles...</span>
-        } @else if (roles().length === 0) {
-          <span class="role-checks__hint">No hay roles registrados</span>
-        } @else {
-          @for (role of roles(); track role.id) {
-            <label class="role-check">
-              <input
-                type="checkbox"
-                [checked]="isRoleSelected(role.id!)"
-                (change)="toggleRole(role.id!, $event)"
-              />
-              <span>{{ role.descripcion }}</span>
-            </label>
-          }
-        }
-      </div>
+    <div class="field field--checkbox field--full">
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="activo" />
+        <span>Activo (Permitir acceso al sistema)</span>
+      </label>
     </div>
   </div>
 </form>

@@ -8,7 +8,7 @@
 <form class="role-form" [formGroup]="form" (ngSubmit)="onSubmit()">
   <div class="role-form__grid">
     <div class="field field--full">
-      <input id="descripcion" class="field__input" type="text" formControlName="descripcion" appAutofocus placeholder=" " />
+      <input id="descripcion" class="field__input" type="text" formControlName="descripcion" appAutofocus appUppercase placeholder=" " />
       <label class="field__label" for="descripcion">Descripción**</label>
       @if (form.controls.descripcion.touched && form.controls.descripcion.invalid) {
         <span class="field__error">La descripción es obligatoria</span>

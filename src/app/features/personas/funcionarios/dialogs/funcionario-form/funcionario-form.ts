@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, Component, effect, inject, input, output } fro
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
+import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { FuncionarioInput, FuncionarioOutput } from '../../interfaces/funcionario.interface';
 import { FuncionarioService } from '../../services/funcionario.service';
 
 @Component({
   selector: 'app-funcionario-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective],
+  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './funcionario-form.html',
   styleUrl: './funcionario-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
