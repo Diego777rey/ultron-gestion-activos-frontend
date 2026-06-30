@@ -1,0 +1,66 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="funcionarios()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Nombre, sector o documento"
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="No hay funcionarios que coincidan con la búsqueda"
+  [trackBy]="trackById"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()"
+>
+  <ng-template appTableCell="id" [appTableCellFrom]="funcionarios()" let-funcionario>
+    {{ funcionario.id_funcionario }}
+  </ng-template>
+
+  <ng-template appTableCell="nombre" [appTableCellFrom]="funcionarios()" let-funcionario>
+    {{ fullName(funcionario) }}
+  </ng-template>
+
+  <ng-template appTableCell="sector" [appTableCellFrom]="funcionarios()" let-funcionario>
+    {{ funcionario.sector | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="sueldo" [appTableCellFrom]="funcionarios()" let-funcionario>
+    {{ formatSueldo(funcionario) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="telefono" [appTableCellFrom]="funcionarios()" let-funcionario>
+    {{ funcionario.persona?.telefono | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="email" [appTableCellFrom]="funcionarios()" let-funcionario>
+    {{ funcionario.persona?.email | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="funcionarios()" let-funcionario>
+    <app-action-menu
+      [actions]="rowActions"
+      (actionSelected)="onRowAction($event, funcionario)"
+    />
+  </ng-template>
+</app-generic-list>
+
+<app-modal
+  [open]="dialogOpen()"
+  [title]="dialogTitle()"
+  [subtitle]="dialogSubtitle()"
+  maxWidth="760px"
+  (closed)="closeDialog()"
+>
+  @if (dialogOpen()) {
+    <app-funcionario-form
+      [funcionario]="selectedFuncionario()"
+      (saved)="onFuncionarioSaved()"
+    />
+  }
+</app-modal>

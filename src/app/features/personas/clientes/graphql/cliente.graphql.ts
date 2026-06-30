@@ -28,6 +28,7 @@ export const CLIENTE_CRUD_CONFIG: CrudConfig = {
   }`,
   operations: {
     list: 'listarClientes',
+    listPaginated: 'listarClientesPaginado',
     getById: 'buscarClientePorId',
     create: 'registrarCliente',
     update: 'actualizarCliente',

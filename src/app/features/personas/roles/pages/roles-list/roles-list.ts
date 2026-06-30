@@ -11,12 +11,12 @@ import { ModalComponent } from '../../../../../shared/components/modal/modal';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
-import { ClienteService } from '../../services/cliente.service';
-import { ClienteOutput } from '../../interfaces/cliente.interface';
-import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
+import { RoleService } from '../../services/role.service';
+import { RoleOutput } from '../../interfaces/role.interface';
+import { RoleFormComponent } from '../../dialogs/role-form/role-form';
 
 @Component({
-  selector: 'app-clientes-list',
+  selector: 'app-roles-list',
   imports: [
     CommonModule,
     GenericListComponent,
@@ -24,42 +24,40 @@ import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
     ActionMenuComponent,
     DefaultEmptyPipe,
     ModalComponent,
-    ClienteFormComponent,
+    RoleFormComponent,
   ],
-  templateUrl: './clientes-list.html',
+  templateUrl: './roles-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'app-list-view' },
 })
-export class ClientesListComponent {
-  private readonly clienteService = inject(ClienteService);
+export class RolesListComponent {
+  private readonly roleService = inject(RoleService);
 
-  protected readonly clientes = signal<ClienteOutput[]>([]);
+  protected readonly roles = signal<RoleOutput[]>([]);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
   protected readonly dialogOpen = signal(false);
-  protected readonly selectedCliente = signal<ClienteOutput | null>(null);
+  protected readonly selectedRole = signal<RoleOutput | null>(null);
 
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
   protected readonly totalElements = signal(0);
 
   protected readonly dialogTitle = computed(() =>
-    this.selectedCliente() ? 'Editar Cliente' : 'Nuevo Cliente'
+    this.selectedRole() ? 'Editar Rol' : 'Nuevo Rol'
   );
 
   protected readonly dialogSubtitle = computed(() =>
-    this.selectedCliente()
-      ? 'Modifica los datos del cliente'
-      : 'Completa los datos para registrar un cliente'
+    this.selectedRole()
+      ? 'Modifica los datos del rol'
+      : 'Completa los datos para registrar un rol'
   );
 
-  protected readonly columns: TableColumn<ClienteOutput>[] = [
+  protected readonly columns: TableColumn<RoleOutput>[] = [
     { key: 'id', header: 'Id', width: '80px', align: 'center' },
-    { key: 'nombre', header: 'Nombre', width: '220px' },
-    { key: 'direccion', header: 'Dirección', width: '220px' },
-    { key: 'telefono', header: 'Teléfono', width: '140px' },
-    { key: 'email', header: 'Gmail', width: '200px' },
+    { key: 'descripcion', header: 'Descripción', width: '320px' },
+    { key: 'activo', header: 'Estado', width: '120px', align: 'center' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
 
@@ -80,9 +78,9 @@ export class ClientesListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.clienteService.findPaginated(this.pageIndex(), this.pageSize()).subscribe({
+    this.roleService.findPaginated(this.pageIndex(), this.pageSize()).subscribe({
       next: (response) => {
-        this.clientes.set(response.content);
+        this.roles.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);
         this.loading.set(false);
       },
@@ -117,34 +115,30 @@ export class ClientesListComponent {
   }
 
   protected openNewDialog(): void {
-    this.selectedCliente.set(null);
+    this.selectedRole.set(null);
     this.dialogOpen.set(true);
   }
 
-  protected openEditDialog(cliente: ClienteOutput): void {
-    this.selectedCliente.set(cliente);
+  protected openEditDialog(role: RoleOutput): void {
+    this.selectedRole.set(role);
     this.dialogOpen.set(true);
   }
 
   protected closeDialog(): void {
     this.dialogOpen.set(false);
-    this.selectedCliente.set(null);
+    this.selectedRole.set(null);
   }
 
-  protected onClienteSaved(): void {
+  protected onRoleSaved(): void {
     this.closeDialog();
     this.load();
   }
 
-  protected onRowAction(actionId: string, cliente: ClienteOutput): void {
+  protected onRowAction(actionId: string, role: RoleOutput): void {
     if (actionId === 'edit') {
-      this.openEditDialog(cliente);
+      this.openEditDialog(role);
     }
   }
 
-  protected fullName(c: ClienteOutput): string {
-    return `${c.persona?.nombre ?? ''} ${c.persona?.apellido ?? ''}`.trim() || 'Sin nombre';
-  }
-
-  protected trackById = (c: ClienteOutput): unknown => c.id_cliente;
+  protected trackById = (r: RoleOutput): unknown => r.id;
 }

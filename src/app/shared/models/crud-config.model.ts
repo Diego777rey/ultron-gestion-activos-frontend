@@ -13,6 +13,8 @@ export interface CrudOperations {
   update: string;
   /** Mutation de eliminación. Ej: 'eliminarCliente'. */
   remove: string;
+  /** Query que lista todos los registros paginados. Ej: 'listarClientesPaginado'. */
+  listPaginated?: string;
 }
 
 /**

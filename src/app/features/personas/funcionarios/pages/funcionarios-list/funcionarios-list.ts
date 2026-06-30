@@ -11,12 +11,12 @@ import { ModalComponent } from '../../../../../shared/components/modal/modal';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
-import { ClienteService } from '../../services/cliente.service';
-import { ClienteOutput } from '../../interfaces/cliente.interface';
-import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
+import { FuncionarioService } from '../../services/funcionario.service';
+import { FuncionarioOutput } from '../../interfaces/funcionario.interface';
+import { FuncionarioFormComponent } from '../../dialogs/funcionario-form/funcionario-form';
 
 @Component({
-  selector: 'app-clientes-list',
+  selector: 'app-funcionarios-list',
   imports: [
     CommonModule,
     GenericListComponent,
@@ -24,40 +24,41 @@ import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
     ActionMenuComponent,
     DefaultEmptyPipe,
     ModalComponent,
-    ClienteFormComponent,
+    FuncionarioFormComponent,
   ],
-  templateUrl: './clientes-list.html',
+  templateUrl: './funcionarios-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'app-list-view' },
 })
-export class ClientesListComponent {
-  private readonly clienteService = inject(ClienteService);
+export class FuncionariosListComponent {
+  private readonly funcionarioService = inject(FuncionarioService);
 
-  protected readonly clientes = signal<ClienteOutput[]>([]);
+  protected readonly funcionarios = signal<FuncionarioOutput[]>([]);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
   protected readonly dialogOpen = signal(false);
-  protected readonly selectedCliente = signal<ClienteOutput | null>(null);
+  protected readonly selectedFuncionario = signal<FuncionarioOutput | null>(null);
 
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
   protected readonly totalElements = signal(0);
 
   protected readonly dialogTitle = computed(() =>
-    this.selectedCliente() ? 'Editar Cliente' : 'Nuevo Cliente'
+    this.selectedFuncionario() ? 'Editar Funcionario' : 'Nuevo Funcionario'
   );
 
   protected readonly dialogSubtitle = computed(() =>
-    this.selectedCliente()
-      ? 'Modifica los datos del cliente'
-      : 'Completa los datos para registrar un cliente'
+    this.selectedFuncionario()
+      ? 'Modifica los datos del funcionario'
+      : 'Completa los datos para registrar un funcionario'
   );
 
-  protected readonly columns: TableColumn<ClienteOutput>[] = [
+  protected readonly columns: TableColumn<FuncionarioOutput>[] = [
     { key: 'id', header: 'Id', width: '80px', align: 'center' },
     { key: 'nombre', header: 'Nombre', width: '220px' },
-    { key: 'direccion', header: 'Dirección', width: '220px' },
+    { key: 'sector', header: 'Sector', width: '160px' },
+    { key: 'sueldo', header: 'Sueldo', width: '120px', align: 'right' },
     { key: 'telefono', header: 'Teléfono', width: '140px' },
     { key: 'email', header: 'Gmail', width: '200px' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
@@ -80,9 +81,9 @@ export class ClientesListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.clienteService.findPaginated(this.pageIndex(), this.pageSize()).subscribe({
+    this.funcionarioService.findPaginated(this.pageIndex(), this.pageSize()).subscribe({
       next: (response) => {
-        this.clientes.set(response.content);
+        this.funcionarios.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);
         this.loading.set(false);
       },
@@ -117,34 +118,43 @@ export class ClientesListComponent {
   }
 
   protected openNewDialog(): void {
-    this.selectedCliente.set(null);
+    this.selectedFuncionario.set(null);
     this.dialogOpen.set(true);
   }
 
-  protected openEditDialog(cliente: ClienteOutput): void {
-    this.selectedCliente.set(cliente);
+  protected openEditDialog(funcionario: FuncionarioOutput): void {
+    this.selectedFuncionario.set(funcionario);
     this.dialogOpen.set(true);
   }
 
   protected closeDialog(): void {
     this.dialogOpen.set(false);
-    this.selectedCliente.set(null);
+    this.selectedFuncionario.set(null);
   }
 
-  protected onClienteSaved(): void {
+  protected onFuncionarioSaved(): void {
     this.closeDialog();
     this.load();
   }
 
-  protected onRowAction(actionId: string, cliente: ClienteOutput): void {
+  protected onRowAction(actionId: string, funcionario: FuncionarioOutput): void {
     if (actionId === 'edit') {
-      this.openEditDialog(cliente);
+      this.openEditDialog(funcionario);
     }
   }
 
-  protected fullName(c: ClienteOutput): string {
-    return `${c.persona?.nombre ?? ''} ${c.persona?.apellido ?? ''}`.trim() || 'Sin nombre';
+  protected fullName(f: FuncionarioOutput): string {
+    return `${f.persona?.nombre ?? ''} ${f.persona?.apellido ?? ''}`.trim() || 'Sin nombre';
   }
 
-  protected trackById = (c: ClienteOutput): unknown => c.id_cliente;
+  protected formatSueldo(f: FuncionarioOutput): string {
+    if (f.sueldo == null) return '';
+    return new Intl.NumberFormat('es-PY', {
+      style: 'currency',
+      currency: 'PYG',
+      maximumFractionDigits: 0,
+    }).format(f.sueldo);
+  }
+
+  protected trackById = (f: FuncionarioOutput): unknown => f.id_funcionario;
 }

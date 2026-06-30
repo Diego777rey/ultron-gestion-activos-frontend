@@ -1,0 +1,80 @@
+@if (error) {
+  <div class="funcionario-form__error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ error }}</span>
+  </div>
+}
+
+<form class="funcionario-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="funcionario-form__grid">
+    <div class="field">
+      <input id="nombre" class="field__input" type="text" formControlName="nombre" appAutofocus placeholder=" " />
+      <label class="field__label" for="nombre">Nombre**</label>
+      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <span class="field__error">El nombre es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="apellido" class="field__input" type="text" formControlName="apellido" placeholder=" " />
+      <label class="field__label" for="apellido">Apellido*</label>
+      @if (form.controls.apellido.touched && form.controls.apellido.invalid) {
+        <span class="field__error">El apellido es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="documento" class="field__input" type="text" formControlName="documento" placeholder=" " />
+      <label class="field__label" for="documento">CI/RUC**</label>
+      @if (form.controls.documento.touched && form.controls.documento.invalid) {
+        <span class="field__error">El documento es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="telefono" class="field__input" type="text" formControlName="telefono" placeholder=" " />
+      <label class="field__label" for="telefono">Teléfono**</label>
+    </div>
+
+    <div class="field field--full">
+      <input id="direccion" class="field__input" type="text" formControlName="direccion" placeholder=" " />
+      <label class="field__label" for="direccion">Dirección</label>
+    </div>
+
+    <div class="field">
+      <input id="email" class="field__input" type="email" formControlName="email" placeholder=" " />
+      <label class="field__label" for="email">Email</label>
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <span class="field__error">Email inválido</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="sector" class="field__input" type="text" formControlName="sector" placeholder=" " />
+      <label class="field__label" for="sector">Sector*</label>
+    </div>
+
+    <div class="field">
+      <input id="sueldo" class="field__input" type="number" formControlName="sueldo" min="0" step="0.01" placeholder=" " />
+      <label class="field__label" for="sueldo">Sueldo</label>
+      @if (form.controls.sueldo.touched && form.controls.sueldo.invalid) {
+        <span class="field__error">El sueldo no puede ser negativo</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="fechaIngreso" class="field__input" type="date" formControlName="fechaIngreso" placeholder=" " />
+      <label class="field__label" for="fechaIngreso">Fecha de ingreso*</label>
+    </div>
+  </div>
+</form>
+
+<div class="funcionario-form-footer">
+  <app-ui-button
+    [label]="isEdit ? 'Guardar Cambios' : 'Registrar Funcionario'"
+    icon="save"
+    variant="primary"
+    [loading]="saving"
+    (clicked)="onSubmit()"
+  />
+</div>
