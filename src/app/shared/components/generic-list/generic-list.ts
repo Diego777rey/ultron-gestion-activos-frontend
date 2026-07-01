@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, contentChildren, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, contentChildren, input, model, output, TemplateRef } from '@angular/core';
 import { UiButtonComponent } from '../ui-button/ui-button';
 import { DataTableComponent } from '../data-table/data-table';
-import { TableCellDirective } from '../data-table/table-cell.directive';
+import { TableCellContext, TableCellDirective } from '../data-table/table-cell.directive';
 import { PaginatorComponent } from '../paginator/paginator';
 import { TableColumn } from '../../models/table-column.model';
 import { PageChange } from '../../models/pagination.model';
@@ -54,6 +54,9 @@ export class GenericListComponent<T = Record<string, unknown>> {
 
   readonly toolbarActions = input<ListToolbarAction[]>([]);
   readonly actionClicked = output<string>();
+
+  /** Plantilla para el contenido expandible de cada fila. */
+  readonly expandTemplate = input<TemplateRef<TableCellContext<T>> | null>(null);
 
   protected readonly searchInputId = `generic-list-search-${++searchInputCounter}`;
 

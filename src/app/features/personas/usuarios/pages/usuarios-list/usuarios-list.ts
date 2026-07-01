@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateRef, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GenericListComponent } from '../../../../../shared/components/generic-list/generic-list';
-import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
+import { TableCellContext, TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
 import {
   ActionMenuComponent,
   MenuAction,
@@ -14,6 +14,7 @@ import { PageChange } from '../../../../../shared/models/pagination.model';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioOutput } from '../../interfaces/usuario.interface';
 import { UsuarioFormComponent } from '../../dialogs/usuario-form/usuario-form';
+import { UsuarioRolesPanelComponent } from '../../components/usuario-roles-panel/usuario-roles-panel';
 
 @Component({
   selector: 'app-usuarios-list',
@@ -25,6 +26,7 @@ import { UsuarioFormComponent } from '../../dialogs/usuario-form/usuario-form';
     DefaultEmptyPipe,
     ModalComponent,
     UsuarioFormComponent,
+    UsuarioRolesPanelComponent,
   ],
   templateUrl: './usuarios-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,6 +46,13 @@ export class UsuariosListComponent {
   protected readonly pageSize = signal(15);
   protected readonly totalElements = signal(0);
 
+  /** Referencia al template de expansión definido en el HTML */
+  protected readonly expandTpl = viewChild<TemplateRef<TableCellContext<UsuarioOutput>>>('expandTemplate');
+
+  protected getExpandTemplate() {
+    return this.expandTpl() ?? null;
+  }
+
   protected readonly dialogTitle = computed(() =>
     this.selectedUsuario() ? 'Editar Usuario' : 'Nuevo Usuario'
   );
@@ -58,7 +67,7 @@ export class UsuariosListComponent {
     { key: 'id', header: 'Id', width: '80px', align: 'center' },
     { key: 'username', header: 'Usuario', width: '160px' },
     { key: 'funcionario', header: 'Funcionario', width: '220px' },
-    { key: 'roles', header: 'Roles', width: '220px' },
+
     { key: 'email', header: 'Email', width: '200px' },
     { key: 'activo', header: 'Activo', width: '90px', align: 'center' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
@@ -143,13 +152,20 @@ export class UsuariosListComponent {
     }
   }
 
+  /** Cuando se actualiza un usuario desde el panel de roles, actualizamos la lista local */
+  protected onUsuarioUpdated(updated: UsuarioOutput): void {
+    const current = this.usuarios();
+    const index = current.findIndex((u) => u.id === updated.id);
+    if (index >= 0) {
+      const copy = [...current];
+      copy[index] = updated;
+      this.usuarios.set(copy);
+    }
+  }
+
   protected funcionarioNombre(u: UsuarioOutput): string {
     const p = u.funcionario?.persona;
     return `${p?.nombre ?? ''} ${p?.apellido ?? ''}`.trim() || 'Sin funcionario';
-  }
-
-  protected rolesLabel(u: UsuarioOutput): string {
-    return (u.roles ?? []).map((r) => r.descripcion).filter(Boolean).join(', ');
   }
 
   protected activoLabel(u: UsuarioOutput): string {

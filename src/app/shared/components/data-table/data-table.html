@@ -32,7 +32,11 @@
         </tr>
       } @else {
         @for (row of data(); track trackRow($index, row); let i = $index) {
-          <tr class="data-table__row" (click)="onRowClick(row)">
+          <tr
+            class="data-table__row"
+            [class.data-table__row--expanded]="isExpanded(row)"
+            (click)="onRowClick(row)"
+          >
             @for (column of visibleColumns(); track column.key) {
               <td
                 class="data-table__td"
@@ -49,6 +53,19 @@
               </td>
             }
           </tr>
+
+          @if (expandTemplate() && isExpanded(row)) {
+            <tr class="data-table__row--detail">
+              <td [attr.colspan]="visibleColumns().length" class="data-table__td--detail">
+                <div class="detail-panel">
+                  <ng-container
+                    [ngTemplateOutlet]="expandTemplate()!"
+                    [ngTemplateOutletContext]="context(row, i)"
+                  ></ng-container>
+                </div>
+              </td>
+            </tr>
+          }
         }
       }
     </tbody>
