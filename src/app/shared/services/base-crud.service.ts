@@ -28,14 +28,16 @@ export abstract class BaseCrudService<TOutput, TInput> {
       .pipe(map((data) => data[op] ?? []));
   }
 
-  /** Lista los registros de la entidad de forma paginada. */
-  findPaginated(page: number, size: number): Observable<import('../models/pagination.model').PageResponse<TOutput>> {
+  /** Lista los registros de la entidad de forma paginada con filtro opcional. */
+  findPaginated(page: number, size: number, filter?: string): Observable<import('../models/pagination.model').PageResponse<TOutput>> {
     const op = this.config.operations.listPaginated;
     if (!op) {
       throw new Error('listPaginated operation not defined in config');
     }
-    const document = `query($page: Int!, $size: Int!) { 
-      ${op}(page: $page, size: $size) {
+    const hasFilter = filter !== undefined && filter !== null && filter.trim() !== '';
+    
+    const document = `query($page: Int!, $size: Int!${hasFilter ? ', $filter: String' : ''}) { 
+      ${op}(page: $page, size: $size${hasFilter ? ', filter: $filter' : ''}) {
         content ${this.config.selectionSet}
         pageInfo {
           pageNumber
@@ -46,8 +48,14 @@ export abstract class BaseCrudService<TOutput, TInput> {
         }
       } 
     }`;
+    
+    const variables: Record<string, any> = { page, size };
+    if (hasFilter) {
+      variables['filter'] = filter.trim();
+    }
+    
     return this.gql
-      .query<Record<string, import('../models/pagination.model').PageResponse<TOutput>>>(document, { page, size })
+      .query<Record<string, import('../models/pagination.model').PageResponse<TOutput>>>(document, variables)
       .pipe(map((data) => data[op]));
   }
 

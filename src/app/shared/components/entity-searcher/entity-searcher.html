@@ -1,0 +1,77 @@
+<div class="field" [class.has-error]="error()">
+  <div class="field__input-wrapper">
+    <input 
+      class="field__input" 
+      type="text" 
+      readonly 
+      [value]="displayValue()" 
+      placeholder=" "
+      [disabled]="disabled()"
+      (click)="openModal()" 
+    />
+    <label class="field__label" (click)="openModal()">{{ label() }}</label>
+    <button type="button" class="field__icon-btn" (click)="openModal()" [disabled]="disabled()">
+      <span class="material-icons">search</span>
+    </button>
+  </div>
+  @if (error() && errorText()) {
+    <span class="field__error">{{ errorText() }}</span>
+  }
+</div>
+
+<app-modal [open]="modalOpen()" [title]="label()" [maxWidth]="modalWidth()" headerVariant="primary" [noPadding]="true" (closed)="closeModal()">
+  <div class="search-modal-body">
+    <div class="search-header">
+      <div class="search-field">
+        <input 
+          class="search-field__input" 
+          type="text" 
+          [value]="searchQuery()" 
+          (input)="onSearch($any($event.target).value)" 
+          placeholder=" "
+        />
+        <label class="search-field__label">Ingresar texto</label>
+        <button class="search-field__clear" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="search-table-container">
+      @if (useTable() && columns().length) {
+        <app-data-table
+          [columns]="columns()"
+          [data]="filteredItems()"
+          [loading]="loading()"
+          [trackBy]="keyFn()"
+          (rowClick)="selectItem($event)"
+        />
+      } @else {
+        <div class="search-list">
+          @for (item of filteredItems(); track keyFn()(item)) {
+            <div class="search-item" 
+                 [class.is-selected]="keyFn()(item) === value()"
+                 (click)="selectItem(item)">
+              {{ displayFn()(item) }}
+            </div>
+          } @empty {
+            <div class="search-empty">
+              No se encontraron resultados
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    @if (backendPagination() || displayTotal() > pageSize()) {
+      <div class="search-paginator-wrapper">
+        <app-paginator
+          [total]="displayTotal()"
+          [pageIndex]="pageIndex()"
+          [pageSize]="pageSize()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+    }
+  </div>
+</app-modal>

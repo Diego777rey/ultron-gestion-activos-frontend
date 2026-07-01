@@ -18,7 +18,7 @@
   flex-direction: column;
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: 6px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
   overflow: hidden;
   animation: modal-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -31,6 +31,26 @@
   gap: 16px;
   padding: 20px 24px;
   border-bottom: 1px solid var(--border-color);
+}
+
+.modal__header--primary {
+  background: var(--primary-color);
+  border-bottom: none;
+  justify-content: center;
+  padding: 16px 24px;
+
+  .modal__title, .modal__subtitle {
+    color: var(--on-primary-color);
+  }
+
+  .modal__titles {
+    align-items: center;
+    text-align: center;
+  }
+
+  .modal__close {
+    display: none;
+  }
 }
 
 .modal__titles {
@@ -83,6 +103,10 @@
     background: var(--scrollbar-thumb);
     border-radius: 4px;
   }
+}
+
+.modal__body--no-padding {
+  padding: 0;
 }
 
 .modal__footer {

@@ -12,6 +12,9 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
+import { EntitySearcherComponent } from '../../../../../shared/components/entity-searcher/entity-searcher';
+import { TableColumn } from '../../../../../shared/models/table-column.model';
+import { PageChange } from '../../../../../shared/models/pagination.model';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { FuncionarioOutput } from '../../../funcionarios/interfaces/funcionario.interface';
@@ -23,7 +26,7 @@ import { UsuarioService } from '../../services/usuario.service';
 
 @Component({
   selector: 'app-usuario-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective, EntitySearcherComponent],
   templateUrl: './usuario-form.html',
   styleUrl: './usuario-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,12 +53,33 @@ export class UsuarioFormComponent implements OnInit {
 
   protected readonly roles = signal<RoleOutput[]>([]);
   protected readonly funcionarios = signal<FuncionarioOutput[]>([]);
+  protected readonly selectedFuncionario = signal<FuncionarioOutput | null>(null);
   protected readonly funcionariosOcupados = signal<Set<string>>(new Set());
+
+  // Pagination state
+  protected readonly funcionariosTotal = signal<number>(0);
+  protected readonly funcionariosPage = signal<number>(0);
+  protected readonly funcionariosPageSize = signal<number>(10);
+  protected readonly funcionariosFilter = signal<string>('');
+  protected readonly loadingFuncionarios = signal<boolean>(false);
+
+  protected readonly funcionarioColumns: TableColumn<FuncionarioOutput>[] = [
+    { key: 'id_funcionario', header: 'Id', width: '80px' },
+    { key: 'documento', header: 'Documento', value: (f) => f.persona?.documento ?? '' },
+    { key: 'nombre', header: 'Nombre Completo', value: (f) => this.funcionarioLabel(f) },
+  ];
 
   protected readonly funcionariosDisponibles = computed(() => {
     const ocupados = this.funcionariosOcupados();
     const actual = this.usuario()?.id_funcionario ?? null;
-    return this.funcionarios().filter(
+    
+    let list = this.funcionarios();
+    const selected = this.selectedFuncionario();
+    if (selected && !list.find(f => f.id_funcionario === selected.id_funcionario)) {
+      list = [selected, ...list];
+    }
+
+    return list.filter(
       (f) => f.id_funcionario && (!ocupados.has(f.id_funcionario) || f.id_funcionario === actual)
     );
   });
@@ -97,22 +121,33 @@ export class UsuarioFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    forkJoin({
+    const actualIdFuncionario = this.usuario()?.id_funcionario;
+    const requests: any = {
       roles: this.roleService.findAll(),
-      funcionarios: this.funcionarioService.findAll(),
       usuarios: this.usuarioService.findAll(),
-    }).subscribe({
-      next: ({ roles, funcionarios, usuarios }) => {
-        this.roles.set(roles);
-        this.funcionarios.set(funcionarios);
+    };
+    
+    if (actualIdFuncionario) {
+      requests.selectedFunc = this.funcionarioService.findById(actualIdFuncionario);
+    }
+
+    forkJoin(requests).subscribe({
+      next: (res: any) => {
+        this.roles.set(res.roles);
         const actualId = this.usuario()?.id;
-        const ocupados = new Set(
-          usuarios
-            .filter((u) => u.id_funcionario && u.id !== actualId)
-            .map((u) => u.id_funcionario!)
+        const ocupados = new Set<string>(
+          res.usuarios
+            .filter((u: any) => u.id_funcionario && u.id !== actualId)
+            .map((u: any) => u.id_funcionario as string)
         );
         this.funcionariosOcupados.set(ocupados);
+        
+        if (res.selectedFunc) {
+          this.selectedFuncionario.set(res.selectedFunc);
+        }
+
         this.loadingCatalogs = false;
+        this.fetchFuncionariosPage(0, this.funcionariosPageSize());
       },
       error: () => {
         this.error = 'No se pudieron cargar funcionarios o roles';
@@ -121,11 +156,40 @@ export class UsuarioFormComponent implements OnInit {
     });
   }
 
+  protected fetchFuncionariosPage(page: number, size: number, filter: string = ''): void {
+    this.loadingFuncionarios.set(true);
+    this.funcionarioService.findPaginated(page, size, filter).subscribe({
+      next: (response) => {
+        this.funcionarios.set(response.content);
+        this.funcionariosTotal.set(response.pageInfo.totalElements);
+        this.funcionariosPage.set(page);
+        this.funcionariosPageSize.set(size);
+        this.funcionariosFilter.set(filter);
+        this.loadingFuncionarios.set(false);
+      },
+      error: () => {
+        this.error = 'Error al cargar la página de funcionarios';
+        this.loadingFuncionarios.set(false);
+      }
+    });
+  }
+
+  protected onFuncionarioSearchChange(filter: string): void {
+    this.fetchFuncionariosPage(0, this.funcionariosPageSize(), filter);
+  }
+
+  protected onFuncionarioPageChange(event: PageChange): void {
+    this.fetchFuncionariosPage(event.pageIndex, event.pageSize, this.funcionariosFilter());
+  }
+
   protected funcionarioLabel(f: FuncionarioOutput): string {
     const nombre = `${f.persona?.nombre ?? ''} ${f.persona?.apellido ?? ''}`.trim();
     const doc = f.persona?.documento ?? '';
     return [nombre, doc].filter(Boolean).join(' — ') || `Funcionario #${f.id_funcionario}`;
   }
+
+  protected readonly funcionarioLabelFn = (f: FuncionarioOutput) => this.funcionarioLabel(f);
+  protected readonly funcionarioKeyFn = (f: FuncionarioOutput) => f.id_funcionario;
 
   protected isRoleSelected(roleId: string): boolean {
     return this.form.controls.roleIds.value.includes(roleId);

@@ -8,7 +8,7 @@
       [style.max-width]="maxWidth()"
       (click)="$event.stopPropagation()"
     >
-      <header class="modal__header">
+      <header class="modal__header" [class.modal__header--primary]="headerVariant() === 'primary'">
         <div class="modal__titles">
           <h2 class="modal__title">{{ title() }}</h2>
           @if (subtitle()) {
@@ -20,7 +20,7 @@
         </button>
       </header>
 
-      <div class="modal__body">
+      <div class="modal__body" [class.modal__body--no-padding]="noPadding()">
         <ng-content></ng-content>
       </div>
 

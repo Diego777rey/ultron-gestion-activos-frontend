@@ -43,18 +43,26 @@
       }
     </div>
 
-    <div class="field">
-      <select id="id_funcionario" class="field__input" formControlName="id_funcionario" [disabled]="loadingCatalogs">
-        <option value="" disabled>Seleccionar funcionario</option>
-        @for (f of funcionariosDisponibles(); track f.id_funcionario) {
-          <option [value]="f.id_funcionario">{{ funcionarioLabel(f) }}</option>
-        }
-      </select>
-      <label class="field__label" for="id_funcionario">Funcionario*</label>
-      @if (form.controls.id_funcionario.touched && form.controls.id_funcionario.invalid) {
-        <span class="field__error">Debe seleccionar un funcionario</span>
-      }
-    </div>
+    <app-entity-searcher
+      [items]="funcionariosDisponibles()"
+      [value]="form.controls.id_funcionario.value"
+      (valueChange)="form.controls.id_funcionario.setValue($event)"
+      [displayFn]="funcionarioLabelFn"
+      [keyFn]="funcionarioKeyFn"
+      [columns]="funcionarioColumns"
+      [backendPagination]="true"
+      [totalItems]="funcionariosTotal()"
+      [pageIndex]="funcionariosPage()"
+      [pageSize]="funcionariosPageSize()"
+      [loading]="loadingCatalogs || loadingFuncionarios()"
+      (searchChange)="onFuncionarioSearchChange($event)"
+      (pageChange)="onFuncionarioPageChange($event)"
+      label="Funcionario*"
+      searchPlaceholder="Buscar por documento o nombre..."
+      [disabled]="loadingCatalogs"
+      [error]="form.controls.id_funcionario.touched && form.controls.id_funcionario.invalid"
+      errorText="Debe seleccionar un funcionario"
+    />
 
     <div class="field field--checkbox field--full">
       <label class="checkbox-label">
