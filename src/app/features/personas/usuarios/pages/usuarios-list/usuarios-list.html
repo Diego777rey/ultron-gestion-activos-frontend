@@ -1,3 +1,10 @@
+<ng-template #expandTemplate let-usuario>
+  <app-usuario-roles-panel
+    [usuario]="usuario"
+    (usuarioUpdated)="onUsuarioUpdated($event)"
+  />
+</ng-template>
+
 <app-generic-list
   [columns]="columns"
   [data]="usuarios()"
@@ -13,6 +20,7 @@
   [toolbarActions]="toolbarActions"
   emptyMessage="No hay usuarios que coincidan con la búsqueda"
   [trackBy]="trackById"
+  [expandTemplate]="getExpandTemplate()"
   (pageChange)="onPageChange($event)"
   (retry)="load()"
   (actionClicked)="onToolbarAction($event)"
@@ -28,10 +36,6 @@
 
   <ng-template appTableCell="funcionario" [appTableCellFrom]="usuarios()" let-usuario>
     {{ funcionarioNombre(usuario) }}
-  </ng-template>
-
-  <ng-template appTableCell="roles" [appTableCellFrom]="usuarios()" let-usuario>
-    {{ rolesLabel(usuario) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="email" [appTableCellFrom]="usuarios()" let-usuario>

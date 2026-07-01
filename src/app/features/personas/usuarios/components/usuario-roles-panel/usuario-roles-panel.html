@@ -1,0 +1,151 @@
+<div class="roles-panel">
+  <!-- Tabla izquierda: Buscar y Agregar Roles -->
+  <div class="roles-panel__section">
+    <div class="roles-panel__header">
+      <span class="material-icons roles-panel__header-icon">search</span>
+      <span class="roles-panel__title">Roles Disponibles</span>
+    </div>
+
+    <div class="roles-panel__search">
+      <input type="text" placeholder="Buscar rol..." [value]="searchFilter()" (input)="onSearchInput($event)" />
+    </div>
+
+    <div class="roles-panel__table-wrapper">
+      <table class="roles-panel__table">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Descripción</th>
+            <th>Activo</th>
+            <th style="width: 50px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loadingAvailable() && pageAvailable() === 0) {
+          <tr>
+            <td colspan="4" class="roles-panel__loading">
+              <span class="material-icons spinning">sync</span>
+              Cargando...
+            </td>
+          </tr>
+          } @else if (availableRoles().length === 0) {
+          <tr>
+            <td colspan="4" class="roles-panel__empty">
+              Sin roles disponibles
+            </td>
+          </tr>
+          } @else {
+          @for (role of availableRoles(); track role.id) {
+          <tr>
+            <td>{{ role.id }}</td>
+            <td>{{ role.descripcion }}</td>
+            <td>{{ role.activo === 'true' || role.activo === 'Si' ? 'Sí' : role.activo }}</td>
+            <td>
+              <button class="roles-panel__btn roles-panel__btn--add" [disabled]="isProcessing(role.id)"
+                (click)="agregarRol(role)" title="Agregar rol">
+                @if (isProcessing(role.id)) {
+                <span class="material-icons spinning">sync</span>
+                } @else {
+                <span class="material-icons">add_circle</span>
+                }
+              </button>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+      
+      <div class="roles-panel__load-more">
+        <button
+          class="roles-panel__load-more-btn"
+          [disabled]="loadingAvailable() || !hasMoreAvailable()"
+          (click)="loadMoreAvailable()"
+          title="Cargar más roles"
+          [style.opacity]="hasMoreAvailable() ? '1' : '0.3'"
+        >
+          @if (loadingAvailable()) {
+            <span class="material-icons spinning">sync</span>
+          } @else {
+            <span class="material-icons">add</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla derecha: Roles del Usuario -->
+  <div class="roles-panel__section">
+    <div class="roles-panel__header roles-panel__header--current">
+      <span class="material-icons roles-panel__header-icon">badge</span>
+      <span class="roles-panel__title">Roles del Usuario</span>
+    </div>
+
+    <div class="roles-panel__search">
+      <input type="text" placeholder="Buscar rol..." [value]="searchFilterCurrent()" (input)="onSearchInputCurrent($event)" />
+    </div>
+
+    <div class="roles-panel__table-wrapper">
+      <table class="roles-panel__table">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Descripción</th>
+            <th>Activo</th>
+            <th style="width: 50px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loadingCurrent() && pageCurrent() === 0) {
+          <tr>
+            <td colspan="4" class="roles-panel__loading">
+              <span class="material-icons spinning">sync</span>
+              Cargando...
+            </td>
+          </tr>
+          } @else if (currentRoles().length === 0) {
+          <tr>
+            <td colspan="4" class="roles-panel__empty">
+              Sin roles asignados
+            </td>
+          </tr>
+          } @else {
+          @for (role of currentRoles(); track role.id) {
+          <tr>
+            <td>{{ role.id }}</td>
+            <td>{{ role.descripcion }}</td>
+            <td>{{ role.activo === 'true' || role.activo === 'Si' ? 'Sí' : role.activo }}</td>
+            <td>
+              <button class="roles-panel__btn roles-panel__btn--remove" [disabled]="isProcessing(role.id)"
+                (click)="quitarRol(role)" title="Quitar rol">
+                @if (isProcessing(role.id)) {
+                <span class="material-icons spinning">sync</span>
+                } @else {
+                <span class="material-icons">close</span>
+                }
+              </button>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+
+      <div class="roles-panel__load-more">
+        <button
+          class="roles-panel__load-more-btn"
+          [disabled]="loadingCurrent() || !hasMoreCurrent()"
+          (click)="loadMoreCurrent()"
+          title="Cargar más roles"
+          [style.opacity]="hasMoreCurrent() ? '1' : '0.3'"
+        >
+          @if (loadingCurrent()) {
+            <span class="material-icons spinning">sync</span>
+          } @else {
+            <span class="material-icons">add</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -5,6 +5,8 @@ import {
   contentChildren,
   input,
   output,
+  signal,
+  TemplateRef,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { TableColumn } from '../../models/table-column.model';
@@ -17,6 +19,7 @@ import { TableCellContext, TableCellDirective } from './table-cell.directive';
  * - Renderiza por defecto el valor de cada celda, o una plantilla personalizada
  *   provista por el consumidor mediante la directiva `appTableCell`.
  * - Maneja estados de carga y vacío de forma uniforme.
+ * - Soporta filas expandibles cuando se provee `expandTemplate`.
  *
  * @template T Tipo de la fila de datos.
  */
@@ -51,6 +54,9 @@ export class DataTableComponent<T = Record<string, unknown>> {
     undefined
   );
 
+  /** Plantilla para el contenido expandible de cada fila. */
+  readonly expandTemplate = input<TemplateRef<TableCellContext<T>> | null>(null);
+
   private readonly localCellTemplates = contentChildren(TableCellDirective);
 
   private readonly resolvedCellTemplates = computed(() => {
@@ -62,6 +68,30 @@ export class DataTableComponent<T = Record<string, unknown>> {
   protected readonly visibleColumns = computed(() =>
     this.columns().filter((c) => !c.hidden)
   );
+
+  /** Set de filas actualmente expandidas, usando la clave de trackBy. */
+  private readonly expandedKeys = signal<Set<unknown>>(new Set());
+
+  /** Verifica si una fila está expandida. */
+  protected isExpanded(row: T): boolean {
+    const key = this.trackBy()(row);
+    return this.expandedKeys().has(key);
+  }
+
+  /** Alterna el estado de expansión de una fila. */
+  protected toggleExpand(row: T, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    const key = this.trackBy()(row);
+    const current = new Set(this.expandedKeys());
+    if (current.has(key)) {
+      current.delete(key);
+    } else {
+      current.add(key);
+    }
+    this.expandedKeys.set(current);
+  }
 
   /** Devuelve la plantilla personalizada de una columna, si existe. */
   protected templateFor(key: string) {
@@ -83,6 +113,9 @@ export class DataTableComponent<T = Record<string, unknown>> {
   }
 
   protected onRowClick(row: T): void {
+    if (this.expandTemplate()) {
+      this.toggleExpand(row);
+    }
     this.rowClick.emit(row);
   }
 
