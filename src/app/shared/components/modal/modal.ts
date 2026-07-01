@@ -26,6 +26,10 @@ export class ModalComponent {
   readonly maxWidth = input<string>('560px');
   /** Permite cerrar al hacer click en el backdrop. */
   readonly closeOnBackdrop = input<boolean>(true);
+  /** Elimina el padding del cuerpo del modal. */
+  readonly noPadding = input<boolean>(false);
+  /** Variante del encabezado. */
+  readonly headerVariant = input<'default' | 'primary'>('default');
 
   /** Se emite al solicitar el cierre del modal. */
   readonly closed = output<void>();
