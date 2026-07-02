@@ -4,6 +4,7 @@ export const ROLES_ROUTES: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./pages/roles-page/roles-page').then((m) => m.RolesPageComponent),
+      import('./pages/roles-list/roles-list').then((m) => m.RolesListComponent),
+    data: { tabTitle: 'Lista de roles' }
   },
 ];

@@ -1,59 +1,39 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { NgComponentOutlet } from '@angular/common';
 import { TabService } from '../../services/tab.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-tabs',
-  imports: [NgComponentOutlet],
+  imports: [CommonModule],
   template: `
-    <div class="tabs-container">
-      <div class="tabs-header">
-        @for (tab of tabService.tabs(); track tab.id; let i = $index) {
-          <div 
-            class="tab-label" 
-            [class.active]="tab.active" 
-            (click)="tabService.setTabActive(i)"
-          >
-            <span class="tab-title">{{ tab.title }}</span>
-            <span 
-              class="material-icons close-icon" 
-              (click)="tabService.removeTab(i); $event.stopPropagation()"
-            >close</span>
-          </div>
-        }
-      </div>
-      <div class="tabs-content">
-        @for (tab of tabService.tabs(); track tab.id) {
-          <div class="tab-pane" [class.active]="tab.active">
-            @if (tab.active) {
-              <ng-container *ngComponentOutlet="tab.component; inputs: tab.tabData?.data" />
-            }
-          </div>
-        }
-      </div>
+    <div class="tabs-header">
+      @for (tab of tabService.tabs(); track tab.id; let i = $index) {
+        <div 
+          class="tab-label" 
+          [class.active]="tab.active" 
+          (click)="tabService.setTabActive(i)"
+        >
+          <span class="tab-title">{{ tab.title }}</span>
+          <span 
+            class="material-icons close-icon" 
+            (click)="tabService.removeTab(i); $event.stopPropagation()"
+          >close</span>
+        </div>
+      }
     </div>
   `,
   styles: [`
     :host {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      min-height: 0;
-      height: 100%;
-    }
-    .tabs-container {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      min-height: 0;
-      height: 100%;
+      display: block;
+      width: 100%;
     }
     .tabs-header {
       display: flex;
       align-items: stretch;
-      background: #424242;
+      background: #333333;
       min-height: 48px;
       overflow-x: auto;
+      border-bottom: 1px solid #222;
     }
     .tab-label {
       position: relative;
@@ -61,14 +41,14 @@ import { TabService } from '../../services/tab.service';
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      min-width: 200px;
+      min-width: 160px;
       max-width: 250px;
       height: 48px;
       padding: 0 14px;
       cursor: pointer;
-      color: rgba(255, 255, 255, 0.7);
-      background: #424242;
-      border-right: none;
+      color: rgba(255, 255, 255, 0.6);
+      background: #333;
+      border-right: 1px solid #222;
       border-bottom: 2px solid transparent;
       transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     }
@@ -79,7 +59,7 @@ import { TabService } from '../../services/tab.service';
     }
     .tab-label:hover:not(.active) {
       color: #fff;
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.05);
     }
     .tab-title {
       flex: 1;
@@ -90,8 +70,8 @@ import { TabService } from '../../services/tab.service';
       text-overflow: ellipsis;
     }
     .close-icon {
-      font-size: 18px;
-      opacity: 0.7;
+      font-size: 16px;
+      opacity: 0.6;
       border-radius: 50%;
       padding: 2px;
       flex-shrink: 0;
@@ -100,31 +80,7 @@ import { TabService } from '../../services/tab.service';
     .close-icon:hover {
       opacity: 1;
       color: #f44336;
-      background: rgba(244, 67, 54, 0.12);
-    }
-    .tabs-content {
-      flex: 1;
-      min-height: 0;
-      position: relative;
-      overflow: hidden;
-      background: rgb(70, 70, 70);
-    }
-    .tab-pane {
-      display: none;
-    }
-    .tab-pane.active {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      overflow: hidden;
-    }
-    .tab-pane.active > * {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
+      background: rgba(244, 67, 54, 0.15);
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,

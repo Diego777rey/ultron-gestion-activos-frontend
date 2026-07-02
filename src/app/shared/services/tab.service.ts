@@ -1,38 +1,34 @@
-import { Injectable, signal, Type } from '@angular/core';
-
-export interface TabData {
-  id?: number;
-  data?: any;
-}
+import { Injectable, signal, inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 export interface Tab {
   id: number;
   title: string;
-  component: Type<any>;
+  url: string;
   active: boolean;
-  tabData?: TabData;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class TabService {
+  private readonly router = inject(Router);
   readonly tabs = signal<Tab[]>([]);
 
-  addTab(tab: Omit<Tab, 'id' | 'active'>): void {
+  addTab(title: string, url: string): void {
     this.tabs.update(tabs => {
-      const existsIndex = tabs.findIndex(t => t.title === tab.title);
+      const existsIndex = tabs.findIndex(t => t.url === url);
       if (existsIndex >= 0) {
         return tabs.map((t, i) => ({
           ...t,
-          active: i === existsIndex,
-          tabData: tab.tabData || t.tabData
+          active: i === existsIndex
         }));
       }
       
       const newTab: Tab = {
-        ...tab,
-        id: tabs.length + 1,
+        id: Date.now(),
+        title,
+        url,
         active: true
       };
       
@@ -43,14 +39,17 @@ export class TabService {
   removeTab(index: number): void {
     this.tabs.update(tabs => {
       const newTabs = [...tabs];
-      newTabs.splice(index, 1);
+      const removedTab = newTabs.splice(index, 1)[0];
       
-      if (newTabs.length > 0 && !newTabs.some(t => t.active)) {
-        // Si no hay tab activo, activar el último o el anterior al cerrado
+      if (newTabs.length > 0 && removedTab.active) {
         const targetIndex = index > 0 ? index - 1 : 0;
-        if (newTabs[targetIndex]) {
-          newTabs[targetIndex].active = true;
+        const targetTab = newTabs[targetIndex];
+        if (targetTab) {
+          targetTab.active = true;
+          this.router.navigateByUrl(targetTab.url);
         }
+      } else if (newTabs.length === 0) {
+        this.router.navigateByUrl('/pantalla-principal');
       }
       
       return newTabs;
@@ -58,12 +57,14 @@ export class TabService {
   }
 
   setTabActive(index: number): void {
-    this.tabs.update(tabs => 
-      tabs.map((t, i) => ({ ...t, active: i === index }))
-    );
+    const tab = this.tabs()[index];
+    if (tab) {
+      this.router.navigateByUrl(tab.url);
+    }
   }
 
   removeAllTabs(): void {
     this.tabs.set([]);
+    this.router.navigateByUrl('/pantalla-principal');
   }
 }

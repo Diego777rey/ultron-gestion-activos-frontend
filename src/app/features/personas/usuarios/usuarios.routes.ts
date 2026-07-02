@@ -4,6 +4,7 @@ export const USUARIOS_ROUTES: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./pages/usuarios-page/usuarios-page').then((m) => m.UsuariosPageComponent),
+      import('./pages/usuarios-list/usuarios-list').then((m) => m.UsuariosListComponent),
+    data: { tabTitle: 'Lista de usuarios' }
   },
 ];

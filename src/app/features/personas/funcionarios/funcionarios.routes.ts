@@ -4,6 +4,7 @@ export const FUNCIONARIOS_ROUTES: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./pages/funcionarios-page/funcionarios-page').then((m) => m.FuncionariosPageComponent),
+      import('./pages/funcionarios-list/funcionarios-list').then((m) => m.FuncionariosListComponent),
+    data: { tabTitle: 'Lista de funcionarios' }
   },
 ];
