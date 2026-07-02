@@ -8,7 +8,7 @@ export class AppRouteReuseStrategy implements RouteReuseStrategy {
   private storedRoutes = new Map<string, DetachedRouteHandle>();
 
   shouldDetach(route: ActivatedRouteSnapshot): boolean {
-    return route.routeConfig?.path !== '' && route.routeConfig?.path !== 'pantalla-principal';
+    return route.routeConfig?.path !== '' && route.routeConfig?.path !== 'pantalla-principal' && route.routeConfig?.path !== 'login';
   }
 
   store(route: ActivatedRouteSnapshot, handle: DetachedRouteHandle | null): void {
@@ -32,5 +32,9 @@ export class AppRouteReuseStrategy implements RouteReuseStrategy {
 
   shouldReuseRoute(future: ActivatedRouteSnapshot, curr: ActivatedRouteSnapshot): boolean {
     return future.routeConfig === curr.routeConfig;
+  }
+
+  clear(): void {
+    this.storedRoutes.clear();
   }
 }

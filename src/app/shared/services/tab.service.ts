@@ -67,4 +67,8 @@ export class TabService {
     this.tabs.set([]);
     this.router.navigateByUrl('/pantalla-principal');
   }
+
+  clear(): void {
+    this.tabs.set([]);
+  }
 }

@@ -7,33 +7,51 @@
             <h2>Bienvenido</h2>
         </div>
 
-        <form class="login-form">
+        <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+            
+            @if (errorMessage()) {
+                <div class="error-text global-error">
+                    <span class="material-icons error-icon">error</span> {{ errorMessage() }}
+                </div>
+            }
+
             <div class="form-group">
-                <label for="usuario">Usuario*</label>
+                <label for="username">Usuario*</label>
                 <div class="input-container">
                     <span class="material-icons prefix-icon">person</span>
-                    <input type="text" id="usuario" placeholder="Usuario*" class="error-input" />
+                    <input type="text" id="username" formControlName="username" placeholder="Usuario*" 
+                           [class.error-input]="loginForm.controls.username.invalid && loginForm.controls.username.touched" />
                 </div>
-                <span class="error-text">
-                    <span class="material-icons error-icon">warning</span> El usuario es obligatorio
-                </span>
+                @if (loginForm.controls.username.invalid && loginForm.controls.username.touched) {
+                    <span class="error-text">
+                        <span class="material-icons error-icon">warning</span> El usuario es obligatorio
+                    </span>
+                }
             </div>
 
             <div class="form-group">
-                <label for="contrasena">Contraseña*</label>
+                <label for="password">Contraseña*</label>
                 <div class="input-container">
                     <span class="material-icons prefix-icon">lock</span>
-                    <input type="password" id="contrasena" placeholder="---" />
-                    <span class="material-icons suffix-icon">visibility_off</span>
+                    <input [type]="isPasswordVisible() ? 'text' : 'password'" id="password" formControlName="password" placeholder="---"
+                           [class.error-input]="loginForm.controls.password.invalid && loginForm.controls.password.touched" />
+                    <span class="material-icons suffix-icon cursor-pointer" (click)="togglePasswordVisibility()">
+                        {{ isPasswordVisible() ? 'visibility' : 'visibility_off' }}
+                    </span>
                 </div>
+                @if (loginForm.controls.password.invalid && loginForm.controls.password.touched) {
+                    <span class="error-text">
+                        <span class="material-icons error-icon">warning</span> La contraseña es obligatoria
+                    </span>
+                }
             </div>
 
             <div class="forgot-password">
                 <a href="#">¿Olvidaste tu contraseña?</a>
             </div>
 
-            <button type="button" class="btn-primary">INGRESAR</button>
-            <button type="button" class="btn-secondary">SALIR</button>
+            <button type="submit" class="btn-primary" [disabled]="loginForm.invalid">INGRESAR</button>
+            <button type="button" class="btn-secondary" (click)="onClear()">SALIR</button>
         </form>
     </div>
 </div>
