@@ -9,6 +9,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { DialogRef } from '@angular/cdk/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
@@ -207,6 +208,8 @@ export class UsuarioFormComponent implements OnInit {
     this.form.controls.roleIds.setValue(current);
   }
 
+  private readonly dialogRef = inject(DialogRef, { optional: true });
+
   protected onSubmit(): void {
     if (!this.isEdit && !this.form.controls.password.value.trim()) {
       this.form.controls.password.setErrors({ required: true });
@@ -235,6 +238,7 @@ export class UsuarioFormComponent implements OnInit {
       next: () => {
         this.saving = false;
         this.saved.emit();
+        this.dialogRef?.close(true);
       },
       error: (err: Error) => {
         this.saving = false;

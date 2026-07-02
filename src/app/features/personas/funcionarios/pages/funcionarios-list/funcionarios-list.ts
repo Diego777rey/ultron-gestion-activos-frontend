@@ -7,13 +7,13 @@ import {
   MenuAction,
 } from '../../../../../shared/components/action-menu/action-menu';
 import { DefaultEmptyPipe } from '../../../../../shared/pipes/default-empty.pipe';
-import { ModalComponent } from '../../../../../shared/components/modal/modal';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
 import { FuncionarioService } from '../../services/funcionario.service';
 import { FuncionarioOutput } from '../../interfaces/funcionario.interface';
 import { FuncionarioFormComponent } from '../../dialogs/funcionario-form/funcionario-form';
+import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 
 @Component({
   selector: 'app-funcionarios-list',
@@ -23,8 +23,6 @@ import { FuncionarioFormComponent } from '../../dialogs/funcionario-form/funcion
     TableCellDirective,
     ActionMenuComponent,
     DefaultEmptyPipe,
-    ModalComponent,
-    FuncionarioFormComponent,
   ],
   templateUrl: './funcionarios-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,22 +35,10 @@ export class FuncionariosListComponent {
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
-  protected readonly dialogOpen = signal(false);
-  protected readonly selectedFuncionario = signal<FuncionarioOutput | null>(null);
 
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
   protected readonly totalElements = signal(0);
-
-  protected readonly dialogTitle = computed(() =>
-    this.selectedFuncionario() ? 'Editar Funcionario' : 'Nuevo Funcionario'
-  );
-
-  protected readonly dialogSubtitle = computed(() =>
-    this.selectedFuncionario()
-      ? 'Modifica los datos del funcionario'
-      : 'Completa los datos para registrar un funcionario'
-  );
 
   protected readonly columns: TableColumn<FuncionarioOutput>[] = [
     { key: 'id', header: 'Id', width: '80px', align: 'center' },
@@ -117,24 +103,31 @@ export class FuncionariosListComponent {
     }
   }
 
+  private readonly dialogService = inject(AppDialogService);
+
   protected openNewDialog(): void {
-    this.selectedFuncionario.set(null);
-    this.dialogOpen.set(true);
+    this.dialogService.openForm(FuncionarioFormComponent, {
+      title: 'Nuevo Funcionario',
+      subtitle: 'Completa los datos para registrar un funcionario',
+      maxWidth: '760px',
+    }).subscribe((saved) => {
+      if (saved) {
+        this.load();
+      }
+    });
   }
 
   protected openEditDialog(funcionario: FuncionarioOutput): void {
-    this.selectedFuncionario.set(funcionario);
-    this.dialogOpen.set(true);
-  }
-
-  protected closeDialog(): void {
-    this.dialogOpen.set(false);
-    this.selectedFuncionario.set(null);
-  }
-
-  protected onFuncionarioSaved(): void {
-    this.closeDialog();
-    this.load();
+    this.dialogService.openForm(FuncionarioFormComponent, {
+      title: 'Editar Funcionario',
+      subtitle: 'Modifica los datos del funcionario',
+      maxWidth: '760px',
+      inputs: { funcionario },
+    }).subscribe((saved) => {
+      if (saved) {
+        this.load();
+      }
+    });
   }
 
   protected onRowAction(actionId: string, funcionario: FuncionarioOutput): void {

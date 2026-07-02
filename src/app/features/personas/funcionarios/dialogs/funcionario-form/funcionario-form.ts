@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, output } from '@angular/core';
+import { DialogRef } from '@angular/cdk/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
@@ -103,6 +104,8 @@ export class FuncionarioFormComponent {
     });
   }
 
+  private readonly dialogRef = inject(DialogRef, { optional: true });
+
   protected onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -138,6 +141,7 @@ export class FuncionarioFormComponent {
       next: () => {
         this.saving = false;
         this.saved.emit();
+        this.dialogRef?.close(true);
       },
       error: (err: Error) => {
         this.saving = false;
