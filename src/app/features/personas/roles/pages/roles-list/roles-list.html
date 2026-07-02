@@ -38,17 +38,4 @@
   </ng-template>
 </app-generic-list>
 
-<app-modal
-  [open]="dialogOpen()"
-  [title]="dialogTitle()"
-  [subtitle]="dialogSubtitle()"
-  maxWidth="560px"
-  (closed)="closeDialog()"
->
-  @if (dialogOpen()) {
-    <app-role-form
-      [role]="selectedRole()"
-      (saved)="onRoleSaved()"
-    />
-  }
-</app-modal>
+

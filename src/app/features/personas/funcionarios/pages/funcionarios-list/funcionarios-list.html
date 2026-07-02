@@ -50,17 +50,4 @@
   </ng-template>
 </app-generic-list>
 
-<app-modal
-  [open]="dialogOpen()"
-  [title]="dialogTitle()"
-  [subtitle]="dialogSubtitle()"
-  maxWidth="760px"
-  (closed)="closeDialog()"
->
-  @if (dialogOpen()) {
-    <app-funcionario-form
-      [funcionario]="selectedFuncionario()"
-      (saved)="onFuncionarioSaved()"
-    />
-  }
-</app-modal>
+

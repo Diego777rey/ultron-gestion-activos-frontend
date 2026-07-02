@@ -54,17 +54,3 @@
   </ng-template>
 </app-generic-list>
 
-<app-modal
-  [open]="dialogOpen()"
-  [title]="dialogTitle()"
-  [subtitle]="dialogSubtitle()"
-  maxWidth="760px"
-  (closed)="closeDialog()"
->
-  @if (dialogOpen()) {
-    <app-usuario-form
-      [usuario]="selectedUsuario()"
-      (saved)="onUsuarioSaved()"
-    />
-  }
-</app-modal>

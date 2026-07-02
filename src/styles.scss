@@ -86,3 +86,10 @@ app-tabs {
     flex-direction: column;
   }
 }
+
+/* Panel transparente para CDK Dialog (ya que app-modal tiene su propio fondo) */
+.app-dialog-transparent-panel {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+

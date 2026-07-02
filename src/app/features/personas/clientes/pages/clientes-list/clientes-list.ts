@@ -7,13 +7,13 @@ import {
   MenuAction,
 } from '../../../../../shared/components/action-menu/action-menu';
 import { DefaultEmptyPipe } from '../../../../../shared/pipes/default-empty.pipe';
-import { ModalComponent } from '../../../../../shared/components/modal/modal';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
 import { ClienteService } from '../../services/cliente.service';
 import { ClienteOutput } from '../../interfaces/cliente.interface';
 import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
+import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 
 @Component({
   selector: 'app-clientes-list',
@@ -23,8 +23,6 @@ import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
     TableCellDirective,
     ActionMenuComponent,
     DefaultEmptyPipe,
-    ModalComponent,
-    ClienteFormComponent,
   ],
   templateUrl: './clientes-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,22 +35,10 @@ export class ClientesListComponent {
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
-  protected readonly dialogOpen = signal(false);
-  protected readonly selectedCliente = signal<ClienteOutput | null>(null);
 
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
   protected readonly totalElements = signal(0);
-
-  protected readonly dialogTitle = computed(() =>
-    this.selectedCliente() ? 'Editar Cliente' : 'Nuevo Cliente'
-  );
-
-  protected readonly dialogSubtitle = computed(() =>
-    this.selectedCliente()
-      ? 'Modifica los datos del cliente'
-      : 'Completa los datos para registrar un cliente'
-  );
 
   protected readonly columns: TableColumn<ClienteOutput>[] = [
     { key: 'id', header: 'Id', width: '80px', align: 'center' },
@@ -116,24 +102,31 @@ export class ClientesListComponent {
     }
   }
 
+  private readonly dialogService = inject(AppDialogService);
+
   protected openNewDialog(): void {
-    this.selectedCliente.set(null);
-    this.dialogOpen.set(true);
+    this.dialogService.openForm(ClienteFormComponent, {
+      title: 'Nuevo Cliente',
+      subtitle: 'Completa los datos para registrar un cliente',
+      maxWidth: '760px',
+    }).subscribe((saved) => {
+      if (saved) {
+        this.load();
+      }
+    });
   }
 
   protected openEditDialog(cliente: ClienteOutput): void {
-    this.selectedCliente.set(cliente);
-    this.dialogOpen.set(true);
-  }
-
-  protected closeDialog(): void {
-    this.dialogOpen.set(false);
-    this.selectedCliente.set(null);
-  }
-
-  protected onClienteSaved(): void {
-    this.closeDialog();
-    this.load();
+    this.dialogService.openForm(ClienteFormComponent, {
+      title: 'Editar Cliente',
+      subtitle: 'Modifica los datos del cliente',
+      maxWidth: '760px',
+      inputs: { cliente },
+    }).subscribe((saved) => {
+      if (saved) {
+        this.load();
+      }
+    });
   }
 
   protected onRowAction(actionId: string, cliente: ClienteOutput): void {

@@ -46,17 +46,4 @@
   </ng-template>
 </app-generic-list>
 
-<app-modal
-  [open]="dialogOpen()"
-  [title]="dialogTitle()"
-  [subtitle]="dialogSubtitle()"
-  maxWidth="760px"
-  (closed)="closeDialog()"
->
-  @if (dialogOpen()) {
-    <app-cliente-form
-      [cliente]="selectedCliente()"
-      (saved)="onClienteSaved()"
-    />
-  }
-</app-modal>
+
