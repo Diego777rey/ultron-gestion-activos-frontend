@@ -5,6 +5,8 @@ import { filter } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { MenuItem } from '../../models/menu-item.model';
 
+import { AuthService } from '../../../core/auth/auth.service';
+
 @Component({
   selector: 'app-sidebar',
   imports: [RouterLink, RouterLinkActive],
@@ -19,6 +21,7 @@ import { MenuItem } from '../../models/menu-item.model';
 export class SidebarComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly authService = inject(AuthService);
 
   items = input<MenuItem[]>([]);
   userName = input<string>('Diego Paulinho Amarilla Mercado');
@@ -95,5 +98,9 @@ export class SidebarComponent implements OnInit {
     if (firstRoute && !this.router.url.startsWith(firstRoute)) {
       void this.router.navigateByUrl(firstRoute);
     }
+  }
+
+  onLogout(): void {
+    this.authService.logout();
   }
 }

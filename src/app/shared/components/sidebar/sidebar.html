@@ -69,7 +69,7 @@
 
   <!-- Footer: Logout -->
   <div class="sidebar-footer" [class.mini]="!isExpanded()">
-    <button class="sidebar-item sidebar-item--logout" type="button" aria-label="Cerrar sesión">
+    <button class="sidebar-item sidebar-item--logout" type="button" aria-label="Cerrar sesión" (click)="onLogout()">
       <span class="material-icons sidebar-item__icon">logout</span>
       @if (isExpanded()) {
         <span class="sidebar-item__label">SALIR</span>
