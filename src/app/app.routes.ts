@@ -4,6 +4,18 @@ import { MainLayoutComponent } from './layouts/main-layout/main-layout';
 export const routes: Routes = [
   {
     path: '',
+    redirectTo: 'login',
+    pathMatch: 'full',
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/login/pantalla-login/pantalla-login').then(
+        (m) => m.PantallaLogin
+      ),
+  },
+  {
+    path: '',
     component: MainLayoutComponent,
     children: [
       {
@@ -50,6 +62,7 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: '',
+    redirectTo: 'login',
   },
 ];
+
