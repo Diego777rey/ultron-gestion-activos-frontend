@@ -45,6 +45,9 @@ export class MainLayoutComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   menuItems: MenuItem[] = [
+    { label: 'Vehículos', icon: 'directions_car' },
+    { label: 'Servicios', icon: 'handyman' },
+    { label: 'Productos', icon: 'category' },
     {
       label: 'R.R.H.H.',
       icon: 'people',

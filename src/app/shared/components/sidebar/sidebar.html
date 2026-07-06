@@ -50,11 +50,11 @@
             </div>
           }
         </div>
-      } @else {
-        <!-- Simple item (no children) -->
+      } @else if (item.route) {
+        <!-- Simple item with route -->
         <a
           class="sidebar-item"
-          [routerLink]="item.route || '/'"
+          [routerLink]="item.route"
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: item.route === '/' || item.route === '' }"
         >
@@ -63,6 +63,14 @@
             <span class="sidebar-item__label">{{ item.label }}</span>
           }
         </a>
+      } @else {
+        <!-- Placeholder item (no route yet) -->
+        <span class="sidebar-item sidebar-item--placeholder" aria-disabled="true">
+          <span class="material-icons sidebar-item__icon">{{ item.icon }}</span>
+          @if (isExpanded()) {
+            <span class="sidebar-item__label">{{ item.label }}</span>
+          }
+        </span>
       }
     }
   </nav>

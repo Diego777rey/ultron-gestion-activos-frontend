@@ -171,6 +171,11 @@
     font-size: 13px;
   }
 
+  /* ---- Placeholder (no route yet) ---- */
+  &--placeholder {
+    cursor: default;
+  }
+
   /* ---- Logout button ---- */
   &--logout {
     padding: 18px 18px;
