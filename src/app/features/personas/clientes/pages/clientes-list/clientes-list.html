@@ -27,23 +27,18 @@
   </ng-template>
 
   <ng-template appTableCell="direccion" [appTableCellFrom]="clientes()" let-cliente>
-    {{ cliente.persona?.direccion | defaultEmpty }}
+    {{ $safeNavigationMigration(cliente.persona?.direccion) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="telefono" [appTableCellFrom]="clientes()" let-cliente>
-    {{ cliente.persona?.telefono | defaultEmpty }}
+    {{ $safeNavigationMigration(cliente.persona?.telefono) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="email" [appTableCellFrom]="clientes()" let-cliente>
-    {{ cliente.persona?.email | defaultEmpty }}
+    {{ $safeNavigationMigration(cliente.persona?.email) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="acciones" [appTableCellFrom]="clientes()" let-cliente>
-    <app-action-menu
-      [actions]="rowActions"
-      (actionSelected)="onRowAction($event, cliente)"
-    />
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, cliente)" />
   </ng-template>
 </app-generic-list>
-
-
