@@ -1,5 +1,5 @@
-import { Directive, forwardRef, inject, ElementRef } from '@angular/core';
-import { DefaultValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { Directive, ElementRef, forwardRef, HostListener } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 @Directive({
   selector: '[appUppercase]',
@@ -8,25 +8,45 @@ import { DefaultValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => UppercaseDirective),
-      multi: true
-    }
+      multi: true,
+    },
   ],
-  host: {
-    '(input)': 'onInput($event)'
-  }
 })
-export class UppercaseDirective extends DefaultValueAccessor {
-  private el = inject(ElementRef);
+export class UppercaseDirective implements ControlValueAccessor {
+  private onChange: (value: string) => void = () => {};
+  private onTouched: () => void = () => {};
 
-  onInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const value = input.value;
-    const upperValue = value.toUpperCase();
-    
-    // Only update if it actually changed to prevent cursor jumping
-    if (value !== upperValue) {
-      input.value = upperValue;
-      this.onChange(upperValue);
+  constructor(private readonly el: ElementRef<HTMLInputElement>) {}
+
+  writeValue(value: string | null): void {
+    this.el.nativeElement.value = value ?? '';
+  }
+
+  registerOnChange(fn: (value: string) => void): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.el.nativeElement.disabled = isDisabled;
+  }
+
+  @HostListener('input')
+  onInput(): void {
+    const upperValue = this.el.nativeElement.value.toUpperCase();
+
+    if (this.el.nativeElement.value !== upperValue) {
+      this.el.nativeElement.value = upperValue;
     }
+
+    this.onChange(upperValue);
+  }
+
+  @HostListener('blur')
+  onBlur(): void {
+    this.onTouched();
   }
 }

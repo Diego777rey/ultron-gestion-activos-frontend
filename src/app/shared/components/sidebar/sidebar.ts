@@ -26,7 +26,7 @@ export class SidebarComponent implements OnInit {
   items = input<MenuItem[]>([]);
   userName = input<string>('Diego Paulinho Amarilla Mercado');
   
-  isExpanded = input<boolean>(true);
+  isExpanded = input<boolean>(false);
   isExpandedChange = output<boolean>();
 
   /** Tracks which parent menu items are expanded. Key = item label. */

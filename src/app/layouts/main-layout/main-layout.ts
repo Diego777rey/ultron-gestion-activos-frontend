@@ -37,7 +37,7 @@ import { TabService } from '../../shared/services/tab.service';
   }
 })
 export class MainLayoutComponent implements OnInit {
-  sidebarOpen = signal(true);
+  sidebarOpen = signal(false);
   
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);

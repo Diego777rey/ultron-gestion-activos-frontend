@@ -35,19 +35,14 @@
   </ng-template>
 
   <ng-template appTableCell="telefono" [appTableCellFrom]="funcionarios()" let-funcionario>
-    {{ funcionario.persona?.telefono | defaultEmpty }}
+    {{ $safeNavigationMigration(funcionario.persona?.telefono) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="email" [appTableCellFrom]="funcionarios()" let-funcionario>
-    {{ funcionario.persona?.email | defaultEmpty }}
+    {{ $safeNavigationMigration(funcionario.persona?.email) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="acciones" [appTableCellFrom]="funcionarios()" let-funcionario>
-    <app-action-menu
-      [actions]="rowActions"
-      (actionSelected)="onRowAction($event, funcionario)"
-    />
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, funcionario)" />
   </ng-template>
 </app-generic-list>
-
-

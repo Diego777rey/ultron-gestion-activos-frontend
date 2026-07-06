@@ -19,7 +19,7 @@
                 <label for="username">Usuario*</label>
                 <div class="input-container">
                     <span class="material-icons prefix-icon">person</span>
-                    <input type="text" id="username" formControlName="username" placeholder="Usuario*" 
+                    <input type="text" id="username" formControlName="username" appUppercase placeholder="Usuario*" 
                            [class.error-input]="loginForm.controls.username.invalid && loginForm.controls.username.touched" />
                 </div>
                 @if (loginForm.controls.username.invalid && loginForm.controls.username.touched) {
@@ -50,7 +50,7 @@
                 <a href="#">¿Olvidaste tu contraseña?</a>
             </div>
 
-            <button type="submit" class="btn-primary" [disabled]="loginForm.invalid">INGRESAR</button>
+            <button type="submit" class="btn-primary" [disabled]="loginForm.invalid || isSubmitting()">INGRESAR</button>
             <button type="button" class="btn-secondary" (click)="onClear()">SALIR</button>
         </form>
     </div>
