@@ -63,6 +63,20 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'inventario/productos',
+        loadChildren: () =>
+          import('./features/inventario/productos/productos.routes').then(
+            (m) => m.PRODUCTOS_ROUTES
+          ),
+      },
+      {
+        path: 'inventario/servicios',
+        loadChildren: () =>
+          import('./features/inventario/servicios/servicios.routes').then(
+            (m) => m.SERVICIOS_ROUTES
+          ),
+      },
+      {
         path: '',
         redirectTo: 'pantalla-principal',
         pathMatch: 'full',
