@@ -1,0 +1,34 @@
+<app-generic-list [columns]="columns" [data]="vehiculos()" [loading]="loading()" [error]="error()"
+  [total]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Chapa, marca o modelo" [searchValue]="search()" (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions" emptyMessage="No hay vehículos que coincidan con la búsqueda" [trackBy]="trackById"
+  (pageChange)="onPageChange($event)" (retry)="load()" (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()">
+  <ng-template appTableCell="id" [appTableCellFrom]="vehiculos()" let-vehiculo>
+    {{ vehiculo.id_bien }}
+  </ng-template>
+
+  <ng-template appTableCell="cliente" [appTableCellFrom]="vehiculos()" let-vehiculo>
+    {{ formatCliente(vehiculo) }}
+  </ng-template>
+
+  <ng-template appTableCell="tipo_vehiculo" [appTableCellFrom]="vehiculos()" let-vehiculo>
+    {{ $safeNavigationMigration(vehiculo.tipo_vehiculo) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="marca" [appTableCellFrom]="vehiculos()" let-vehiculo>
+    {{ $safeNavigationMigration(vehiculo.marca) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="modelo" [appTableCellFrom]="vehiculos()" let-vehiculo>
+    {{ $safeNavigationMigration(vehiculo.modelo) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="chapa" [appTableCellFrom]="vehiculos()" let-vehiculo>
+    {{ $safeNavigationMigration(vehiculo.chapa) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="vehiculos()" let-vehiculo>
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, vehiculo)" />
+  </ng-template>
+</app-generic-list>

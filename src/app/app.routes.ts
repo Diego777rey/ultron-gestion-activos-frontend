@@ -56,6 +56,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'activos/vehiculos',
+        loadChildren: () =>
+          import('./features/activos/vehiculos/vehiculos.routes').then(
+            (m) => m.VEHICULOS_ROUTES
+          ),
+      },
+      {
         path: '',
         redirectTo: 'pantalla-principal',
         pathMatch: 'full',
