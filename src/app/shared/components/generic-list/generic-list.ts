@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, contentChildren, input, model, output, TemplateRef } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged, skip } from 'rxjs';
 import { UiButtonComponent } from '../ui-button/ui-button';
 import { DataTableComponent } from '../data-table/data-table';
 import { TableCellContext, TableCellDirective } from '../data-table/table-cell.directive';
@@ -60,13 +62,19 @@ export class GenericListComponent<T = Record<string, unknown>> {
 
   protected readonly searchInputId = `generic-list-search-${++searchInputCounter}`;
 
+  constructor() {
+    toObservable(this.searchValue).pipe(
+      skip(1),
+      debounceTime(400),
+      distinctUntilChanged()
+    ).subscribe((val) => {
+      this.searchSubmit.emit(val);
+    });
+  }
+
   protected onSearchInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.searchValue.set(value);
-  }
-
-  protected onSearchEnter(): void {
-    this.searchSubmit.emit(this.searchValue());
   }
 
   protected onActionClick(actionId: string): void {

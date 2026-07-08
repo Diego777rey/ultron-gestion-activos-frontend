@@ -66,7 +66,7 @@ export class ClientesListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.clienteService.findPaginated(this.pageIndex(), this.pageSize()).subscribe({
+    this.clienteService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
       next: (response) => {
         this.clientes.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);

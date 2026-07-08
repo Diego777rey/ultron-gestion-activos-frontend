@@ -64,7 +64,7 @@ export class RolesListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.roleService.findPaginated(this.pageIndex(), this.pageSize()).subscribe({
+    this.roleService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
       next: (response) => {
         this.roles.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);
