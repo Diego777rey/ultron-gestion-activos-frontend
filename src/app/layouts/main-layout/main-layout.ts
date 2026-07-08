@@ -46,8 +46,8 @@ export class MainLayoutComponent implements OnInit {
 
   menuItems: MenuItem[] = [
     { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos' },
-    { label: 'Servicios', icon: 'handyman' },
-    { label: 'Productos', icon: 'category' },
+    { label: 'Servicios', icon: 'handyman', route: '/inventario/servicios' },
+    { label: 'Productos', icon: 'category', route: '/inventario/productos' },
     {
       label: 'R.R.H.H.',
       icon: 'people',
@@ -87,6 +87,8 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('funcionarios')) return 'Lista de funcionarios';
     if (url.includes('usuarios')) return 'Lista de usuarios';
     if (url.includes('roles')) return 'Lista de roles';
+    if (url.includes('productos')) return 'Productos';
+    if (url.includes('servicios')) return 'Servicios';
     return 'Pantalla';
   }
 

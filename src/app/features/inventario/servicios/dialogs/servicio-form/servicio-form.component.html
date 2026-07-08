@@ -1,0 +1,59 @@
+@if (error) {
+  <div class="servicio-form__error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ error }}</span>
+  </div>
+}
+
+<form class="servicio-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="servicio-form__grid">
+    <div class="field">
+      <input id="codigo" class="field__input" type="text" formControlName="codigo" appAutofocus appUppercase placeholder=" " />
+      <label class="field__label" for="codigo">Código</label>
+    </div>
+
+    <div class="field field--span-2">
+      <input id="nombre" class="field__input" type="text" formControlName="nombre" appUppercase placeholder=" " />
+      <label class="field__label" for="nombre">Nombre*</label>
+      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <span class="field__error">El nombre es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="precio" class="field__input" type="number" formControlName="precio" placeholder=" " />
+      <label class="field__label" for="precio">Precio*</label>
+      @if (form.controls.precio.touched && form.controls.precio.invalid) {
+        <span class="field__error">Precio válido requerido</span>
+      }
+    </div>
+
+    <div class="field">
+      <select id="idCategoriaServicio" class="field__input" formControlName="idCategoriaServicio">
+        <option value="0" disabled>Selecciona una categoría</option>
+        @for (cat of categorias(); track cat.id_categoria_servicio) {
+          <option [value]="cat.id_categoria_servicio">{{ cat.nombre }}</option>
+        }
+      </select>
+      <label class="field__label" for="idCategoriaServicio">Categoría*</label>
+      @if (form.controls.idCategoriaServicio.touched && form.controls.idCategoriaServicio.invalid) {
+        <span class="field__error">Selecciona una categoría válida</span>
+      }
+    </div>
+
+    <div class="field field--full">
+      <input id="descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
+      <label class="field__label" for="descripcion">Descripción / Notas</label>
+    </div>
+  </div>
+</form>
+
+<div class="servicio-form-footer">
+  <app-ui-button
+    [label]="isEdit ? 'Guardar Cambios' : 'Registrar Servicio'"
+    icon="save"
+    variant="primary"
+    [loading]="saving"
+    (clicked)="onSubmit()"
+  />
+</div>

@@ -1,0 +1,82 @@
+@if (error) {
+  <div class="producto-form__error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ error }}</span>
+  </div>
+}
+
+<form class="producto-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="producto-form__grid">
+    <div class="field">
+      <input id="codigo" class="field__input" type="text" formControlName="codigo" appAutofocus appUppercase placeholder=" " />
+      <label class="field__label" for="codigo">Código*</label>
+      @if (form.controls.codigo.touched && form.controls.codigo.invalid) {
+        <span class="field__error">El código es obligatorio</span>
+      }
+    </div>
+
+    <div class="field field--span-2">
+      <input id="nombre" class="field__input" type="text" formControlName="nombre" appUppercase placeholder=" " />
+      <label class="field__label" for="nombre">Nombre*</label>
+      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <span class="field__error">El nombre es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="precioCompra" class="field__input" type="number" formControlName="precioCompra" placeholder=" " />
+      <label class="field__label" for="precioCompra">Precio de Compra</label>
+    </div>
+
+    <div class="field">
+      <input id="precioVenta" class="field__input" type="number" formControlName="precioVenta" placeholder=" " />
+      <label class="field__label" for="precioVenta">Precio de Venta*</label>
+      @if (form.controls.precioVenta.touched && form.controls.precioVenta.invalid) {
+        <span class="field__error">Precio válido requerido</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="stock" class="field__input" type="number" formControlName="stock" placeholder=" " />
+      <label class="field__label" for="stock">Stock Actual*</label>
+    </div>
+
+    <div class="field">
+      <input id="stockMinimo" class="field__input" type="number" formControlName="stockMinimo" placeholder=" " />
+      <label class="field__label" for="stockMinimo">Stock Mínimo*</label>
+    </div>
+
+    <div class="field">
+      <select id="idCategoriaProducto" class="field__input" formControlName="idCategoriaProducto">
+        <option value="0" disabled>Selecciona una categoría</option>
+        @for (cat of categorias(); track cat.id_categoria_producto) {
+          <option [value]="cat.id_categoria_producto">{{ cat.nombre }}</option>
+        }
+      </select>
+      <label class="field__label" for="idCategoriaProducto">Categoría*</label>
+      @if (form.controls.idCategoriaProducto.touched && form.controls.idCategoriaProducto.invalid) {
+        <span class="field__error">Selecciona una categoría válida</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="ubicacion" class="field__input" type="text" formControlName="ubicacion" appUppercase placeholder=" " />
+      <label class="field__label" for="ubicacion">Ubicación física</label>
+    </div>
+
+    <div class="field field--full">
+      <input id="descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
+      <label class="field__label" for="descripcion">Descripción / Notas</label>
+    </div>
+  </div>
+</form>
+
+<div class="producto-form-footer">
+  <app-ui-button
+    [label]="isEdit ? 'Guardar Cambios' : 'Registrar Producto'"
+    icon="save"
+    variant="primary"
+    [loading]="saving"
+    (clicked)="onSubmit()"
+  />
+</div>
