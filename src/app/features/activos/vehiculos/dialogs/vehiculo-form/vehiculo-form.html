@@ -1,0 +1,84 @@
+@if (error) {
+  <div class="vehiculo-form__error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ error }}</span>
+  </div>
+}
+
+<form class="vehiculo-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="vehiculo-form__grid">
+    <div class="field">
+      <input id="cliente_doc" class="field__input" type="text" formControlName="cliente_doc" appAutofocus appUppercase placeholder=" " />
+      <label class="field__label" for="cliente_doc">CI/RUC Cliente**</label>
+      @if (form.controls.id_cliente.invalid && form.controls.cliente_doc.touched) {
+        <span class="field__error">El cliente es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="cliente_nombre" class="field__input" type="text" formControlName="cliente_nombre" placeholder=" " />
+      <label class="field__label" for="cliente_nombre">Nombre del Cliente</label>
+    </div>
+
+    <div class="field">
+      <input id="chapa" class="field__input" type="text" formControlName="chapa" appUppercase placeholder=" " />
+      <label class="field__label" for="chapa">Chapa**</label>
+      @if (form.controls.chapa.touched && form.controls.chapa.invalid) {
+        <span class="field__error">La chapa es obligatoria</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="tipo_vehiculo" class="field__input" type="text" formControlName="tipo_vehiculo" appUppercase placeholder=" " />
+      <label class="field__label" for="tipo_vehiculo">Tipo de Vehículo**</label>
+      @if (form.controls.tipo_vehiculo.touched && form.controls.tipo_vehiculo.invalid) {
+        <span class="field__error">El tipo es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="marca" class="field__input" type="text" formControlName="marca" appUppercase placeholder=" " />
+      <label class="field__label" for="marca">Marca**</label>
+      @if (form.controls.marca.touched && form.controls.marca.invalid) {
+        <span class="field__error">La marca es obligatoria</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="modelo" class="field__input" type="text" formControlName="modelo" appUppercase placeholder=" " />
+      <label class="field__label" for="modelo">Modelo**</label>
+      @if (form.controls.modelo.touched && form.controls.modelo.invalid) {
+        <span class="field__error">El modelo es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="anio" class="field__input" type="number" formControlName="anio" placeholder=" " />
+      <label class="field__label" for="anio">Año**</label>
+      @if (form.controls.anio.touched && form.controls.anio.invalid) {
+        <span class="field__error">Año inválido</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="valor" class="field__input" type="number" formControlName="valor" placeholder=" " />
+      <label class="field__label" for="valor">Valor</label>
+    </div>
+
+    <div class="field field--full">
+      <input id="descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
+      <label class="field__label" for="descripcion">Descripción</label>
+    </div>
+
+  </div>
+</form>
+
+<div class="vehiculo-form-footer">
+  <app-ui-button
+    [label]="isEdit ? 'Guardar Cambios' : 'Registrar Vehículo'"
+    icon="save"
+    variant="primary"
+    [loading]="saving"
+    (clicked)="onSubmit()"
+  />
+</div>

@@ -45,7 +45,7 @@ export class MainLayoutComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   menuItems: MenuItem[] = [
-    { label: 'Vehículos', icon: 'directions_car' },
+    { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos' },
     { label: 'Servicios', icon: 'handyman' },
     { label: 'Productos', icon: 'category' },
     {
@@ -82,6 +82,7 @@ export class MainLayoutComponent implements OnInit {
   }
 
   private getTitleFromUrl(url: string): string {
+    if (url.includes('vehiculos')) return 'Lista de vehículos';
     if (url.includes('clientes')) return 'Lista de clientes';
     if (url.includes('funcionarios')) return 'Lista de funcionarios';
     if (url.includes('usuarios')) return 'Lista de usuarios';
