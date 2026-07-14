@@ -1,0 +1,29 @@
+<app-generic-list
+  [data]="categorias()"
+  [columns]="columns"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageSize]="pageSize()"
+  [pageIndex]="pageIndex()"
+  [toolbarActions]="toolbarActions"
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  (pageChange)="onPageChange($event)"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()"
+  [trackBy]="trackById"
+>
+  <ng-template appTableCell="estado" [appTableCellFrom]="categorias()" let-item>
+    <span class="status-badge" [class.active]="item.estado" [class.inactive]="!item.estado">
+      {{ item.estado ? 'Activo' : 'Inactivo' }}
+    </span>
+  </ng-template>
+  
+  <ng-template appTableCell="acciones" [appTableCellFrom]="categorias()" let-item>
+    <app-action-menu
+      [actions]="rowActions"
+      (actionSelected)="onRowAction($event, item)"
+    />
+  </ng-template>
+</app-generic-list>
