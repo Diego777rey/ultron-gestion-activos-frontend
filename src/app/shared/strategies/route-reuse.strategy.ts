@@ -7,27 +7,38 @@ import { Injectable } from '@angular/core';
 export class AppRouteReuseStrategy implements RouteReuseStrategy {
   private storedRoutes = new Map<string, DetachedRouteHandle>();
 
+  private getRouteKey(route: ActivatedRouteSnapshot): string {
+    return route.pathFromRoot
+      .map(v => v.routeConfig && v.routeConfig.path ? v.routeConfig.path : '')
+      .filter(p => p !== '')
+      .join('/');
+  }
+
   shouldDetach(route: ActivatedRouteSnapshot): boolean {
-    return route.routeConfig?.path !== '' && route.routeConfig?.path !== 'pantalla-principal' && route.routeConfig?.path !== 'login';
+    const key = this.getRouteKey(route);
+    return key !== '' && !key.includes('pantalla-principal') && !key.includes('login');
   }
 
   store(route: ActivatedRouteSnapshot, handle: DetachedRouteHandle | null): void {
-    if (route.routeConfig?.path) {
+    const key = this.getRouteKey(route);
+    if (key) {
       if (handle) {
-        this.storedRoutes.set(route.routeConfig.path, handle);
+        this.storedRoutes.set(key, handle);
       } else {
-        this.storedRoutes.delete(route.routeConfig.path);
+        this.storedRoutes.delete(key);
       }
     }
   }
 
   shouldAttach(route: ActivatedRouteSnapshot): boolean {
-    return !!route.routeConfig?.path && this.storedRoutes.has(route.routeConfig.path);
+    const key = this.getRouteKey(route);
+    return !!key && this.storedRoutes.has(key);
   }
 
   retrieve(route: ActivatedRouteSnapshot): DetachedRouteHandle | null {
-    if (!route.routeConfig?.path) return null;
-    return this.storedRoutes.get(route.routeConfig.path) || null;
+    const key = this.getRouteKey(route);
+    if (!key) return null;
+    return this.storedRoutes.get(key) || null;
   }
 
   shouldReuseRoute(future: ActivatedRouteSnapshot, curr: ActivatedRouteSnapshot): boolean {

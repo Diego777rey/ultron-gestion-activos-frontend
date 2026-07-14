@@ -1,0 +1,40 @@
+@if (error) {
+  <div class="form-error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ error }}</span>
+  </div>
+}
+
+<form class="form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="form__grid">
+    <div class="field field--full">
+      <input id="nombre" class="field__input" type="text" formControlName="nombre" appAutofocus appUppercase placeholder=" " />
+      <label class="field__label" for="nombre">Nombre*</label>
+      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <span class="field__error">El nombre es obligatorio</span>
+      }
+    </div>
+
+    <div class="field field--full">
+      <input id="descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
+      <label class="field__label" for="descripcion">Descripción</label>
+    </div>
+
+    <div class="field field--checkbox field--full">
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="estado">
+        Categoría Activa
+      </label>
+    </div>
+  </div>
+</form>
+
+<div class="form-footer">
+  <app-ui-button
+    [label]="isEdit ? 'Guardar Cambios' : 'Registrar Categoría'"
+    icon="save"
+    variant="primary"
+    [loading]="saving"
+    (clicked)="onSubmit()"
+  />
+</div>
