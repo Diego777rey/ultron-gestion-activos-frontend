@@ -14,6 +14,15 @@ import { ClienteService } from '../../services/cliente.service';
 import { ClienteOutput } from '../../interfaces/cliente.interface';
 import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
+import { VehiculoService } from '../../../../activos/vehiculos/services/vehiculo.service';
+import { VehiculoOutput } from '../../../../activos/vehiculos/interfaces/vehiculo.interface';
+
+/** Estado de carga de los vehículos asociados a un cliente. */
+interface VehiculosClienteState {
+  loading: boolean;
+  error: string | null;
+  items: VehiculoOutput[];
+}
 
 @Component({
   selector: 'app-clientes-list',
@@ -25,11 +34,13 @@ import { AppDialogService } from '../../../../../shared/services/app-dialog.serv
     DefaultEmptyPipe,
   ],
   templateUrl: './clientes-list.html',
+  styleUrl: './clientes-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'app-list-view' },
 })
 export class ClientesListComponent {
   private readonly clienteService = inject(ClienteService);
+  private readonly vehiculoService = inject(VehiculoService);
 
   protected readonly clientes = signal<ClienteOutput[]>([]);
   protected readonly loading = signal(false);
@@ -58,6 +69,9 @@ export class ClientesListComponent {
   protected readonly rowActions: MenuAction[] = [
     { id: 'edit', label: 'Editar', icon: 'edit' },
   ];
+
+  /** Estado de los vehículos por cliente, indexado por id_cliente. */
+  protected readonly vehiculosState = signal<Record<string, VehiculosClienteState>>({});
 
   constructor() {
     this.load();
@@ -134,6 +148,46 @@ export class ClientesListComponent {
       this.openEditDialog(cliente);
     }
   }
+
+  /** Al desplegar un cliente, carga (una sola vez) sus vehículos asociados. */
+  protected onClienteRowClick(cliente: ClienteOutput): void {
+    const id = cliente.id_cliente;
+    if (id == null) {
+      return;
+    }
+    const key = String(id);
+    const current = this.vehiculosState()[key];
+    if (current && (current.loading || current.error === null)) {
+      return;
+    }
+
+    this.setVehiculosState(key, { loading: true, error: null, items: [] });
+    this.vehiculoService.findByCliente(id).subscribe({
+      next: (items) => this.setVehiculosState(key, { loading: false, error: null, items }),
+      error: (err: Error) =>
+        this.setVehiculosState(key, {
+          loading: false,
+          error: err.message || 'No se pudieron cargar los vehículos',
+          items: [],
+        }),
+    });
+  }
+
+  /** Devuelve el estado de vehículos de un cliente (para la plantilla de detalle). */
+  protected vehiculosFor(cliente: ClienteOutput): VehiculosClienteState | undefined {
+    const id = cliente.id_cliente;
+    return id == null ? undefined : this.vehiculosState()[String(id)];
+  }
+
+  private setVehiculosState(key: string, state: VehiculosClienteState): void {
+    this.vehiculosState.update((map) => ({ ...map, [key]: state }));
+  }
+
+  protected vehiculoNombre(v: VehiculoOutput): string {
+    return `${v.marca ?? ''} ${v.modelo ?? ''}`.trim() || 'Vehículo';
+  }
+
+  protected trackVehiculo = (v: VehiculoOutput): unknown => v.id_bien;
 
   protected fullName(c: ClienteOutput): string {
     return `${c.persona?.nombre ?? ''} ${c.persona?.apellido ?? ''}`.trim() || 'Sin nombre';

@@ -51,6 +51,7 @@
           [emptyMessage]="emptyMessage()"
           [cellTemplates]="cellTemplates()"
           [expandTemplate]="expandTemplate()"
+          (rowClick)="rowClick.emit($event)"
         />
       </div>
 
