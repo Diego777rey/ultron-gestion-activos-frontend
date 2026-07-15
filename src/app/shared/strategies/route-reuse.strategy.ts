@@ -8,13 +8,31 @@ export class AppRouteReuseStrategy implements RouteReuseStrategy {
   private storedRoutes = new Map<string, DetachedRouteHandle>();
 
   private getRouteKey(route: ActivatedRouteSnapshot): string {
+    // Se conservan los segmentos vacios (sin filtrarlos) para que una ruta
+    // contenedora y su hija con path '' no generen la misma clave. Ademas se
+    // incluyen los parametros para distinguir, por ejemplo, ':id/editar'.
     return route.pathFromRoot
-      .map(v => v.routeConfig && v.routeConfig.path ? v.routeConfig.path : '')
-      .filter(p => p !== '')
+      .map(v => {
+        const path = v.routeConfig && v.routeConfig.path ? v.routeConfig.path : '';
+        const params = v.params && Object.keys(v.params).length
+          ? ';' + Object.keys(v.params).map(k => `${k}=${v.params[k]}`).join(';')
+          : '';
+        return path + params;
+      })
       .join('/');
   }
 
+  /** Indica si la ruta corresponde a una pantalla real (hoja) que debe conservarse. */
+  private esRutaHoja(route: ActivatedRouteSnapshot): boolean {
+    return route.children.length === 0;
+  }
+
   shouldDetach(route: ActivatedRouteSnapshot): boolean {
+    // Solo se conserva el estado de las pantallas hoja, nunca de las rutas
+    // contenedoras/lazy, evitando colisiones de handles entre niveles.
+    if (!this.esRutaHoja(route)) {
+      return false;
+    }
     const key = this.getRouteKey(route);
     return key !== '' && !key.includes('pantalla-principal') && !key.includes('login');
   }
@@ -31,6 +49,9 @@ export class AppRouteReuseStrategy implements RouteReuseStrategy {
   }
 
   shouldAttach(route: ActivatedRouteSnapshot): boolean {
+    if (!this.esRutaHoja(route)) {
+      return false;
+    }
     const key = this.getRouteKey(route);
     return !!key && this.storedRoutes.has(key);
   }
@@ -42,7 +63,8 @@ export class AppRouteReuseStrategy implements RouteReuseStrategy {
   }
 
   shouldReuseRoute(future: ActivatedRouteSnapshot, curr: ActivatedRouteSnapshot): boolean {
-    return future.routeConfig === curr.routeConfig;
+    return future.routeConfig === curr.routeConfig
+      && JSON.stringify(future.params) === JSON.stringify(curr.params);
   }
 
   clear(): void {
