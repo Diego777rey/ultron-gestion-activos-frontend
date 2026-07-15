@@ -31,9 +31,11 @@
           placeholder=" "
         />
         <label class="search-field__label">Ingresar texto</label>
-        <button class="search-field__clear" (click)="closeModal()">
-          <span class="material-icons">close</span>
-        </button>
+        @if (searchQuery()) {
+          <button type="button" class="search-field__clear" aria-label="Limpiar búsqueda" (click)="clearSearch()">
+            <span class="material-icons">close</span>
+          </button>
+        }
       </div>
     </div>
     
@@ -73,5 +75,12 @@
         />
       </div>
     }
+
+    <div class="search-footer">
+      <app-ui-button label="Salir" icon="close" variant="ghost" (clicked)="closeModal()" />
+      @if (allowAdd()) {
+        <app-ui-button [label]="addLabel()" icon="add" variant="primary" (clicked)="onAdd()" />
+      }
+    </div>
   </div>
 </app-modal>

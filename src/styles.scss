@@ -4,6 +4,9 @@
 
 // CSS variables definition for theme adaptability
 :root {
+  // Indica a los controles nativos (selects, scrollbars, date pickers, etc.)
+  // que rendericen su UI en modo oscuro para que el desplegable sea legible.
+  color-scheme: dark;
   --bg-color: #121212;
   --surface-color: #1e1e1e;
   --border-color: #2d2d2d;
@@ -84,5 +87,23 @@ app-root {
 .app-dialog-transparent-panel {
   background: transparent !important;
   box-shadow: none !important;
+}
+
+/*
+ * Selects nativos: en tema oscuro el desplegable del navegador se veía en
+ * blanco (texto ilegible). Las <option> se renderizan fuera de la
+ * encapsulación de los componentes, por eso el arreglo va en estilos globales.
+ */
+select option,
+select optgroup {
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+}
+
+select option:checked,
+select option:hover,
+select option:focus {
+  background-color: var(--active-bg);
+  color: var(--text-primary);
 }
 

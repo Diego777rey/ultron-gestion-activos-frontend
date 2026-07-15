@@ -54,6 +54,14 @@
   }
 }
 
+/* Alinea el buscador de cliente con los campos normales de la grilla:
+   los .field tienen padding-top para el label flotante y el host del
+   buscador debe igualarlo para que los inputs queden al mismo nivel. */
+app-entity-searcher {
+  display: block;
+  padding-top: 16px;
+}
+
 .field__label {
   position: absolute;
   top: 24px;
@@ -106,6 +114,12 @@
 .field__error {
   font-size: 11px;
   color: #ff6b8b;
+  margin-top: 4px;
+}
+
+.field__hint {
+  font-size: 11px;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
