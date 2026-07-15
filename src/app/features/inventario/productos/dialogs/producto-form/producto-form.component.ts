@@ -29,7 +29,8 @@ export class ProductoFormComponent {
   protected error: string | null = null;
   protected isEdit = false;
 
-  protected readonly categorias = signal<CategoriaProductoOutput[]>([]);
+  protected readonly categoriasRaiz = signal<CategoriaProductoOutput[]>([]);
+  protected readonly subcategorias = signal<CategoriaProductoOutput[]>([]);
 
   protected readonly form = this.fb.nonNullable.group({
     codigo: ['', [Validators.required, Validators.maxLength(50)]],
@@ -41,16 +42,26 @@ export class ProductoFormComponent {
     stockMinimo: [0, [Validators.required, Validators.min(0)]],
     ubicacion: [''],
     estado: [true],
-    idCategoriaProducto: [0, [Validators.required, Validators.min(1)]],
+    idCategoriaRaiz: [0, [Validators.required, Validators.min(1)]],
+    idSubcategoria: [0],
   });
 
   constructor() {
-    this.loadCategorias();
+    this.loadCategoriasRaiz();
 
     effect(() => {
       const p = this.producto();
       if (p) {
         this.isEdit = !!p.id_producto;
+        const cat = p.categoriaProducto;
+        let rootId = 0;
+        let subId = 0;
+        if (cat?.categoriaPadre?.id_categoria_producto) {
+          rootId = cat.categoriaPadre.id_categoria_producto;
+          subId = cat.id_categoria_producto ?? 0;
+        } else {
+          rootId = cat?.id_categoria_producto ?? 0;
+        }
         this.form.reset({
           codigo: p.codigo,
           nombre: p.nombre,
@@ -61,10 +72,15 @@ export class ProductoFormComponent {
           stockMinimo: p.stockMinimo,
           ubicacion: p.ubicacion ?? '',
           estado: p.estado ?? true,
-          idCategoriaProducto: p.categoriaProducto?.id_categoria_producto ?? 0,
+          idCategoriaRaiz: rootId,
+          idSubcategoria: subId,
         });
+        if (rootId) {
+          this.loadSubcategorias(rootId, subId);
+        }
       } else {
         this.isEdit = false;
+        this.subcategorias.set([]);
         this.form.reset({
           codigo: '',
           nombre: '',
@@ -75,17 +91,39 @@ export class ProductoFormComponent {
           stockMinimo: 0,
           ubicacion: '',
           estado: true,
-          idCategoriaProducto: 0,
+          idCategoriaRaiz: 0,
+          idSubcategoria: 0,
         });
       }
     });
   }
 
-  private loadCategorias(): void {
-    this.categoriaService.findAll().subscribe({
-      next: (cats) => this.categorias.set(cats),
-      error: () => this.error = 'No se pudieron cargar las categorías'
+  private loadCategoriasRaiz(): void {
+    this.categoriaService.findRaices().subscribe({
+      next: (cats) => this.categoriasRaiz.set(cats),
+      error: () => (this.error = 'No se pudieron cargar las categorías'),
     });
+  }
+
+  private loadSubcategorias(idRaiz: number, preselectSubId = 0): void {
+    this.categoriaService.findSubcategorias(idRaiz).subscribe({
+      next: (subs) => {
+        this.subcategorias.set(subs);
+        if (preselectSubId) {
+          this.form.controls.idSubcategoria.setValue(preselectSubId);
+        }
+      },
+      error: () => this.subcategorias.set([]),
+    });
+  }
+
+  protected onRootChange(): void {
+    const rootId = Number(this.form.controls.idCategoriaRaiz.value);
+    this.form.controls.idSubcategoria.setValue(0);
+    this.subcategorias.set([]);
+    if (rootId > 0) {
+      this.loadSubcategorias(rootId);
+    }
   }
 
   protected onSubmit(): void {
@@ -96,7 +134,11 @@ export class ProductoFormComponent {
 
     const v = this.form.getRawValue();
     const p = this.producto();
-    
+
+    const idCategoriaProducto = Number(v.idSubcategoria) > 0
+      ? Number(v.idSubcategoria)
+      : Number(v.idCategoriaRaiz);
+
     const payload: ProductoInput = {
       codigo: v.codigo.trim(),
       nombre: v.nombre.trim(),
@@ -107,11 +149,11 @@ export class ProductoFormComponent {
       stockMinimo: v.stockMinimo,
       ubicacion: v.ubicacion?.trim() || undefined,
       estado: v.estado,
-      idCategoriaProducto: Number(v.idCategoriaProducto),
+      idCategoriaProducto,
     };
 
     this.saving = true;
-    const request = (p && p.id_producto) 
+    const request = (p && p.id_producto)
       ? this.productoService.update(p.id_producto, payload)
       : this.productoService.create(payload);
 

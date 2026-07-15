@@ -1,0 +1,156 @@
+<div class="stepper-page">
+  <header class="stepper-header">
+    @for (step of steps; track step.index) {
+      <div
+        class="stepper-step"
+        [class.active]="currentStep() === step.index"
+        [class.done]="currentStep() > step.index"
+      >
+        <span class="stepper-step__circle">
+          @if (currentStep() > step.index) {
+            <span class="material-icons">check</span>
+          } @else {
+            <span class="material-icons">{{ step.icon }}</span>
+          }
+        </span>
+        <span class="stepper-step__label">{{ step.label }}</span>
+      </div>
+      @if (!$last) {
+        <span class="stepper-connector" [class.done]="currentStep() > step.index"></span>
+      }
+    }
+  </header>
+
+  @if (error()) {
+    <div class="form-error" role="alert">
+      <span class="material-icons" aria-hidden="true">error_outline</span>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <section class="stepper-body">
+    <h2 class="stepper-body__title">{{ tituloPaso() }}</h2>
+
+    <!-- Paso 1: Categoría -->
+    @if (currentStep() === 1) {
+      <form class="form" [formGroup]="categoriaForm" (ngSubmit)="guardarCategoria()">
+        <div class="form__grid">
+          <div class="field field--full">
+            <input id="cat-nombre" class="field__input" type="text" formControlName="nombre" appAutofocus appUppercase placeholder=" " />
+            <label class="field__label" for="cat-nombre">Nombre de la categoría*</label>
+            @if (categoriaForm.controls.nombre.touched && categoriaForm.controls.nombre.invalid) {
+              <span class="field__error">El nombre es obligatorio</span>
+            }
+          </div>
+
+          <div class="field field--full">
+            <input id="cat-descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
+            <label class="field__label" for="cat-descripcion">Descripción</label>
+          </div>
+
+          <div class="field field--checkbox field--full">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="estado" />
+              Categoría Activa
+            </label>
+          </div>
+        </div>
+      </form>
+    }
+
+    <!-- Paso 2: Subcategorías -->
+    @if (currentStep() === 2) {
+      <p class="stepper-body__hint">
+        Categoría: <strong>{{ categoria()?.nombre }}</strong>. Agrega las subcategorías que
+        pertenecen a esta categoría (ej: Vinos, Espumantes, Cervezas).
+      </p>
+
+      <form class="form sub-form" [formGroup]="subForm" (ngSubmit)="agregarSubcategoria()">
+        <div class="sub-form__row">
+          <div class="field">
+            <input id="sub-nombre" class="field__input" type="text" formControlName="nombre" appUppercase placeholder=" " />
+            <label class="field__label" for="sub-nombre">Nombre de la subcategoría*</label>
+            @if (subForm.controls.nombre.touched && subForm.controls.nombre.invalid) {
+              <span class="field__error">El nombre es obligatorio</span>
+            }
+          </div>
+
+          <div class="field">
+            <input id="sub-descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
+            <label class="field__label" for="sub-descripcion">Descripción</label>
+          </div>
+
+          <app-ui-button
+            label="Agregar"
+            icon="add"
+            variant="primary"
+            size="sm"
+            [loading]="savingSub()"
+            (clicked)="agregarSubcategoria()"
+          />
+        </div>
+      </form>
+
+      <div class="sub-table">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Estado</th>
+              <th style="width: 60px; text-align: center;">...</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loadingSubs()) {
+              <tr><td colspan="4" class="sub-table__empty">Cargando...</td></tr>
+            } @else if (subcategorias().length === 0) {
+              <tr><td colspan="4" class="sub-table__empty">
+                <span class="material-icons">inbox</span>
+                <span>Aún no hay subcategorías</span>
+              </td></tr>
+            } @else {
+              @for (sub of subcategorias(); track sub.id_categoria_producto) {
+                <tr>
+                  <td>{{ sub.nombre }}</td>
+                  <td>{{ sub.descripcion || '—' }}</td>
+                  <td>
+                    <span class="status-badge" [class.active]="sub.estado" [class.inactive]="!sub.estado">
+                      {{ sub.estado ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td style="text-align: center;">
+                    <button type="button" class="icon-btn" (click)="eliminarSubcategoria(sub)" title="Eliminar">
+                      <span class="material-icons">delete</span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <footer class="stepper-footer">
+    <app-ui-button label="Cancelar" variant="ghost" (clicked)="cancelar()" />
+
+    <div class="stepper-footer__right">
+      @if (currentStep() === 2) {
+        <app-ui-button label="Atrás" icon="arrow_back" variant="outline" (clicked)="volverPaso1()" />
+      }
+      @if (currentStep() === 1) {
+        <app-ui-button
+          [label]="isEdit() ? 'Guardar y continuar' : 'Registrar y continuar'"
+          icon="arrow_forward"
+          variant="primary"
+          [loading]="savingCategoria()"
+          (clicked)="guardarCategoria()"
+        />
+      } @else {
+        <app-ui-button label="Finalizar" icon="check" variant="primary" (clicked)="finalizar()" />
+      }
+    </div>
+  </footer>
+</div>

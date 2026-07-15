@@ -16,6 +16,20 @@ export const PRODUCTO_CRUD_CONFIG: CrudConfig = {
     categoriaProducto {
       id_categoria_producto
       nombre
+      categoriaPadre {
+        id_categoria_producto
+        nombre
+      }
+    }
+    presentaciones {
+      id_presentacion_producto
+      descripcion
+      tipo
+      cantidad
+      codigoBarras
+      precio
+      principal
+      estado
     }
   }`,
   operations: {
