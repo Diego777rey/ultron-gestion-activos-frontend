@@ -13,6 +13,7 @@
   [toolbarActions]="toolbarActions"
   emptyMessage="No hay productos que coincidan con la búsqueda"
   [trackBy]="trackById"
+  [expandTemplate]="presentacionesTemplate() ?? null"
   (pageChange)="onPageChange($event)"
   (retry)="load()"
   (actionClicked)="onToolbarAction($event)"
@@ -35,10 +36,98 @@
   </ng-template>
 
   <ng-template appTableCell="categoria" [appTableCellFrom]="productos()" let-producto>
-    {{ producto.categoriaProducto?.nombre | defaultEmpty }}
+    {{ categoriaLabel(producto) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="presentaciones" [appTableCellFrom]="productos()" let-producto>
+    <span class="pres-count">
+      <span class="material-icons">inventory_2</span>
+      {{ presentacionesDe(producto).length }}
+    </span>
   </ng-template>
 
   <ng-template appTableCell="acciones" [appTableCellFrom]="productos()" let-producto>
     <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, producto)" />
   </ng-template>
 </app-generic-list>
+
+<!-- Contenido expandible: presentaciones del producto -->
+<ng-template #presTpl let-producto>
+  <div class="pres-panel">
+    <div class="pres-panel__header">
+      <div class="pres-panel__title">
+        <span class="material-icons">inventory_2</span>
+        Presentaciones de <strong>{{ producto.nombre }}</strong>
+      </div>
+      <app-ui-button
+        label="Agregar presentación"
+        icon="add"
+        variant="primary"
+        size="sm"
+        (clicked)="openPresentacionForm(producto)"
+      />
+    </div>
+
+    <table class="pres-table">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th>Tipo</th>
+          <th>Cantidad</th>
+          <th>Código de barras</th>
+          <th>Precio</th>
+          <th style="text-align: center;">Principal</th>
+          <th style="text-align: center;">Estado</th>
+          <th style="width: 90px; text-align: center;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (presentacionesDe(producto).length === 0) {
+          <tr>
+            <td colspan="8" class="pres-table__empty">
+              <span class="material-icons">inbox</span>
+              <span>Este producto no tiene presentaciones. Agrega la primera.</span>
+            </td>
+          </tr>
+        } @else {
+          @for (pres of presentacionesDe(producto); track pres.id_presentacion_producto) {
+            <tr [class.pres-row--principal]="pres.principal">
+              <td>{{ pres.descripcion }}</td>
+              <td>{{ pres.tipo || '—' }}</td>
+              <td>{{ pres.cantidad || 1 }}</td>
+              <td>
+                @if (pres.codigoBarras) {
+                  <span class="pres-barcode">
+                    <span class="material-icons">qr_code_2</span>
+                    {{ pres.codigoBarras }}
+                  </span>
+                } @else {
+                  <span class="pres-barcode pres-barcode--empty">Sin código</span>
+                }
+              </td>
+              <td>{{ pres.precio | number:'1.0-0' }}</td>
+              <td style="text-align: center;">
+                @if (pres.principal) {
+                  <span class="material-icons pres-star">star</span>
+                }
+              </td>
+              <td style="text-align: center;">
+                <span class="status-badge" [class.active]="pres.estado" [class.inactive]="!pres.estado">
+                  {{ pres.estado ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td style="text-align: center;">
+                <button type="button" class="icon-btn" (click)="openPresentacionForm(producto, pres, $event)" title="Editar">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button type="button" class="icon-btn icon-btn--danger" (click)="eliminarPresentacion(producto, pres, $event)" title="Eliminar">
+                  <span class="material-icons">delete</span>
+                </button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</ng-template>
