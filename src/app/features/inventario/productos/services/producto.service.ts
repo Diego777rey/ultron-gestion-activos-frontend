@@ -7,4 +7,8 @@ import { ProductoInput, ProductoOutput } from '../interfaces/producto.interface'
 @Injectable({ providedIn: 'root' })
 export class ProductoService extends BaseCrudService<ProductoOutput, ProductoInput> {
   protected readonly config: CrudConfig = PRODUCTO_CRUD_CONFIG;
+
+  protected override resolveEntityName(entity: ProductoOutput): string | undefined {
+    return entity.nombre?.trim() || undefined;
+  }
 }

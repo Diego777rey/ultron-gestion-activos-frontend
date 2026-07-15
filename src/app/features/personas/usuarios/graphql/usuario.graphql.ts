@@ -32,4 +32,5 @@ export const USUARIO_CRUD_CONFIG: CrudConfig = {
     update: 'actualizarUsuario',
     remove: 'eliminarUsuario',
   },
+  entity: { label: 'Usuario', gender: 'm' },
 };

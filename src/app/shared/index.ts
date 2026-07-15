@@ -6,10 +6,12 @@ export * from './models/pagination.model';
 export * from './models/crud-config.model';
 export * from './models/menu-item.model';
 export * from './models/list-toolbar-action.model';
+export * from './models/notification.model';
 
 // Servicios genéricos
 export * from './services/graphql.service';
 export * from './services/base-crud.service';
+export * from './services/notification.service';
 
 // Pipes
 export * from './pipes/search-filter.pipe';
@@ -30,6 +32,7 @@ export * from './components/paginator/paginator';
 export * from './components/modal/modal';
 export * from './components/action-menu/action-menu';
 export * from './components/generic-list/generic-list';
+export * from './components/notification-container/notification-container';
 
 
 // Utilidades

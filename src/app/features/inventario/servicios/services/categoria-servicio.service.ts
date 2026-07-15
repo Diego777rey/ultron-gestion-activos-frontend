@@ -14,4 +14,8 @@ export interface CategoriaServicioInput {
 @Injectable({ providedIn: 'root' })
 export class CategoriaServicioService extends BaseCrudService<CategoriaServicioOutput, CategoriaServicioInput> {
   protected readonly config: CrudConfig = CATEGORIA_SERVICIO_CRUD_CONFIG;
+
+  protected override resolveEntityName(entity: CategoriaServicioOutput): string | undefined {
+    return entity.nombre?.trim() || undefined;
+  }
 }

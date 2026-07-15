@@ -12,4 +12,9 @@ import { ClienteInput, ClienteOutput } from '../interfaces/cliente.interface';
 @Injectable({ providedIn: 'root' })
 export class ClienteService extends BaseCrudService<ClienteOutput, ClienteInput> {
   protected readonly config: CrudConfig = CLIENTE_CRUD_CONFIG;
+
+  protected override resolveEntityName(entity: ClienteOutput): string | undefined {
+    const nombre = `${entity.persona?.nombre ?? ''} ${entity.persona?.apellido ?? ''}`.trim();
+    return nombre || undefined;
+  }
 }

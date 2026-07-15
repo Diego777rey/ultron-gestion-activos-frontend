@@ -15,4 +15,5 @@ export const ROLE_CRUD_CONFIG: CrudConfig = {
     update: 'actualizarRole',
     remove: 'eliminarRole',
   },
+  entity: { label: 'Rol', gender: 'm' },
 };

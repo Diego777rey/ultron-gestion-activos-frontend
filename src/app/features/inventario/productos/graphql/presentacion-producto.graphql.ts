@@ -21,4 +21,5 @@ export const PRESENTACION_PRODUCTO_CRUD_CONFIG: CrudConfig = {
     update: 'actualizarPresentacionProducto',
     remove: 'eliminarPresentacionProducto',
   },
+  entity: { label: 'Presentación', gender: 'f' },
 };

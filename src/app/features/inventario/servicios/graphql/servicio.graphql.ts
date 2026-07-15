@@ -22,4 +22,5 @@ export const SERVICIO_CRUD_CONFIG: CrudConfig = {
     update: 'actualizarServicio',
     remove: 'eliminarServicio',
   },
+  entity: { label: 'Servicio', gender: 'm' },
 };

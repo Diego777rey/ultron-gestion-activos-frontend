@@ -7,4 +7,10 @@ import { VehiculoInput, VehiculoOutput } from '../interfaces/vehiculo.interface'
 @Injectable({ providedIn: 'root' })
 export class VehiculoService extends BaseCrudService<VehiculoOutput, VehiculoInput> {
   protected readonly config: CrudConfig = VEHICULO_CRUD_CONFIG;
+
+  protected override resolveEntityName(entity: VehiculoOutput): string | undefined {
+    const nombre = `${entity.marca ?? ''} ${entity.modelo ?? ''}`.trim();
+    const chapa = entity.chapa?.trim();
+    return [nombre, chapa].filter(Boolean).join(' - ') || undefined;
+  }
 }
