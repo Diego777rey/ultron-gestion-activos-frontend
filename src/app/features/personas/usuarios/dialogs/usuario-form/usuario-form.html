@@ -62,6 +62,9 @@
       [disabled]="loadingCatalogs"
       [error]="form.controls.id_funcionario.touched && form.controls.id_funcionario.invalid"
       errorText="Debe seleccionar un funcionario"
+      [allowAdd]="true"
+      addLabel="Nuevo funcionario"
+      (addClicked)="onAddFuncionario()"
     />
 
     <div class="field field--checkbox field--full">

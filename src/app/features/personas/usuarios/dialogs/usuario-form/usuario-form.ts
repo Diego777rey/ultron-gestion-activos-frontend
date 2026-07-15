@@ -20,6 +20,8 @@ import { AutofocusDirective } from '../../../../../shared/directives/autofocus.d
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { FuncionarioOutput } from '../../../funcionarios/interfaces/funcionario.interface';
 import { FuncionarioService } from '../../../funcionarios/services/funcionario.service';
+import { FuncionarioFormComponent } from '../../../funcionarios/dialogs/funcionario-form/funcionario-form';
+import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { RoleOutput } from '../../../roles/interfaces/role.interface';
 import { RoleService } from '../../../roles/services/role.service';
 import { UsuarioInput, UsuarioOutput } from '../../interfaces/usuario.interface';
@@ -37,6 +39,7 @@ export class UsuarioFormComponent implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly funcionarioService = inject(FuncionarioService);
   private readonly roleService = inject(RoleService);
+  private readonly dialogService = inject(AppDialogService);
 
   readonly usuario = input<UsuarioOutput | null>(null);
   readonly saved = output<void>();
@@ -181,6 +184,19 @@ export class UsuarioFormComponent implements OnInit {
 
   protected onFuncionarioPageChange(event: PageChange): void {
     this.fetchFuncionariosPage(event.pageIndex, event.pageSize, this.funcionariosFilter());
+  }
+
+  /** Abre el alta de funcionario desde el buscador y recarga la lista al guardar. */
+  protected onAddFuncionario(): void {
+    this.dialogService.openForm(FuncionarioFormComponent, {
+      title: 'Nuevo Funcionario',
+      subtitle: 'Completa los datos para registrar un funcionario',
+      maxWidth: '760px',
+    }).subscribe((saved) => {
+      if (saved) {
+        this.fetchFuncionariosPage(0, this.funcionariosPageSize(), '');
+      }
+    });
   }
 
   protected funcionarioLabel(f: FuncionarioOutput): string {
