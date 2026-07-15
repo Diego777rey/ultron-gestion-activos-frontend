@@ -13,6 +13,8 @@
   [toolbarActions]="toolbarActions"
   emptyMessage="No hay clientes que coincidan con la búsqueda"
   [trackBy]="trackById"
+  [expandTemplate]="vehiculosTpl"
+  (rowClick)="onClienteRowClick($event)"
   (pageChange)="onPageChange($event)"
   (retry)="load()"
   (actionClicked)="onToolbarAction($event)"
@@ -42,3 +44,53 @@
     <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, cliente)" />
   </ng-template>
 </app-generic-list>
+
+<ng-template #vehiculosTpl let-cliente>
+  @let estado = vehiculosFor(cliente);
+  <section class="cliente-vehiculos">
+    <header class="cliente-vehiculos__header">
+      <span class="material-icons" aria-hidden="true">directions_car</span>
+      <h4 class="cliente-vehiculos__title">Vehículos asociados</h4>
+    </header>
+
+    @if (estado?.loading) {
+      <p class="cliente-vehiculos__status">
+        <span class="material-icons cliente-vehiculos__spinner" aria-hidden="true">progress_activity</span>
+        Cargando vehículos…
+      </p>
+    } @else if (estado?.error) {
+      <p class="cliente-vehiculos__status cliente-vehiculos__status--error">
+        <span class="material-icons" aria-hidden="true">error_outline</span>
+        {{ estado?.error }}
+      </p>
+    } @else if (estado?.items?.length) {
+      <table class="cliente-vehiculos__table">
+        <thead>
+          <tr>
+            <th>Vehículo</th>
+            <th>Año</th>
+            <th>Chapa</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (vehiculo of estado?.items ?? []; track trackVehiculo(vehiculo)) {
+            <tr>
+              <td>{{ vehiculoNombre(vehiculo) }}</td>
+              <td>{{ vehiculo.anio | defaultEmpty }}</td>
+              <td>{{ vehiculo.chapa | defaultEmpty }}</td>
+              <td>{{ vehiculo.tipo_vehiculo | defaultEmpty }}</td>
+              <td>{{ vehiculo.estado | defaultEmpty }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p class="cliente-vehiculos__status cliente-vehiculos__status--empty">
+        <span class="material-icons" aria-hidden="true">inbox</span>
+        Este cliente no tiene vehículos asociados.
+      </p>
+    }
+  </section>
+</ng-template>

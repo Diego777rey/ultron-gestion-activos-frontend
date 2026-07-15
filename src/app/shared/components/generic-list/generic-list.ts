@@ -60,6 +60,9 @@ export class GenericListComponent<T = Record<string, unknown>> {
   /** Plantilla para el contenido expandible de cada fila. */
   readonly expandTemplate = input<TemplateRef<TableCellContext<T>> | null>(null);
 
+  /** Se emite al hacer click sobre una fila (útil para cargar detalle al desplegar). */
+  readonly rowClick = output<T>();
+
   protected readonly searchInputId = `generic-list-search-${++searchInputCounter}`;
 
   constructor() {
