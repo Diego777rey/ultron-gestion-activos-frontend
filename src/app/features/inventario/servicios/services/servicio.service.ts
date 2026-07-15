@@ -7,4 +7,8 @@ import { ServicioInput, ServicioOutput } from '../interfaces/servicio.interface'
 @Injectable({ providedIn: 'root' })
 export class ServicioService extends BaseCrudService<ServicioOutput, ServicioInput> {
   protected readonly config: CrudConfig = SERVICIO_CRUD_CONFIG;
+
+  protected override resolveEntityName(entity: ServicioOutput): string | undefined {
+    return entity.nombre?.trim() || undefined;
+  }
 }

@@ -16,4 +16,5 @@ export const CATEGORIA_SERVICIO_CRUD_CONFIG: CrudConfig = {
     update: 'actualizarCategoriaServicio',
     remove: 'eliminarCategoriaServicio',
   },
+  entity: { label: 'Categoría de servicio', gender: 'f' },
 };

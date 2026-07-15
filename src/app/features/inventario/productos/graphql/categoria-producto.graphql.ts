@@ -16,4 +16,5 @@ export const CATEGORIA_PRODUCTO_CRUD_CONFIG: CrudConfig = {
     update: 'actualizarCategoriaProducto',
     remove: 'eliminarCategoriaProducto',
   },
+  entity: { label: 'Categoría de producto', gender: 'f' },
 };

@@ -1,0 +1,31 @@
+@for (n of notifications(); track trackById(n)) {
+  <div
+    class="toast"
+    [class.toast--success]="n.type === 'success'"
+    [class.toast--error]="n.type === 'error'"
+    [class.toast--warning]="n.type === 'warning'"
+    [class.toast--info]="n.type === 'info'"
+    [attr.role]="roleFor(n.type)"
+    [attr.aria-live]="roleFor(n.type) === 'alert' ? 'assertive' : 'polite'"
+  >
+    <span class="toast__icon material-icons" aria-hidden="true">{{ iconFor(n) }}</span>
+
+    <div class="toast__content">
+      <p class="toast__title">{{ n.title }}</p>
+      @if (n.message) {
+        <p class="toast__message">{{ n.message }}</p>
+      }
+    </div>
+
+    @if (n.dismissible) {
+      <button
+        type="button"
+        class="toast__close"
+        (click)="dismiss(n.id)"
+        aria-label="Cerrar aviso"
+      >
+        <span class="material-icons" aria-hidden="true">close</span>
+      </button>
+    }
+  </div>
+}

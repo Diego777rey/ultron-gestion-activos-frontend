@@ -18,6 +18,20 @@ export interface CrudOperations {
 }
 
 /**
+ * Metadatos de la entidad usados para emitir avisos automáticos y consistentes
+ * tras las operaciones CRUD (crear/actualizar/eliminar).
+ *
+ * Si se define en la `CrudConfig`, `BaseCrudService` mostrará un aviso de éxito
+ * automáticamente. Si se omite, no se emite ningún aviso automático.
+ */
+export interface CrudEntityMeta {
+  /** Etiqueta legible en singular. Ej: 'Cliente', 'Categoría'. */
+  label: string;
+  /** Género gramatical para concordar el mensaje en español. Por defecto 'm'. */
+  gender?: 'm' | 'f';
+}
+
+/**
  * Configuración necesaria para reutilizar `BaseCrudService` en cualquier entidad.
  */
 export interface CrudConfig {
@@ -30,4 +44,9 @@ export interface CrudConfig {
   selectionSet: string;
   /** Nombres de las operaciones GraphQL. */
   operations: CrudOperations;
+  /**
+   * Metadatos opcionales de la entidad para avisos automáticos.
+   * Al definirlos, cada create/update/remove exitoso mostrará un aviso.
+   */
+  entity?: CrudEntityMeta;
 }

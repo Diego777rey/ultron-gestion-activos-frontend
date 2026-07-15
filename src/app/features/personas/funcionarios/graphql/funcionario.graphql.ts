@@ -33,4 +33,5 @@ export const FUNCIONARIO_CRUD_CONFIG: CrudConfig = {
     update: 'actualizarFuncionario',
     remove: 'eliminarFuncionario',
   },
+  entity: { label: 'Funcionario', gender: 'm' },
 };

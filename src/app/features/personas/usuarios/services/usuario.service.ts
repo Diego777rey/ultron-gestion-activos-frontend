@@ -9,6 +9,10 @@ import { UsuarioInput, UsuarioOutput } from '../interfaces/usuario.interface';
 export class UsuarioService extends BaseCrudService<UsuarioOutput, UsuarioInput> {
   protected readonly config: CrudConfig = USUARIO_CRUD_CONFIG;
 
+  protected override resolveEntityName(entity: UsuarioOutput): string | undefined {
+    return entity.username?.trim() || undefined;
+  }
+
   agregarRol(usuarioId: string, roleId: string): Observable<UsuarioOutput> {
     const document = `mutation($usuarioId: ID!, $roleId: ID!) {
       agregarRolAUsuario(usuarioId: $usuarioId, roleId: $roleId) ${this.config.selectionSet}

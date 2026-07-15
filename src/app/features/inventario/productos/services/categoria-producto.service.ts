@@ -24,6 +24,10 @@ const CATEGORIA_SELECTION = `{
 export class CategoriaProductoService extends BaseCrudService<CategoriaProductoOutput, CategoriaProductoInput> {
   protected readonly config: CrudConfig = CATEGORIA_PRODUCTO_CRUD_CONFIG;
 
+  protected override resolveEntityName(entity: CategoriaProductoOutput): string | undefined {
+    return entity.nombre?.trim() || undefined;
+  }
+
   private readonly graphql = inject(GraphqlService);
 
   /** Lista solo las categorias raiz (sin categoria padre). */

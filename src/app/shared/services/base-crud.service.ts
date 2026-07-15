@@ -1,7 +1,8 @@
 import { inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map, tap, throwError } from 'rxjs';
 import { GraphqlService } from './graphql.service';
 import { CrudConfig } from '../models/crud-config.model';
+import { NotificationService } from './notification.service';
 
 /**
  * Servicio base reutilizable para operaciones CRUD sobre GraphQL.
@@ -15,9 +16,19 @@ import { CrudConfig } from '../models/crud-config.model';
  */
 export abstract class BaseCrudService<TOutput, TInput> {
   protected readonly gql = inject(GraphqlService);
+  protected readonly notifications = inject(NotificationService);
 
   /** Configuración GraphQL específica de la entidad. */
   protected abstract readonly config: CrudConfig;
+
+  /**
+   * Extrae un nombre legible del registro para enriquecer los avisos.
+   * Las entidades concretas pueden sobreescribirlo (ej. `${nombre} ${apellido}`).
+   * Devolver `undefined` omite el nombre en el mensaje.
+   */
+  protected resolveEntityName(_entity: TOutput): string | undefined {
+    return undefined;
+  }
 
   /** Lista todos los registros de la entidad. */
   findAll(): Observable<TOutput[]> {
@@ -76,7 +87,11 @@ export abstract class BaseCrudService<TOutput, TInput> {
       `{ ${op}(input: $input) ${this.config.selectionSet} }`;
     return this.gql
       .mutate<Record<string, TOutput>>(document, { input })
-      .pipe(map((data) => data[op]));
+      .pipe(
+        map((data) => data[op]),
+        tap((entity) => this.notifyCreated(entity)),
+        catchError((err) => this.notifyError(err)),
+      );
   }
 
   /** Actualiza un registro existente. */
@@ -87,7 +102,11 @@ export abstract class BaseCrudService<TOutput, TInput> {
       `{ ${op}(id: $id, input: $input) ${this.config.selectionSet} }`;
     return this.gql
       .mutate<Record<string, TOutput>>(document, { id, input })
-      .pipe(map((data) => data[op]));
+      .pipe(
+        map((data) => data[op]),
+        tap((entity) => this.notifyUpdated(entity)),
+        catchError((err) => this.notifyError(err)),
+      );
   }
 
   /** Elimina un registro por su identificador. */
@@ -96,6 +115,50 @@ export abstract class BaseCrudService<TOutput, TInput> {
     const document = `mutation($id: ID!) { ${op}(id: $id) }`;
     return this.gql
       .mutate<Record<string, boolean>>(document, { id })
-      .pipe(map((data) => data[op] ?? false));
+      .pipe(
+        map((data) => data[op] ?? false),
+        tap((ok) => {
+          if (ok) {
+            this.notifyDeleted();
+          }
+        }),
+        catchError((err) => this.notifyError(err)),
+      );
+  }
+
+  // ==================== Avisos automáticos ====================
+
+  private notifyCreated(entity: TOutput): void {
+    const meta = this.config.entity;
+    if (!meta) return;
+    this.notifications.created(meta.label, {
+      gender: meta.gender,
+      name: this.resolveEntityName(entity),
+    });
+  }
+
+  private notifyUpdated(entity: TOutput): void {
+    const meta = this.config.entity;
+    if (!meta) return;
+    this.notifications.updated(meta.label, {
+      gender: meta.gender,
+      name: this.resolveEntityName(entity),
+    });
+  }
+
+  private notifyDeleted(): void {
+    const meta = this.config.entity;
+    if (!meta) return;
+    this.notifications.deleted(meta.label, { gender: meta.gender });
+  }
+
+  /**
+   * Muestra un aviso de error (rojo) y re-lanza el error para que la lógica
+   * del componente (por ejemplo, el mensaje en línea del formulario) siga operando.
+   */
+  private notifyError(err: unknown): Observable<never> {
+    const message = err instanceof Error ? err.message : 'Ocurrió un error inesperado.';
+    this.notifications.error(message);
+    return throwError(() => err);
   }
 }

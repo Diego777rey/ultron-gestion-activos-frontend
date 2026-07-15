@@ -13,6 +13,10 @@ import { PresentacionProductoInput, PresentacionProductoOutput } from '../interf
 export class PresentacionProductoService extends BaseCrudService<PresentacionProductoOutput, PresentacionProductoInput> {
   protected readonly config: CrudConfig = PRESENTACION_PRODUCTO_CRUD_CONFIG;
 
+  protected override resolveEntityName(entity: PresentacionProductoOutput): string | undefined {
+    return entity.descripcion?.trim() || undefined;
+  }
+
   private readonly graphql = inject(GraphqlService);
 
   /** Lista las presentaciones de un producto especifico. */

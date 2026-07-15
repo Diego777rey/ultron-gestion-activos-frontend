@@ -12,4 +12,9 @@ import { FuncionarioInput, FuncionarioOutput } from '../interfaces/funcionario.i
 @Injectable({ providedIn: 'root' })
 export class FuncionarioService extends BaseCrudService<FuncionarioOutput, FuncionarioInput> {
   protected readonly config: CrudConfig = FUNCIONARIO_CRUD_CONFIG;
+
+  protected override resolveEntityName(entity: FuncionarioOutput): string | undefined {
+    const nombre = `${entity.persona?.nombre ?? ''} ${entity.persona?.apellido ?? ''}`.trim();
+    return nombre || undefined;
+  }
 }

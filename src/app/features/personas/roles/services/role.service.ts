@@ -7,4 +7,8 @@ import { RoleInput, RoleOutput } from '../interfaces/role.interface';
 @Injectable({ providedIn: 'root' })
 export class RoleService extends BaseCrudService<RoleOutput, RoleInput> {
   protected readonly config: CrudConfig = ROLE_CRUD_CONFIG;
+
+  protected override resolveEntityName(entity: RoleOutput): string | undefined {
+    return entity.descripcion?.trim() || undefined;
+  }
 }

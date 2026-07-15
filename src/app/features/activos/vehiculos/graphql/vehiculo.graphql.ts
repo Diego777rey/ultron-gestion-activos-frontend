@@ -32,4 +32,5 @@ export const VEHICULO_CRUD_CONFIG: CrudConfig = {
     update: 'actualizarVehiculo',
     remove: 'eliminarVehiculo',
   },
+  entity: { label: 'Vehículo', gender: 'm' },
 };

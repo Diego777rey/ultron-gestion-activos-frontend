@@ -40,4 +40,5 @@ export const PRODUCTO_CRUD_CONFIG: CrudConfig = {
     update: 'actualizarProducto',
     remove: 'eliminarProducto',
   },
+  entity: { label: 'Producto', gender: 'm' },
 };

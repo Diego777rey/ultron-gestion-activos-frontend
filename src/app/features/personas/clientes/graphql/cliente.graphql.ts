@@ -34,4 +34,5 @@ export const CLIENTE_CRUD_CONFIG: CrudConfig = {
     update: 'actualizarCliente',
     remove: 'eliminarCliente',
   },
+  entity: { label: 'Cliente', gender: 'm' },
 };
