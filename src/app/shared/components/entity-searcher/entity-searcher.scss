@@ -247,3 +247,13 @@
 .search-paginator-wrapper {
   padding: 0;
 }
+
+.search-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--border-color);
+  background: #333333;
+}

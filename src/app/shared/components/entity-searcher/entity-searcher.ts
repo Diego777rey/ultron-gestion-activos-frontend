@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output, signal } f
 import { ModalComponent } from '../modal/modal';
 import { DataTableComponent } from '../data-table/data-table';
 import { PaginatorComponent } from '../paginator/paginator';
+import { UiButtonComponent } from '../ui-button/ui-button';
 import { TableColumn } from '../../models/table-column.model';
 import { PageChange } from '../../models/pagination.model';
 
@@ -9,7 +10,7 @@ import { PageChange } from '../../models/pagination.model';
   selector: 'app-entity-searcher',
   templateUrl: './entity-searcher.html',
   styleUrl: './entity-searcher.scss',
-  imports: [ModalComponent, DataTableComponent, PaginatorComponent],
+  imports: [ModalComponent, DataTableComponent, PaginatorComponent, UiButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EntitySearcherComponent<T> {
@@ -33,10 +34,16 @@ export class EntitySearcherComponent<T> {
   readonly loading = input<boolean>(false);
   readonly modalWidth = input<string>('900px');
 
+  // Botón "Adicionar": permite crear la entidad (cliente, funcionario, etc.)
+  // desde el propio buscador cuando no se encuentra por su documento.
+  readonly allowAdd = input<boolean>(false);
+  readonly addLabel = input<string>('Adicionar');
+
   readonly valueChange = output<any>();
   readonly itemChange = output<T | null>();
   readonly pageChange = output<PageChange>();
   readonly searchChange = output<string>();
+  readonly addClicked = output<void>();
 
   protected readonly modalOpen = signal(false);
   protected readonly searchQuery = signal('');
@@ -58,6 +65,15 @@ export class EntitySearcherComponent<T> {
     const upperQuery = query.toUpperCase();
     this.searchQuery.set(upperQuery);
     this.searchChange.emit(upperQuery);
+  }
+
+  protected clearSearch(): void {
+    this.searchQuery.set('');
+    this.searchChange.emit('');
+  }
+
+  protected onAdd(): void {
+    this.addClicked.emit();
   }
 
   protected onPageChange(event: PageChange): void {
