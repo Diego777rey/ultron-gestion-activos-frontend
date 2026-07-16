@@ -30,10 +30,9 @@ import { CommonModule } from '@angular/common';
     .tabs-header {
       display: flex;
       align-items: stretch;
-      background: #333333;
+      background: var(--content-bg);
       min-height: 48px;
       overflow-x: auto;
-      border-bottom: 1px solid #222;
     }
     .tab-label {
       position: relative;
@@ -47,7 +46,7 @@ import { CommonModule } from '@angular/common';
       padding: 0 14px;
       cursor: pointer;
       color: rgba(255, 255, 255, 0.6);
-      background: #333;
+      background: var(--content-bg);
       border-right: 1px solid #222;
       border-bottom: 2px solid transparent;
       transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
