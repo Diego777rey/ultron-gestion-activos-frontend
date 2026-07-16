@@ -4,16 +4,6 @@
 
 **Ultron** es un sistema de gestión pensado **principalmente para talleres** (mecánicos, de servicios u otros), orientado a administrar órdenes de trabajo, vehículos, servicios, clientes y el personal del negocio.
 
-Al mismo tiempo, está diseñado para ser **flexible y adaptable a otros rubros comerciales**, como **tiendas, minimarkets y similares**. Por eso incluye módulos de uso general que permiten operar tanto un taller como un punto de venta:
-
-- **Ventas** — punto de venta.
-- **Taller** — órdenes de trabajo.
-- **Inventario** — productos, categorías, presentaciones y servicios.
-- **Activos** — vehículos.
-- **R.R.H.H.** — clientes, funcionarios, usuarios y roles.
-
-En resumen: el foco principal es el taller, pero el mismo sistema también sirve para la gestión diaria de tiendas, minimarkets y otros negocios afines.
-
 ---
 
 Este proyecto fue generado con [Angular CLI](https://github.com/angular/angular-cli) versión 21.2.17.
