@@ -5,7 +5,7 @@ export const PRODUCTOS_ROUTES: Routes = [
     path: 'categorias/nueva',
     loadComponent: () =>
       import('./pages/categoria-producto-stepper/categoria-producto-stepper.component').then((m) => m.CategoriaProductoStepperComponent),
-    data: { tabTitle: 'Nueva Categoría' }
+    data: { tabTitle: 'Nueva Categoría', noReuse: true }
   },
   {
     path: 'categorias/:id/editar',

@@ -81,6 +81,25 @@ export class SidebarComponent implements OnInit {
     return this.expandedMenus().has(item.label);
   }
 
+  /**
+   * A child link must use exact matching when its route is a prefix of a
+   * sibling's route (e.g. `/inventario/productos` vs
+   * `/inventario/productos/categorias`); otherwise both links would highlight
+   * as active at the same time. Children with deeper-only routes keep prefix
+   * matching so their own sub-pages still mark them active.
+   */
+  isChildExact(item: MenuItem, child: MenuItem): boolean {
+    if (!child.route || child.route === '/' || child.route === '') {
+      return true;
+    }
+    return (item.children ?? []).some(
+      (sibling) =>
+        sibling !== child &&
+        !!sibling.route &&
+        sibling.route.startsWith(child.route + '/')
+    );
+  }
+
   private syncExpandedMenus(url: string): void {
     for (const item of this.items()) {
       const matchesChild = item.children?.some(

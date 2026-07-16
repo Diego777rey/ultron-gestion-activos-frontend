@@ -37,23 +37,29 @@ export class TabService {
   }
 
   removeTab(index: number): void {
-    this.tabs.update(tabs => {
-      const newTabs = [...tabs];
-      const removedTab = newTabs.splice(index, 1)[0];
-      
-      if (newTabs.length > 0 && removedTab.active) {
-        const targetIndex = index > 0 ? index - 1 : 0;
-        const targetTab = newTabs[targetIndex];
-        if (targetTab) {
-          targetTab.active = true;
-          this.router.navigateByUrl(targetTab.url);
-        }
-      } else if (newTabs.length === 0) {
-        this.router.navigateByUrl('/pantalla-principal');
-      }
-      
-      return newTabs;
-    });
+    const tabs = this.tabs();
+    const removedTab = tabs[index];
+    if (!removedTab) {
+      return;
+    }
+
+    const newTabs = tabs.filter((_, i) => i !== index);
+
+    // Al cerrar el último tab siempre volvemos al home.
+    if (newTabs.length === 0) {
+      this.tabs.set([]);
+      this.router.navigateByUrl('/pantalla-principal');
+      return;
+    }
+
+    if (removedTab.active) {
+      const targetIndex = index > 0 ? index - 1 : 0;
+      const activatedTabs = newTabs.map((t, i) => ({ ...t, active: i === targetIndex }));
+      this.tabs.set(activatedTabs);
+      this.router.navigateByUrl(activatedTabs[targetIndex].url);
+    } else {
+      this.tabs.set(newTabs);
+    }
   }
 
   setTabActive(index: number): void {

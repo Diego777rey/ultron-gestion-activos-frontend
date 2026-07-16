@@ -33,6 +33,11 @@ export class AppRouteReuseStrategy implements RouteReuseStrategy {
     if (!this.esRutaHoja(route)) {
       return false;
     }
+    // Rutas marcadas con `noReuse` (ej. steppers de alta) deben recrearse
+    // siempre para arrancar con un estado limpio y no reatachar datos previos.
+    if (route.data?.['noReuse']) {
+      return false;
+    }
     const key = this.getRouteKey(route);
     return key !== '' && !key.includes('pantalla-principal') && !key.includes('login');
   }

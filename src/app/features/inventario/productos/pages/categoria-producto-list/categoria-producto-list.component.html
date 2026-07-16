@@ -7,6 +7,8 @@
   [pageSize]="pageSize()"
   [pageIndex]="pageIndex()"
   [toolbarActions]="toolbarActions"
+  searchLabel="Buscar por nombre o descripción..."
+  emptyMessage="No hay categorías que coincidan con la búsqueda"
   [searchValue]="search()"
   (searchValueChange)="search.set($event)"
   (pageChange)="onPageChange($event)"
