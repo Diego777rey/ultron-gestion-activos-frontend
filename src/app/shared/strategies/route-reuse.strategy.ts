@@ -57,6 +57,14 @@ export class AppRouteReuseStrategy implements RouteReuseStrategy {
     if (!this.esRutaHoja(route)) {
       return false;
     }
+    // Rutas con `noReuse` nunca se reatachan; se limpia cualquier handle viejo.
+    if (route.data?.['noReuse']) {
+      const key = this.getRouteKey(route);
+      if (key) {
+        this.storedRoutes.delete(key);
+      }
+      return false;
+    }
     const key = this.getRouteKey(route);
     return !!key && this.storedRoutes.has(key);
   }

@@ -61,6 +61,14 @@ export class MainLayoutComponent implements OnInit {
     },
     { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos' },
     {
+      label: 'Financiero',
+      icon: 'account_balance',
+      children: [
+        { label: 'Maletines', icon: 'business_center', route: '/financiero/maletines' },
+        { label: 'Cajas', icon: 'account_balance_wallet', route: '/financiero/cajas' },
+      ]
+    },
+    {
       label: 'Servicios',
       icon: 'handyman',
       children: [
@@ -115,6 +123,8 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('funcionarios')) return 'Lista de funcionarios';
     if (url.includes('usuarios')) return 'Lista de usuarios';
     if (url.includes('roles')) return 'Lista de roles';
+    if (url.includes('maletines')) return 'Maletines';
+    if (url.includes('cajas')) return 'Cajas';
     if (url.includes('productos/categorias')) return 'Categorías de Productos';
     if (url.includes('productos')) return 'Productos';
     if (url.includes('servicios/categorias')) return 'Categorías de Servicios';
