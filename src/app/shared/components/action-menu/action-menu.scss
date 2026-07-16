@@ -16,7 +16,7 @@
   border: none;
   background: transparent;
   border-radius: 8px;
-  color: var(--text-muted);
+  color: var(--primary-color);
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
 
@@ -26,7 +26,7 @@
 
   &:hover {
     background: var(--hover-color);
-    color: var(--text-primary);
+    color: var(--primary-color-dark);
   }
 }
 
