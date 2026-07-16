@@ -56,6 +56,22 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'ventas/punto-de-venta',
+        loadComponent: () =>
+          import('./features/ventas/punto-de-venta/punto-de-venta.component').then(
+            (m) => m.PuntoDeVentaComponent
+          ),
+        data: { tabTitle: 'Punto de Venta' },
+      },
+      {
+        path: 'taller/orden-de-trabajo',
+        loadComponent: () =>
+          import('./features/taller/orden-de-trabajo/orden-de-trabajo.component').then(
+            (m) => m.OrdenDeTrabajoComponent
+          ),
+        data: { tabTitle: 'Orden de Trabajo' },
+      },
+      {
         path: 'activos/vehiculos',
         loadChildren: () =>
           import('./features/activos/vehiculos/vehiculos.routes').then(
