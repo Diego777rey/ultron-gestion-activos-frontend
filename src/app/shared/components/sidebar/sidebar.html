@@ -40,7 +40,7 @@
                   class="sidebar-item sidebar-item--child"
                   [routerLink]="child.route || '/'"
                   routerLinkActive="active"
-                  [routerLinkActiveOptions]="{ exact: child.route === '/' || child.route === '' || !child.route }"
+                  [routerLinkActiveOptions]="{ exact: isChildExact(item, child) }"
                   (click)="onChildClick($event)"
                 >
                   <span class="material-icons sidebar-item__icon">{{ child.icon }}</span>
