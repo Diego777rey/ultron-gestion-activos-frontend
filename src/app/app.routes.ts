@@ -61,7 +61,7 @@ export const routes: Routes = [
           import('./features/ventas/punto-de-venta/punto-de-venta.component').then(
             (m) => m.PuntoDeVentaComponent
           ),
-        data: { tabTitle: 'Punto de Venta' },
+        data: { tabTitle: 'Punto de Venta', noReuse: true },
       },
       {
         path: 'taller/orden-de-trabajo',
@@ -77,6 +77,22 @@ export const routes: Routes = [
           import('./features/activos/vehiculos/vehiculos.routes').then(
             (m) => m.VEHICULOS_ROUTES
           ),
+      },
+      {
+        path: 'financiero/maletines',
+        loadComponent: () =>
+          import('./features/financiero/maletines/pages/maletines-page/maletines-page.component').then(
+            (m) => m.MaletinesPageComponent
+          ),
+        data: { tabTitle: 'Maletines' },
+      },
+      {
+        path: 'financiero/cajas',
+        loadComponent: () =>
+          import('./features/financiero/cajas/pages/cajas-page/cajas-page.component').then(
+            (m) => m.CajasPageComponent
+          ),
+        data: { tabTitle: 'Cajas' },
       },
       {
         path: 'inventario/productos',
