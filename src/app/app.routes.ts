@@ -109,6 +109,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'sectores',
+        loadChildren: () =>
+          import('./features/sectores/sectores.routes').then(
+            (m) => m.SECTORES_ROUTES
+          ),
+      },
+      {
         path: '',
         redirectTo: 'pantalla-principal',
         pathMatch: 'full',

@@ -98,7 +98,8 @@ export class MainLayoutComponent implements OnInit {
       label: 'Sectores',
       icon: 'map',
       children: [
-        { label: 'Zonas', icon: 'place' },
+        { label: 'Sectores', icon: 'grid_view', route: '/sectores' },
+        { label: 'Zonas', icon: 'place', route: '/sectores/zonas' },
       ]
     }
   ];
@@ -136,6 +137,8 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('productos')) return 'Productos';
     if (url.includes('servicios/categorias')) return 'Categorías de Servicios';
     if (url.includes('servicios')) return 'Servicios';
+    if (url.includes('sectores/zonas')) return 'Zonas';
+    if (url.includes('sectores')) return 'Sectores';
     return 'Pantalla';
   }
 
