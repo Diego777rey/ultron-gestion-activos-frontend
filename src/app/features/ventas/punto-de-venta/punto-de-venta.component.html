@@ -1,35 +1,155 @@
-<div class="pos-page">
-  @if (cajaAbierta()) {
-    <div class="pos-page__operativa">
-      <div class="pos-page__status">
-        <span class="material-icons" aria-hidden="true">point_of_sale</span>
-        <div>
-          <h2>Caja abierta</h2>
-          <p>Podés operar ventas. Cuando termines, realizá el conteo de cierre.</p>
+<div class="pos-page" [class.pos-page--operando]="cajaAbierta()">
+  @if (loadingSesion()) {
+    <div class="pos-page__placeholder">
+      <span class="material-icons">hourglass_top</span>
+      <h2>Cargando sesión…</h2>
+    </div>
+  } @else if (cajaAbierta()) {
+    <div class="pos-workspace">
+      <header class="pos-toolbar">
+        <div class="pos-toolbar__info">
+          <span class="material-icons" aria-hidden="true">point_of_sale</span>
+          <div>
+            <strong>{{ sesion()?.caja?.nombre || 'Caja abierta' }}</strong>
+            <small>
+              Maletín {{ sesion()?.maletin?.nombre || '—' }} · Ventas Gs.
+              {{ (sesion()?.totalVentasPyg || 0) | number: '1.0-0' }}
+            </small>
+          </div>
         </div>
-      </div>
+        <div class="pos-toolbar__actions">
+          <button type="button" class="pos-chip-btn" (click)="onAbrirGestionCaja()">
+            <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
+            Cerrar caja
+          </button>
+          <button type="button" class="pos-chip-btn pos-chip-btn--muted" (click)="onSalirPos()">
+            <span class="material-icons" aria-hidden="true">logout</span>
+            Salir
+          </button>
+        </div>
+      </header>
 
-      <div class="pos-page__actions">
-        <button type="button" class="pos-chip-btn" (click)="onAbrirGestionCaja()">
-          <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
-          Conteo de cierre
-        </button>
-        <button type="button" class="pos-chip-btn pos-chip-btn--muted" (click)="onSalirPos()">
-          <span class="material-icons" aria-hidden="true">logout</span>
-          Salir del POS
-        </button>
+      @if (ventaError(); as err) {
+        <div class="pos-alert" role="alert">
+          <span class="material-icons" aria-hidden="true">error_outline</span>
+          <span>{{ err }}</span>
+        </div>
+      }
+
+      @if (lastVentaNumero(); as numero) {
+        <div class="pos-alert pos-alert--ok" role="status">
+          <span class="material-icons" aria-hidden="true">check_circle</span>
+          <span>Última venta: {{ numero }}</span>
+        </div>
+      }
+
+      <div class="pos-grid">
+        <section class="pos-catalog" aria-label="Catálogo de productos">
+          <div class="pos-search">
+            <span class="material-icons" aria-hidden="true">search</span>
+            <input
+              type="search"
+              placeholder="Buscar producto por nombre o código…"
+              [value]="search()"
+              (input)="onSearchInput($any($event.target).value)"
+            />
+          </div>
+
+          <div class="pos-product-list">
+            @for (producto of productosFiltrados(); track producto.id_producto) {
+              <button type="button" class="pos-product" (click)="addProducto(producto)">
+                <div class="pos-product__main">
+                  <strong>{{ producto.nombre }}</strong>
+                  <small>{{ producto.codigo }} · Stock {{ producto.stock | number: '1.0-0' }}</small>
+                </div>
+                <span class="pos-product__price">
+                  Gs. {{ producto.precioVenta | number: '1.0-0' }}
+                </span>
+              </button>
+            } @empty {
+              <div class="pos-empty">No hay productos para mostrar</div>
+            }
+          </div>
+        </section>
+
+        <aside class="pos-cart" aria-label="Carrito de venta">
+          <div class="pos-cart__header">
+            <h2>
+              <span class="material-icons" aria-hidden="true">shopping_cart</span>
+              Carrito
+            </h2>
+            <span class="pos-cart__badge">{{ cartCount() }}</span>
+          </div>
+
+          <div class="pos-cart__items">
+            @for (item of cart(); track $index; let i = $index) {
+              <div class="pos-cart-item">
+                <div class="pos-cart-item__info">
+                  <strong>{{ item.nombre }}</strong>
+                  <small>Gs. {{ item.precioUnitario | number: '1.0-0' }}</small>
+                </div>
+                <div class="pos-cart-item__qty">
+                  <button type="button" (click)="ajustarCantidad(i, -1)" aria-label="Restar">
+                    <span class="material-icons">remove</span>
+                  </button>
+                  <span>{{ item.cantidad }}</span>
+                  <button type="button" (click)="ajustarCantidad(i, 1)" aria-label="Sumar">
+                    <span class="material-icons">add</span>
+                  </button>
+                </div>
+                <div class="pos-cart-item__total">
+                  Gs. {{ item.cantidad * item.precioUnitario | number: '1.0-0' }}
+                </div>
+                <button
+                  type="button"
+                  class="pos-cart-item__remove"
+                  (click)="removeItem(i)"
+                  aria-label="Quitar"
+                >
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+            } @empty {
+              <div class="pos-empty">El carrito está vacío</div>
+            }
+          </div>
+
+          <div class="pos-cart__footer">
+            <div class="pos-cart__total">
+              <span>Total</span>
+              <strong>Gs. {{ cartTotal() | number: '1.0-0' }}</strong>
+            </div>
+            <div class="pos-cart__actions">
+              <app-ui-button
+                label="Vaciar"
+                icon="delete"
+                variant="ghost"
+                [disabled]="cart().length === 0"
+                (clicked)="clearCart()"
+              />
+              <app-ui-button
+                label="Cobrar efectivo"
+                icon="payments"
+                variant="primary"
+                [loading]="selling()"
+                [disabled]="cart().length === 0"
+                (clicked)="cobrar()"
+              />
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   } @else {
     <div class="pos-page__placeholder">
       <span class="material-icons">storefront</span>
       <h2>Punto de Venta</h2>
-      <p>Módulo en construcción.</p>
+      <p>Abrí una caja para comenzar a vender.</p>
     </div>
   }
 </div>
 
-@if (inicioDialogOpen()) {
+@if (inicioDialogOpen() && !cajaAbierta() && !loadingSesion()) {
   <app-modal
     [open]="true"
     title="Punto de Venta"
@@ -47,7 +167,7 @@
         <div>
           <h3>Inicio de caja</h3>
           <p>
-            Elegí una opción para continuar. Consultar productos todavía es prototipo visual.
+            Verificá el maletín, contá la apertura y empezá a vender productos con descuento de stock.
           </p>
         </div>
       </div>
@@ -58,14 +178,6 @@
           <span class="pos-action__content">
             <strong>Salir</strong>
             <small>Cerrar y salir sin abrir caja</small>
-          </span>
-        </button>
-
-        <button type="button" class="pos-action">
-          <span class="material-icons pos-action__icon" aria-hidden="true">inventory_2</span>
-          <span class="pos-action__content">
-            <strong>Consultar productos</strong>
-            <small>Buscar precios y disponibilidad</small>
           </span>
         </button>
 
@@ -86,9 +198,10 @@
     [maletinVerificado]="maletinVerificado()"
     [cajaAbierta]="cajaAbierta()"
     [initialStep]="pasoInicialGestion()"
+    [sesionActual]="sesion()"
     (salir)="onSalirGestionCaja()"
     (maletinConfirmado)="onMaletinConfirmado()"
-    (cajaAbiertaConfirmada)="onCajaAbierta()"
+    (cajaAbiertaConfirmada)="onCajaAbierta($event)"
     (cajaCerradaConfirmada)="onCajaCerrada()"
   />
 }

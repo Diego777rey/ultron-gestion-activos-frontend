@@ -1,0 +1,40 @@
+@if (error) {
+  <div class="form-error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ error }}</span>
+  </div>
+}
+
+<form class="entity-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="entity-form__grid">
+    <div class="field field--full">
+      <input id="nombre" class="field__input" type="text" formControlName="nombre" appAutofocus appUppercase placeholder=" " />
+      <label class="field__label" for="nombre">Nombre*</label>
+      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <span class="field__error">El nombre es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="saldoActual" class="field__input" type="number" formControlName="saldoActual" placeholder=" " />
+      <label class="field__label" for="saldoActual">Saldo actual (Gs.)</label>
+    </div>
+
+    <div class="field field--checkbox">
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="activa" />
+        Activa
+      </label>
+    </div>
+  </div>
+</form>
+
+<div class="entity-form-footer">
+  <app-ui-button
+    [label]="isEdit ? 'Guardar Cambios' : 'Registrar Caja'"
+    icon="save"
+    variant="primary"
+    [loading]="saving"
+    (clicked)="onSubmit()"
+  />
+</div>

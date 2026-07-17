@@ -36,6 +36,13 @@
     </header>
 
     <section class="abrir-caja__body">
+      @if (error(); as errMsg) {
+        <div class="status-note status-note--warn" role="alert">
+          <span class="material-icons" aria-hidden="true">error_outline</span>
+          <span>{{ errMsg }}</span>
+        </div>
+      }
+
       @if (currentStep() === 1) {
         <div class="maletin-step">
           <div class="maletin-hero">
@@ -45,10 +52,42 @@
             <div>
               <h3>Verificar maletín</h3>
               <p>
-                Confirmá físicamente el maletín asignado a esta caja. Al verificarlo se habilitan
-                los pasos de apertura y cierre.
+                Seleccioná la caja y el maletín, confirmá físicamente el contenido y
+                continuá al conteo de apertura.
               </p>
             </div>
+          </div>
+
+          <div class="select-grid">
+            <label class="select-field">
+              <span>Caja</span>
+              <select
+                [value]="idCajaSeleccionada() ?? ''"
+                (change)="onCajaChange($any($event.target).value)"
+                [disabled]="cajaOpen()"
+              >
+                <option value="" disabled>Seleccionar caja</option>
+                @for (caja of cajas(); track caja.id_caja) {
+                  <option [value]="caja.id_caja">{{ caja.nombre }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="select-field">
+              <span>Maletín</span>
+              <select
+                [value]="idMaletinSeleccionado() ?? ''"
+                (change)="onMaletinChange($any($event.target).value)"
+                [disabled]="cajaOpen()"
+              >
+                <option value="" disabled>Seleccionar maletín</option>
+                @for (maletin of maletines(); track maletin.id_maletin) {
+                  <option [value]="maletin.id_maletin">
+                    {{ maletin.nombre }} · {{ maletin.estado }}
+                  </option>
+                }
+              </select>
+            </label>
           </div>
 
           <div class="check-grid" aria-label="Checklist de verificación">
@@ -198,6 +237,7 @@
               label="Verificar maletín"
               icon="verified"
               variant="primary"
+              [disabled]="!puedeVerificar()"
               (clicked)="verificarMaletin()"
             />
           } @else {
@@ -213,6 +253,8 @@
             label="Abrir caja"
             icon="point_of_sale"
             variant="primary"
+            [loading]="saving()"
+            [disabled]="cajaOpen()"
             (clicked)="abrirCaja()"
           />
         } @else {
@@ -220,6 +262,7 @@
             label="Cerrar caja"
             icon="lock"
             variant="primary"
+            [loading]="saving()"
             [disabled]="!cajaOpen()"
             (clicked)="cerrarCaja()"
           />

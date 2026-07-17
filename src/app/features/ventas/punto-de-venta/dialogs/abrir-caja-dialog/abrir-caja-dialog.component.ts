@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   input,
   output,
   signal,
@@ -9,6 +10,15 @@ import {
 import { DecimalPipe } from '@angular/common';
 import { ModalComponent } from '../../../../../shared/components/modal/modal';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
+import { CajaService } from '../../../../financiero/cajas/services/caja.service';
+import { MaletinService } from '../../../../financiero/maletines/services/maletin.service';
+import { CajaOutput } from '../../../../financiero/cajas/interfaces/caja.interface';
+import { MaletinOutput } from '../../../../financiero/maletines/interfaces/maletin.interface';
+import { SesionCajaService } from '../../services/sesion-caja.service';
+import {
+  ConteoDenominacionInput,
+  SesionCajaOutput,
+} from '../../interfaces/sesion-caja.interface';
 
 type MonedaCodigo = 'PYG' | 'BRL' | 'USD';
 type TipoConteo = 'apertura' | 'cierre';
@@ -75,17 +85,19 @@ function crearMonedasVacias(): MonedaConfig[] {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AbrirCajaDialogComponent {
-  /** Si el maletín ya fue verificado en esta sesión. */
+  private readonly cajaService = inject(CajaService);
+  private readonly maletinService = inject(MaletinService);
+  private readonly sesionCajaService = inject(SesionCajaService);
+
   readonly maletinVerificado = input(false);
-  /** Si la caja ya fue abierta tras el conteo de apertura. */
   readonly cajaAbierta = input(false);
-  /** Paso inicial al abrir el diálogo. */
   readonly initialStep = input(1);
+  readonly sesionActual = input<SesionCajaOutput | null>(null);
 
   readonly salir = output<void>();
-  readonly maletinConfirmado = output<void>();
-  readonly cajaAbiertaConfirmada = output<void>();
-  readonly cajaCerradaConfirmada = output<void>();
+  readonly maletinConfirmado = output<{ idCaja: number; idMaletin: number }>();
+  readonly cajaAbiertaConfirmada = output<SesionCajaOutput>();
+  readonly cajaCerradaConfirmada = output<SesionCajaOutput>();
 
   protected readonly steps: StepDef[] = [
     { index: 1, label: 'Verificar maletín', icon: 'business_center' },
@@ -97,16 +109,30 @@ export class AbrirCajaDialogComponent {
   protected readonly monedaActiva = signal<MonedaCodigo>('PYG');
   protected readonly maletinOk = signal(false);
   protected readonly cajaOpen = signal(false);
+  protected readonly saving = signal(false);
+  protected readonly error = signal<string | null>(null);
+
+  protected readonly cajas = signal<CajaOutput[]>([]);
+  protected readonly maletines = signal<MaletinOutput[]>([]);
+  protected readonly idCajaSeleccionada = signal<number | null>(null);
+  protected readonly idMaletinSeleccionado = signal<number | null>(null);
 
   protected readonly monedasApertura = signal<MonedaConfig[]>(crearMonedasVacias());
   protected readonly monedasCierre = signal<MonedaConfig[]>(crearMonedasVacias());
 
   constructor() {
-    // Estado inicial sincronizado con el padre al crear el diálogo.
+    this.loadCatalogos();
     queueMicrotask(() => {
       this.maletinOk.set(this.maletinVerificado());
       this.cajaOpen.set(this.cajaAbierta());
       this.currentStep.set(this.initialStep());
+      const sesion = this.sesionActual();
+      if (sesion?.caja?.id_caja) {
+        this.idCajaSeleccionada.set(sesion.caja.id_caja);
+      }
+      if (sesion?.maletin?.id_maletin) {
+        this.idMaletinSeleccionado.set(sesion.maletin.id_maletin);
+      }
     });
   }
 
@@ -159,6 +185,10 @@ export class AbrirCajaDialogComponent {
     }))
   );
 
+  protected readonly puedeVerificar = computed(
+    () => this.idCajaSeleccionada() != null && this.idMaletinSeleccionado() != null
+  );
+
   protected isStepEnabled(stepIndex: number): boolean {
     if (stepIndex === 1) {
       return true;
@@ -188,20 +218,84 @@ export class AbrirCajaDialogComponent {
     this.monedaActiva.set(codigo);
   }
 
+  protected onCajaChange(raw: string): void {
+    const id = Number(raw);
+    this.idCajaSeleccionada.set(Number.isFinite(id) && id > 0 ? id : null);
+  }
+
+  protected onMaletinChange(raw: string): void {
+    const id = Number(raw);
+    this.idMaletinSeleccionado.set(Number.isFinite(id) && id > 0 ? id : null);
+  }
+
   protected verificarMaletin(): void {
+    const idCaja = this.idCajaSeleccionada();
+    const idMaletin = this.idMaletinSeleccionado();
+    if (idCaja == null || idMaletin == null) {
+      this.error.set('Seleccioná una caja y un maletín para continuar');
+      return;
+    }
+    this.error.set(null);
     this.maletinOk.set(true);
-    this.maletinConfirmado.emit();
+    this.maletinConfirmado.emit({ idCaja, idMaletin });
     this.monedaActiva.set('PYG');
     this.currentStep.set(2);
   }
 
   protected abrirCaja(): void {
-    this.cajaOpen.set(true);
-    this.cajaAbiertaConfirmada.emit();
+    const idCaja = this.idCajaSeleccionada();
+    const idMaletin = this.idMaletinSeleccionado();
+    if (idCaja == null || idMaletin == null) {
+      this.error.set('Seleccioná caja y maletín antes de abrir');
+      this.currentStep.set(1);
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set(null);
+    this.sesionCajaService
+      .abrirCaja({
+        idCaja,
+        idMaletin,
+        conteos: this.buildConteos(this.monedasApertura()),
+      })
+      .subscribe({
+        next: (sesion) => {
+          this.saving.set(false);
+          this.cajaOpen.set(true);
+          this.cajaAbiertaConfirmada.emit(sesion);
+        },
+        error: (err: Error) => {
+          this.saving.set(false);
+          this.error.set(err.message || 'No se pudo abrir la caja');
+        },
+      });
   }
 
   protected cerrarCaja(): void {
-    this.cajaCerradaConfirmada.emit();
+    const sesion = this.sesionActual();
+    if (!sesion?.id_sesion_caja) {
+      this.error.set('No hay una sesión abierta para cerrar');
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set(null);
+    this.sesionCajaService
+      .cerrarCaja({
+        idSesionCaja: sesion.id_sesion_caja,
+        conteos: this.buildConteos(this.monedasCierre()),
+      })
+      .subscribe({
+        next: (cerrada) => {
+          this.saving.set(false);
+          this.cajaCerradaConfirmada.emit(cerrada);
+        },
+        error: (err: Error) => {
+          this.saving.set(false);
+          this.error.set(err.message || 'No se pudo cerrar la caja');
+        },
+      });
   }
 
   protected onSalir(): void {
@@ -252,6 +346,43 @@ export class AbrirCajaDialogComponent {
 
   protected formatDenominacion(moneda: MonedaConfig, valor: number): string {
     return `${moneda.simbolo} ${valor.toLocaleString('es-PY')}`;
+  }
+
+  private loadCatalogos(): void {
+    this.cajaService.findAll().subscribe({
+      next: (items) => this.cajas.set(items.filter((c) => c.activa !== false)),
+      error: () => this.error.set('No se pudieron cargar las cajas'),
+    });
+    this.maletinService.findDisponibles().subscribe({
+      next: (items) => {
+        const sesion = this.sesionActual();
+        if (sesion?.maletin && !items.some((m) => m.id_maletin === sesion.maletin?.id_maletin)) {
+          this.maletines.set([sesion.maletin, ...items]);
+        } else {
+          this.maletines.set(items);
+        }
+      },
+      error: () => this.error.set('No se pudieron cargar los maletines'),
+    });
+  }
+
+  private buildConteos(monedas: MonedaConfig[]): ConteoDenominacionInput[] {
+    const conteos: ConteoDenominacionInput[] = [];
+    for (const moneda of monedas) {
+      for (const d of moneda.denominaciones) {
+        if (d.cantidad > 0) {
+          conteos.push({
+            moneda: moneda.codigo,
+            valorDenominacion: d.valor,
+            cantidad: d.cantidad,
+          });
+        }
+      }
+    }
+    if (conteos.length === 0) {
+      conteos.push({ moneda: 'PYG', valorDenominacion: 1000, cantidad: 0 });
+    }
+    return conteos;
   }
 
   private actualizarMonedas(updater: (lista: MonedaConfig[]) => MonedaConfig[]): void {
