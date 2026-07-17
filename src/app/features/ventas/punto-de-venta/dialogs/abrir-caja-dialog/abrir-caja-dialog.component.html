@@ -1,0 +1,230 @@
+<app-modal
+  [open]="true"
+  title="Gestión de caja"
+  [subtitle]="tituloPaso()"
+  maxWidth="920px"
+  headerVariant="primary"
+  [closeOnBackdrop]="false"
+  [noPadding]="true"
+  (closed)="onSalir()"
+>
+  <div class="abrir-caja">
+    <header class="stepper-header">
+      @for (step of steps; track step.index) {
+        <button
+          type="button"
+          class="stepper-step"
+          [class.active]="currentStep() === step.index"
+          [class.done]="isStepDone(step.index)"
+          [class.enabled]="isStepEnabled(step.index)"
+          [disabled]="!isStepEnabled(step.index)"
+          (click)="irAPaso(step.index)"
+        >
+          <span class="stepper-step__circle">
+            @if (isStepDone(step.index) && currentStep() !== step.index) {
+              <span class="material-icons">check</span>
+            } @else {
+              <span class="material-icons">{{ step.icon }}</span>
+            }
+          </span>
+          <span class="stepper-step__label">{{ step.label }}</span>
+        </button>
+        @if (!$last) {
+          <span class="stepper-connector" [class.done]="isStepDone(step.index)"></span>
+        }
+      }
+    </header>
+
+    <section class="abrir-caja__body">
+      @if (currentStep() === 1) {
+        <div class="maletin-step">
+          <div class="maletin-hero">
+            <div class="maletin-hero__icon">
+              <span class="material-icons" aria-hidden="true">business_center</span>
+            </div>
+            <div>
+              <h3>Verificar maletín</h3>
+              <p>
+                Confirmá físicamente el maletín asignado a esta caja. Al verificarlo se habilitan
+                los pasos de apertura y cierre.
+              </p>
+            </div>
+          </div>
+
+          <div class="check-grid" aria-label="Checklist de verificación">
+            <div class="check-card">
+              <span class="material-icons">verified</span>
+              <strong>Identificación</strong>
+              <small>Código y precinto visibles</small>
+            </div>
+            <div class="check-card">
+              <span class="material-icons">lock</span>
+              <strong>Integridad</strong>
+              <small>Sin signos de apertura</small>
+            </div>
+            <div class="check-card">
+              <span class="material-icons">inventory_2</span>
+              <strong>Contenido</strong>
+              <small>Listo para el conteo</small>
+            </div>
+          </div>
+
+          @if (maletinOk()) {
+            <div class="status-note">
+              <span class="material-icons" aria-hidden="true">check_circle</span>
+              <span>Maletín verificado. Ya podés usar apertura y cierre de caja.</span>
+            </div>
+          }
+        </div>
+      }
+
+      @if (tipoConteoActivo(); as tipoConteo) {
+        <div class="conteo-step">
+          <div class="conteo-banner" [class.conteo-banner--cierre]="tipoConteo === 'cierre'">
+            <span class="material-icons" aria-hidden="true">
+              {{ tipoConteo === 'apertura' ? 'payments' : 'account_balance_wallet' }}
+            </span>
+            <div>
+              <strong>
+                {{ tipoConteo === 'apertura' ? 'Conteo de apertura' : 'Conteo de cierre' }}
+              </strong>
+              <p>
+                @if (tipoConteo === 'apertura') {
+                  Ingresá la cantidad de billetes y monedas con las que inicia la caja.
+                  Luego pulsá Abrir caja para operar y, cuando termines, volvé al conteo de cierre.
+                } @else {
+                  Ingresá la cantidad de billetes y monedas con las que cierra la caja al finalizar
+                  las operaciones.
+                }
+              </p>
+            </div>
+          </div>
+
+          @if (tipoConteo === 'cierre' && !cajaOpen()) {
+            <div class="status-note status-note--warn">
+              <span class="material-icons" aria-hidden="true">info</span>
+              <span>Primero realizá el conteo de apertura y abrí la caja para poder cerrarla.</span>
+            </div>
+          }
+
+          <div class="currency-tabs" role="tablist" aria-label="Monedas">
+            @for (moneda of monedas(); track moneda.codigo) {
+              <button
+                type="button"
+                class="currency-tab"
+                role="tab"
+                [class.active]="monedaActiva() === moneda.codigo"
+                [attr.aria-selected]="monedaActiva() === moneda.codigo"
+                (click)="seleccionarMoneda(moneda.codigo)"
+              >
+                <span class="material-icons" aria-hidden="true">{{ moneda.icon }}</span>
+                <span>{{ moneda.label }}</span>
+              </button>
+            }
+          </div>
+
+          <div class="denom-list" role="list">
+            @for (deno of monedaSeleccionada().denominaciones; track deno.valor) {
+              <div class="denom-row" role="listitem">
+                <div class="denom-row__value">
+                  <span class="denom-row__badge">{{ formatDenominacion(monedaSeleccionada(), deno.valor) }}</span>
+                </div>
+
+                <div class="qty-control">
+                  <button
+                    type="button"
+                    class="qty-btn"
+                    aria-label="Restar"
+                    (click)="ajustarCantidad(deno.valor, -1)"
+                    [disabled]="deno.cantidad === 0"
+                  >
+                    <span class="material-icons">remove</span>
+                  </button>
+                  <input
+                    class="qty-input"
+                    type="number"
+                    min="0"
+                    inputmode="numeric"
+                    [value]="deno.cantidad"
+                    (input)="setCantidad(deno.valor, $any($event.target).value)"
+                    [attr.aria-label]="'Cantidad de ' + formatDenominacion(monedaSeleccionada(), deno.valor)"
+                  />
+                  <button
+                    type="button"
+                    class="qty-btn"
+                    aria-label="Sumar"
+                    (click)="ajustarCantidad(deno.valor, 1)"
+                  >
+                    <span class="material-icons">add</span>
+                  </button>
+                </div>
+
+                <div class="denom-row__total">
+                  {{ monedaSeleccionada().simbolo }}
+                  {{ lineTotal(deno.valor, deno.cantidad) | number: '1.0-0' }}
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="totales">
+            <div class="totales__activo">
+              <span>Total {{ monedaSeleccionada().label }}</span>
+              <strong>
+                {{ monedaSeleccionada().simbolo }}
+                {{ totalMonedaActiva() | number: '1.0-0' }}
+              </strong>
+            </div>
+            <div class="totales__grid">
+              @for (item of totalesPorMoneda(); track item.codigo) {
+                <div class="totales__chip" [class.active]="item.codigo === monedaActiva()">
+                  <small>{{ item.label }}</small>
+                  <span>{{ item.simbolo }} {{ item.total | number: '1.0-0' }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </section>
+
+    <footer class="abrir-caja__footer">
+      <app-ui-button label="Salir" icon="logout" variant="ghost" (clicked)="onSalir()" />
+
+      <div class="abrir-caja__footer-right">
+        @if (currentStep() === 1) {
+          @if (!maletinOk()) {
+            <app-ui-button
+              label="Verificar maletín"
+              icon="verified"
+              variant="primary"
+              (clicked)="verificarMaletin()"
+            />
+          } @else {
+            <app-ui-button
+              label="Ir a apertura"
+              icon="arrow_forward"
+              variant="primary"
+              (clicked)="irAPaso(2)"
+            />
+          }
+        } @else if (currentStep() === 2) {
+          <app-ui-button
+            label="Abrir caja"
+            icon="point_of_sale"
+            variant="primary"
+            (clicked)="abrirCaja()"
+          />
+        } @else {
+          <app-ui-button
+            label="Cerrar caja"
+            icon="lock"
+            variant="primary"
+            [disabled]="!cajaOpen()"
+            (clicked)="cerrarCaja()"
+          />
+        }
+      </div>
+    </footer>
+  </div>
+</app-modal>

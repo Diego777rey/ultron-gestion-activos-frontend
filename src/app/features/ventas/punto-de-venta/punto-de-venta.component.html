@@ -1,55 +1,94 @@
 <div class="pos-page">
-  <div class="pos-page__placeholder">
-    <span class="material-icons">storefront</span>
-    <h2>Punto de Venta</h2>
-    <p>Módulo en construcción.</p>
-  </div>
+  @if (cajaAbierta()) {
+    <div class="pos-page__operativa">
+      <div class="pos-page__status">
+        <span class="material-icons" aria-hidden="true">point_of_sale</span>
+        <div>
+          <h2>Caja abierta</h2>
+          <p>Podés operar ventas. Cuando termines, realizá el conteo de cierre.</p>
+        </div>
+      </div>
+
+      <div class="pos-page__actions">
+        <button type="button" class="pos-chip-btn" (click)="onAbrirGestionCaja()">
+          <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
+          Conteo de cierre
+        </button>
+        <button type="button" class="pos-chip-btn pos-chip-btn--muted" (click)="onSalirPos()">
+          <span class="material-icons" aria-hidden="true">logout</span>
+          Salir del POS
+        </button>
+      </div>
+    </div>
+  } @else {
+    <div class="pos-page__placeholder">
+      <span class="material-icons">storefront</span>
+      <h2>Punto de Venta</h2>
+      <p>Módulo en construcción.</p>
+    </div>
+  }
 </div>
 
-<app-modal
-  [open]="dialogOpen()"
-  title="Punto de Venta"
-  subtitle="Seleccioná cómo querés iniciar la operación"
-  maxWidth="720px"
-  headerVariant="primary"
-  [closeOnBackdrop]="false"
-  (closed)="onSalir()"
->
-  <div class="pos-dialog">
-    <div class="pos-dialog__hero">
-      <div class="pos-dialog__icon">
-        <span class="material-icons" aria-hidden="true">storefront</span>
+@if (inicioDialogOpen()) {
+  <app-modal
+    [open]="true"
+    title="Punto de Venta"
+    subtitle="Seleccioná cómo querés iniciar la operación"
+    maxWidth="720px"
+    headerVariant="primary"
+    [closeOnBackdrop]="false"
+    (closed)="onSalirPos()"
+  >
+    <div class="pos-dialog">
+      <div class="pos-dialog__hero">
+        <div class="pos-dialog__icon">
+          <span class="material-icons" aria-hidden="true">storefront</span>
+        </div>
+        <div>
+          <h3>Inicio de caja</h3>
+          <p>
+            Elegí una opción para continuar. Consultar productos todavía es prototipo visual.
+          </p>
+        </div>
       </div>
-      <div>
-        <h3>Inicio de caja</h3>
-        <p>Elegí una opción para continuar. Consultar productos y Abrir caja todavía son prototipo visual.</p>
+
+      <div class="pos-dialog__actions" aria-label="Acciones de punto de venta">
+        <button type="button" class="pos-action pos-action--muted" (click)="onSalirPos()">
+          <span class="material-icons pos-action__icon" aria-hidden="true">logout</span>
+          <span class="pos-action__content">
+            <strong>Salir</strong>
+            <small>Cerrar y salir sin abrir caja</small>
+          </span>
+        </button>
+
+        <button type="button" class="pos-action">
+          <span class="material-icons pos-action__icon" aria-hidden="true">inventory_2</span>
+          <span class="pos-action__content">
+            <strong>Consultar productos</strong>
+            <small>Buscar precios y disponibilidad</small>
+          </span>
+        </button>
+
+        <button type="button" class="pos-action pos-action--primary" (click)="onAbrirGestionCaja()">
+          <span class="material-icons pos-action__icon" aria-hidden="true">point_of_sale</span>
+          <span class="pos-action__content">
+            <strong>Abrir caja</strong>
+            <small>Verificar maletín y contar apertura</small>
+          </span>
+        </button>
       </div>
     </div>
+  </app-modal>
+}
 
-    <div class="pos-dialog__actions" aria-label="Acciones de punto de venta">
-      <button type="button" class="pos-action pos-action--muted" (click)="onSalir()">
-        <span class="material-icons pos-action__icon" aria-hidden="true">logout</span>
-        <span class="pos-action__content">
-          <strong>Salir</strong>
-          <small>Cerrar y salir sin abrir caja</small>
-        </span>
-      </button>
-
-      <button type="button" class="pos-action">
-        <span class="material-icons pos-action__icon" aria-hidden="true">inventory_2</span>
-        <span class="pos-action__content">
-          <strong>Consultar productos</strong>
-          <small>Buscar precios y disponibilidad</small>
-        </span>
-      </button>
-
-      <button type="button" class="pos-action pos-action--primary">
-        <span class="material-icons pos-action__icon" aria-hidden="true">point_of_sale</span>
-        <span class="pos-action__content">
-          <strong>Abrir caja</strong>
-          <small>Preparar una nueva jornada de venta</small>
-        </span>
-      </button>
-    </div>
-  </div>
-</app-modal>
+@if (gestionCajaOpen()) {
+  <app-abrir-caja-dialog
+    [maletinVerificado]="maletinVerificado()"
+    [cajaAbierta]="cajaAbierta()"
+    [initialStep]="pasoInicialGestion()"
+    (salir)="onSalirGestionCaja()"
+    (maletinConfirmado)="onMaletinConfirmado()"
+    (cajaAbiertaConfirmada)="onCajaAbierta()"
+    (cajaCerradaConfirmada)="onCajaCerrada()"
+  />
+}
