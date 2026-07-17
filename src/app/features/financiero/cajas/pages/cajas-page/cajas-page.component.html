@@ -1,0 +1,36 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="cajas()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Buscar caja por nombre..."
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="No hay cajas registradas"
+  [trackBy]="trackById"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()"
+>
+  <ng-template appTableCell="nombre" [appTableCellFrom]="cajas()" let-item>
+    {{ item.nombre | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="saldoActual" [appTableCellFrom]="cajas()" let-item>
+    {{ item.saldoActual | number: '1.0-0' | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="activa" [appTableCellFrom]="cajas()" let-item>
+    {{ item.activa ? 'Sí' : 'No' }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="cajas()" let-item>
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, item)" />
+  </ng-template>
+</app-generic-list>

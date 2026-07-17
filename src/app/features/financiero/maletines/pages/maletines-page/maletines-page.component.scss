@@ -1,0 +1,16 @@
+.estado-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--text-secondary);
+
+  &--abierto {
+    background: rgba(56, 189, 248, 0.16);
+    color: #7dd3fc;
+  }
+}
