@@ -36,16 +36,23 @@
           @if (isExpanded() && isMenuExpanded(item)) {
             <div class="sidebar-submenu">
               @for (child of item.children; track child.label) {
-                <a
-                  class="sidebar-item sidebar-item--child"
-                  [routerLink]="child.route || '/'"
-                  routerLinkActive="active"
-                  [routerLinkActiveOptions]="{ exact: isChildExact(item, child) }"
-                  (click)="onChildClick($event)"
-                >
-                  <span class="material-icons sidebar-item__icon">{{ child.icon }}</span>
-                  <span class="sidebar-item__label">{{ child.label }}</span>
-                </a>
+                @if (child.route) {
+                  <a
+                    class="sidebar-item sidebar-item--child"
+                    [routerLink]="child.route"
+                    routerLinkActive="active"
+                    [routerLinkActiveOptions]="{ exact: isChildExact(item, child) }"
+                    (click)="onChildClick($event)"
+                  >
+                    <span class="material-icons sidebar-item__icon">{{ child.icon }}</span>
+                    <span class="sidebar-item__label">{{ child.label }}</span>
+                  </a>
+                } @else {
+                  <span class="sidebar-item sidebar-item--child sidebar-item--placeholder" aria-disabled="true">
+                    <span class="material-icons sidebar-item__icon">{{ child.icon }}</span>
+                    <span class="sidebar-item__label">{{ child.label }}</span>
+                  </span>
+                }
               }
             </div>
           }

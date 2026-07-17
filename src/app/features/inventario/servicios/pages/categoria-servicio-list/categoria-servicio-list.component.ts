@@ -1,16 +1,16 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, viewChild, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { GenericListComponent } from '../../../../../shared/components/generic-list/generic-list';
-import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
+import { TableCellContext, TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
 import { ActionMenuComponent, MenuAction } from '../../../../../shared/components/action-menu/action-menu';
-import { DefaultEmptyPipe } from '../../../../../shared/pipes/default-empty.pipe';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
 import { CategoriaServicioService } from '../../services/categoria-servicio.service';
 import { CategoriaServicioOutput } from '../../interfaces/servicio.interface';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
-import { CategoriaServicioFormComponent } from '../../dialogs/categoria-servicio-form/categoria-servicio-form.component';
+import { SubcategoriaServicioFormComponent } from '../../dialogs/subcategoria-servicio-form/subcategoria-servicio-form.component';
 
 @Component({
   selector: 'app-categoria-servicio-list',
@@ -21,14 +21,19 @@ import { CategoriaServicioFormComponent } from '../../dialogs/categoria-servicio
     ActionMenuComponent,
   ],
   templateUrl: './categoria-servicio-list.component.html',
+  styleUrl: './categoria-servicio-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'app-list-view' },
 })
 export class CategoriaServicioListComponent {
   private readonly categoriaService = inject(CategoriaServicioService);
+  private readonly router = inject(Router);
   private readonly dialogService = inject(AppDialogService);
 
+  protected readonly subcatTemplate = viewChild<TemplateRef<TableCellContext<CategoriaServicioOutput>>>('subcatTpl');
+
   protected readonly categorias = signal<CategoriaServicioOutput[]>([]);
+  protected readonly subcatMap = signal<Record<number, CategoriaServicioOutput[]>>({});
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
@@ -40,6 +45,7 @@ export class CategoriaServicioListComponent {
   protected readonly columns: TableColumn<CategoriaServicioOutput>[] = [
     { key: 'nombre', header: 'Nombre', width: '250px' },
     { key: 'descripcion', header: 'Descripción', width: '350px' },
+    { key: 'subcategorias', header: 'Subcategorías', width: '120px', align: 'center' },
     { key: 'estado', header: 'Estado', width: '100px' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
@@ -52,6 +58,7 @@ export class CategoriaServicioListComponent {
 
   protected readonly rowActions: MenuAction[] = [
     { id: 'edit', label: 'Editar', icon: 'edit' },
+    { id: 'add_sub', label: 'Agregar subcategoría', icon: 'account_tree' },
   ];
 
   constructor() {
@@ -66,12 +73,33 @@ export class CategoriaServicioListComponent {
         this.categorias.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);
         this.loading.set(false);
+        this.cargarSubcategorias(response.content);
       },
       error: (err: Error) => {
         this.error.set(err.message || 'No se pudo conectar con el servidor');
         this.loading.set(false);
       },
     });
+  }
+
+  private cargarSubcategorias(categorias: CategoriaServicioOutput[]): void {
+    this.subcatMap.set({});
+    for (const cat of categorias) {
+      const id = cat.id_categoria_servicio;
+      if (!id) {
+        continue;
+      }
+      this.categoriaService.findSubcategorias(id).subscribe({
+        next: (subs) => {
+          this.subcatMap.update((map) => ({ ...map, [id]: subs }));
+        },
+      });
+    }
+  }
+
+  protected subcategoriasDe(cat: CategoriaServicioOutput): CategoriaServicioOutput[] {
+    const id = cat.id_categoria_servicio;
+    return id ? (this.subcatMap()[id] ?? []) : [];
   }
 
   protected onPageChange(event: PageChange): void {
@@ -92,40 +120,43 @@ export class CategoriaServicioListComponent {
         this.load();
         break;
       case 'add':
-        this.openNewDialog();
+        this.router.navigate(['/inventario/servicios/categorias/nueva']);
         break;
     }
   }
 
-  protected openNewDialog(): void {
-    this.dialogService.openForm(CategoriaServicioFormComponent, {
-      title: 'Nueva Categoría de Servicio',
-      subtitle: 'Completa los datos para registrar una categoría',
-      maxWidth: '600px',
-    }).subscribe((saved) => {
-      if (saved) {
-        this.load();
-      }
-    });
-  }
-
-  protected openEditDialog(categoria: CategoriaServicioOutput): void {
-    this.dialogService.openForm(CategoriaServicioFormComponent, {
-      title: 'Editar Categoría',
-      subtitle: 'Modifica los datos de la categoría',
-      maxWidth: '600px',
-      inputs: { categoria },
-    }).subscribe((saved) => {
-      if (saved) {
-        this.load();
-      }
-    });
-  }
-
   protected onRowAction(actionId: string, categoria: CategoriaServicioOutput): void {
-    if (actionId === 'edit') {
-      this.openEditDialog(categoria);
+    if (!categoria.id_categoria_servicio) {
+      return;
     }
+    if (actionId === 'edit') {
+      this.router.navigate(['/inventario/servicios/categorias', categoria.id_categoria_servicio, 'editar']);
+    } else if (actionId === 'add_sub') {
+      this.agregarSubcategoria(categoria);
+    }
+  }
+
+  protected agregarSubcategoria(categoria: CategoriaServicioOutput): void {
+    if (!categoria.id_categoria_servicio) {
+      return;
+    }
+    const id = categoria.id_categoria_servicio;
+    this.dialogService.openForm(SubcategoriaServicioFormComponent, {
+      title: 'Nueva Subcategoría',
+      subtitle: categoria.nombre,
+      maxWidth: '560px',
+      inputs: { idCategoriaPadre: id, nombrePadre: categoria.nombre },
+    }).subscribe((saved) => {
+      if (saved) {
+        this.recargarSubcategorias(id);
+      }
+    });
+  }
+
+  private recargarSubcategorias(idPadre: number): void {
+    this.categoriaService.findSubcategorias(idPadre).subscribe({
+      next: (subs) => this.subcatMap.update((map) => ({ ...map, [idPadre]: subs })),
+    });
   }
 
   protected trackById = (c: CategoriaServicioOutput): unknown => c.id_categoria_servicio;

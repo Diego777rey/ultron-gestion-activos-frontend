@@ -4,6 +4,8 @@ export interface CategoriaServicioOutput {
   descripcion?: string;
   estado?: boolean;
   categoriaPadre?: CategoriaServicioOutput;
+  /** Subcategorias cargadas bajo demanda (no viene por defecto del backend). */
+  subcategorias?: CategoriaServicioOutput[];
 }
 
 export interface ServicioOutput {

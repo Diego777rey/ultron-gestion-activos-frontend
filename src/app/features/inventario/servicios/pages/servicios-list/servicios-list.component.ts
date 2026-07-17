@@ -130,5 +130,13 @@ export class ServiciosListComponent {
     }
   }
 
+  protected categoriaLabel(servicio: ServicioOutput): string {
+    const cat = servicio.categoriaServicio;
+    if (!cat) {
+      return '';
+    }
+    return cat.categoriaPadre ? `${cat.categoriaPadre.nombre} › ${cat.nombre}` : cat.nombre;
+  }
+
   protected trackById = (s: ServicioOutput): unknown => s.id_servicio;
 }

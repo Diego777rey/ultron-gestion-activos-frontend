@@ -12,6 +12,10 @@ export const SERVICIO_CRUD_CONFIG: CrudConfig = {
     categoriaServicio {
       id_categoria_servicio
       nombre
+      categoriaPadre {
+        id_categoria_servicio
+        nombre
+      }
     }
   }`,
   operations: {

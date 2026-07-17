@@ -31,7 +31,7 @@
   </ng-template>
 
   <ng-template appTableCell="categoria" [appTableCellFrom]="servicios()" let-servicio>
-    {{ servicio.categoriaServicio?.nombre | defaultEmpty }}
+    {{ categoriaLabel(servicio) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="acciones" [appTableCellFrom]="servicios()" let-servicio>
