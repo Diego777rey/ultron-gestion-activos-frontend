@@ -29,7 +29,8 @@ export class ServicioFormComponent {
   protected error: string | null = null;
   protected isEdit = false;
 
-  protected readonly categorias = signal<CategoriaServicioOutput[]>([]);
+  protected readonly categoriasRaiz = signal<CategoriaServicioOutput[]>([]);
+  protected readonly subcategorias = signal<CategoriaServicioOutput[]>([]);
 
   protected readonly form = this.fb.nonNullable.group({
     codigo: ['', [Validators.maxLength(50)]],
@@ -37,43 +38,80 @@ export class ServicioFormComponent {
     descripcion: [''],
     precio: [0, [Validators.required, Validators.min(0)]],
     estado: [true],
-    idCategoriaServicio: [0, [Validators.required, Validators.min(1)]],
+    idCategoriaRaiz: [0, [Validators.required, Validators.min(1)]],
+    idSubcategoria: [0],
   });
 
   constructor() {
-    this.loadCategorias();
+    this.loadCategoriasRaiz();
 
     effect(() => {
       const s = this.servicio();
       if (s) {
         this.isEdit = !!s.id_servicio;
+        const cat = s.categoriaServicio;
+        let rootId = 0;
+        let subId = 0;
+        if (cat?.categoriaPadre?.id_categoria_servicio) {
+          rootId = cat.categoriaPadre.id_categoria_servicio;
+          subId = cat.id_categoria_servicio ?? 0;
+        } else {
+          rootId = cat?.id_categoria_servicio ?? 0;
+        }
         this.form.reset({
           codigo: s.codigo ?? '',
           nombre: s.nombre,
           descripcion: s.descripcion ?? '',
           precio: s.precio,
           estado: s.estado ?? true,
-          idCategoriaServicio: s.categoriaServicio?.id_categoria_servicio ?? 0,
+          idCategoriaRaiz: rootId,
+          idSubcategoria: subId,
         });
+        if (rootId) {
+          this.loadSubcategorias(rootId, subId);
+        }
       } else {
         this.isEdit = false;
+        this.subcategorias.set([]);
         this.form.reset({
           codigo: '',
           nombre: '',
           descripcion: '',
           precio: 0,
           estado: true,
-          idCategoriaServicio: 0,
+          idCategoriaRaiz: 0,
+          idSubcategoria: 0,
         });
       }
     });
   }
 
-  private loadCategorias(): void {
-    this.categoriaService.findAll().subscribe({
-      next: (cats) => this.categorias.set(cats),
-      error: () => this.error = 'No se pudieron cargar las categorías'
+  private loadCategoriasRaiz(): void {
+    this.categoriaService.findRaices().subscribe({
+      next: (cats) => this.categoriasRaiz.set(cats),
+      error: () => (this.error = 'No se pudieron cargar las categorías'),
     });
+  }
+
+  private loadSubcategorias(idRaiz: number, preselectSubId = 0): void {
+    this.categoriaService.findSubcategorias(idRaiz).subscribe({
+      next: (subs) => {
+        this.subcategorias.set(subs);
+        if (preselectSubId) {
+          this.form.controls.idSubcategoria.setValue(preselectSubId);
+        }
+      },
+      error: () => this.subcategorias.set([]),
+    });
+  }
+
+  protected onRootChange(): void {
+    const rootId = Number(this.form.controls.idCategoriaRaiz.value);
+    this.form.controls.idSubcategoria.setValue(0);
+    this.subcategorias.set([]);
+    if (rootId > 0) {
+      this.loadSubcategorias(rootId);
+    }
   }
 
   protected onSubmit(): void {
@@ -84,18 +122,22 @@ export class ServicioFormComponent {
 
     const v = this.form.getRawValue();
     const s = this.servicio();
-    
+
+    const idCategoriaServicio = Number(v.idSubcategoria) > 0
+      ? Number(v.idSubcategoria)
+      : Number(v.idCategoriaRaiz);
+
     const payload: ServicioInput = {
       codigo: v.codigo?.trim() || undefined,
       nombre: v.nombre.trim(),
       descripcion: v.descripcion?.trim() || undefined,
       precio: v.precio,
       estado: v.estado,
-      idCategoriaServicio: Number(v.idCategoriaServicio),
+      idCategoriaServicio,
     };
 
     this.saving = true;
-    const request = (s && s.id_servicio) 
+    const request = (s && s.id_servicio)
       ? this.servicioService.update(s.id_servicio, payload)
       : this.servicioService.create(payload);
 

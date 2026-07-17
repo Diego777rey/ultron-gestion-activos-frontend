@@ -29,16 +29,26 @@
     </div>
 
     <div class="field">
-      <select id="idCategoriaServicio" class="field__input" formControlName="idCategoriaServicio">
+      <select id="idCategoriaRaiz" class="field__input" formControlName="idCategoriaRaiz" (change)="onRootChange()">
         <option value="0" disabled>Selecciona una categoría</option>
-        @for (cat of categorias(); track cat.id_categoria_servicio) {
+        @for (cat of categoriasRaiz(); track cat.id_categoria_servicio) {
           <option [value]="cat.id_categoria_servicio">{{ cat.nombre }}</option>
         }
       </select>
-      <label class="field__label" for="idCategoriaServicio">Categoría*</label>
-      @if (form.controls.idCategoriaServicio.touched && form.controls.idCategoriaServicio.invalid) {
+      <label class="field__label" for="idCategoriaRaiz">Categoría*</label>
+      @if (form.controls.idCategoriaRaiz.touched && form.controls.idCategoriaRaiz.invalid) {
         <span class="field__error">Selecciona una categoría válida</span>
       }
+    </div>
+
+    <div class="field">
+      <select id="idSubcategoria" class="field__input" formControlName="idSubcategoria" [attr.disabled]="subcategorias().length === 0 ? '' : null">
+        <option [value]="0">{{ subcategorias().length ? 'Sin subcategoría' : 'No hay subcategorías' }}</option>
+        @for (sub of subcategorias(); track sub.id_categoria_servicio) {
+          <option [value]="sub.id_categoria_servicio">{{ sub.nombre }}</option>
+        }
+      </select>
+      <label class="field__label" for="idSubcategoria">Subcategoría</label>
     </div>
 
     <div class="field field--full">

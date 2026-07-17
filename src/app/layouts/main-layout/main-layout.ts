@@ -93,6 +93,13 @@ export class MainLayoutComponent implements OnInit {
         { label: 'Usuarios', icon: 'account_circle', route: '/personas/usuarios' },
         { label: 'Roles', icon: 'shield', route: '/personas/roles' },
       ]
+    },
+    {
+      label: 'Sectores',
+      icon: 'map',
+      children: [
+        { label: 'Zonas', icon: 'place' },
+      ]
     }
   ];
 

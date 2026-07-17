@@ -1,0 +1,40 @@
+@if (error) {
+  <div class="form-error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ error }}</span>
+  </div>
+}
+
+<form class="form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="form__grid">
+    <div class="field field--full">
+      <input id="sub-nombre" class="field__input" type="text" formControlName="nombre" appAutofocus appUppercase placeholder=" " />
+      <label class="field__label" for="sub-nombre">Nombre de la subcategoría*</label>
+      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <span class="field__error">El nombre es obligatorio</span>
+      }
+    </div>
+
+    <div class="field field--full">
+      <input id="sub-descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
+      <label class="field__label" for="sub-descripcion">Descripción</label>
+    </div>
+
+    <div class="field field--checkbox field--full">
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="estado" />
+        Subcategoría Activa
+      </label>
+    </div>
+  </div>
+</form>
+
+<div class="form-footer">
+  <app-ui-button
+    label="Registrar Subcategoría"
+    icon="save"
+    variant="primary"
+    [loading]="saving"
+    (clicked)="onSubmit()"
+  />
+</div>
