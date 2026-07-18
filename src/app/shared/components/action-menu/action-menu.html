@@ -11,7 +11,13 @@
   </button>
 
   @if (isOpen()) {
-    <div class="action-menu__dropdown" role="menu">
+    <div
+      class="action-menu__dropdown"
+      role="menu"
+      [style.top]="dropdownStyle()['top']"
+      [style.left]="dropdownStyle()['left']"
+      [style.min-width]="dropdownStyle()['minWidth']"
+    >
       @for (action of actions(); track action.id) {
         <button
           type="button"

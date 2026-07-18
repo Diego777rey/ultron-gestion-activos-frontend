@@ -34,6 +34,12 @@
   }
 }
 
+app-entity-searcher {
+  grid-column: 1 / -1;
+  display: block;
+  padding-top: 16px;
+}
+
 .field {
   position: relative;
   display: flex;

@@ -20,6 +20,12 @@ export const PRODUCTOS_ROUTES: Routes = [
     data: { tabTitle: 'Categorías de Productos' }
   },
   {
+    path: 'presentaciones',
+    loadComponent: () =>
+      import('./pages/presentaciones-list/presentaciones-list.component').then((m) => m.PresentacionesListComponent),
+    data: { tabTitle: 'Presentaciones' }
+  },
+  {
     path: '',
     pathMatch: 'full',
     loadComponent: () =>

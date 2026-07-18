@@ -12,7 +12,7 @@
       <label class="field__label" for="codigo">Código</label>
     </div>
 
-    <div class="field field--span-2">
+    <div class="field">
       <input id="nombre" class="field__input" type="text" formControlName="nombre" appUppercase placeholder=" " />
       <label class="field__label" for="nombre">Nombre*</label>
       @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
@@ -28,28 +28,32 @@
       }
     </div>
 
-    <div class="field">
-      <select id="idCategoriaRaiz" class="field__input" formControlName="idCategoriaRaiz" (change)="onRootChange()">
-        <option value="0" disabled>Selecciona una categoría</option>
-        @for (cat of categoriasRaiz(); track cat.id_categoria_servicio) {
-          <option [value]="cat.id_categoria_servicio">{{ cat.nombre }}</option>
-        }
-      </select>
-      <label class="field__label" for="idCategoriaRaiz">Categoría*</label>
-      @if (form.controls.idCategoriaRaiz.touched && form.controls.idCategoriaRaiz.invalid) {
-        <span class="field__error">Selecciona una categoría válida</span>
-      }
-    </div>
+    <app-entity-searcher
+      [items]="categoriasDisponibles()"
+      [value]="form.controls.idCategoriaRaiz.value || null"
+      (itemChange)="onCategoriaSelected($event)"
+      [displayFn]="categoriaLabelFn"
+      [keyFn]="categoriaKeyFn"
+      [columns]="categoriaColumns"
+      [loading]="loadingCategorias()"
+      label="Categoría*"
+      searchPlaceholder="Ingresar texto"
+      [error]="form.controls.idCategoriaRaiz.touched && form.controls.idCategoriaRaiz.invalid"
+      errorText="Selecciona una categoría válida"
+    />
 
-    <div class="field">
-      <select id="idSubcategoria" class="field__input" formControlName="idSubcategoria" [attr.disabled]="subcategorias().length === 0 ? '' : null">
-        <option [value]="0">{{ subcategorias().length ? 'Sin subcategoría' : 'No hay subcategorías' }}</option>
-        @for (sub of subcategorias(); track sub.id_categoria_servicio) {
-          <option [value]="sub.id_categoria_servicio">{{ sub.nombre }}</option>
-        }
-      </select>
-      <label class="field__label" for="idSubcategoria">Subcategoría</label>
-    </div>
+    <app-entity-searcher
+      [items]="subcategoriasDisponibles()"
+      [value]="form.controls.idSubcategoria.value || null"
+      (itemChange)="onSubcategoriaSelected($event)"
+      [displayFn]="subcategoriaLabelFn"
+      [keyFn]="subcategoriaKeyFn"
+      [columns]="categoriaColumns"
+      [loading]="loadingSubcategorias()"
+      [disabled]="!form.controls.idCategoriaRaiz.value"
+      label="Subcategoría"
+      searchPlaceholder="Ingresar texto"
+    />
 
     <div class="field field--full">
       <input id="descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
