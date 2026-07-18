@@ -27,14 +27,6 @@
     {{ producto.nombre | defaultEmpty }}
   </ng-template>
 
-  <ng-template appTableCell="precioVenta" [appTableCellFrom]="productos()" let-producto>
-    {{ producto.precioVenta | number:'1.0-0' | defaultEmpty }}
-  </ng-template>
-
-  <ng-template appTableCell="stock" [appTableCellFrom]="productos()" let-producto>
-    {{ producto.stock | defaultEmpty }}
-  </ng-template>
-
   <ng-template appTableCell="categoria" [appTableCellFrom]="productos()" let-producto>
     {{ categoriaLabel(producto) | defaultEmpty }}
   </ng-template>

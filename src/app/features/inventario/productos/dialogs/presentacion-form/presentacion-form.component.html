@@ -7,22 +7,28 @@
 
 <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()">
   <div class="form__grid">
-    <div class="field field--span-2">
-      <input id="pres-descripcion" class="field__input" type="text" formControlName="descripcion" appAutofocus appUppercase placeholder=" " />
-      <label class="field__label" for="pres-descripcion">Descripción (ej: UNIDAD, PACK X 12)*</label>
-      @if (form.controls.descripcion.touched && form.controls.descripcion.invalid) {
-        <span class="field__error">La descripción es obligatoria</span>
-      }
-    </div>
-
-    <div class="field">
-      <select id="pres-tipo" class="field__input" formControlName="tipo">
-        @for (t of tipos; track t) {
-          <option [value]="t">{{ t }}</option>
-        }
-      </select>
-      <label class="field__label" for="pres-tipo">Tipo*</label>
-    </div>
+    <app-entity-searcher
+      [items]="presentacionesDisponibles()"
+      [value]="form.controls.idPresentacion.value"
+      (itemChange)="onPresentacionSelected($event)"
+      [displayFn]="presentacionLabelFn"
+      [keyFn]="presentacionKeyFn"
+      [columns]="presentacionColumns"
+      [backendPagination]="true"
+      [totalItems]="presentacionesTotal()"
+      [pageIndex]="presentacionesPage()"
+      [pageSize]="presentacionesPageSize()"
+      [loading]="loadingPresentaciones()"
+      (searchChange)="onPresentacionSearchChange($event)"
+      (pageChange)="onPresentacionPageChange($event)"
+      label="Presentación*"
+      searchPlaceholder="Ingresar texto"
+      [error]="form.controls.idPresentacion.touched && form.controls.idPresentacion.invalid"
+      errorText="Selecciona una presentación"
+      [allowAdd]="true"
+      addLabel="Nueva presentación"
+      (addClicked)="onAddPresentacion()"
+    />
 
     <div class="field">
       <input id="pres-cantidad" class="field__input" type="number" formControlName="cantidad" placeholder=" " />

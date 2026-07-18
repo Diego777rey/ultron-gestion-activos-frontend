@@ -49,8 +49,6 @@ export class ProductosListComponent {
   protected readonly columns: TableColumn<ProductoOutput>[] = [
     { key: 'codigo', header: 'Código', width: '120px' },
     { key: 'nombre', header: 'Nombre', width: '250px' },
-    { key: 'precioVenta', header: 'Precio Venta', width: '120px' },
-    { key: 'stock', header: 'Stock', width: '90px' },
     { key: 'categoria', header: 'Categoría', width: '220px' },
     { key: 'presentaciones', header: 'Presentaciones', width: '120px', align: 'center' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },

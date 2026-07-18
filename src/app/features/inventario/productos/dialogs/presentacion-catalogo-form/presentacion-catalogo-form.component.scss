@@ -2,7 +2,7 @@
   display: block;
 }
 
-.producto-form__error {
+.form-error {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -19,7 +19,7 @@
   }
 }
 
-.producto-form-footer {
+.entity-form-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -28,12 +28,12 @@
   border-top: 1px solid var(--border-color);
 }
 
-.producto-form {
+.entity-form {
   display: flex;
   flex-direction: column;
 }
 
-.producto-form__grid {
+.entity-form__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
@@ -43,19 +43,11 @@
   }
 }
 
-app-entity-searcher {
-  display: block;
-  padding-top: 16px;
-}
 .field {
   position: relative;
   display: flex;
   flex-direction: column;
   padding-top: 16px;
-
-  &--span-2 {
-    grid-column: span 2;
-  }
 
   &--full {
     grid-column: 1 / -1;
@@ -91,15 +83,8 @@ app-entity-searcher {
     border-bottom: 2px solid var(--primary-color);
   }
 
-  &::-webkit-calendar-picker-indicator {
-    filter: invert(50%) sepia(100%) saturate(3000%) hue-rotate(190deg) brightness(100%) contrast(100%);
-    cursor: pointer;
-  }
-
   &:focus ~ .field__label,
-  &:not(:placeholder-shown) ~ .field__label,
-  &[type="date"] ~ .field__label,
-  select.field__input ~ .field__label {
+  &:not(:placeholder-shown) ~ .field__label {
     top: 0;
     font-size: 11px;
     color: var(--primary-color);
