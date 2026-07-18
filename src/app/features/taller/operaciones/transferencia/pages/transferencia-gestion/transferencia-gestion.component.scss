@@ -1,0 +1,148 @@
+/* Ajustes locales del listado genérico: solo esta pantalla */
+:host.transferencia-gestion {
+  ::ng-deep .generic-list__filters {
+    align-items: flex-start;
+  }
+
+  ::ng-deep .generic-list__filters-actions {
+    flex: 0 0 auto;
+    min-width: 150px;
+    max-width: 180px;
+    justify-content: flex-start;
+    padding-top: 4px;
+  }
+}
+
+.gestion-state {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-secondary);
+
+  &--error {
+    color: #ff8aa3;
+  }
+}
+
+.trf-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.trf-header__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.trf-header__numero {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.trf-header__meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 2px 0 0;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+
+  dt {
+    margin: 0 0 2px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #f59e0b;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 14px;
+    color: #fff;
+    word-break: break-word;
+  }
+}
+
+.trf-header__add {
+  display: grid;
+  grid-template-columns: 1fr 100px;
+  gap: 12px;
+  align-items: end;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.trf-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  width: 100%;
+}
+
+.field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: 16px;
+
+  &--qty {
+    min-width: 90px;
+  }
+}
+
+.field__label {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.65);
+  pointer-events: none;
+  transition: 0.2s ease all;
+}
+
+.field__input {
+  width: 100%;
+  height: 36px;
+  padding: 8px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.42);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  color-scheme: dark;
+
+  &:focus {
+    border-bottom: 2px solid var(--primary-color);
+  }
+
+  &:focus ~ .field__label,
+  &:not(:placeholder-shown) ~ .field__label {
+    top: 0;
+    font-size: 11px;
+    color: var(--primary-color);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}

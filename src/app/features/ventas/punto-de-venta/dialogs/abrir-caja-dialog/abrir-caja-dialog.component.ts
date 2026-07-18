@@ -221,6 +221,8 @@ export class AbrirCajaDialogComponent {
   protected onCajaChange(raw: string): void {
     const id = Number(raw);
     this.idCajaSeleccionada.set(Number.isFinite(id) && id > 0 ? id : null);
+    this.idMaletinSeleccionado.set(null);
+    this.loadMaletinesDisponibles();
   }
 
   protected onMaletinChange(raw: string): void {
@@ -353,7 +355,15 @@ export class AbrirCajaDialogComponent {
       next: (items) => this.cajas.set(items.filter((c) => c.activa !== false)),
       error: () => this.error.set('No se pudieron cargar las cajas'),
     });
-    this.maletinService.findDisponibles().subscribe({
+    this.loadMaletinesDisponibles();
+  }
+
+  private loadMaletinesDisponibles(): void {
+    const idCaja = this.idCajaSeleccionada();
+    const caja = this.cajas().find((c) => c.id_caja === idCaja);
+    const idSector = caja?.sector?.id_sector ?? null;
+
+    this.maletinService.findDisponibles(idSector).subscribe({
       next: (items) => {
         const sesion = this.sesionActual();
         if (sesion?.maletin && !items.some((m) => m.id_maletin === sesion.maletin?.id_maletin)) {

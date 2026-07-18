@@ -59,6 +59,17 @@ export class MainLayoutComponent implements OnInit {
         { label: 'Orden de Trabajo', icon: 'assignment', route: '/taller/orden-de-trabajo' },
       ]
     },
+    {
+      label: 'Operaciones',
+      icon: 'sync_alt',
+      children: [
+        {
+          label: 'Transferencia',
+          icon: 'swap_horiz',
+          route: '/taller/operaciones/transferencia',
+        },
+      ],
+    },
     { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos' },
     {
       label: 'Financiero',
@@ -141,6 +152,11 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('servicios')) return 'Servicios';
     if (url.includes('sectores/zonas')) return 'Zonas';
     if (url.includes('sectores')) return 'Sectores';
+    if (url.includes('operaciones/transferencia/historico')) return 'Histórico de transferencias';
+    if (url.includes('operaciones/transferencia/solicitudes')) return 'Solicitudes de repuestos';
+    if (url.includes('operaciones/transferencia/entregadores')) return 'Entregadores';
+    if (url.includes('operaciones/transferencia')) return 'Transferencia';
+    if (url.includes('orden-de-trabajo')) return 'Orden de Trabajo';
     return 'Pantalla';
   }
 

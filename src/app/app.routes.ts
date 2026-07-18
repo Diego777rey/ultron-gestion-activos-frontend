@@ -72,6 +72,13 @@ export const routes: Routes = [
         data: { tabTitle: 'Orden de Trabajo' },
       },
       {
+        path: 'taller/operaciones/transferencia',
+        loadChildren: () =>
+          import('./features/taller/operaciones/transferencia/transferencia.routes').then(
+            (m) => m.TRANSFERENCIA_ROUTES
+          ),
+      },
+      {
         path: 'activos/vehiculos',
         loadChildren: () =>
           import('./features/activos/vehiculos/vehiculos.routes').then(

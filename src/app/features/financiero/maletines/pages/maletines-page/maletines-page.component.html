@@ -7,7 +7,7 @@
   [pageIndex]="pageIndex()"
   [pageSize]="pageSize()"
   [pageSizeOptions]="[15, 25, 50, 100]"
-  searchLabel="Buscar maletín por nombre..."
+  searchLabel="Buscar maletín por código o sector..."
   [searchValue]="search()"
   (searchValueChange)="search.set($event)"
   [toolbarActions]="toolbarActions"
@@ -18,30 +18,34 @@
   (actionClicked)="onToolbarAction($event)"
   (searchSubmit)="pageIndex.set(0); load()"
 >
+  <ng-template appTableCell="id_maletin" [appTableCellFrom]="maletines()" let-item>
+    {{ item.id_maletin | defaultEmpty }}
+  </ng-template>
+
   <ng-template appTableCell="nombre" [appTableCellFrom]="maletines()" let-item>
     {{ item.nombre | defaultEmpty }}
   </ng-template>
 
-  <ng-template appTableCell="estado" [appTableCellFrom]="maletines()" let-item>
-    <span class="estado-pill" [class.estado-pill--abierto]="item.estado === 'ABIERTO'">
-      {{ item.estado | defaultEmpty }}
+  <ng-template appTableCell="sector" [appTableCellFrom]="maletines()" let-item>
+    {{ item.sector?.nombre | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="idCajaActual" [appTableCellFrom]="maletines()" let-item>
+    {{ item.idCajaActual | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="abierto" [appTableCellFrom]="maletines()" let-item>
+    <span class="estado-pill" [class.estado-pill--abierto]="item.abierto">
+      {{ item.abierto ? 'Sí' : 'No' }}
     </span>
   </ng-template>
 
-  <ng-template appTableCell="balancePyg" [appTableCellFrom]="maletines()" let-item>
-    {{ item.balancePyg | number: '1.0-0' | defaultEmpty }}
+  <ng-template appTableCell="ultimoMovimiento" [appTableCellFrom]="maletines()" let-item>
+    {{ item.ultimoMovimiento | defaultEmpty }}
   </ng-template>
 
-  <ng-template appTableCell="balanceUsd" [appTableCellFrom]="maletines()" let-item>
-    {{ item.balanceUsd | number: '1.2-2' | defaultEmpty }}
-  </ng-template>
-
-  <ng-template appTableCell="balanceBrl" [appTableCellFrom]="maletines()" let-item>
-    {{ item.balanceBrl | number: '1.2-2' | defaultEmpty }}
-  </ng-template>
-
-  <ng-template appTableCell="activo" [appTableCellFrom]="maletines()" let-item>
-    {{ item.activo ? 'Sí' : 'No' }}
+  <ng-template appTableCell="ultimoResponsable" [appTableCellFrom]="maletines()" let-item>
+    {{ responsableLabel(item) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="acciones" [appTableCellFrom]="maletines()" let-item>

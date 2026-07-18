@@ -14,6 +14,12 @@ export const CAJA_CRUD_CONFIG: CrudConfig = {
       apellido
       documento
     }
+    sector {
+      id_sector
+      nombre
+      descripcion
+      estado
+    }
   }`,
   operations: {
     list: 'listarCajas',

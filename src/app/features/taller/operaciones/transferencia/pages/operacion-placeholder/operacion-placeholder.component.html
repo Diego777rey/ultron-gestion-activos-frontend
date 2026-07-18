@@ -1,0 +1,17 @@
+<section class="placeholder" aria-labelledby="placeholder-title">
+  <a class="placeholder__back" routerLink="/taller/operaciones/transferencia">
+    <span class="material-icons" aria-hidden="true">arrow_back</span>
+    Volver a Transferencia
+  </a>
+
+  <div class="placeholder__card">
+    <span class="placeholder__icon" aria-hidden="true">
+      <span class="material-icons">{{ icon() }}</span>
+    </span>
+    <h1 id="placeholder-title">{{ title() }}</h1>
+    @if (subtitle()) {
+      <p>{{ subtitle() }}</p>
+    }
+    <p class="placeholder__badge">Próximamente</p>
+  </div>
+</section>

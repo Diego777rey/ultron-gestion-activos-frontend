@@ -1,0 +1,62 @@
+<a class="list-back" routerLink="/taller/operaciones/transferencia">
+  <span class="material-icons" aria-hidden="true">arrow_back</span>
+  Volver a Transferencia
+</a>
+
+<app-generic-list
+  [columns]="columns"
+  [data]="transferencias()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Buscar por número o sector..."
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="No hay transferencias registradas"
+  [trackBy]="trackById"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()"
+>
+  <ng-template appTableCell="numero" [appTableCellFrom]="transferencias()" let-item>
+    <button type="button" class="link-btn" (click)="openGestion(item)">
+      {{ item.numero | defaultEmpty }}
+    </button>
+  </ng-template>
+
+  <ng-template appTableCell="fecha" [appTableCellFrom]="transferencias()" let-item>
+    {{ item.fecha | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="sectorOrigen" [appTableCellFrom]="transferencias()" let-item>
+    {{ item.sectorOrigen?.nombre | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="sectorDestino" [appTableCellFrom]="transferencias()" let-item>
+    {{ item.sectorDestino?.nombre | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="cantidadItems" [appTableCellFrom]="transferencias()" let-item>
+    {{ item.cantidadItems ?? item.detalles?.length ?? 0 }}
+  </ng-template>
+
+  <ng-template appTableCell="estado" [appTableCellFrom]="transferencias()" let-item>
+    <span
+      class="estado-pill"
+      [class.estado-pill--pendiente]="item.estado === 'PENDIENTE'"
+      [class.estado-pill--conferido]="item.estado === 'CONFERIDO'"
+      [class.estado-pill--recepcionado]="item.estado === 'RECEPCIONADO'"
+    >
+      {{ estadoLabel(item.estado) | defaultEmpty }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="transferencias()" let-item>
+    <app-action-menu [actions]="rowActionsFor(item)" (actionSelected)="onRowAction($event, item)" />
+  </ng-template>
+</app-generic-list>

@@ -2,7 +2,6 @@ import { Component, ChangeDetectionStrategy, input, output, signal, inject, OnIn
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
-import { trigger, transition, style, animate } from '@angular/animations';
 import { MenuItem } from '../../models/menu-item.model';
 
 import { AuthService } from '../../../core/auth/auth.service';
@@ -25,11 +24,11 @@ export class SidebarComponent implements OnInit {
 
   items = input<MenuItem[]>([]);
   userName = input<string>('Diego Paulinho Amarilla Mercado');
-  
+
   isExpanded = input<boolean>(false);
   isExpandedChange = output<boolean>();
 
-  /** Tracks which parent menu items are expanded. Key = item label. */
+  /** Tracks which parent menu items are expanded. Key = item label or nested key. */
   expandedMenus = signal<Set<string>>(new Set<string>());
 
   ngOnInit(): void {
@@ -51,13 +50,17 @@ export class SidebarComponent implements OnInit {
     }
   }
 
+  menuKey(parent: MenuItem, child: MenuItem): string {
+    return `${parent.label}/${child.label}`;
+  }
+
   toggleSubmenu(item: MenuItem, event: Event): void {
     event.stopPropagation();
 
     if (!this.isExpanded()) {
       this.isExpandedChange.emit(true);
       this.expandedMenus.set(new Set([item.label]));
-      this.navigateToFirstChild(item);
+      this.navigateToFirstRoute(item);
       return;
     }
 
@@ -65,9 +68,31 @@ export class SidebarComponent implements OnInit {
       const copy = new Set(set);
       if (copy.has(item.label)) {
         copy.delete(item.label);
+        for (const key of [...copy]) {
+          if (key.startsWith(item.label + '/')) {
+            copy.delete(key);
+          }
+        }
       } else {
-        copy.clear();
-        copy.add(item.label);
+        // Keep other top-level menus closed (accordion)
+        const next = new Set<string>();
+        next.add(item.label);
+        return next;
+      }
+      return copy;
+    });
+  }
+
+  toggleNestedSubmenu(parent: MenuItem, child: MenuItem, event: Event): void {
+    event.stopPropagation();
+    const key = this.menuKey(parent, child);
+    this.expandedMenus.update((set) => {
+      const copy = new Set(set);
+      copy.add(parent.label);
+      if (copy.has(key)) {
+        copy.delete(key);
+      } else {
+        copy.add(key);
       }
       return copy;
     });
@@ -77,17 +102,10 @@ export class SidebarComponent implements OnInit {
     event.stopPropagation();
   }
 
-  isMenuExpanded(item: MenuItem): boolean {
-    return this.expandedMenus().has(item.label);
+  isMenuExpanded(key: string): boolean {
+    return this.expandedMenus().has(key);
   }
 
-  /**
-   * A child link must use exact matching when its route is a prefix of a
-   * sibling's route (e.g. `/inventario/productos` vs
-   * `/inventario/productos/categorias`); otherwise both links would highlight
-   * as active at the same time. Children with deeper-only routes keep prefix
-   * matching so their own sub-pages still mark them active.
-   */
   isChildExact(item: MenuItem, child: MenuItem): boolean {
     if (!child.route || child.route === '/' || child.route === '') {
       return true;
@@ -102,21 +120,45 @@ export class SidebarComponent implements OnInit {
 
   private syncExpandedMenus(url: string): void {
     for (const item of this.items()) {
-      const matchesChild = item.children?.some(
-        (child) => child.route && url.startsWith(child.route)
-      );
-      if (matchesChild) {
-        this.expandedMenus.update((set) => new Set([...set, item.label]));
-        return;
+      if (!item.children?.length) {
+        continue;
+      }
+      for (const child of item.children) {
+        if (child.route && url.startsWith(child.route)) {
+          this.expandedMenus.update((set) => new Set([...set, item.label]));
+          return;
+        }
+        if (child.children?.length) {
+          const match = child.children.some((g) => g.route && url.startsWith(g.route));
+          if (match) {
+            this.expandedMenus.update(
+              (set) => new Set([...set, item.label, this.menuKey(item, child)])
+            );
+            return;
+          }
+        }
       }
     }
   }
 
-  private navigateToFirstChild(item: MenuItem): void {
-    const firstRoute = item.children?.find((child) => child.route)?.route;
-    if (firstRoute && !this.router.url.startsWith(firstRoute)) {
-      void this.router.navigateByUrl(firstRoute);
+  private navigateToFirstRoute(item: MenuItem): void {
+    const route = this.findFirstRoute(item);
+    if (route && !this.router.url.startsWith(route)) {
+      void this.router.navigateByUrl(route);
     }
+  }
+
+  private findFirstRoute(item: MenuItem): string | undefined {
+    if (item.route) {
+      return item.route;
+    }
+    for (const child of item.children ?? []) {
+      const nested = this.findFirstRoute(child);
+      if (nested) {
+        return nested;
+      }
+    }
+    return undefined;
   }
 
   onLogout(): void {

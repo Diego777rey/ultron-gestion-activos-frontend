@@ -1,0 +1,33 @@
+<section class="transfer-hub" aria-labelledby="transfer-hub-title">
+  <header class="transfer-hub__header">
+    <p class="transfer-hub__eyebrow">Operaciones</p>
+    <h1 id="transfer-hub-title" class="transfer-hub__title">Transferencia</h1>
+    <p class="transfer-hub__lead">
+      Mové productos entre sectores: el stock se resta en origen y se suma en destino.
+    </p>
+  </header>
+
+  <div class="transfer-hub__grid">
+    @for (card of cards; track card.route) {
+      <a
+        class="hub-card"
+        [class.hub-card--teal]="card.accent === 'teal'"
+        [class.hub-card--amber]="card.accent === 'amber'"
+        [class.hub-card--slate]="card.accent === 'slate'"
+        [routerLink]="card.route"
+      >
+        <span class="hub-card__icon" aria-hidden="true">
+          <span class="material-icons">{{ card.icon }}</span>
+        </span>
+        <div class="hub-card__body">
+          <h2 class="hub-card__title">{{ card.title }}</h2>
+          <p class="hub-card__desc">{{ card.description }}</p>
+        </div>
+        <span class="hub-card__cta">
+          Abrir
+          <span class="material-icons" aria-hidden="true">arrow_forward</span>
+        </span>
+      </a>
+    }
+  </div>
+</section>

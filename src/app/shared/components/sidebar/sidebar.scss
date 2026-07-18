@@ -171,6 +171,15 @@
     font-size: 13px;
   }
 
+  &--nested-parent {
+    width: 100%;
+  }
+
+  &--grandchild {
+    padding-left: 48px;
+    font-size: 12px;
+  }
+
   /* ---- Placeholder (no route yet) ---- */
   &--placeholder {
     cursor: default;
@@ -203,6 +212,16 @@
   background-color: #3c3c3c;
   overflow: hidden;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
+
+  &--nested {
+    background-color: #353535;
+    border-top: none;
+  }
+}
+
+.sidebar-nav-subgroup {
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-nav-group {

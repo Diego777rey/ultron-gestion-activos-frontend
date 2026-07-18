@@ -39,7 +39,8 @@ export class CajasPageComponent {
   protected readonly totalElements = signal(0);
 
   protected readonly columns: TableColumn<CajaOutput>[] = [
-    { key: 'nombre', header: 'Nombre', width: '260px' },
+    { key: 'nombre', header: 'Nombre', width: '220px' },
+    { key: 'sector', header: 'Sector', width: '200px' },
     { key: 'saldoActual', header: 'Saldo actual', width: '160px' },
     { key: 'activa', header: 'Activa', width: '100px' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
@@ -102,8 +103,8 @@ export class CajasPageComponent {
     this.dialogService
       .openForm(CajaFormComponent, {
         title: 'Nueva Caja',
-        subtitle: 'Registrá una caja para operar en el punto de venta',
-        maxWidth: '560px',
+        subtitle: 'Registrá una caja asociada a un sector (ubicación física)',
+        maxWidth: '640px',
       })
       .subscribe((saved) => {
         if (saved) {
@@ -116,8 +117,8 @@ export class CajasPageComponent {
     this.dialogService
       .openForm(CajaFormComponent, {
         title: 'Editar Caja',
-        subtitle: 'Modificá los datos de la caja',
-        maxWidth: '560px',
+        subtitle: 'Modificá los datos de la caja y su sector',
+        maxWidth: '640px',
         inputs: { caja },
       })
       .subscribe((saved) => {

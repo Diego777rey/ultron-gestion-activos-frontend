@@ -1,0 +1,68 @@
+@if (error) {
+  <div class="form-error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ error }}</span>
+  </div>
+}
+
+<form class="transfer-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <p class="transfer-form__hint">
+    Se crea la cabecera en estado pendiente. Después cargás los productos en la pantalla de gestión.
+  </p>
+
+  <div class="transfer-form__sectores">
+    <app-entity-searcher
+      [items]="sectores()"
+      [value]="form.controls.idSectorOrigen.value"
+      (itemChange)="onOrigenSelected($event)"
+      [displayFn]="sectorLabelFn"
+      [keyFn]="sectorKeyFn"
+      [columns]="sectorColumns"
+      [backendPagination]="true"
+      [totalItems]="sectoresTotal()"
+      [pageIndex]="sectoresPage()"
+      [pageSize]="sectoresPageSize()"
+      [loading]="loadingSectores()"
+      (searchChange)="onSectorSearchChange($event)"
+      (pageChange)="onSectorPageChange($event)"
+      label="Sector origen*"
+      searchPlaceholder="Buscar sector origen..."
+      [error]="form.controls.idSectorOrigen.touched && form.controls.idSectorOrigen.invalid"
+      errorText="Seleccioná el sector de origen"
+    />
+
+    <div class="transfer-form__arrow" aria-hidden="true">
+      <span class="material-icons">east</span>
+    </div>
+
+    <app-entity-searcher
+      [items]="sectores()"
+      [value]="form.controls.idSectorDestino.value"
+      (itemChange)="onDestinoSelected($event)"
+      [displayFn]="sectorLabelFn"
+      [keyFn]="sectorKeyFn"
+      [columns]="sectorColumns"
+      [backendPagination]="true"
+      [totalItems]="sectoresTotal()"
+      [pageIndex]="sectoresPage()"
+      [pageSize]="sectoresPageSize()"
+      [loading]="loadingSectores()"
+      (searchChange)="onSectorSearchChange($event)"
+      (pageChange)="onSectorPageChange($event)"
+      label="Sector destino*"
+      searchPlaceholder="Buscar sector destino..."
+      [error]="form.controls.idSectorDestino.touched && form.controls.idSectorDestino.invalid"
+      errorText="Seleccioná el sector de destino"
+    />
+  </div>
+</form>
+
+<div class="entity-form-footer">
+  <app-ui-button
+    label="Crear y gestionar"
+    icon="swap_horiz"
+    variant="primary"
+    [loading]="saving"
+    (clicked)="onSubmit()"
+  />
+</div>

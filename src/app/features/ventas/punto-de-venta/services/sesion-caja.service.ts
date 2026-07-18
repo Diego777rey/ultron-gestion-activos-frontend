@@ -28,15 +28,20 @@ const SESION_SELECTION = `{
     nombre
     saldoActual
     activa
+    sector {
+      id_sector
+      nombre
+    }
   }
   maletin {
     id_maletin
     nombre
-    estado
-    balancePyg
-    balanceUsd
-    balanceBrl
+    abierto
     activo
+    sector {
+      id_sector
+      nombre
+    }
   }
 }`;
 

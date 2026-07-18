@@ -5,12 +5,23 @@ export const MALETIN_CRUD_CONFIG: CrudConfig = {
   selectionSet: `{
     id_maletin
     nombre
-    estado
-    balancePyg
-    balanceUsd
-    balanceBrl
+    abierto
     activo
+    idCajaActual
+    ultimoMovimiento
+    sector {
+      id_sector
+      nombre
+      descripcion
+      estado
+    }
     responsable {
+      id_persona
+      nombre
+      apellido
+      documento
+    }
+    ultimoResponsable {
       id_persona
       nombre
       apellido

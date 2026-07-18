@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { GenericListComponent } from '../../../../../shared/components/generic-list/generic-list';
 import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
 import { ActionMenuComponent, MenuAction } from '../../../../../shared/components/action-menu/action-menu';
@@ -19,7 +18,6 @@ import { MaletinFormComponent } from '../../dialogs/maletin-form/maletin-form.co
     TableCellDirective,
     ActionMenuComponent,
     DefaultEmptyPipe,
-    DecimalPipe,
   ],
   templateUrl: './maletines-page.component.html',
   styleUrl: './maletines-page.component.scss',
@@ -39,12 +37,13 @@ export class MaletinesPageComponent {
   protected readonly totalElements = signal(0);
 
   protected readonly columns: TableColumn<MaletinOutput>[] = [
-    { key: 'nombre', header: 'Nombre', width: '240px' },
-    { key: 'estado', header: 'Estado', width: '120px' },
-    { key: 'balancePyg', header: 'Balance Gs.', width: '140px' },
-    { key: 'balanceUsd', header: 'Balance US$', width: '120px' },
-    { key: 'balanceBrl', header: 'Balance R$', width: '120px' },
-    { key: 'activo', header: 'Activo', width: '90px' },
+    { key: 'id_maletin', header: 'Id', width: '80px' },
+    { key: 'nombre', header: 'Código', width: '160px' },
+    { key: 'sector', header: 'Sector', width: '200px' },
+    { key: 'idCajaActual', header: 'Caja actual', width: '120px' },
+    { key: 'abierto', header: 'Abierto', width: '100px' },
+    { key: 'ultimoMovimiento', header: 'Últ. movimiento', width: '160px' },
+    { key: 'ultimoResponsable', header: 'Últ. responsable', width: '220px' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
 
@@ -105,7 +104,7 @@ export class MaletinesPageComponent {
     this.dialogService
       .openForm(MaletinFormComponent, {
         title: 'Nuevo Maletín',
-        subtitle: 'Registrá un maletín para verificar en la apertura de caja',
+        subtitle: 'Sobre físico para trasladar el dinero de una caja a otra o a caja fuerte',
         maxWidth: '640px',
       })
       .subscribe((saved) => {
@@ -119,7 +118,7 @@ export class MaletinesPageComponent {
     this.dialogService
       .openForm(MaletinFormComponent, {
         title: 'Editar Maletín',
-        subtitle: 'Modificá los datos del maletín',
+        subtitle: 'Modificá el código y el sector del maletín',
         maxWidth: '640px',
         inputs: { maletin },
       })
@@ -134,6 +133,14 @@ export class MaletinesPageComponent {
     if (actionId === 'edit') {
       this.openEditDialog(maletin);
     }
+  }
+
+  protected responsableLabel(m: MaletinOutput): string {
+    const p = m.ultimoResponsable;
+    if (!p) {
+      return '';
+    }
+    return [p.nombre, p.apellido].filter(Boolean).join(' ').trim();
   }
 
   protected trackById = (m: MaletinOutput): unknown => m.id_maletin;

@@ -83,7 +83,10 @@
                 <option value="" disabled>Seleccionar maletín</option>
                 @for (maletin of maletines(); track maletin.id_maletin) {
                   <option [value]="maletin.id_maletin">
-                    {{ maletin.nombre }} · {{ maletin.estado }}
+                    {{ maletin.nombre }}
+                    @if (maletin.sector?.nombre) {
+                      · {{ maletin.sector?.nombre }}
+                    }
                   </option>
                 }
               </select>

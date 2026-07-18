@@ -7,6 +7,29 @@
 
 <form class="entity-form" [formGroup]="form" (ngSubmit)="onSubmit()">
   <div class="entity-form__grid">
+    <app-entity-searcher
+      [items]="sectoresDisponibles()"
+      [value]="form.controls.idSector.value"
+      (itemChange)="onSectorSelected($event)"
+      [displayFn]="sectorLabelFn"
+      [keyFn]="sectorKeyFn"
+      [columns]="sectorColumns"
+      [backendPagination]="true"
+      [totalItems]="sectoresTotal()"
+      [pageIndex]="sectoresPage()"
+      [pageSize]="sectoresPageSize()"
+      [loading]="loadingSectores()"
+      (searchChange)="onSectorSearchChange($event)"
+      (pageChange)="onSectorPageChange($event)"
+      label="Sector*"
+      searchPlaceholder="Buscar sector por nombre..."
+      [error]="form.controls.idSector.touched && form.controls.idSector.invalid"
+      errorText="Debe seleccionar un sector"
+      [allowAdd]="true"
+      addLabel="Nuevo sector"
+      (addClicked)="onAddSector()"
+    />
+
     <div class="field field--full">
       <input id="nombre" class="field__input" type="text" formControlName="nombre" appAutofocus appUppercase placeholder=" " />
       <label class="field__label" for="nombre">Nombre*</label>

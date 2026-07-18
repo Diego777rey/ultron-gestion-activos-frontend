@@ -1,0 +1,41 @@
+@if (transferencia(); as t) {
+  <div class="detalle">
+    <dl class="detalle__meta">
+      <div>
+        <dt>Fecha</dt>
+        <dd>{{ t.fecha | defaultEmpty }}</dd>
+      </div>
+      <div>
+        <dt>Origen</dt>
+        <dd>{{ t.sectorOrigen?.nombre | defaultEmpty }}</dd>
+      </div>
+      <div>
+        <dt>Destino</dt>
+        <dd>{{ t.sectorDestino?.nombre | defaultEmpty }}</dd>
+      </div>
+      <div>
+        <dt>Estado</dt>
+        <dd>{{ t.estado | defaultEmpty }}</dd>
+      </div>
+    </dl>
+
+    <table class="detalle__table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Producto</th>
+          <th class="num">Cantidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of t.detalles ?? []; track d.id_detalle) {
+          <tr>
+            <td>{{ d.producto?.codigo | defaultEmpty }}</td>
+            <td>{{ d.producto?.nombre | defaultEmpty }}</td>
+            <td class="num">{{ d.cantidad | number: '1.0-2' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

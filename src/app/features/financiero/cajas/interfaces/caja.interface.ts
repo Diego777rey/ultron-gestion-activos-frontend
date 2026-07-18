@@ -1,3 +1,5 @@
+import { SectorOutput } from '../../../sectores/interfaces/sector.interface';
+
 export interface PersonaResumen {
   id_persona?: number;
   nombre?: string;
@@ -11,6 +13,7 @@ export interface CajaOutput {
   saldoActual?: number;
   idEmpresa?: number | null;
   responsable?: PersonaResumen | null;
+  sector?: SectorOutput | null;
   activa?: boolean;
 }
 
@@ -19,5 +22,6 @@ export interface CajaInput {
   saldoActual?: number;
   idEmpresa?: number | null;
   idResponsable?: number | null;
+  idSector: number;
   activa?: boolean;
 }

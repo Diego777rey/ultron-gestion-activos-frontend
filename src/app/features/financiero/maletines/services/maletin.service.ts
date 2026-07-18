@@ -15,12 +15,14 @@ export class MaletinService extends BaseCrudService<MaletinOutput, MaletinInput>
     return entity.nombre?.trim() || undefined;
   }
 
-  findDisponibles(): Observable<MaletinOutput[]> {
-    const document = `query {
-      listarMaletinesDisponibles ${this.config.selectionSet}
+  findDisponibles(idSector?: number | null): Observable<MaletinOutput[]> {
+    const document = `query($idSector: ID) {
+      listarMaletinesDisponibles(idSector: $idSector) ${this.config.selectionSet}
     }`;
     return this.graphql
-      .query<{ listarMaletinesDisponibles: MaletinOutput[] }>(document)
+      .query<{ listarMaletinesDisponibles: MaletinOutput[] }>(document, {
+        idSector: idSector ?? null,
+      })
       .pipe(map((data) => data.listarMaletinesDisponibles ?? []));
   }
 }

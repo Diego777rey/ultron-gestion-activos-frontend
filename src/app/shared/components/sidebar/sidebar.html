@@ -15,28 +15,62 @@
   <nav class="sidebar-nav" aria-label="Menú principal">
     @for (item of items(); track item.label) {
       @if (item.children && item.children.length > 0) {
-        <!-- Parent item with dropdown -->
         <div class="sidebar-nav-group">
           <button
             class="sidebar-item sidebar-item--parent"
-            [class.sidebar-item--expanded]="isExpanded() && isMenuExpanded(item)"
+            [class.sidebar-item--expanded]="isExpanded() && isMenuExpanded(item.label)"
             (click)="toggleSubmenu(item, $event)"
-            [attr.aria-expanded]="isMenuExpanded(item)"
+            [attr.aria-expanded]="isMenuExpanded(item.label)"
             type="button"
           >
             <span class="material-icons sidebar-item__icon">{{ item.icon }}</span>
             @if (isExpanded()) {
               <span class="sidebar-item__label">{{ item.label }}</span>
               <span class="material-icons sidebar-item__arrow">
-                {{ isMenuExpanded(item) ? 'expand_less' : 'expand_more' }}
+                {{ isMenuExpanded(item.label) ? 'expand_less' : 'expand_more' }}
               </span>
             }
           </button>
 
-          @if (isExpanded() && isMenuExpanded(item)) {
+          @if (isExpanded() && isMenuExpanded(item.label)) {
             <div class="sidebar-submenu">
               @for (child of item.children; track child.label) {
-                @if (child.route) {
+                @if (child.children && child.children.length > 0) {
+                  <div class="sidebar-nav-subgroup">
+                    <button
+                      class="sidebar-item sidebar-item--child sidebar-item--nested-parent"
+                      [class.sidebar-item--expanded]="isMenuExpanded(menuKey(item, child))"
+                      (click)="toggleNestedSubmenu(item, child, $event)"
+                      [attr.aria-expanded]="isMenuExpanded(menuKey(item, child))"
+                      type="button"
+                    >
+                      <span class="material-icons sidebar-item__icon">{{ child.icon }}</span>
+                      <span class="sidebar-item__label">{{ child.label }}</span>
+                      <span class="material-icons sidebar-item__arrow">
+                        {{ isMenuExpanded(menuKey(item, child)) ? 'expand_less' : 'expand_more' }}
+                      </span>
+                    </button>
+
+                    @if (isMenuExpanded(menuKey(item, child))) {
+                      <div class="sidebar-submenu sidebar-submenu--nested">
+                        @for (grand of child.children; track grand.label) {
+                          @if (grand.route) {
+                            <a
+                              class="sidebar-item sidebar-item--child sidebar-item--grandchild"
+                              [routerLink]="grand.route"
+                              routerLinkActive="active"
+                              [routerLinkActiveOptions]="{ exact: isChildExact(child, grand) }"
+                              (click)="onChildClick($event)"
+                            >
+                              <span class="material-icons sidebar-item__icon">{{ grand.icon }}</span>
+                              <span class="sidebar-item__label">{{ grand.label }}</span>
+                            </a>
+                          }
+                        }
+                      </div>
+                    }
+                  </div>
+                } @else if (child.route) {
                   <a
                     class="sidebar-item sidebar-item--child"
                     [routerLink]="child.route"
@@ -58,7 +92,6 @@
           }
         </div>
       } @else if (item.route) {
-        <!-- Simple item with route -->
         <a
           class="sidebar-item"
           [routerLink]="item.route"
@@ -71,7 +104,6 @@
           }
         </a>
       } @else {
-        <!-- Placeholder item (no route yet) -->
         <span class="sidebar-item sidebar-item--placeholder" aria-disabled="true">
           <span class="material-icons sidebar-item__icon">{{ item.icon }}</span>
           @if (isExpanded()) {
@@ -82,7 +114,6 @@
     }
   </nav>
 
-  <!-- Footer: Logout -->
   <div class="sidebar-footer" [class.mini]="!isExpanded()">
     <button class="sidebar-item sidebar-item--logout" type="button" aria-label="Cerrar sesión" (click)="onLogout()">
       <span class="material-icons sidebar-item__icon">logout</span>

@@ -22,6 +22,10 @@
     {{ item.nombre | defaultEmpty }}
   </ng-template>
 
+  <ng-template appTableCell="sector" [appTableCellFrom]="cajas()" let-item>
+    {{ item.sector?.nombre | defaultEmpty }}
+  </ng-template>
+
   <ng-template appTableCell="saldoActual" [appTableCellFrom]="cajas()" let-item>
     {{ item.saldoActual | number: '1.0-0' | defaultEmpty }}
   </ng-template>

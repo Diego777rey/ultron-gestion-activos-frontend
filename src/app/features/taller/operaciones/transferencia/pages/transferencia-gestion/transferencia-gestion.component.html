@@ -1,0 +1,145 @@
+@if (loading() && !transferencia()) {
+  <div class="gestion-state">Cargando transferencia…</div>
+} @else if (error() && !transferencia()) {
+  <div class="gestion-state gestion-state--error" role="alert">{{ error() }}</div>
+} @else if (transferencia(); as t) {
+  <app-generic-list
+    [columns]="columns"
+    [data]="detallesPagina()"
+    [loading]="loading()"
+    [error]="error()"
+    [total]="totalDetalles()"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="[15, 25, 50, 100]"
+    emptyMessage="No hay productos en la transferencia"
+    [trackBy]="trackById"
+    (pageChange)="onPageChange($event)"
+    (retry)="load()"
+  >
+    <!-- Reemplaza el filtro/Buscar del listado genérico, solo en esta pantalla -->
+    <div genericListFilters class="trf-header">
+      <h1 class="trf-header__title">Gestión de Transferencia</h1>
+      <p class="trf-header__numero">{{ t.numero }}</p>
+
+      <dl class="trf-header__meta">
+        <div>
+          <dt>Sector origen</dt>
+          <dd>{{ t.sectorOrigen?.nombre | defaultEmpty }}</dd>
+        </div>
+        <div>
+          <dt>Sector destino</dt>
+          <dd>{{ t.sectorDestino?.nombre | defaultEmpty }}</dd>
+        </div>
+        <div>
+          <dt>Responsable</dt>
+          <dd>{{ personaLabel(t) }}</dd>
+        </div>
+        <div>
+          <dt>Creado en</dt>
+          <dd>{{ t.fecha | defaultEmpty }}</dd>
+        </div>
+      </dl>
+
+      @if (esPendiente()) {
+        <div class="trf-header__add">
+          <app-entity-searcher
+            [items]="stockItems()"
+            [value]="null"
+            (itemChange)="onProductoSelected($event)"
+            [displayFn]="stockLabelFn"
+            [keyFn]="stockKeyFn"
+            [columns]="productoColumns"
+            [backendPagination]="true"
+            [totalItems]="stockTotal()"
+            [pageIndex]="stockPage()"
+            [pageSize]="stockPageSize()"
+            [loading]="loadingStock() || saving()"
+            (searchChange)="onStockSearchChange($event)"
+            (pageChange)="onStockPageChange($event)"
+            label="Producto (stock en origen)"
+            searchPlaceholder="Buscar producto para agregar..."
+          />
+          <div class="field field--qty">
+            <input
+              id="cantidadNueva"
+              class="field__input"
+              type="number"
+              min="1"
+              step="1"
+              [value]="cantidadNueva()"
+              (input)="onCantidadNuevaInput($any($event.target).value)"
+              placeholder=" "
+              [disabled]="saving()"
+            />
+            <label class="field__label" for="cantidadNueva">Cantidad</label>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div genericListActions class="trf-actions">
+      <div class="action-btn">
+        <app-ui-button
+          label="Actualizar"
+          icon="refresh"
+          variant="ghost"
+          size="sm"
+          [disabled]="saving()"
+          (clicked)="load()"
+        />
+      </div>
+      @if (esPendiente()) {
+        <div class="action-btn">
+          <app-ui-button
+            label="Conferir"
+            icon="fact_check"
+            variant="primary"
+            size="sm"
+            [disabled]="!puedeConferir() || saving()"
+            [loading]="saving()"
+            (clicked)="conferir()"
+          />
+        </div>
+      }
+      @if (esConferido()) {
+        <div class="action-btn">
+          <app-ui-button
+            label="Recepcionar"
+            icon="inventory"
+            variant="primary"
+            size="sm"
+            [disabled]="saving()"
+            [loading]="saving()"
+            (clicked)="recepcionar()"
+          />
+        </div>
+      }
+    </div>
+
+    <ng-template appTableCell="producto" [appTableCellFrom]="detallesPagina()" let-item>
+      {{ item.producto?.id_producto | defaultEmpty }} — {{ item.producto?.nombre | defaultEmpty }}
+    </ng-template>
+
+    <ng-template appTableCell="codigo" [appTableCellFrom]="detallesPagina()" let-item>
+      {{ item.producto?.codigo | defaultEmpty }}
+    </ng-template>
+
+    <ng-template appTableCell="cantidad" [appTableCellFrom]="detallesPagina()" let-item>
+      {{ item.cantidad | number: '1.0-2' }}
+    </ng-template>
+
+    <ng-template appTableCell="estado" [appTableCellFrom]="detallesPagina()" let-item>
+      {{ estadoDetalle(t.estado) }}
+    </ng-template>
+
+    <ng-template appTableCell="acciones" [appTableCellFrom]="detallesPagina()" let-item>
+      @if (rowActionsFor(item).length) {
+        <app-action-menu
+          [actions]="rowActionsFor(item)"
+          (actionSelected)="onRowAction($event, item)"
+        />
+      }
+    </ng-template>
+  </app-generic-list>
+}
