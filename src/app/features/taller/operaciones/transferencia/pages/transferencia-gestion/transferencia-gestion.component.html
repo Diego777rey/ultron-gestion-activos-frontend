@@ -22,6 +22,18 @@
       <h1 class="trf-header__title">Gestión de Transferencia</h1>
       <p class="trf-header__numero">{{ t.numero }}</p>
 
+      <ol class="trf-stages" aria-label="Etapas de la transferencia">
+        @for (etapa of etapas; track etapa.key; let last = $last) {
+          <li class="trf-stages__item" [class]="etapaClase(etapa.key)">
+            <span class="trf-stages__dot" aria-hidden="true"></span>
+            <span class="trf-stages__label">{{ etapa.label }}</span>
+          </li>
+          @if (!last) {
+            <li class="trf-stages__sep" aria-hidden="true"></li>
+          }
+        }
+      </ol>
+
       <dl class="trf-header__meta">
         <div>
           <dt>Sector origen</dt>
@@ -41,11 +53,12 @@
         </div>
       </dl>
 
-      @if (esPendiente()) {
+      @if (esCreacion()) {
         <div class="trf-header__add">
           <app-entity-searcher
-            [items]="stockItems()"
-            [value]="null"
+            class="trf-header__searcher"
+            [items]="stockItemsForSearcher()"
+            [value]="productoPendienteKey()"
             (itemChange)="onProductoSelected($event)"
             [displayFn]="stockLabelFn"
             [keyFn]="stockKeyFn"
@@ -55,13 +68,35 @@
             [pageIndex]="stockPage()"
             [pageSize]="stockPageSize()"
             [loading]="loadingStock() || saving()"
+            [quickEntry]="true"
             (searchChange)="onStockSearchChange($event)"
             (pageChange)="onStockPageChange($event)"
-            label="Producto (stock en origen)"
-            searchPlaceholder="Buscar producto para agregar..."
+            label="Producto"
+            searchPlaceholder="Nombre, código o código de barras…"
           />
-          <div class="field field--qty">
+
+          @if (presentacionesDisponibles().length > 0) {
+            <div class="field field--presentacion">
+              <select
+                id="presentacionSelect"
+                class="field__input field__select"
+                [disabled]="saving() || !puedeCargarCantidad()"
+                (change)="onPresentacionChange($any($event.target).value)"
+              >
+                <option value="">— Sin presentación —</option>
+                @for (pres of presentacionesDisponibles(); track pres.id_presentacion_producto) {
+                  <option [value]="pres.id_presentacion_producto">
+                    {{ pres.descripcion }} (x{{ pres.cantidad | number: '1.0-0' }}) - {{ pres.precio | number: '1.0-2' }}
+                  </option>
+                }
+              </select>
+              <label class="field__label field__label--select" for="presentacionSelect">Presentación</label>
+            </div>
+          }
+
+          <div class="field field--qty" [class.field--disabled]="!puedeCargarCantidad()">
             <input
+              #cantidadInput
               id="cantidadNueva"
               class="field__input"
               type="number"
@@ -69,12 +104,30 @@
               step="1"
               [value]="cantidadNueva()"
               (input)="onCantidadNuevaInput($any($event.target).value)"
+              (keydown)="onCantidadKeydown($event)"
               placeholder=" "
-              [disabled]="saving()"
+              [disabled]="saving() || !puedeCargarCantidad()"
             />
             <label class="field__label" for="cantidadNueva">Cantidad</label>
           </div>
+          <div class="trf-header__add-btn">
+            <app-ui-button
+              label="Agregar"
+              icon="add"
+              variant="primary"
+              size="sm"
+              [disabled]="saving() || !puedeCargarCantidad()"
+              [loading]="saving()"
+              (clicked)="confirmarAgregarProducto()"
+            />
+          </div>
         </div>
+      }
+
+      @if (esPendienteConferir()) {
+        <p class="trf-header__stage-note">
+          Revisá cada producto: aceptalo para recepción o rechazalo indicando el motivo.
+        </p>
       }
     </div>
 
@@ -89,48 +142,67 @@
           (clicked)="load()"
         />
       </div>
-      @if (esPendiente()) {
+      @if (!esRecepcionado()) {
         <div class="action-btn">
           <app-ui-button
-            label="Conferir"
-            icon="fact_check"
+            [label]="avanzarLabel()"
+            icon="trending_flat"
             variant="primary"
             size="sm"
-            [disabled]="!puedeConferir() || saving()"
+            [disabled]="!puedeAvanzar() || saving()"
             [loading]="saving()"
-            (clicked)="conferir()"
+            (clicked)="avanzarEtapa()"
           />
         </div>
       }
-      @if (esConferido()) {
-        <div class="action-btn">
-          <app-ui-button
-            label="Recepcionar"
-            icon="inventory"
-            variant="primary"
-            size="sm"
-            [disabled]="saving()"
-            [loading]="saving()"
-            (clicked)="recepcionar()"
-          />
-        </div>
+      @if (avanzarHint()) {
+        <p class="trf-actions__hint">{{ avanzarHint() }}</p>
       }
     </div>
 
     <ng-template appTableCell="producto" [appTableCellFrom]="detallesPagina()" let-item>
-      {{ item.producto?.id_producto | defaultEmpty }} — {{ item.producto?.nombre | defaultEmpty }}
+      {{ item.producto?.nombre | defaultEmpty }}
     </ng-template>
 
     <ng-template appTableCell="codigo" [appTableCellFrom]="detallesPagina()" let-item>
       {{ item.producto?.codigo | defaultEmpty }}
     </ng-template>
 
+    <ng-template appTableCell="presentacion" [appTableCellFrom]="detallesPagina()" let-item>
+      @if (item.presentacionDescripcion) {
+        <span class="presentacion-badge">
+          {{ item.presentacionDescripcion }} (x{{ item.cantidadPresentacion | number: '1.0-0' }})
+        </span>
+      } @else {
+        <span class="text-muted">Unidad</span>
+      }
+    </ng-template>
+
+    <ng-template appTableCell="precioVenta" [appTableCellFrom]="detallesPagina()" let-item>
+      {{ item.precioVenta | number: '1.0-2' }}
+    </ng-template>
+
     <ng-template appTableCell="cantidad" [appTableCellFrom]="detallesPagina()" let-item>
       {{ item.cantidad | number: '1.0-2' }}
     </ng-template>
 
+    <ng-template appTableCell="cantidadTotal" [appTableCellFrom]="detallesPagina()" let-item>
+      <strong>{{ item.cantidadTotal | number: '1.0-2' }}</strong>
+    </ng-template>
+
     <ng-template appTableCell="estado" [appTableCellFrom]="detallesPagina()" let-item>
-      {{ estadoDetalle(t.estado) }}
+      <span
+        class="estado-pill"
+        [class.estado-pill--pendiente]="estadoLinea(item) === 'PENDIENTE'"
+        [class.estado-pill--verificado]="estadoLinea(item) === 'VERIFICADO'"
+        [class.estado-pill--rechazado]="estadoLinea(item) === 'RECHAZADO'"
+        [title]="motivoLabel(item)"
+      >
+        {{ estadoLineaLabel(item) }}
+      </span>
+      @if (motivoLabel(item)) {
+        <span class="estado-motivo">{{ motivoLabel(item) }}</span>
+      }
     </ng-template>
 
     <ng-template appTableCell="acciones" [appTableCellFrom]="detallesPagina()" let-item>

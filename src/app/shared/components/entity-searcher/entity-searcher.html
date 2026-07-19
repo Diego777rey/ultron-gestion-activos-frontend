@@ -1,13 +1,15 @@
 <div class="field" [class.has-error]="error()">
   <div class="field__input-wrapper">
-    <input 
-      class="field__input" 
-      type="text" 
-      readonly 
-      [value]="displayValue()" 
+    <input
+      class="field__input"
+      type="text"
+      [attr.readonly]="quickEntry() ? null : true"
+      [value]="displayValue()"
       placeholder=" "
       [disabled]="disabled()"
-      (click)="openModal()" 
+      (click)="onOuterClick()"
+      (input)="onOuterInput($any($event.target).value)"
+      (keydown)="onOuterKeydown($event)"
     />
     <label class="field__label" (click)="openModal()">{{ label() }}</label>
     <button type="button" class="field__icon-btn" (click)="openModal()" [disabled]="disabled()">
@@ -23,11 +25,12 @@
   <div class="search-modal-body">
     <div class="search-header">
       <div class="search-field">
-        <input 
-          class="search-field__input" 
-          type="text" 
-          [value]="searchQuery()" 
-          (input)="onSearch($any($event.target).value)" 
+        <input
+          #modalSearchInput
+          class="search-field__input"
+          type="text"
+          [value]="searchQuery()"
+          (input)="onSearch($any($event.target).value)"
           placeholder=" "
         />
         <label class="search-field__label">Ingresar texto</label>
@@ -38,7 +41,7 @@
         }
       </div>
     </div>
-    
+
     <div class="search-table-container">
       @if (useTable() && columns().length) {
         <app-data-table
@@ -51,7 +54,7 @@
       } @else {
         <div class="search-list">
           @for (item of filteredItems(); track keyFn()(item)) {
-            <div class="search-item" 
+            <div class="search-item"
                  [class.is-selected]="keyFn()(item) === value()"
                  (click)="selectItem(item)">
               {{ displayFn()(item) }}

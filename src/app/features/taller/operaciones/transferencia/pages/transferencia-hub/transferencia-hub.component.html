@@ -2,9 +2,6 @@
   <header class="transfer-hub__header">
     <p class="transfer-hub__eyebrow">Operaciones</p>
     <h1 id="transfer-hub-title" class="transfer-hub__title">Transferencia</h1>
-    <p class="transfer-hub__lead">
-      Mové productos entre sectores: el stock se resta en origen y se suma en destino.
-    </p>
   </header>
 
   <div class="transfer-hub__grid">
@@ -13,7 +10,6 @@
         class="hub-card"
         [class.hub-card--teal]="card.accent === 'teal'"
         [class.hub-card--amber]="card.accent === 'amber'"
-        [class.hub-card--slate]="card.accent === 'slate'"
         [routerLink]="card.route"
       >
         <span class="hub-card__icon" aria-hidden="true">

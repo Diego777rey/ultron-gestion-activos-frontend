@@ -48,7 +48,8 @@
   <ng-template appTableCell="estado" [appTableCellFrom]="transferencias()" let-item>
     <span
       class="estado-pill"
-      [class.estado-pill--pendiente]="item.estado === 'PENDIENTE'"
+      [class.estado-pill--creacion]="item.estado === 'CREACION' || item.estado === 'PENDIENTE'"
+      [class.estado-pill--pendiente]="item.estado === 'PENDIENTE_CONFERIR'"
       [class.estado-pill--conferido]="item.estado === 'CONFERIDO'"
       [class.estado-pill--recepcionado]="item.estado === 'RECEPCIONADO'"
     >

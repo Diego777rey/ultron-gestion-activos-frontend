@@ -20,10 +20,27 @@ export const TRANSFERENCIA_SELECTION = `{
   detalles {
     id_detalle
     cantidad
+    estado
+    motivoRechazo
+    motivoRechazoDetalle
+    idPresentacionProducto
+    presentacionDescripcion
+    cantidadPresentacion
+    precioVenta
+    cantidadTotal
     producto {
       id_producto
       codigo
       nombre
+      precioVenta
+      presentaciones {
+        id_presentacion_producto
+        descripcion
+        cantidad
+        precio
+        principal
+        estado
+      }
     }
   }
 }`;
@@ -36,6 +53,15 @@ export const STOCK_SECTOR_SELECTION = `{
     codigo
     nombre
     stock
+    precioVenta
+    presentaciones {
+      id_presentacion_producto
+      descripcion
+      cantidad
+      precio
+      principal
+      estado
+    }
   }
   sector {
     id_sector

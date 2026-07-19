@@ -1,7 +1,22 @@
 import { SectorOutput } from '../../../../sectores/interfaces/sector.interface';
 import { ProductoOutput } from '../../../../inventario/productos/interfaces/producto.interface';
 
-export type TransferenciaEstado = 'PENDIENTE' | 'CONFERIDO' | 'RECEPCIONADO' | string;
+export type TransferenciaEstado =
+  | 'CREACION'
+  | 'PENDIENTE_CONFERIR'
+  | 'CONFERIDO'
+  | 'RECEPCIONADO'
+  | 'PENDIENTE' // legado
+  | string;
+
+export type TransferenciaDetalleEstado = 'PENDIENTE' | 'VERIFICADO' | 'RECHAZADO' | string;
+
+export type MotivoRechazoTransferencia =
+  | 'AVERIADO'
+  | 'VENCIDO'
+  | 'ENVIADO_MAL'
+  | 'OTRO'
+  | string;
 
 export interface PersonaResumen {
   id_persona?: number;
@@ -13,6 +28,14 @@ export interface TransferenciaDetalleOutput {
   id_detalle?: number;
   producto?: ProductoOutput | null;
   cantidad?: number;
+  estado?: TransferenciaDetalleEstado;
+  motivoRechazo?: MotivoRechazoTransferencia | null;
+  motivoRechazoDetalle?: string | null;
+  idPresentacionProducto?: number | null;
+  presentacionDescripcion?: string | null;
+  cantidadPresentacion?: number | null;
+  precioVenta?: number | null;
+  cantidadTotal?: number | null;
 }
 
 export interface TransferenciaOutput {
@@ -30,6 +53,7 @@ export interface TransferenciaOutput {
 
 export interface TransferenciaDetalleInput {
   idProducto: number;
+  idPresentacionProducto?: number | null;
   cantidad: number;
 }
 
