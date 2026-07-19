@@ -24,7 +24,10 @@
         <tr>
           <th>Código</th>
           <th>Producto</th>
-          <th class="num">Cantidad</th>
+          <th>Presentación</th>
+          <th class="num">Precio Vta.</th>
+          <th class="num">Cant.</th>
+          <th class="num">Cant. Total</th>
         </tr>
       </thead>
       <tbody>
@@ -32,7 +35,16 @@
           <tr>
             <td>{{ d.producto?.codigo | defaultEmpty }}</td>
             <td>{{ d.producto?.nombre | defaultEmpty }}</td>
+            <td>
+              @if (d.presentacionDescripcion) {
+                {{ d.presentacionDescripcion }} (x{{ d.cantidadPresentacion | number: '1.0-0' }})
+              } @else {
+                Unidad
+              }
+            </td>
+            <td class="num">{{ d.precioVenta | number: '1.0-2' }}</td>
             <td class="num">{{ d.cantidad | number: '1.0-2' }}</td>
+            <td class="num"><strong>{{ d.cantidadTotal | number: '1.0-2' }}</strong></td>
           </tr>
         }
       </tbody>

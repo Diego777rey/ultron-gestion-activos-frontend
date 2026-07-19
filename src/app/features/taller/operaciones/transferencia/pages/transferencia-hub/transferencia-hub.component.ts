@@ -6,7 +6,7 @@ interface HubCard {
   description: string;
   icon: string;
   route: string;
-  accent: 'teal' | 'amber' | 'slate';
+  accent: 'teal' | 'amber';
 }
 
 @Component({
@@ -31,13 +31,6 @@ export class TransferenciaHubComponent {
       icon: 'request_quote',
       route: '/taller/operaciones/transferencia/solicitudes',
       accent: 'amber',
-    },
-    {
-      title: 'Entregadores',
-      description: 'Personal que traslada el stock físico. Próximamente disponible.',
-      icon: 'local_shipping',
-      route: '/taller/operaciones/transferencia/entregadores',
-      accent: 'slate',
     },
   ];
 }

@@ -36,19 +36,6 @@ export const TRANSFERENCIA_ROUTES: Routes = [
     },
   },
   {
-    path: 'entregadores',
-    loadComponent: () =>
-      import('./pages/operacion-placeholder/operacion-placeholder.component').then(
-        (m) => m.OperacionPlaceholderComponent
-      ),
-    data: {
-      tabTitle: 'Entregadores',
-      title: 'Entregadores',
-      subtitle: 'Personal encargado del traslado físico de mercadería',
-      icon: 'local_shipping',
-    },
-  },
-  {
     path: ':id',
     loadComponent: () =>
       import('./pages/transferencia-gestion/transferencia-gestion.component').then(

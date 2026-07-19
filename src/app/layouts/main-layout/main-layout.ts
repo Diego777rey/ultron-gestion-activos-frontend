@@ -154,7 +154,6 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('sectores')) return 'Sectores';
     if (url.includes('operaciones/transferencia/historico')) return 'Histórico de transferencias';
     if (url.includes('operaciones/transferencia/solicitudes')) return 'Solicitudes de repuestos';
-    if (url.includes('operaciones/transferencia/entregadores')) return 'Entregadores';
     if (url.includes('operaciones/transferencia')) return 'Transferencia';
     if (url.includes('orden-de-trabajo')) return 'Orden de Trabajo';
     return 'Pantalla';

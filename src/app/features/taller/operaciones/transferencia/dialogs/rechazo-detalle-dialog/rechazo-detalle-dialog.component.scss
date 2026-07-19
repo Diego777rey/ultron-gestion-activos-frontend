@@ -1,0 +1,67 @@
+.rechazo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__product {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--text-secondary);
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  &__select,
+  &__textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(15, 23, 42, 0.45);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--primary-color);
+    }
+  }
+
+  &__textarea {
+    resize: vertical;
+    min-height: 84px;
+  }
+
+  &__error {
+    font-size: 12px;
+    color: #ff8aa3;
+  }
+}
+
+.entity-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}

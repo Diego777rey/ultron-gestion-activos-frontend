@@ -32,10 +32,17 @@
   outline: none;
   transition: border-color 0.2s ease;
   color-scheme: dark;
-  cursor: pointer;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+
+  &:not([readonly]) {
+    cursor: text;
+  }
+
+  &[readonly] {
+    cursor: pointer;
+  }
 
   &:focus,
   &:hover:not(:disabled) {

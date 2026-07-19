@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ModalComponent } from '../modal/modal';
 import { DataTableComponent } from '../data-table/data-table';
 import { PaginatorComponent } from '../paginator/paginator';
@@ -24,6 +33,12 @@ export class EntitySearcherComponent<T> {
   readonly error = input<boolean>(false);
   readonly errorText = input<string>('');
 
+  /**
+   * Permite tipear en el input externo y abrir el buscador genérico con Enter / lupa,
+   * aplicando el texto como filtro inicial del modal.
+   */
+  readonly quickEntry = input<boolean>(false);
+
   // Table and Pagination properties
   readonly columns = input<TableColumn<T>[]>([]);
   readonly useTable = input<boolean>(true);
@@ -45,8 +60,11 @@ export class EntitySearcherComponent<T> {
   readonly searchChange = output<string>();
   readonly addClicked = output<void>();
 
+  private readonly modalSearchInput = viewChild<ElementRef<HTMLInputElement>>('modalSearchInput');
+
   protected readonly modalOpen = signal(false);
   protected readonly searchQuery = signal('');
+  protected readonly quickQuery = signal('');
 
   protected readonly filteredItems = computed(() => {
     if (this.backendPagination()) return this.items();
@@ -60,6 +78,41 @@ export class EntitySearcherComponent<T> {
   protected readonly displayTotal = computed(() => {
     return this.backendPagination() ? this.totalItems() : this.filteredItems().length;
   });
+
+  protected readonly displayValue = computed(() => {
+    // En quickEntry, mientras se escribe se muestra el texto; si no, el ítem seleccionado.
+    if (this.quickEntry() && this.quickQuery()) {
+      return this.quickQuery();
+    }
+    const val = this.value();
+    if (val === null || val === undefined || val === '') {
+      return this.quickEntry() ? this.quickQuery() : '';
+    }
+    const all = this.items();
+    const kfn = this.keyFn();
+    const match = all.find((i) => kfn(i) === val);
+    return match ? this.displayFn()(match) : this.quickEntry() ? this.quickQuery() : '';
+  });
+
+  protected onOuterClick(): void {
+    if (!this.quickEntry()) {
+      this.openModal();
+    }
+  }
+
+  protected onOuterInput(raw: string): void {
+    if (this.quickEntry()) {
+      this.quickQuery.set(raw);
+    }
+  }
+
+  protected onOuterKeydown(event: KeyboardEvent): void {
+    if (!this.quickEntry() || event.key !== 'Enter') {
+      return;
+    }
+    event.preventDefault();
+    this.openModalWithQuery(this.quickQuery());
+  }
 
   protected onSearch(query: string) {
     const upperQuery = query.toUpperCase();
@@ -80,19 +133,29 @@ export class EntitySearcherComponent<T> {
     this.pageChange.emit(event);
   }
 
-  protected readonly displayValue = computed(() => {
-    const val = this.value();
-    if (val === null || val === undefined || val === '') return '';
-    const all = this.items();
-    const kfn = this.keyFn();
-    const match = all.find((i) => kfn(i) === val);
-    return match ? this.displayFn()(match) : '';
-  });
-
   protected openModal(): void {
     if (this.disabled()) return;
+    if (this.quickEntry()) {
+      this.openModalWithQuery(this.quickQuery());
+      return;
+    }
     this.searchQuery.set('');
     this.modalOpen.set(true);
+  }
+
+  protected openModalWithQuery(rawQuery: string): void {
+    if (this.disabled()) return;
+    const query = (rawQuery ?? '').toUpperCase().trim();
+    this.searchQuery.set(query);
+    this.searchChange.emit(query);
+    this.modalOpen.set(true);
+    queueMicrotask(() => {
+      const el = this.modalSearchInput()?.nativeElement;
+      if (el) {
+        el.focus();
+        el.select();
+      }
+    });
   }
 
   protected closeModal(): void {
@@ -103,6 +166,9 @@ export class EntitySearcherComponent<T> {
     const val = this.keyFn()(item);
     this.valueChange.emit(val);
     this.itemChange.emit(item);
+    if (this.quickEntry()) {
+      this.quickQuery.set('');
+    }
     this.closeModal();
   }
 }

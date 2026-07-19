@@ -127,11 +127,9 @@ export class TransferenciasListComponent {
     const actions: MenuAction[] = [
       { id: 'gestionar', label: 'Gestionar', icon: 'edit_note' },
     ];
-    if (item.estado === 'PENDIENTE') {
-      actions.push({ id: 'conferir', label: 'Conferir', icon: 'fact_check' });
-    }
-    if (item.estado === 'CONFERIDO') {
-      actions.push({ id: 'recepcionar', label: 'Recepcionar', icon: 'inventory' });
+    const estado = this.normalizarEstado(item.estado);
+    if (estado !== 'RECEPCIONADO') {
+      actions.push({ id: 'avanzar', label: 'Avanzar etapa', icon: 'trending_flat' });
     }
     return actions;
   }
@@ -141,14 +139,8 @@ export class TransferenciasListComponent {
       case 'gestionar':
         this.openGestion(item);
         break;
-      case 'conferir':
-        this.transferenciaService.conferir(item.id_transferencia).subscribe({
-          next: () => this.load(),
-          error: (err: Error) => this.error.set(err.message),
-        });
-        break;
-      case 'recepcionar':
-        this.transferenciaService.recepcionar(item.id_transferencia).subscribe({
+      case 'avanzar':
+        this.transferenciaService.avanzarEtapa(item.id_transferencia).subscribe({
           next: () => this.load(),
           error: (err: Error) => this.error.set(err.message),
         });
@@ -157,16 +149,26 @@ export class TransferenciasListComponent {
   }
 
   protected estadoLabel(estado?: string | null): string {
-    switch (estado) {
-      case 'PENDIENTE':
-        return 'Pendiente de conferir';
+    switch (this.normalizarEstado(estado)) {
+      case 'CREACION':
+        return 'Creación';
+      case 'PENDIENTE_CONFERIR':
+        return 'Pendiente a conferir';
       case 'CONFERIDO':
-        return 'Conferida — pendiente de recepción';
+        return 'Conferido';
       case 'RECEPCIONADO':
-        return 'Recepcionada en destino';
+        return 'Recepcionado';
       default:
         return estado ?? '';
     }
+  }
+
+  private normalizarEstado(estado?: string | null): string {
+    const n = (estado ?? '').toUpperCase();
+    if (n === 'PENDIENTE') {
+      return 'CREACION';
+    }
+    return n;
   }
 
   protected trackById = (t: TransferenciaOutput): unknown => t.id_transferencia;

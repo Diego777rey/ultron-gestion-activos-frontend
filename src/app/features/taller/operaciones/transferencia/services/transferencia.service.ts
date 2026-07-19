@@ -98,28 +98,76 @@ export class TransferenciaService {
       );
   }
 
-  conferir(id: number): Observable<TransferenciaOutput> {
-    const document = `mutation($id: ID!) {
-      conferirTransferencia(id: $id) ${TRANSFERENCIA_SELECTION}
+  aceptarProducto(idTransferencia: number, idDetalle: number): Observable<TransferenciaOutput> {
+    const document = `mutation($idTransferencia: ID!, $idDetalle: ID!) {
+      aceptarProductoTransferencia(idTransferencia: $idTransferencia, idDetalle: $idDetalle) ${TRANSFERENCIA_SELECTION}
     }`;
     return this.gql
-      .mutate<{ conferirTransferencia: TransferenciaOutput }>(document, { id })
+      .mutate<{ aceptarProductoTransferencia: TransferenciaOutput }>(document, {
+        idTransferencia,
+        idDetalle,
+      })
       .pipe(
-        map((data) => data.conferirTransferencia),
-        tap((t) => this.notifications.success(`Transferencia ${t.numero} conferida`))
+        map((data) => data.aceptarProductoTransferencia),
+        tap(() => this.notifications.success('Producto verificado'))
       );
   }
 
-  recepcionar(id: number): Observable<TransferenciaOutput> {
-    const document = `mutation($id: ID!) {
-      recepcionarTransferencia(id: $id) ${TRANSFERENCIA_SELECTION}
+  rechazarProducto(
+    idTransferencia: number,
+    idDetalle: number,
+    motivo: string,
+    detalle?: string
+  ): Observable<TransferenciaOutput> {
+    const document = `mutation($idTransferencia: ID!, $idDetalle: ID!, $motivo: String!, $detalle: String) {
+      rechazarProductoTransferencia(
+        idTransferencia: $idTransferencia
+        idDetalle: $idDetalle
+        motivo: $motivo
+        detalle: $detalle
+      ) ${TRANSFERENCIA_SELECTION}
     }`;
     return this.gql
-      .mutate<{ recepcionarTransferencia: TransferenciaOutput }>(document, { id })
+      .mutate<{ rechazarProductoTransferencia: TransferenciaOutput }>(document, {
+        idTransferencia,
+        idDetalle,
+        motivo,
+        detalle: detalle?.trim() || null,
+      })
       .pipe(
-        map((data) => data.recepcionarTransferencia),
-        tap((t) => this.notifications.success(`Transferencia ${t.numero} recepcionada`))
+        map((data) => data.rechazarProductoTransferencia),
+        tap(() => this.notifications.success('Producto rechazado — stock devuelto al origen'))
       );
+  }
+
+  avanzarEtapa(id: number): Observable<TransferenciaOutput> {
+    const document = `mutation($id: ID!) {
+      avanzarEtapaTransferencia(id: $id) ${TRANSFERENCIA_SELECTION}
+    }`;
+    return this.gql
+      .mutate<{ avanzarEtapaTransferencia: TransferenciaOutput }>(document, { id })
+      .pipe(
+        map((data) => data.avanzarEtapaTransferencia),
+        tap((t) => {
+          const msg =
+            t.estado === 'PENDIENTE_CONFERIR'
+              ? `Transferencia ${t.numero}: pendiente a conferir`
+              : t.estado === 'CONFERIDO'
+                ? `Transferencia ${t.numero} conferida`
+                : t.estado === 'RECEPCIONADO'
+                  ? `Transferencia ${t.numero} recepcionada`
+                  : `Transferencia ${t.numero} actualizada`;
+          this.notifications.success(msg);
+        })
+      );
+  }
+
+  conferir(id: number): Observable<TransferenciaOutput> {
+    return this.avanzarEtapa(id);
+  }
+
+  recepcionar(id: number): Observable<TransferenciaOutput> {
+    return this.avanzarEtapa(id);
   }
 
   stockPorProductoSector(idProducto: number, idSector: number): Observable<number> {

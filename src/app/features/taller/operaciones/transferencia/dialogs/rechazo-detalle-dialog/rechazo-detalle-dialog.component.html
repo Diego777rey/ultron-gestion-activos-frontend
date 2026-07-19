@@ -1,0 +1,39 @@
+<form class="rechazo-form" [formGroup]="form" (ngSubmit)="confirmar()">
+  @if (productoLabel()) {
+    <p class="rechazo-form__product">{{ productoLabel() }}</p>
+  }
+  <p class="rechazo-form__hint">
+    Indicá el motivo del rechazo. El stock se devolverá al sector origen.
+  </p>
+
+  <div class="field">
+    <label class="field__label" for="motivoRechazo">Motivo*</label>
+    <select id="motivoRechazo" class="field__select" formControlName="motivo">
+      @for (m of motivos; track m.value) {
+        <option [value]="m.value">{{ m.label }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="field__label" for="detalleRechazo">
+      {{ requiereDetalle ? 'Especificar motivo*' : 'Detalle (opcional)' }}
+    </label>
+    <textarea
+      id="detalleRechazo"
+      class="field__textarea"
+      formControlName="detalle"
+      rows="3"
+      maxlength="255"
+      [placeholder]="requiereDetalle ? 'Describí el motivo…' : 'Observación adicional…'"
+    ></textarea>
+    @if (requiereDetalle && form.controls.detalle.touched && form.controls.detalle.invalid) {
+      <span class="field__error">Debés especificar el motivo</span>
+    }
+  </div>
+
+  <div class="entity-form-footer">
+    <app-ui-button type="button" label="Cancelar" icon="close" variant="ghost" (clicked)="cancelar()" />
+    <app-ui-button type="submit" label="Rechazar" icon="cancel" variant="danger" />
+  </div>
+</form>
