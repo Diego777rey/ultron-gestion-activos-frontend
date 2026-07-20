@@ -1,7 +1,7 @@
-@if (error) {
+@if (error()) {
   <div class="producto-form__error" role="alert">
     <span class="material-icons" aria-hidden="true">error_outline</span>
-    <span>{{ error }}</span>
+    <span>{{ error() }}</span>
   </div>
 }
 
@@ -62,7 +62,7 @@
     [label]="isEdit ? 'Guardar Cambios' : 'Registrar Producto'"
     icon="save"
     variant="primary"
-    [loading]="saving"
+    [loading]="saving()"
     (clicked)="onSubmit()"
   />
 </div>
