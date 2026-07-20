@@ -34,8 +34,8 @@ export class ProductoFormComponent {
   readonly producto = input<ProductoOutput | null>(null);
   readonly saved = output<void>();
 
-  protected saving = false;
-  protected error: string | null = null;
+  protected readonly saving = signal(false);
+  protected readonly error = signal<string | null>(null);
   protected isEdit = false;
 
   protected readonly categoriasRaiz = signal<CategoriaProductoOutput[]>([]);
@@ -141,7 +141,7 @@ export class ProductoFormComponent {
         this.loadingCategorias.set(false);
       },
       error: () => {
-        this.error = 'No se pudieron cargar las categorías';
+        this.error.set('No se pudieron cargar las categorías');
         this.loadingCategorias.set(false);
       },
     });
@@ -190,6 +190,7 @@ export class ProductoFormComponent {
   protected onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.error.set('Por favor, completa correctamente todos los campos requeridos.');
       return;
     }
 
@@ -213,20 +214,20 @@ export class ProductoFormComponent {
       idCategoriaProducto,
     };
 
-    this.saving = true;
+    this.saving.set(true);
     const request = (p && p.id_producto)
       ? this.productoService.update(p.id_producto, payload)
       : this.productoService.create(payload);
 
     request.subscribe({
       next: () => {
-        this.saving = false;
+        this.saving.set(false);
         this.saved.emit();
         this.dialogRef?.close(true);
       },
       error: (err: Error) => {
-        this.saving = false;
-        this.error = err.message || 'No se pudo guardar el producto';
+        this.saving.set(false);
+        this.error.set(err.message || 'No se pudo guardar el producto');
       },
     });
   }

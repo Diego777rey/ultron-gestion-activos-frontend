@@ -38,8 +38,8 @@ export class PresentacionFormComponent {
   readonly presentacion = input<PresentacionProductoOutput | null>(null);
   readonly saved = output<void>();
 
-  protected saving = false;
-  protected error: string | null = null;
+  protected readonly saving = signal(false);
+  protected readonly error = signal<string | null>(null);
   protected isEdit = false;
 
   protected readonly presentaciones = signal<PresentacionOutput[]>([]);
@@ -143,7 +143,7 @@ export class PresentacionFormComponent {
         this.loadingPresentaciones.set(false);
       },
       error: () => {
-        this.error = 'No se pudieron cargar las presentaciones';
+        this.error.set('No se pudieron cargar las presentaciones');
         this.loadingPresentaciones.set(false);
       },
     });
@@ -195,6 +195,7 @@ export class PresentacionFormComponent {
   protected onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.error.set('Por favor, completa correctamente todos los campos requeridos.');
       return;
     }
 
@@ -212,21 +213,21 @@ export class PresentacionFormComponent {
       estado: v.estado,
     };
 
-    this.saving = true;
-    this.error = null;
+    this.saving.set(true);
+    this.error.set(null);
     const request = (p && p.id_presentacion_producto)
       ? this.presentacionProductoService.update(p.id_presentacion_producto, payload)
       : this.presentacionProductoService.create(payload);
 
     request.subscribe({
       next: () => {
-        this.saving = false;
+        this.saving.set(false);
         this.saved.emit();
         this.dialogRef?.close(true);
       },
       error: (err: Error) => {
-        this.saving = false;
-        this.error = err.message || 'No se pudo guardar la presentación';
+        this.saving.set(false);
+        this.error.set(err.message || 'No se pudo guardar la presentación');
       },
     });
   }

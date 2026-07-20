@@ -1,7 +1,7 @@
-@if (error) {
+@if (error()) {
   <div class="form-error" role="alert">
     <span class="material-icons" aria-hidden="true">error_outline</span>
-    <span>{{ error }}</span>
+    <span>{{ error() }}</span>
   </div>
 }
 
@@ -69,7 +69,7 @@
     [label]="isEdit ? 'Guardar Cambios' : 'Agregar Presentación'"
     icon="save"
     variant="primary"
-    [loading]="saving"
+    [loading]="saving()"
     (clicked)="onSubmit()"
   />
 </div>
