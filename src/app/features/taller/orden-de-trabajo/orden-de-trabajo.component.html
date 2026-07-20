@@ -1,7 +1,42 @@
-<div class="ot-page">
-  <div class="ot-page__placeholder">
-    <span class="material-icons">assignment</span>
-    <h2>Orden de Trabajo</h2>
-    <p>Módulo en construcción.</p>
-  </div>
-</div>
+<app-generic-list [columns]="columns" [data]="ordenes()" [loading]="loading()" [error]="error()"
+  [total]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Nº orden, etapa, cliente, chapa" [searchValue]="search()" (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions" emptyMessage="No hay órdenes de trabajo que coincidan con la búsqueda"
+  [trackBy]="trackById" (pageChange)="onPageChange($event)" (retry)="load()"
+  (actionClicked)="onToolbarAction($event)" (searchSubmit)="pageIndex.set(0); load()">
+
+  <ng-template appTableCell="numero_orden" [appTableCellFrom]="ordenes()" let-orden>
+    <span class="ot-numero">{{ orden.numero_orden | defaultEmpty }}</span>
+  </ng-template>
+
+  <ng-template appTableCell="etapa" [appTableCellFrom]="ordenes()" let-orden>
+    <span class="ot-etapa-badge" [style.background]="getEtapaInfo(orden.etapa).color">
+      <span class="material-icons ot-etapa-badge__icon">{{ getEtapaInfo(orden.etapa).icono }}</span>
+      {{ getEtapaInfo(orden.etapa).label }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableCell="cliente" [appTableCellFrom]="ordenes()" let-orden>
+    {{ formatCliente(orden) }}
+  </ng-template>
+
+  <ng-template appTableCell="vehiculo" [appTableCellFrom]="ordenes()" let-orden>
+    {{ formatVehiculo(orden) }}
+  </ng-template>
+
+  <ng-template appTableCell="mecanico" [appTableCellFrom]="ordenes()" let-orden>
+    {{ formatMecanico(orden) }}
+  </ng-template>
+
+  <ng-template appTableCell="total_presupuesto" [appTableCellFrom]="ordenes()" let-orden>
+    <span class="ot-monto">{{ orden.total_presupuesto ? (orden.total_presupuesto | number:'1.0-0') + ' ₲' : '—' }}</span>
+  </ng-template>
+
+  <ng-template appTableCell="fecha_creacion" [appTableCellFrom]="ordenes()" let-orden>
+    {{ formatFecha(orden.fecha_creacion) }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="ordenes()" let-orden>
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, orden)" />
+  </ng-template>
+</app-generic-list>

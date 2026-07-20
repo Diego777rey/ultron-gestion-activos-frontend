@@ -1,0 +1,161 @@
+<div class="stepper-page">
+  <header class="stepper-header">
+    @for (step of steps; track step.index) {
+      <div
+        class="stepper-step"
+        [class.active]="currentStep() === step.index"
+        [class.done]="currentStep() > step.index"
+      >
+        <span class="stepper-step__circle">
+          @if (currentStep() > step.index) {
+            <span class="material-icons">check</span>
+          } @else {
+            <span class="material-icons">{{ step.icon }}</span>
+          }
+        </span>
+        <span class="stepper-step__label">{{ step.label }}</span>
+      </div>
+      @if (!$last) {
+        <span class="stepper-connector" [class.done]="currentStep() > step.index"></span>
+      }
+    }
+  </header>
+
+  @if (error()) {
+    <div class="form-error" role="alert">
+      <span class="material-icons" aria-hidden="true">error_outline</span>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <section class="stepper-body">
+    <h2 class="stepper-body__title">
+      {{ tituloPaso() }} 
+      <span style="font-weight: 400; color: #888; margin-left: 10px;">
+        {{ orden()?.numero_orden ? '(' + orden()?.numero_orden + ')' : '' }}
+      </span>
+    </h2>
+
+    @if (loading()) {
+      <div class="loading-state">Cargando datos de la orden...</div>
+    } @else {
+      <!-- PASO 1: RECEPCION -->
+      @if (currentStep() === 1) {
+        <p class="stepper-body__hint">
+          Asigna un mecánico, registra/selecciona el cliente y su vehículo y proporciona una descripción de la falla.
+        </p>
+        <form class="form" [formGroup]="recepcionForm" (ngSubmit)="guardarRecepcion()">
+          <div class="form__grid">
+            
+            <div class="field field--full">
+              <label class="field__label" style="position: relative; top: 0; font-size: 11px; color: var(--primary-color);">
+                Cliente*
+              </label>
+              <app-entity-searcher
+                [items]="clientes()"
+                [columns]="clienteColumns"
+                [totalItems]="clientesTotal()"
+                [loading]="loadingClientes()"
+                [displayFn]="clienteLabelFn"
+                [keyFn]="clienteKeyFn"
+                [value]="recepcionForm.controls.id_cliente.value"
+                (searchChange)="fetchClientes(0, 10, $event)"
+                (pageChange)="fetchClientes($event.pageIndex, $event.pageSize, '')"
+                (itemChange)="onClienteSelected($event)"
+                [allowAdd]="true"
+                [backendPagination]="true"
+                (addClicked)="onAddCliente()"
+                placeholder="Buscar cliente por nombre o documento..."
+              />
+              @if (recepcionForm.controls.id_cliente.touched && recepcionForm.controls.id_cliente.invalid) {
+                <span class="field__error">Debes seleccionar un cliente</span>
+              }
+            </div>
+            
+            <div class="field field--full">
+              <label class="field__label" style="position: relative; top: 0; font-size: 11px; color: var(--primary-color);">
+                Vehículo*
+              </label>
+              <app-entity-searcher
+                [items]="vehiculos()"
+                [columns]="vehiculoColumns"
+                [totalItems]="vehiculosTotal()"
+                [loading]="loadingVehiculos()"
+                [displayFn]="vehiculoLabelFn"
+                [keyFn]="vehiculoKeyFn"
+                [value]="recepcionForm.controls.id_vehiculo.value"
+                (searchChange)="fetchVehiculos(0, 10, $event)"
+                (pageChange)="fetchVehiculos($event.pageIndex, $event.pageSize, '')"
+                (itemChange)="onVehiculoSelected($event)"
+                [allowAdd]="true"
+                [backendPagination]="true"
+                (addClicked)="onAddVehiculo()"
+                placeholder="Buscar vehículo por chapa o modelo..."
+              />
+              @if (recepcionForm.controls.id_vehiculo.touched && recepcionForm.controls.id_vehiculo.invalid) {
+                <span class="field__error">Debes seleccionar un vehículo</span>
+              }
+            </div>
+
+            <div class="field field--full">
+              <label class="field__label" style="position: relative; top: 0; font-size: 11px; color: var(--primary-color);">
+                Mecánico Asignado*
+              </label>
+              <app-entity-searcher
+                [items]="mecanicos()"
+                [columns]="mecanicoColumns"
+                [totalItems]="mecanicosTotal()"
+                [loading]="loadingMecanicos()"
+                [displayFn]="mecanicoLabelFn"
+                [keyFn]="mecanicoKeyFn"
+                [value]="recepcionForm.controls.id_mecanico.value"
+                (searchChange)="fetchMecanicos(0, 10, $event)"
+                (pageChange)="fetchMecanicos($event.pageIndex, $event.pageSize, '')"
+                (itemChange)="onMecanicoSelected($event)"
+                [backendPagination]="true"
+                placeholder="Buscar mecánico por nombre..."
+              />
+              @if (recepcionForm.controls.id_mecanico.touched && recepcionForm.controls.id_mecanico.invalid) {
+                <span class="field__error">Debes asignar un mecánico</span>
+              }
+            </div>
+            
+            <div class="field field--full">
+              <textarea id="cat-falla" class="field__input" style="height: 80px; resize: none;" formControlName="descripcion_falla" placeholder=" "></textarea>
+              <label class="field__label" for="cat-falla">Descripción detallada de la falla*</label>
+              @if (recepcionForm.controls.descripcion_falla.touched && recepcionForm.controls.descripcion_falla.invalid) {
+                <span class="field__error">Debes ingresar una descripción de la falla</span>
+              }
+            </div>
+          </div>
+        </form>
+      }
+
+      <!-- PASO 2: DIAGNOSTICO -->
+      @if (currentStep() === 2) {
+        <p class="stepper-body__hint">
+          El mecánico asignado revisa el vehículo y genera el presupuesto de productos y servicios.
+        </p>
+        <!-- TBD -->
+      }
+    }
+  </section>
+
+  <footer class="stepper-footer">
+    <app-ui-button label="Volver / Cancelar" variant="ghost" (clicked)="cancelar()" />
+
+    <div class="stepper-footer__right">
+      @if (currentStep() === 1) {
+        <app-ui-button
+          [label]="isEdit() ? 'Guardar Cambios' : 'Iniciar Diagnóstico'"
+          icon="arrow_forward"
+          variant="primary"
+          [loading]="saving()"
+          (clicked)="guardarRecepcion()"
+        />
+      } @else {
+        <app-ui-button label="Siguiente Etapa" icon="arrow_forward" variant="primary" />
+      }
+    </div>
+  </footer>
+</div>
