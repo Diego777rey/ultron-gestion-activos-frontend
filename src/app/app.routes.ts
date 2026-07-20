@@ -65,11 +65,11 @@ export const routes: Routes = [
       },
       {
         path: 'taller/orden-de-trabajo',
-        loadComponent: () =>
-          import('./features/taller/orden-de-trabajo/orden-de-trabajo.component').then(
-            (m) => m.OrdenDeTrabajoComponent
+        loadChildren: () =>
+          import('./features/taller/orden-de-trabajo/orden-trabajo.routes').then(
+            (m) => m.ORDEN_TRABAJO_ROUTES
           ),
-        data: { tabTitle: 'Orden de Trabajo' },
+        data: { tabTitle: 'Órdenes de Trabajo' },
       },
       {
         path: 'taller/operaciones/transferencia',

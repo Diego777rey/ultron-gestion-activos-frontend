@@ -14,6 +14,7 @@ import { ProductoOutput, PresentacionProductoOutput } from '../../interfaces/pro
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { ProductoFormComponent } from '../../dialogs/producto-form/producto-form.component';
 import { PresentacionFormComponent } from '../../dialogs/presentacion-form/presentacion-form.component';
+import { StockSectoresDialogComponent } from '../../dialogs/stock-sectores-dialog/stock-sectores-dialog.component';
 
 @Component({
   selector: 'app-productos-list',
@@ -62,6 +63,7 @@ export class ProductosListComponent {
 
   protected readonly rowActions: MenuAction[] = [
     { id: 'edit', label: 'Editar', icon: 'edit' },
+    { id: 'stock', label: 'Ver Stock', icon: 'inventory_2' },
   ];
 
   constructor() {
@@ -147,7 +149,18 @@ export class ProductosListComponent {
   protected onRowAction(actionId: string, producto: ProductoOutput): void {
     if (actionId === 'edit') {
       this.openEditDialog(producto);
+    } else if (actionId === 'stock') {
+      this.openStockDialog(producto);
     }
+  }
+
+  protected openStockDialog(producto: ProductoOutput): void {
+    this.dialogService.openForm(StockSectoresDialogComponent, {
+      title: 'Stock por Sectores',
+      subtitle: producto.nombre,
+      maxWidth: '640px',
+      inputs: { producto },
+    }).subscribe();
   }
 
   protected openPresentacionForm(producto: ProductoOutput, presentacion?: PresentacionProductoOutput, event?: Event): void {

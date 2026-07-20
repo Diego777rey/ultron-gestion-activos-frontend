@@ -1,35 +1,36 @@
-.ot-page {
-  display: flex;
-  flex: 1;
-  min-height: 0;
+:host {
+  display: block;
   width: 100%;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--content-bg);
+  height: 100%;
 }
 
-.ot-page__placeholder {
-  display: flex;
-  flex-direction: column;
+.ot-numero {
+  font-weight: 600;
+  color: #90CAF9;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  letter-spacing: 0.5px;
+}
+
+.ot-etapa-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
-  text-align: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 
-  .material-icons {
-    font-size: 56px;
-    color: var(--primary-color);
-  }
-
-  h2 {
-    margin: 0;
-    color: var(--text-primary);
-    font-weight: 500;
-  }
-
-  p {
-    margin: 0;
+  &__icon {
     font-size: 14px;
-    color: var(--text-muted);
   }
+}
+
+.ot-monto {
+  font-weight: 600;
+  color: #A5D6A7;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }

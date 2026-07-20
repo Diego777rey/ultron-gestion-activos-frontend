@@ -57,6 +57,8 @@ export class MainLayoutComponent implements OnInit {
       icon: 'construction',
       children: [
         { label: 'Orden de Trabajo', icon: 'assignment', route: '/taller/orden-de-trabajo' },
+        { label: 'Historial', icon: 'history', route: '/taller/historial' },
+        { label: 'Calendario', icon: 'calendar_month', route: '/taller/calendario' },
       ]
     },
     {
@@ -156,6 +158,8 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('operaciones/transferencia/solicitudes')) return 'Solicitudes de repuestos';
     if (url.includes('operaciones/transferencia')) return 'Transferencia';
     if (url.includes('orden-de-trabajo')) return 'Orden de Trabajo';
+    if (url.includes('taller/historial')) return 'Historial';
+    if (url.includes('taller/calendario')) return 'Calendario';
     return 'Pantalla';
   }
 
