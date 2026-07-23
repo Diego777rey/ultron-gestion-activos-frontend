@@ -1,0 +1,393 @@
+/* Estilos compartidos del flujo OT — formularios compactos y legibles */
+
+.ot-hint {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.62);
+  margin: 0 0 16px;
+  max-width: 640px;
+}
+
+.ot-section {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  max-width: 920px;
+}
+
+.ot-section--narrow {
+  max-width: 560px;
+}
+
+.ot-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: #f2f2f2;
+  letter-spacing: 0.01em;
+}
+
+.ot-section .ot-hint {
+  margin-bottom: 14px;
+}
+
+.ot-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 640px;
+  width: 100%;
+}
+
+.ot-form--wide {
+  max-width: 100%;
+}
+
+.ot-form__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.ot-form__grid--2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+  align-items: start;
+}
+
+.ot-form__row {
+  display: grid;
+  gap: 12px;
+  align-items: end;
+  width: 100%;
+}
+
+/* Fila compacta: tipo | ítem | cant | precio | botón */
+.ot-form__row--lineas {
+  grid-template-columns: 150px minmax(180px, 1.4fr) 88px 110px auto;
+}
+
+/* Fila solicitud: sector | observación */
+.ot-form__row--solicitud-top {
+  grid-template-columns: minmax(180px, 1fr) minmax(160px, 1fr);
+}
+
+/* Fila solicitud: producto | cant | botón */
+.ot-form__row--solicitud-add {
+  grid-template-columns: minmax(200px, 1.6fr) 88px auto;
+}
+
+@media (max-width: 860px) {
+  .ot-form__row--lineas,
+  .ot-form__row--solicitud-top,
+  .ot-form__row--solicitud-add {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ot-form__row--lineas > :nth-child(2),
+  .ot-form__row--solicitud-add > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .ot-form__grid--2,
+  .ot-form__row--lineas,
+  .ot-form__row--solicitud-top,
+  .ot-form__row--solicitud-add {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ot-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ot-field--full {
+  grid-column: 1 / -1;
+}
+
+.ot-field__label-static {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ot-field__label {
+  position: absolute;
+  top: 22px;
+  left: 10px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+  transition: 0.15s ease all;
+}
+
+.ot-field__input {
+  width: 100%;
+  height: 38px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  color: #f5f5f5;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  color-scheme: dark;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+
+  &:focus {
+    border-color: var(--primary-color);
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  &:focus ~ .ot-field__label,
+  &:not(:placeholder-shown) ~ .ot-field__label {
+    top: -7px;
+    left: 8px;
+    font-size: 11px;
+    padding: 0 4px;
+    background: #3a3a3a;
+    color: var(--primary-color);
+  }
+}
+
+select.ot-field__input {
+  cursor: pointer;
+  appearance: auto;
+}
+
+textarea.ot-field__input {
+  height: 72px;
+  resize: vertical;
+  min-height: 72px;
+  padding-top: 10px;
+}
+
+.ot-field__error {
+  font-size: 11px;
+  color: #ff8aa3;
+  margin-top: 2px;
+}
+
+.ot-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 16px;
+  max-width: 920px;
+}
+
+@media (max-width: 720px) {
+  .ot-panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ot-panel {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.22);
+  min-height: 88px;
+}
+
+.ot-panel__title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .material-icons {
+    font-size: 18px;
+    color: var(--primary-color);
+  }
+}
+
+.ot-panel__empty {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.ot-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ot-panel__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.88);
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  strong {
+    color: #fff;
+  }
+}
+
+.ot-table-wrap {
+  margin-top: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.ot-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+
+  th {
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  td {
+    padding: 10px 14px;
+    color: rgba(255, 255, 255, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    vertical-align: middle;
+  }
+
+  tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  tfoot td {
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: none;
+  }
+}
+
+.ot-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: rgba(66, 165, 245, 0.2);
+  color: #90caf9;
+  border: 1px solid rgba(66, 165, 245, 0.35);
+}
+
+.ot-badge--servicio {
+  background: rgba(171, 71, 188, 0.2);
+  color: #ce93d8;
+  border-color: rgba(171, 71, 188, 0.35);
+}
+
+.ot-badge--ok {
+  background: rgba(102, 187, 106, 0.2);
+  color: #a5d6a7;
+  border-color: rgba(102, 187, 106, 0.35);
+}
+
+.ot-badge--warn {
+  background: rgba(255, 167, 38, 0.2);
+  color: #ffcc80;
+  border-color: rgba(255, 167, 38, 0.35);
+}
+
+.ot-badge--danger {
+  background: rgba(229, 57, 53, 0.2);
+  color: #ef9a9a;
+  border-color: rgba(229, 57, 53, 0.35);
+}
+
+.ot-icon-btn {
+  background: none;
+  border: none;
+  color: #ef9a9a;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: inline-flex;
+
+  &:hover {
+    background: rgba(229, 57, 53, 0.15);
+  }
+
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+.ot-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.88);
+
+  input {
+    accent-color: var(--primary-color);
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.ot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.ot-divider {
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 8px 0 20px;
+}
+
+.ot-total {
+  color: var(--primary-color);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Entity searcher inside OT fields: keep height consistent */
+.ot-field app-entity-searcher {
+  display: block;
+  width: 100%;
+}

@@ -1,0 +1,130 @@
+<div class="ot-section presupuesto-section">
+  <h3 class="ot-section-title">Presupuesto detallado</h3>
+
+  @if (editable()) {
+    <form class="ot-form ot-form--wide" [formGroup]="detalleForm" (ngSubmit)="agregarDetalle()">
+      <div class="ot-form__row ot-form__row--lineas">
+        <div class="ot-field">
+          <label class="ot-field__label-static" for="ot-det-tipo">Tipo*</label>
+          <select id="ot-det-tipo" class="ot-field__input" formControlName="tipo">
+            @for (t of detalleTipos; track t.value) {
+              <option [value]="t.value">{{ t.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="ot-field">
+          <label class="ot-field__label-static">Ítem*</label>
+          @if (detalleForm.controls.tipo.value === 'PRODUCTO') {
+            <app-entity-searcher
+              [items]="productos()"
+              [columns]="productoColumns"
+              [totalItems]="productosTotal()"
+              [loading]="loadingProductos()"
+              [displayFn]="productoLabelFn"
+              [keyFn]="productoKeyFn"
+              [value]="detalleForm.controls.id_item.value"
+              (searchChange)="fetchProductos(0, 10, $event)"
+              (pageChange)="fetchProductos($event.pageIndex, $event.pageSize, '')"
+              (itemChange)="onProductoSelected($event)"
+              [backendPagination]="true"
+              placeholder="Buscar producto..."
+            />
+          } @else {
+            <app-entity-searcher
+              [items]="servicios()"
+              [columns]="servicioColumns"
+              [totalItems]="serviciosTotal()"
+              [loading]="loadingServicios()"
+              [displayFn]="servicioLabelFn"
+              [keyFn]="servicioKeyFn"
+              [value]="detalleForm.controls.id_item.value"
+              (searchChange)="fetchServicios(0, 10, $event)"
+              (pageChange)="fetchServicios($event.pageIndex, $event.pageSize, '')"
+              (itemChange)="onServicioSelected($event)"
+              [allowAdd]="allowCreateServicio()"
+              (addClicked)="onAddServicio()"
+              [backendPagination]="true"
+              placeholder="Buscar servicio..."
+            />
+          }
+        </div>
+
+        <div class="ot-field">
+          <label class="ot-field__label-static" for="ot-det-cant">Cantidad*</label>
+          <input id="ot-det-cant" type="number" class="ot-field__input" formControlName="cantidad" min="0.01" step="0.01" />
+        </div>
+
+        <div class="ot-field">
+          <label class="ot-field__label-static" for="ot-det-precio">Precio*</label>
+          <input id="ot-det-precio" type="number" class="ot-field__input" formControlName="precio_unitario" min="0" step="1" />
+        </div>
+
+        <div class="ot-field">
+          <label class="ot-field__label-static" aria-hidden="true">&nbsp;</label>
+          <app-ui-button
+            type="submit"
+            label="Agregar"
+            icon="add"
+            variant="outline"
+            [loading]="isAdding()"
+            [disabled]="detalleForm.invalid"
+          />
+        </div>
+      </div>
+    </form>
+  }
+
+  <div class="ot-table-wrap">
+    <table class="ot-table">
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Descripción</th>
+          <th>Cant.</th>
+          <th>Precio U.</th>
+          <th>Subtotal</th>
+          @if (editable()) {
+            <th style="width: 52px;"></th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (det of orden().detalles; track det.id_detalle) {
+          <tr>
+            <td>
+              <span class="ot-badge" [class.ot-badge--servicio]="det.tipo === 'SERVICIO'">
+                {{ det.tipo }}
+              </span>
+            </td>
+            <td>{{ nombreItem(det) }}</td>
+            <td>{{ det.cantidad }}</td>
+            <td>{{ det.precio_unitario | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</td>
+            <td>{{ det.subtotal | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</td>
+            @if (editable()) {
+              <td>
+                <button type="button" class="ot-icon-btn" (click)="eliminarDetalle(det)" aria-label="Eliminar ítem">
+                  <span class="material-icons" aria-hidden="true">delete</span>
+                </button>
+              </td>
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="editable() ? 6 : 5" style="text-align: center; color: rgba(255,255,255,0.45); padding: 22px;">
+              No hay productos ni servicios en el presupuesto.
+            </td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" style="text-align: right;">Total presupuesto:</td>
+          <td [attr.colspan]="editable() ? 2 : 1" class="ot-total">
+            {{ orden().total_presupuesto | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
