@@ -1,0 +1,155 @@
+<section class="ot-section solicitud-block">
+  <h3 class="ot-section-title">Solicitud de repuesto</h3>
+  <p class="ot-hint">
+    Solicita productos desde otro sector. Al aprobar se genera una transferencia hacia el sector de la orden.
+  </p>
+
+  @if (editable()) {
+    <form class="ot-form ot-form--wide" [formGroup]="form">
+      <div class="ot-form__row ot-form__row--solicitud-top">
+        <div class="ot-field">
+          <label class="ot-field__label-static">Sector origen*</label>
+          <app-entity-searcher
+            [items]="sectores()"
+            [columns]="sectorColumns"
+            [totalItems]="sectoresTotal()"
+            [loading]="loadingSectores()"
+            [displayFn]="sectorLabelFn"
+            [keyFn]="sectorKeyFn"
+            [value]="form.controls.id_sector_origen.value"
+            (searchChange)="fetchSectores(0, 10, $event)"
+            (pageChange)="fetchSectores($event.pageIndex, $event.pageSize, '')"
+            (itemChange)="onSectorSelected($event)"
+            [backendPagination]="true"
+            placeholder="Buscar sector origen..."
+          />
+        </div>
+        <div class="ot-field">
+          <label class="ot-field__label-static" for="ot-sol-obs">Observación</label>
+          <input id="ot-sol-obs" class="ot-field__input" formControlName="observacion" />
+        </div>
+      </div>
+
+      <div class="ot-form__row ot-form__row--solicitud-add">
+        <div class="ot-field">
+          <label class="ot-field__label-static">Producto*</label>
+          <app-entity-searcher
+            [items]="productos()"
+            [columns]="productoColumns"
+            [totalItems]="productosTotal()"
+            [loading]="loadingProductos()"
+            [displayFn]="productoLabelFn"
+            [keyFn]="productoKeyFn"
+            [value]="form.controls.id_producto.value"
+            (searchChange)="fetchProductos(0, 10, $event)"
+            (pageChange)="fetchProductos($event.pageIndex, $event.pageSize, '')"
+            (itemChange)="onProductoSelected($event)"
+            [backendPagination]="true"
+            placeholder="Buscar producto..."
+          />
+        </div>
+        <div class="ot-field">
+          <label class="ot-field__label-static" for="ot-sol-cant">Cantidad*</label>
+          <input id="ot-sol-cant" type="number" class="ot-field__input" formControlName="cantidad" min="0.01" step="0.01" />
+        </div>
+        <div class="ot-field">
+          <label class="ot-field__label-static" aria-hidden="true">&nbsp;</label>
+          <app-ui-button type="button" label="Agregar línea" icon="add" variant="outline" (clicked)="agregarLinea()" />
+        </div>
+      </div>
+    </form>
+
+    @if (pendientes().length > 0) {
+      <div class="ot-table-wrap">
+        <table class="ot-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th style="width: 100px;">Cantidad</th>
+              <th style="width: 52px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of pendientes(); track $index) {
+              <tr>
+                <td>{{ p.nombre }}</td>
+                <td>{{ p.cantidad }}</td>
+                <td>
+                  <button type="button" class="ot-icon-btn" (click)="quitarLinea($index)" aria-label="Quitar línea">
+                    <span class="material-icons" aria-hidden="true">delete</span>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="ot-actions">
+        <app-ui-button
+          label="Crear solicitud"
+          icon="send"
+          variant="primary"
+          [loading]="saving()"
+          (clicked)="crearSolicitud()"
+        />
+      </div>
+    }
+  }
+
+  @if (loading()) {
+    <p class="ot-panel__empty">Cargando solicitudes...</p>
+  } @else if (solicitudes().length === 0) {
+    <p class="ot-panel__empty" style="margin-top: 12px;">No hay solicitudes de repuesto.</p>
+  } @else {
+    <div class="ot-table-wrap" style="margin-top: 16px;">
+      <table class="ot-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Origen → Destino</th>
+            <th>Estado</th>
+            <th>Transferencia</th>
+            <th>Productos</th>
+            @if (editable()) {
+              <th style="width: 180px;"></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (sol of solicitudes(); track sol.id_solicitud_repuesto) {
+            <tr>
+              <td>{{ sol.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ sol.sector_origen?.nombre }} → {{ sol.sector_destino?.nombre }}</td>
+              <td>
+                <span
+                  class="ot-badge"
+                  [class.ot-badge--warn]="sol.estado === 'PENDIENTE'"
+                  [class.ot-badge--ok]="sol.estado === 'APROBADA'"
+                  [class.ot-badge--danger]="sol.estado === 'RECHAZADA'"
+                >
+                  {{ sol.estado }}
+                </span>
+              </td>
+              <td>{{ sol.numero_transferencia || '—' }}</td>
+              <td>
+                @for (d of sol.detalles; track d.id_detalle) {
+                  <div>{{ d.codigo_producto }} {{ d.nombre_producto }} ({{ d.cantidad }})</div>
+                }
+              </td>
+              @if (editable()) {
+                <td>
+                  @if (sol.estado === 'PENDIENTE') {
+                    <div class="ot-actions" style="margin-top: 0;">
+                      <app-ui-button label="Aprobar" icon="check" variant="outline" (clicked)="aprobar(sol)" />
+                      <app-ui-button label="Rechazar" icon="close" variant="ghost" (clicked)="rechazar(sol)" />
+                    </div>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

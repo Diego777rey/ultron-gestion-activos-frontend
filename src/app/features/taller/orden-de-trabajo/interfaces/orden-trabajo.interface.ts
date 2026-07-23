@@ -1,5 +1,6 @@
 import { ClienteOutput } from '../../../personas/clientes/interfaces/cliente.interface';
 import { VehiculoOutput } from '../../../activos/vehiculos/interfaces/vehiculo.interface';
+import { CajaOutput } from '../../../financiero/cajas/interfaces/caja.interface';
 
 export interface OrdenTrabajoOutput {
   id_orden_trabajo?: string | null;
@@ -18,6 +19,7 @@ export interface OrdenTrabajoOutput {
   presupuesto_aprobado?: boolean | null;
   total_presupuesto?: number | null;
   observaciones?: string | null;
+  caja?: CajaOutput | null;
   detalles?: OrdenTrabajoDetalleOutput[] | null;
 }
 
@@ -58,7 +60,6 @@ export interface OrdenTrabajoDetalleInput {
   precio_unitario?: number | null;
 }
 
-// Interfaces resumidas para datos anidados
 export interface FuncionarioResumen {
   id_funcionario?: string | null;
   persona?: {
@@ -79,7 +80,6 @@ export interface UsuarioResumen {
   funcionario?: FuncionarioResumen | null;
 }
 
-/** Etapas de la orden de trabajo */
 export type EtapaOrdenTrabajo =
   | 'RECEPCION'
   | 'DIAGNOSTICO'
@@ -87,7 +87,12 @@ export type EtapaOrdenTrabajo =
   | 'FINALIZADA'
   | 'FACTURADO';
 
-export const ETAPAS_ORDEN: { valor: EtapaOrdenTrabajo; label: string; icono: string; color: string }[] = [
+export const ETAPAS_ORDEN: {
+  valor: EtapaOrdenTrabajo;
+  label: string;
+  icono: string;
+  color: string;
+}[] = [
   { valor: 'RECEPCION', label: 'Recepción', icono: 'login', color: '#42A5F5' },
   { valor: 'DIAGNOSTICO', label: 'Diagnóstico', icono: 'search', color: '#FFA726' },
   { valor: 'EN_PROCESO', label: 'En Proceso', icono: 'build', color: '#AB47BC' },

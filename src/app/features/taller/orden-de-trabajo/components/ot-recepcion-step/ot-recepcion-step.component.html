@@ -1,0 +1,134 @@
+<p class="ot-hint">
+  Asigna sector, responsable, mecánico, cliente y vehículo, e indica la falla reportada.
+</p>
+
+<section class="ot-section">
+  <form class="ot-form" [formGroup]="form">
+    <div class="ot-form__grid--2">
+      <div class="ot-field">
+        <label class="ot-field__label-static">Sector (reparaciones)*</label>
+        <app-entity-searcher
+          [items]="sectores()"
+          [columns]="sectorColumns"
+          [totalItems]="sectoresTotal()"
+          [loading]="loadingSectores()"
+          [displayFn]="sectorLabelFn"
+          [keyFn]="sectorKeyFn"
+          [value]="form.controls.id_sector.value"
+          (searchChange)="fetchSectores(0, 10, $event)"
+          (pageChange)="fetchSectores($event.pageIndex, $event.pageSize, '')"
+          (itemChange)="onSectorSelected($event)"
+          [backendPagination]="true"
+          placeholder="Buscar sector..."
+        />
+        @if (form.controls.id_sector.touched && form.controls.id_sector.invalid) {
+          <span class="ot-field__error">Debes seleccionar un sector</span>
+        }
+      </div>
+
+      <div class="ot-field">
+        <label class="ot-field__label-static">Usuario responsable*</label>
+        <app-entity-searcher
+          [items]="usuarios()"
+          [columns]="usuarioColumns"
+          [totalItems]="usuariosTotal()"
+          [loading]="loadingUsuarios()"
+          [displayFn]="usuarioLabelFn"
+          [keyFn]="usuarioKeyFn"
+          [value]="form.controls.id_responsable.value"
+          (searchChange)="fetchUsuarios(0, 10, $event)"
+          (pageChange)="fetchUsuarios($event.pageIndex, $event.pageSize, '')"
+          (itemChange)="onUsuarioSelected($event)"
+          [backendPagination]="true"
+          placeholder="Buscar responsable..."
+        />
+        @if (form.controls.id_responsable.touched && form.controls.id_responsable.invalid) {
+          <span class="ot-field__error">Debes seleccionar un responsable</span>
+        }
+      </div>
+
+      <div class="ot-field">
+        <label class="ot-field__label-static">Cliente*</label>
+        <app-entity-searcher
+          [items]="clientes()"
+          [columns]="clienteColumns"
+          [totalItems]="clientesTotal()"
+          [loading]="loadingClientes()"
+          [displayFn]="clienteLabelFn"
+          [keyFn]="clienteKeyFn"
+          [value]="form.controls.id_cliente.value"
+          (searchChange)="fetchClientes(0, 10, $event)"
+          (pageChange)="fetchClientes($event.pageIndex, $event.pageSize, '')"
+          (itemChange)="onClienteSelected($event)"
+          [allowAdd]="true"
+          [backendPagination]="true"
+          (addClicked)="onAddCliente()"
+          placeholder="Buscar cliente..."
+        />
+        @if (form.controls.id_cliente.touched && form.controls.id_cliente.invalid) {
+          <span class="ot-field__error">Debes seleccionar un cliente</span>
+        }
+      </div>
+
+      <div class="ot-field">
+        <label class="ot-field__label-static">Vehículo*</label>
+        <app-entity-searcher
+          [items]="vehiculos()"
+          [columns]="vehiculoColumns"
+          [totalItems]="vehiculosTotal()"
+          [loading]="loadingVehiculos()"
+          [displayFn]="vehiculoLabelFn"
+          [keyFn]="vehiculoKeyFn"
+          [value]="form.controls.id_vehiculo.value"
+          (searchChange)="fetchVehiculos(0, 10, $event)"
+          (pageChange)="fetchVehiculos($event.pageIndex, $event.pageSize, '')"
+          (itemChange)="onVehiculoSelected($event)"
+          [allowAdd]="true"
+          [backendPagination]="true"
+          (addClicked)="onAddVehiculo()"
+          placeholder="Buscar vehículo..."
+        />
+        @if (form.controls.id_vehiculo.touched && form.controls.id_vehiculo.invalid) {
+          <span class="ot-field__error">Debes seleccionar un vehículo</span>
+        }
+      </div>
+
+      <div class="ot-field ot-field--full">
+        <label class="ot-field__label-static">Mecánico asignado*</label>
+        <app-entity-searcher
+          [items]="mecanicos()"
+          [columns]="mecanicoColumns"
+          [totalItems]="mecanicosTotal()"
+          [loading]="loadingMecanicos()"
+          [displayFn]="mecanicoLabelFn"
+          [keyFn]="mecanicoKeyFn"
+          [value]="form.controls.id_mecanico.value"
+          (searchChange)="fetchMecanicos(0, 10, $event)"
+          (pageChange)="fetchMecanicos($event.pageIndex, $event.pageSize, '')"
+          (itemChange)="onMecanicoSelected($event)"
+          [backendPagination]="true"
+          placeholder="Buscar mecánico..."
+        />
+        @if (form.controls.id_mecanico.touched && form.controls.id_mecanico.invalid) {
+          <span class="ot-field__error">Debes asignar un mecánico</span>
+        }
+      </div>
+
+      <div class="ot-field ot-field--full">
+        <label class="ot-field__label-static" for="ot-falla">Descripción de la falla*</label>
+        <textarea id="ot-falla" class="ot-field__input" formControlName="descripcion_falla" rows="3"></textarea>
+        @if (form.controls.descripcion_falla.touched && form.controls.descripcion_falla.invalid) {
+          <span class="ot-field__error">Debes ingresar la descripción de la falla</span>
+        }
+      </div>
+    </div>
+  </form>
+</section>
+
+<div class="ot-panels">
+  <app-ot-historial-panel
+    [idCliente]="form.controls.id_cliente.value || null"
+    [idVehiculo]="form.controls.id_vehiculo.value || null"
+  />
+  <app-ot-agenda-mecanico [idMecanico]="form.controls.id_mecanico.value || null" />
+</div>
