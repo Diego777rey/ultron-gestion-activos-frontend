@@ -9,12 +9,14 @@
   }
 
   <section class="stepper-body">
-    <h2 class="stepper-body__title">
-      {{ tituloPaso() }}
-      @if (orden()?.numero_orden) {
-        <span class="stepper-body__subtitle">({{ orden()?.numero_orden }})</span>
-      }
-    </h2>
+    @if (currentStep() !== 1) {
+      <h2 class="stepper-body__title">
+        {{ tituloPaso() }}
+        @if (orden()?.numero_orden) {
+          <span class="stepper-body__subtitle">({{ orden()?.numero_orden }})</span>
+        }
+      </h2>
+    }
 
     @if (loading()) {
       <div class="loading-state">Cargando datos de la orden...</div>

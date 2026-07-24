@@ -39,8 +39,10 @@ export interface OtStepDef {
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 8px 0 16px;
-      border-bottom: 1px solid var(--border-color);
+      margin: -24px -32px 0;
+      padding: 18px 32px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: #1a1a1a;
       flex-wrap: wrap;
     }
     .stepper-step {
@@ -60,35 +62,40 @@ export interface OtStepDef {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: #3c3c3c;
-      border: 2px solid var(--border-color);
-      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      color: rgba(255, 255, 255, 0.75);
     }
     .stepper-step__circle .material-icons {
       font-size: 18px;
     }
     .stepper-step.active .stepper-step__circle {
-      background: var(--primary-color);
-      border-color: var(--primary-color);
+      background: #43a047;
+      border-color: #43a047;
       color: #fff;
+      box-shadow: 0 0 0 4px rgba(67, 160, 71, 0.4);
     }
     .stepper-step.done .stepper-step__circle {
-      background: #3b883f;
-      border-color: #3b883f;
+      background: #388e3c;
+      border-color: #388e3c;
       color: #fff;
     }
     .stepper-step__label {
       font-size: 14px;
       font-weight: 500;
-      color: var(--text-primary);
+      color: rgba(255, 255, 255, 0.92);
+    }
+    .stepper-step.active .stepper-step__label {
+      color: #43a047;
+      font-weight: 700;
     }
     .stepper-connector {
       width: 48px;
       height: 2px;
-      background: var(--border-color);
+      background: rgba(255, 255, 255, 0.35);
     }
     .stepper-connector.done {
-      background: #3b883f;
+      background: #43a047;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
