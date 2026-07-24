@@ -1,5 +1,10 @@
 /* Estilos compartidos del flujo OT — formularios compactos y legibles */
 
+:host {
+  display: block;
+  width: 100%;
+}
+
 .ot-hint {
   font-size: 13px;
   line-height: 1.45;
@@ -9,12 +14,16 @@
 }
 
 .ot-section {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
   padding: 18px 20px;
   margin-bottom: 20px;
   max-width: 920px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 10px 28px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(8px);
 }
 
 .ot-section--narrow {
@@ -137,23 +146,25 @@
   height: 38px;
   padding: 8px 10px;
   box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
   color: #f5f5f5;
   font-family: inherit;
   font-size: 13px;
   outline: none;
   color-scheme: dark;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.22);
+    border-color: rgba(148, 163, 184, 0.35);
+    background: rgba(255, 255, 255, 0.08);
   }
 
   &:focus {
     border-color: var(--primary-color);
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(255, 255, 255, 0.09);
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.18);
   }
 
   &:focus ~ .ot-field__label,
@@ -162,7 +173,7 @@
     left: 8px;
     font-size: 11px;
     padding: 0 4px;
-    background: #3a3a3a;
+    background: #2a3140;
     color: var(--primary-color);
   }
 }
@@ -185,12 +196,102 @@ textarea.ot-field__input {
   margin-top: 2px;
 }
 
+.ot-recepcion-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  width: 100%;
+}
+
+.ot-recepcion-layout__main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+
+  .ot-section {
+    max-width: none;
+    margin-bottom: 0;
+  }
+}
+
+.ot-recepcion-layout__side {
+  min-width: 0;
+  position: sticky;
+  top: 12px;
+  align-self: stretch;
+
+  app-ot-historial-panel {
+    display: block;
+    height: 100%;
+    min-height: 420px;
+  }
+}
+
+/* Historial grande a la derecha (estilos aplicados en el host del panel) */
+:host-context(.ot-recepcion-layout__side) {
+  display: block;
+  height: 100%;
+  min-height: 420px;
+
+  .ot-panel {
+    height: 100%;
+    min-height: 420px;
+    padding: 18px 20px;
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+
+  .ot-panel__title {
+    font-size: 16px;
+    margin-bottom: 14px;
+    gap: 8px;
+
+    .material-icons {
+      font-size: 22px;
+    }
+  }
+
+  .ot-panel__empty {
+    font-size: 13px;
+  }
+
+  .ot-panel__item {
+    font-size: 13px;
+    padding: 10px 0;
+    gap: 16px;
+  }
+}
+
 .ot-panels {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
   margin-top: 16px;
   max-width: 920px;
+}
+
+@media (max-width: 1100px) {
+  .ot-recepcion-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ot-recepcion-layout__side {
+    position: static;
+
+    app-ot-historial-panel {
+      min-height: 0;
+    }
+  }
+
+  :host-context(.ot-recepcion-layout__side) {
+    min-height: 0;
+
+    .ot-panel {
+      min-height: 0;
+    }
+  }
 }
 
 @media (max-width: 720px) {
@@ -200,11 +301,15 @@ textarea.ot-field__input {
 }
 
 .ot-panel {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
   padding: 12px 14px;
-  background: rgba(0, 0, 0, 0.22);
+  background: rgba(255, 255, 255, 0.06);
   min-height: 88px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 22px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(8px);
 }
 
 .ot-panel__title {
@@ -257,10 +362,10 @@ textarea.ot-field__input {
 
 .ot-table-wrap {
   margin-top: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .ot-table {
