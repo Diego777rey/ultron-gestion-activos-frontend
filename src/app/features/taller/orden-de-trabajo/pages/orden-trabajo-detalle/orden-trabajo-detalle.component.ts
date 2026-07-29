@@ -67,11 +67,6 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
     return step ? step.index : 1;
   });
 
-  protected readonly tituloPaso = computed(() => {
-    const step = this.steps.find((s) => s.index === this.currentStep());
-    return step?.label ?? '';
-  });
-
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {

@@ -14,37 +14,39 @@ import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas
   selector: 'app-ot-diagnostico-step',
   imports: [ReactiveFormsModule, OtDetalleLineasComponent],
   template: `
-    <p class="ot-hint">
-      Define tiempos estimados, arma el presupuesto y valida la aprobación del cliente.
-    </p>
+    <div class="ot-recepcion-layout">
+      <div class="ot-recepcion-layout__main">
+        <section class="ot-section">
+          <h3 class="ot-section-title">Tiempos y aprobación</h3>
+          <form class="ot-form" [formGroup]="form">
+            <div class="ot-form__grid--2">
+              <div class="ot-field">
+                <label class="ot-field__label-static" for="ot-f-inicio">Fecha de inicio estimada</label>
+                <input id="ot-f-inicio" type="date" class="ot-field__input" formControlName="fecha_inicio_estimada" />
+              </div>
+              <div class="ot-field">
+                <label class="ot-field__label-static" for="ot-f-fin">Fecha de fin estimada</label>
+                <input id="ot-f-fin" type="date" class="ot-field__input" formControlName="fecha_fin_estimada" />
+              </div>
+            </div>
+            <div class="ot-checkbox-row">
+              <input id="ot-p-aprobado" type="checkbox" formControlName="presupuesto_aprobado" />
+              <label for="ot-p-aprobado">Presupuesto aprobado por el cliente</label>
+            </div>
+          </form>
+        </section>
+      </div>
 
-    <section class="ot-section ot-section--narrow">
-      <h3 class="ot-section-title">Tiempos y aprobación</h3>
-      <form class="ot-form" [formGroup]="form">
-        <div class="ot-form__grid--2">
-          <div class="ot-field">
-            <label class="ot-field__label-static" for="ot-f-inicio">Fecha de inicio estimada</label>
-            <input id="ot-f-inicio" type="date" class="ot-field__input" formControlName="fecha_inicio_estimada" />
-          </div>
-          <div class="ot-field">
-            <label class="ot-field__label-static" for="ot-f-fin">Fecha de fin estimada</label>
-            <input id="ot-f-fin" type="date" class="ot-field__input" formControlName="fecha_fin_estimada" />
-          </div>
-        </div>
-        <div class="ot-checkbox-row">
-          <input id="ot-p-aprobado" type="checkbox" formControlName="presupuesto_aprobado" />
-          <label for="ot-p-aprobado">Presupuesto aprobado por el cliente</label>
-        </div>
-      </form>
-    </section>
-
-    <app-ot-detalle-lineas
-      [orden]="orden()"
-      [editable]="true"
-      [allowCreateServicio]="true"
-      (ordenChange)="ordenChange.emit($event)"
-      (errorChange)="errorChange.emit($event)"
-    />
+      <aside class="ot-recepcion-layout__side">
+        <app-ot-detalle-lineas
+          [orden]="orden()"
+          [editable]="true"
+          [allowCreateServicio]="true"
+          (ordenChange)="ordenChange.emit($event)"
+          (errorChange)="errorChange.emit($event)"
+        />
+      </aside>
+    </div>
   `,
   styleUrl: '../../styles/ot-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

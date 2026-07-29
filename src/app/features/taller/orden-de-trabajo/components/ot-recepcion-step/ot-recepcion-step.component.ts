@@ -25,7 +25,6 @@ import { UsuarioService } from '../../../../personas/usuarios/services/usuario.s
 import { UsuarioOutput } from '../../../../personas/usuarios/interfaces/usuario.interface';
 import { OrdenTrabajoInput, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
 import { OtHistorialPanelComponent } from '../ot-historial-panel/ot-historial-panel.component';
-import { OtAgendaMecanicoComponent } from '../ot-agenda-mecanico/ot-agenda-mecanico.component';
 
 @Component({
   selector: 'app-ot-recepcion-step',
@@ -33,7 +32,6 @@ import { OtAgendaMecanicoComponent } from '../ot-agenda-mecanico/ot-agenda-mecan
     ReactiveFormsModule,
     EntitySearcherComponent,
     OtHistorialPanelComponent,
-    OtAgendaMecanicoComponent,
   ],
   templateUrl: './ot-recepcion-step.component.html',
   styleUrl: '../../styles/ot-form.scss',

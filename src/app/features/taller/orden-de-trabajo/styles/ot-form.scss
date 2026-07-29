@@ -222,7 +222,8 @@ textarea.ot-field__input {
   top: 12px;
   align-self: stretch;
 
-  app-ot-historial-panel {
+  app-ot-historial-panel,
+  app-ot-detalle-lineas {
     display: block;
     height: 100%;
     min-height: 420px;
@@ -241,6 +242,15 @@ textarea.ot-field__input {
     padding: 18px 20px;
     border-radius: 10px;
     box-sizing: border-box;
+  }
+
+  .ot-panel--historial {
+    padding-bottom: 0;
+  }
+
+  .ot-panel__paginator {
+    margin-left: -20px;
+    margin-right: -20px;
   }
 
   .ot-panel__title {
@@ -312,6 +322,26 @@ textarea.ot-field__input {
   backdrop-filter: blur(8px);
 }
 
+.ot-panel--historial {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+.ot-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ot-panel__paginator {
+  flex-shrink: 0;
+  margin: 8px -14px 0;
+  overflow: hidden;
+  border-radius: 0 0 12px 12px;
+}
+
 .ot-panel__title {
   font-size: 13px;
   font-weight: 600;
@@ -344,8 +374,9 @@ textarea.ot-field__input {
 
 .ot-panel__item {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.88);
   padding: 7px 0;
@@ -360,12 +391,89 @@ textarea.ot-field__input {
   }
 }
 
+.ot-panel__item-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ot-panel__item-meta {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.65);
+}
+
 .ot-table-wrap {
   margin-top: 14px;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 10px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.04);
+}
+
+.ot-table__empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 22px;
+}
+
+.presupuesto-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.presupuesto-section__table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin-top: 4px;
+}
+
+.presupuesto-section__paginator {
+  flex-shrink: 0;
+  margin-top: 0;
+  overflow: hidden;
+  border-radius: 0 0 10px 10px;
+
+  .ot-table-wrap + & {
+    margin-top: -1px;
+  }
+}
+
+:host-context(.ot-recepcion-layout__side) {
+  .presupuesto-section {
+    height: 100%;
+    min-height: 420px;
+    margin-bottom: 0;
+    box-sizing: border-box;
+  }
+
+  .presupuesto-section__table {
+    flex: 1;
+  }
+
+  .ot-table-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .presupuesto-section__paginator {
+    border-radius: 0 0 10px 10px;
+  }
+
+  .ot-form__row--lineas {
+    grid-template-columns: 1fr 1fr;
+
+    > :nth-child(2) {
+      grid-column: 1 / -1;
+    }
+  }
 }
 
 .ot-table {

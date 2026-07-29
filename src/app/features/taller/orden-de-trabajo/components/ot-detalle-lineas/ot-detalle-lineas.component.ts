@@ -1,17 +1,21 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  effect,
   inject,
   input,
   OnInit,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { EntitySearcherComponent } from '../../../../../shared/components/entity-searcher/entity-searcher';
+import { PaginatorComponent } from '../../../../../shared/components/paginator/paginator';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
+import { PageChange, PageResponse } from '../../../../../shared/models/pagination.model';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { ProductoService } from '../../../../inventario/productos/services/producto.service';
 import { ProductoOutput } from '../../../../inventario/productos/interfaces/producto.interface';
@@ -27,7 +31,13 @@ import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 
 @Component({
   selector: 'app-ot-detalle-lineas',
-  imports: [CurrencyPipe, ReactiveFormsModule, UiButtonComponent, EntitySearcherComponent],
+  imports: [
+    CurrencyPipe,
+    ReactiveFormsModule,
+    UiButtonComponent,
+    EntitySearcherComponent,
+    PaginatorComponent,
+  ],
   templateUrl: './ot-detalle-lineas.component.html',
   styleUrl: '../../styles/ot-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,6 +69,11 @@ export class OtDetalleLineasComponent implements OnInit {
   });
 
   protected readonly isAdding = signal(false);
+  protected readonly loadingDetalles = signal(false);
+  protected readonly detalles = signal<OrdenTrabajoDetalleOutput[]>([]);
+  protected readonly pageIndex = signal(0);
+  protected readonly pageSize = signal(5);
+  protected readonly totalElements = signal(0);
 
   protected readonly productos = signal<ProductoOutput[]>([]);
   protected readonly productosTotal = signal(0);
@@ -83,12 +98,33 @@ export class OtDetalleLineasComponent implements OnInit {
   protected readonly servicioLabelFn = (s: ServicioOutput) => `${s.codigo ?? ''} - ${s.nombre ?? ''}`;
   protected readonly servicioKeyFn = (s: ServicioOutput) => String(s.id_servicio);
 
+  private loadedOrdenId: string | null | undefined = undefined;
+
+  constructor() {
+    effect(() => {
+      const idOrden = this.orden().id_orden_trabajo ?? null;
+      if (idOrden === this.loadedOrdenId) {
+        return;
+      }
+      this.loadedOrdenId = idOrden;
+      const size = untracked(() => this.pageSize());
+      this.pageIndex.set(0);
+      this.cargarDetalles(idOrden, 0, size);
+    });
+  }
+
   ngOnInit(): void {
     this.fetchProductos(0, 10, '');
     this.fetchServicios(0, 10, '');
     this.detalleForm.get('tipo')?.valueChanges.subscribe(() => {
       this.detalleForm.patchValue({ id_item: '', precio_unitario: 0, descripcion: '' });
     });
+  }
+
+  protected onPageChange(event: PageChange): void {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    this.cargarDetalles(this.orden().id_orden_trabajo ?? null, event.pageIndex, event.pageSize);
   }
 
   protected fetchProductos(page: number, size: number, filter: string): void {
@@ -177,6 +213,7 @@ export class OtDetalleLineasComponent implements OnInit {
           descripcion: '',
         });
         this.detalleForm.markAsUntouched();
+        this.irAUltimaPagina(orden.id_orden_trabajo!);
       },
       error: (err) => {
         this.errorChange.emit(err?.message ?? 'No se pudo agregar el detalle');
@@ -194,7 +231,10 @@ export class OtDetalleLineasComponent implements OnInit {
       return;
     }
     this.ordenService.eliminarDetalle(orden.id_orden_trabajo, det.id_detalle).subscribe({
-      next: (updated) => this.ordenChange.emit(updated),
+      next: (updated) => {
+        this.ordenChange.emit(updated);
+        this.cargarDetalles(orden.id_orden_trabajo!, this.pageIndex(), this.pageSize());
+      },
       error: (err) => this.errorChange.emit(err?.message ?? 'No se pudo eliminar el detalle'),
     });
   }
@@ -204,5 +244,53 @@ export class OtDetalleLineasComponent implements OnInit {
       return det.nombre_producto || det.descripcion || '';
     }
     return det.nombre_servicio || det.descripcion || '';
+  }
+
+  private cargarDetalles(idOrden: string | null, page: number, size: number): void {
+    if (!idOrden) {
+      this.detalles.set([]);
+      this.totalElements.set(0);
+      this.loadingDetalles.set(false);
+      return;
+    }
+
+    this.loadingDetalles.set(true);
+    this.ordenService.findDetallesPaginado(idOrden, page, size).subscribe({
+      next: (response) => this.applyResponse(response),
+      error: () => {
+        this.detalles.set([]);
+        this.totalElements.set(0);
+        this.loadingDetalles.set(false);
+      },
+    });
+  }
+
+  private irAUltimaPagina(idOrden: string): void {
+    const size = this.pageSize();
+    this.ordenService.findDetallesPaginado(idOrden, 0, size).subscribe({
+      next: (response) => {
+        const lastPage = Math.max(0, (response.pageInfo?.totalPages ?? 1) - 1);
+        this.pageIndex.set(lastPage);
+        if (lastPage === 0) {
+          this.applyResponse(response);
+          return;
+        }
+        this.cargarDetalles(idOrden, lastPage, size);
+      },
+      error: () => this.cargarDetalles(idOrden, this.pageIndex(), size),
+    });
+  }
+
+  private applyResponse(response: PageResponse<OrdenTrabajoDetalleOutput>): void {
+    this.detalles.set(response.content ?? []);
+    this.totalElements.set(response.pageInfo?.totalElements ?? 0);
+    this.loadingDetalles.set(false);
+
+    const totalPages = response.pageInfo?.totalPages ?? 0;
+    if (totalPages > 0 && this.pageIndex() >= totalPages) {
+      const lastPage = totalPages - 1;
+      this.pageIndex.set(lastPage);
+      this.cargarDetalles(this.orden().id_orden_trabajo ?? null, lastPage, this.pageSize());
+    }
   }
 }

@@ -2,13 +2,37 @@ import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { BaseCrudService } from '../../../../shared/services/base-crud.service';
 import { CrudConfig } from '../../../../shared/models/crud-config.model';
+import { PageResponse } from '../../../../shared/models/pagination.model';
 import { ORDEN_TRABAJO_CRUD_CONFIG, ORDEN_TRABAJO_SELECTION } from '../graphql/orden-trabajo.graphql';
 import {
   OrdenTrabajoOutput,
   OrdenTrabajoInput,
   OrdenTrabajoDetalleInput,
+  OrdenTrabajoDetalleOutput,
 } from '../interfaces/orden-trabajo.interface';
 import { CajaOutput } from '../../../financiero/cajas/interfaces/caja.interface';
+
+const ORDEN_TRABAJO_DETALLE_SELECTION = `{
+  id_detalle
+  tipo
+  id_producto
+  nombre_producto
+  id_servicio
+  nombre_servicio
+  descripcion
+  cantidad
+  precio_unitario
+  subtotal
+  etapa_origen
+}`;
+
+const EMPTY_PAGE_INFO = (size: number) => ({
+  pageNumber: 0,
+  pageSize: size,
+  totalElements: 0,
+  totalPages: 0,
+  last: true,
+});
 
 @Injectable({ providedIn: 'root' })
 export class OrdenTrabajoService extends BaseCrudService<OrdenTrabajoOutput, OrdenTrabajoInput> {
@@ -63,34 +87,98 @@ export class OrdenTrabajoService extends BaseCrudService<OrdenTrabajoOutput, Ord
       .pipe(map((data) => data.marcarOrdenFacturada));
   }
 
-  findByCliente(idCliente: string, page = 0, size = 10): Observable<OrdenTrabajoOutput[]> {
+  findByCliente(idCliente: string, page = 0, size = 10): Observable<PageResponse<OrdenTrabajoOutput>> {
     const document = `query($idCliente: ID!, $page: Int!, $size: Int!) {
       listarOrdenesPorClientePaginado(idCliente: $idCliente, page: $page, size: $size) {
         content ${ORDEN_TRABAJO_SELECTION}
+        pageInfo {
+          pageNumber
+          pageSize
+          totalElements
+          totalPages
+          last
+        }
       }
     }`;
     return this.gql
-      .query<{ listarOrdenesPorClientePaginado: { content: OrdenTrabajoOutput[] } }>(document, {
+      .query<{ listarOrdenesPorClientePaginado: PageResponse<OrdenTrabajoOutput> }>(document, {
         idCliente,
         page,
         size,
       })
-      .pipe(map((data) => data.listarOrdenesPorClientePaginado?.content ?? []));
+      .pipe(
+        map(
+          (data) =>
+            data.listarOrdenesPorClientePaginado ?? {
+              content: [],
+              pageInfo: EMPTY_PAGE_INFO(size),
+            }
+        )
+      );
   }
 
-  findByVehiculo(idVehiculo: string, page = 0, size = 10): Observable<OrdenTrabajoOutput[]> {
+  findByVehiculo(idVehiculo: string, page = 0, size = 10): Observable<PageResponse<OrdenTrabajoOutput>> {
     const document = `query($idVehiculo: ID!, $page: Int!, $size: Int!) {
       listarOrdenesPorVehiculoPaginado(idVehiculo: $idVehiculo, page: $page, size: $size) {
         content ${ORDEN_TRABAJO_SELECTION}
+        pageInfo {
+          pageNumber
+          pageSize
+          totalElements
+          totalPages
+          last
+        }
       }
     }`;
     return this.gql
-      .query<{ listarOrdenesPorVehiculoPaginado: { content: OrdenTrabajoOutput[] } }>(document, {
+      .query<{ listarOrdenesPorVehiculoPaginado: PageResponse<OrdenTrabajoOutput> }>(document, {
         idVehiculo,
         page,
         size,
       })
-      .pipe(map((data) => data.listarOrdenesPorVehiculoPaginado?.content ?? []));
+      .pipe(
+        map(
+          (data) =>
+            data.listarOrdenesPorVehiculoPaginado ?? {
+              content: [],
+              pageInfo: EMPTY_PAGE_INFO(size),
+            }
+        )
+      );
+  }
+
+  findDetallesPaginado(
+    idOrden: string,
+    page = 0,
+    size = 10
+  ): Observable<PageResponse<OrdenTrabajoDetalleOutput>> {
+    const document = `query($idOrden: ID!, $page: Int!, $size: Int!) {
+      listarDetallesOrdenTrabajoPaginado(idOrden: $idOrden, page: $page, size: $size) {
+        content ${ORDEN_TRABAJO_DETALLE_SELECTION}
+        pageInfo {
+          pageNumber
+          pageSize
+          totalElements
+          totalPages
+          last
+        }
+      }
+    }`;
+    return this.gql
+      .query<{ listarDetallesOrdenTrabajoPaginado: PageResponse<OrdenTrabajoDetalleOutput> }>(document, {
+        idOrden,
+        page,
+        size,
+      })
+      .pipe(
+        map(
+          (data) =>
+            data.listarDetallesOrdenTrabajoPaginado ?? {
+              content: [],
+              pageInfo: EMPTY_PAGE_INFO(size),
+            }
+        )
+      );
   }
 
   listarAgendaMecanico(
