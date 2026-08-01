@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { GenericListComponent } from '../../../../../shared/components/generic-list/generic-list';
 import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
 import { ActionMenuComponent, MenuAction } from '../../../../../shared/components/action-menu/action-menu';
@@ -28,6 +29,7 @@ import { ServicioFormComponent } from '../../dialogs/servicio-form/servicio-form
 export class ServiciosListComponent {
   private readonly servicioService = inject(ServicioService);
   private readonly dialogService = inject(AppDialogService);
+  private readonly router = inject(Router);
 
   protected readonly servicios = signal<ServicioOutput[]>([]);
   protected readonly loading = signal(false);
@@ -94,21 +96,9 @@ export class ServiciosListComponent {
         this.load();
         break;
       case 'add':
-        this.openNewDialog();
+        this.router.navigate(['/inventario/servicios/nuevo']);
         break;
     }
-  }
-
-  protected openNewDialog(): void {
-    this.dialogService.openForm(ServicioFormComponent, {
-      title: 'Nuevo Servicio',
-      subtitle: 'Definí precio, categoría y subcategoría',
-      maxWidth: '820px',
-    }).subscribe((saved) => {
-      if (saved) {
-        this.load();
-      }
-    });
   }
 
   protected openEditDialog(servicio: ServicioOutput): void {

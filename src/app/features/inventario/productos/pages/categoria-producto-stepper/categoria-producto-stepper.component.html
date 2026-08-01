@@ -1,12 +1,12 @@
 <div class="stepper-page">
-  <header class="stepper-header">
+  <header class="stepper-header" role="navigation" aria-label="Pasos de categoría">
     @for (step of steps; track step.index) {
       <div
         class="stepper-step"
         [class.active]="currentStep() === step.index"
         [class.done]="currentStep() > step.index"
       >
-        <span class="stepper-step__circle">
+        <span class="stepper-step__circle" aria-hidden="true">
           @if (currentStep() > step.index) {
             <span class="material-icons">check</span>
           } @else {
@@ -16,7 +16,7 @@
         <span class="stepper-step__label">{{ step.label }}</span>
       </div>
       @if (!$last) {
-        <span class="stepper-connector" [class.done]="currentStep() > step.index"></span>
+        <span class="stepper-connector" [class.done]="currentStep() > step.index" aria-hidden="true"></span>
       }
     }
   </header>
@@ -29,112 +29,221 @@
   }
 
   <section class="stepper-body">
-    <h2 class="stepper-body__title">{{ tituloPaso() }}</h2>
-
-    <!-- Paso 1: Categoría -->
     @if (currentStep() === 1) {
-      <form class="form" [formGroup]="categoriaForm" (ngSubmit)="guardarCategoria()">
-        <div class="form__grid">
-          <div class="field field--full">
-            <input id="cat-nombre" class="field__input" type="text" formControlName="nombre" appAutofocus appUppercase placeholder=" " />
-            <label class="field__label" for="cat-nombre">Nombre de la categoría*</label>
-            @if (categoriaForm.controls.nombre.touched && categoriaForm.controls.nombre.invalid) {
-              <span class="field__error">El nombre es obligatorio</span>
+      <div class="cat-layout">
+        <div class="cat-layout__main">
+          <section class="cat-section">
+            <h2 class="cat-section__title">Datos de la categoría</h2>
+            <p class="cat-hint">Definí el nombre y la descripción de la categoría principal del catálogo de productos.</p>
+
+            <form class="cat-form" [formGroup]="categoriaForm" (ngSubmit)="guardarCategoria()">
+              <div class="cat-field">
+                <label class="cat-field__label" for="cat-nombre">Nombre de la categoría*</label>
+                <input
+                  id="cat-nombre"
+                  class="cat-field__input"
+                  type="text"
+                  formControlName="nombre"
+                  appAutofocus
+                  appUppercase
+                  placeholder="Ej: BEBIDAS"
+                />
+                @if (categoriaForm.controls.nombre.touched && categoriaForm.controls.nombre.invalid) {
+                  <span class="cat-field__error">El nombre es obligatorio</span>
+                }
+              </div>
+
+              <div class="cat-field">
+                <label class="cat-field__label" for="cat-descripcion">Descripción</label>
+                <textarea
+                  id="cat-descripcion"
+                  class="cat-field__input cat-field__input--textarea"
+                  formControlName="descripcion"
+                  appUppercase
+                  rows="3"
+                  placeholder="Notas u observaciones de la categoría"
+                ></textarea>
+              </div>
+
+              <label class="cat-checkbox">
+                <input type="checkbox" formControlName="estado" />
+                Categoría activa
+              </label>
+            </form>
+          </section>
+        </div>
+
+        <aside class="cat-layout__side">
+          <div class="cat-panel">
+            <h3 class="cat-panel__title">
+              <span class="material-icons" aria-hidden="true">info</span>
+              Cómo funciona
+            </h3>
+            <ul class="cat-panel__list">
+              <li class="cat-panel__item">
+                <strong>Paso 1</strong>
+                <span>Registrá la categoría principal</span>
+              </li>
+              <li class="cat-panel__item">
+                <strong>Paso 2</strong>
+                <span>Agregá subcategorías (opcional)</span>
+              </li>
+              <li class="cat-panel__item">
+                <strong>Productos</strong>
+                <span>Se clasifican con categoría y subcategoría</span>
+              </li>
+            </ul>
+            @if (categoria(); as cat) {
+              <div class="cat-panel__preview">
+                <span class="cat-panel__preview-label">Editando</span>
+                <strong>{{ cat.nombre }}</strong>
+              </div>
             }
           </div>
-
-          <div class="field field--full">
-            <input id="cat-descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
-            <label class="field__label" for="cat-descripcion">Descripción</label>
-          </div>
-
-          <div class="field field--checkbox field--full">
-            <label class="checkbox-label">
-              <input type="checkbox" formControlName="estado" />
-              Categoría Activa
-            </label>
-          </div>
-        </div>
-      </form>
+        </aside>
+      </div>
     }
 
-    <!-- Paso 2: Subcategorías -->
     @if (currentStep() === 2) {
-      <p class="stepper-body__hint">
-        Categoría: <strong>{{ categoria()?.nombre }}</strong>. Agrega las subcategorías que
-        pertenecen a esta categoría (ej: Vinos, Espumantes, Cervezas).
-      </p>
+      <div class="cat-layout">
+        <div class="cat-layout__main">
+          <section class="cat-section">
+            <h2 class="cat-section__title">Subcategorías</h2>
+            <p class="cat-hint">
+              Categoría:
+              <strong>{{ categoria()?.nombre }}</strong>.
+              Agregá las subcategorías que pertenecen a esta categoría.
+            </p>
 
-      <form class="form sub-form" [formGroup]="subForm" (ngSubmit)="agregarSubcategoria()">
-        <div class="sub-form__row">
-          <div class="field">
-            <input id="sub-nombre" class="field__input" type="text" formControlName="nombre" appUppercase placeholder=" " />
-            <label class="field__label" for="sub-nombre">Nombre de la subcategoría*</label>
-            @if (subForm.controls.nombre.touched && subForm.controls.nombre.invalid) {
-              <span class="field__error">El nombre es obligatorio</span>
-            }
-          </div>
+            <form class="cat-form cat-form--inline" [formGroup]="subForm" (ngSubmit)="agregarSubcategoria()">
+              <div class="cat-field">
+                <label class="cat-field__label" for="sub-nombre">Nombre*</label>
+                <input
+                  id="sub-nombre"
+                  class="cat-field__input"
+                  type="text"
+                  formControlName="nombre"
+                  appUppercase
+                  placeholder="Ej: CERVEZAS"
+                />
+                @if (subForm.controls.nombre.touched && subForm.controls.nombre.invalid) {
+                  <span class="cat-field__error">El nombre es obligatorio</span>
+                }
+              </div>
 
-          <div class="field">
-            <input id="sub-descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
-            <label class="field__label" for="sub-descripcion">Descripción</label>
-          </div>
+              <div class="cat-field">
+                <label class="cat-field__label" for="sub-descripcion">Descripción</label>
+                <input
+                  id="sub-descripcion"
+                  class="cat-field__input"
+                  type="text"
+                  formControlName="descripcion"
+                  appUppercase
+                  placeholder="Opcional"
+                />
+              </div>
 
-          <app-ui-button
-            label="Agregar"
-            icon="add"
-            variant="primary"
-            size="sm"
-            [loading]="savingSub()"
-            (clicked)="agregarSubcategoria()"
-          />
+              <div class="cat-form__action">
+                <app-ui-button
+                  label="Agregar"
+                  icon="add"
+                  variant="primary"
+                  size="sm"
+                  [loading]="savingSub()"
+                  (clicked)="agregarSubcategoria()"
+                />
+              </div>
+            </form>
+
+            <div class="cat-table-wrap">
+              <table class="cat-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th style="width: 56px; text-align: center;">...</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @if (loadingSubs()) {
+                    <tr>
+                      <td colspan="4" class="cat-table__empty">Cargando...</td>
+                    </tr>
+                  } @else if (subcategorias().length === 0) {
+                    <tr>
+                      <td colspan="4" class="cat-table__empty">
+                        <span class="material-icons" aria-hidden="true">inbox</span>
+                        <span>Aún no hay subcategorías</span>
+                      </td>
+                    </tr>
+                  } @else {
+                    @for (sub of subcategorias(); track sub.id_categoria_producto) {
+                      <tr>
+                        <td>{{ sub.nombre }}</td>
+                        <td>{{ sub.descripcion || '—' }}</td>
+                        <td>
+                          <span
+                            class="cat-badge"
+                            [class.cat-badge--ok]="sub.estado"
+                            [class.cat-badge--danger]="!sub.estado"
+                          >
+                            {{ sub.estado ? 'Activo' : 'Inactivo' }}
+                          </span>
+                        </td>
+                        <td style="text-align: center;">
+                          <button
+                            type="button"
+                            class="cat-icon-btn"
+                            (click)="eliminarSubcategoria(sub)"
+                            title="Eliminar"
+                          >
+                            <span class="material-icons">delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
-      </form>
 
-      <div class="sub-table">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Descripción</th>
-              <th>Estado</th>
-              <th style="width: 60px; text-align: center;">...</th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (loadingSubs()) {
-              <tr><td colspan="4" class="sub-table__empty">Cargando...</td></tr>
-            } @else if (subcategorias().length === 0) {
-              <tr><td colspan="4" class="sub-table__empty">
-                <span class="material-icons">inbox</span>
-                <span>Aún no hay subcategorías</span>
-              </td></tr>
+        <aside class="cat-layout__side">
+          <div class="cat-panel">
+            <h3 class="cat-panel__title">
+              <span class="material-icons" aria-hidden="true">account_tree</span>
+              Resumen
+            </h3>
+            <div class="cat-panel__preview">
+              <span class="cat-panel__preview-label">Categoría</span>
+              <strong>{{ categoria()?.nombre || '—' }}</strong>
+            </div>
+            <div class="cat-panel__stat">
+              <span class="cat-panel__stat-value">{{ subcategorias().length }}</span>
+              <span class="cat-panel__stat-label">subcategorías</span>
+            </div>
+            @if (subcategorias().length > 0) {
+              <ul class="cat-panel__list">
+                @for (sub of subcategorias(); track sub.id_categoria_producto) {
+                  <li class="cat-panel__item">
+                    <strong>{{ sub.nombre }}</strong>
+                    <span>{{ sub.descripcion || 'Sin descripción' }}</span>
+                  </li>
+                }
+              </ul>
             } @else {
-              @for (sub of subcategorias(); track sub.id_categoria_producto) {
-                <tr>
-                  <td>{{ sub.nombre }}</td>
-                  <td>{{ sub.descripcion || '—' }}</td>
-                  <td>
-                    <span class="status-badge" [class.active]="sub.estado" [class.inactive]="!sub.estado">
-                      {{ sub.estado ? 'Activo' : 'Inactivo' }}
-                    </span>
-                  </td>
-                  <td style="text-align: center;">
-                    <button type="button" class="icon-btn" (click)="eliminarSubcategoria(sub)" title="Eliminar">
-                      <span class="material-icons">delete</span>
-                    </button>
-                  </td>
-                </tr>
-              }
+              <p class="cat-panel__empty">Agregá al menos una subcategoría si querés clasificar productos con más detalle.</p>
             }
-          </tbody>
-        </table>
+          </div>
+        </aside>
       </div>
     }
   </section>
 
   <footer class="stepper-footer">
-    <app-ui-button label="Cancelar" variant="ghost" (clicked)="cancelar()" />
+    <app-ui-button label="Volver / Cancelar" variant="ghost" (clicked)="cancelar()" />
 
     <div class="stepper-footer__right">
       @if (currentStep() === 2) {

@@ -1,0 +1,281 @@
+<div class="stepper-page">
+  <header class="stepper-header" role="navigation" aria-label="Pasos del servicio">
+    @for (step of steps; track step.index) {
+      <div
+        class="stepper-step"
+        [class.active]="currentStep() === step.index"
+        [class.done]="currentStep() > step.index"
+      >
+        <span class="stepper-step__circle" aria-hidden="true">
+          @if (currentStep() > step.index) {
+            <span class="material-icons">check</span>
+          } @else {
+            <span class="material-icons">{{ step.icon }}</span>
+          }
+        </span>
+        <span class="stepper-step__label">{{ step.label }}</span>
+      </div>
+      @if (!$last) {
+        <span class="stepper-connector" [class.done]="currentStep() > step.index" aria-hidden="true"></span>
+      }
+    }
+  </header>
+
+  @if (error()) {
+    <div class="form-error" role="alert">
+      <span class="material-icons" aria-hidden="true">error_outline</span>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <div class="wizard">
+    <aside class="wizard__summary">
+      <h2 class="wizard__summary-title">Resumen del servicio</h2>
+      <dl class="summary-list">
+        <div class="summary-list__row">
+          <dt>Nombre</dt>
+          <dd>{{ resumenNombre() }}</dd>
+        </div>
+        <div class="summary-list__row">
+          <dt>Categoría</dt>
+          <dd>{{ selectedCategoria()?.nombre || '—' }}</dd>
+        </div>
+        <div class="summary-list__row">
+          <dt>Subcategoría</dt>
+          <dd>{{ selectedSubcategoria()?.nombre || '—' }}</dd>
+        </div>
+        <div class="summary-list__row">
+          <dt>Código</dt>
+          <dd>{{ resumenCodigo() }}</dd>
+        </div>
+        <div class="summary-list__row">
+          <dt>Precio</dt>
+          <dd>{{ resumenPrecio() }}</dd>
+        </div>
+        <div class="summary-list__row">
+          <dt>Descripción</dt>
+          <dd>{{ resumenDescripcion() }}</dd>
+        </div>
+      </dl>
+    </aside>
+
+    <section class="wizard__main">
+      @if (currentStep() === 1) {
+        <div class="table-panel">
+          <div class="table-toolbar">
+            <div class="table-search">
+              <span class="material-icons" aria-hidden="true">search</span>
+              <input
+                type="search"
+                [value]="categoriaSearch()"
+                (input)="onCategoriaSearch($any($event.target).value)"
+                placeholder="Buscar categoría..."
+                aria-label="Buscar categoría"
+              />
+            </div>
+            <div class="table-toolbar__actions">
+              <button type="button" class="icon-tool" title="Agregar categoría" (click)="openNuevaCategoria()">
+                <span class="material-icons">add</span>
+              </button>
+              <button type="button" class="icon-tool" title="Actualizar" (click)="loadCategorias()">
+                <span class="material-icons">refresh</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">Id</th>
+                  <th>Nombre</th>
+                  <th style="width: 100px;">Activo</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (loadingCategorias()) {
+                  <tr><td colspan="3" class="table-empty">Cargando categorías...</td></tr>
+                } @else if (categoriasPagina().length === 0) {
+                  <tr>
+                    <td colspan="3" class="table-empty">
+                      No hay categorías. Usá el botón + para crear una.
+                    </td>
+                  </tr>
+                } @else {
+                  @for (cat of categoriasPagina(); track cat.id_categoria_servicio) {
+                    <tr
+                      [class.selected]="selectedCategoria()?.id_categoria_servicio === cat.id_categoria_servicio"
+                      (click)="selectCategoria(cat)"
+                    >
+                      <td>{{ cat.id_categoria_servicio }}</td>
+                      <td>{{ cat.nombre }}</td>
+                      <td>{{ cat.estado !== false ? 'Sí' : 'No' }}</td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <span>{{ catRangeLabel() }}</span>
+            <div class="pager">
+              <button type="button" class="icon-tool" [disabled]="catPage() === 0" (click)="catPage.set(catPage() - 1)">
+                <span class="material-icons">chevron_left</span>
+              </button>
+              <button
+                type="button"
+                class="icon-tool"
+                [disabled]="catPage() >= catTotalPages() - 1"
+                (click)="catPage.set(catPage() + 1)"
+              >
+                <span class="material-icons">chevron_right</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (currentStep() === 2) {
+        <div class="table-panel">
+          <p class="step-hint">
+            Categoría seleccionada: <strong>{{ selectedCategoria()?.nombre }}</strong>.
+            Podés elegir una subcategoría o continuar sin ella.
+          </p>
+
+          <div class="table-toolbar">
+            <div class="table-search">
+              <span class="material-icons" aria-hidden="true">search</span>
+              <input
+                type="search"
+                [value]="subcategoriaSearch()"
+                (input)="onSubcategoriaSearch($any($event.target).value)"
+                placeholder="Buscar subcategoría..."
+                aria-label="Buscar subcategoría"
+              />
+            </div>
+            <div class="table-toolbar__actions">
+              <button type="button" class="icon-tool" title="Agregar subcategoría" (click)="openNuevaSubcategoria()">
+                <span class="material-icons">add</span>
+              </button>
+              <button
+                type="button"
+                class="icon-tool"
+                title="Actualizar"
+                (click)="loadSubcategorias(selectedCategoria()!.id_categoria_servicio!)"
+              >
+                <span class="material-icons">refresh</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">Id</th>
+                  <th>Nombre</th>
+                  <th style="width: 100px;">Activo</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (loadingSubcategorias()) {
+                  <tr><td colspan="3" class="table-empty">Cargando subcategorías...</td></tr>
+                } @else if (subcategoriasPagina().length === 0) {
+                  <tr>
+                    <td colspan="3" class="table-empty">
+                      No hay subcategorías. Usá + para crear una, o continuá sin subcategoría.
+                    </td>
+                  </tr>
+                } @else {
+                  @for (sub of subcategoriasPagina(); track sub.id_categoria_servicio) {
+                    <tr
+                      [class.selected]="selectedSubcategoria()?.id_categoria_servicio === sub.id_categoria_servicio"
+                      (click)="selectSubcategoria(sub)"
+                    >
+                      <td>{{ sub.id_categoria_servicio }}</td>
+                      <td>{{ sub.nombre }}</td>
+                      <td>{{ sub.estado !== false ? 'Sí' : 'No' }}</td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <span>{{ subRangeLabel() }}</span>
+            <div class="pager">
+              <button type="button" class="icon-tool" [disabled]="subPage() === 0" (click)="subPage.set(subPage() - 1)">
+                <span class="material-icons">chevron_left</span>
+              </button>
+              <button
+                type="button"
+                class="icon-tool"
+                [disabled]="subPage() >= subTotalPages() - 1"
+                (click)="subPage.set(subPage() + 1)"
+              >
+                <span class="material-icons">chevron_right</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (currentStep() === 3) {
+        <section class="datos-panel">
+          <h2 class="datos-panel__title">Datos generales</h2>
+          <p class="step-hint">Completá la identificación del servicio.</p>
+
+          <form class="datos-form" [formGroup]="datosForm">
+            <div class="datos-field">
+              <label for="srv-nombre">Nombre*</label>
+              <input id="srv-nombre" type="text" formControlName="nombre" appAutofocus appUppercase placeholder="Nombre del servicio" />
+              @if (datosForm.controls.nombre.touched && datosForm.controls.nombre.invalid) {
+                <span class="field-error">El nombre es obligatorio</span>
+              }
+            </div>
+
+            <div class="datos-field">
+              <label for="srv-codigo">Código</label>
+              <input id="srv-codigo" type="text" formControlName="codigo" appUppercase placeholder="Opcional" />
+            </div>
+
+            <div class="datos-field">
+              <label for="srv-precio">Precio*</label>
+              <input id="srv-precio" type="number" formControlName="precio" min="0" step="1" placeholder="0" />
+              @if (datosForm.controls.precio.touched && datosForm.controls.precio.invalid) {
+                <span class="field-error">Precio válido requerido</span>
+              }
+            </div>
+
+            <div class="datos-field datos-field--full">
+              <label for="srv-desc">Descripción</label>
+              <textarea id="srv-desc" formControlName="descripcion" appUppercase rows="3" placeholder="Notas del servicio"></textarea>
+            </div>
+          </form>
+        </section>
+      }
+    </section>
+  </div>
+
+  <footer class="stepper-footer">
+    <app-ui-button
+      [label]="currentStep() === 1 ? 'Cancelar' : 'Atrás'"
+      [icon]="currentStep() === 1 ? '' : 'arrow_back'"
+      variant="ghost"
+      (clicked)="atras()"
+    />
+
+    <div class="stepper-footer__right">
+      <app-ui-button
+        [label]="currentStep() === 3 ? 'Registrar servicio' : 'Siguiente'"
+        [icon]="currentStep() === 3 ? 'save' : 'arrow_forward'"
+        variant="primary"
+        [loading]="saving()"
+        [disabled]="!puedeAvanzar() && currentStep() !== 3"
+        (clicked)="siguiente()"
+      />
+    </div>
+  </footer>
+</div>

@@ -2,6 +2,12 @@ import { Routes } from '@angular/router';
 
 export const SERVICIOS_ROUTES: Routes = [
   {
+    path: 'nuevo',
+    loadComponent: () =>
+      import('./pages/servicio-stepper/servicio-stepper.component').then((m) => m.ServicioStepperComponent),
+    data: { tabTitle: 'Nuevo Servicio', noReuse: true },
+  },
+  {
     path: 'categorias/nueva',
     loadComponent: () =>
       import('./pages/categoria-servicio-stepper/categoria-servicio-stepper.component').then((m) => m.CategoriaServicioStepperComponent),

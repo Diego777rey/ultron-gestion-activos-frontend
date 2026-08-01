@@ -84,18 +84,12 @@ export class MainLayoutComponent implements OnInit {
     {
       label: 'Servicios',
       icon: 'handyman',
-      children: [
-        { label: 'Servicios', icon: 'build', route: '/inventario/servicios' },
-        { label: 'Categoría Servicios', icon: 'category', route: '/inventario/servicios/categorias' },
-      ]
+      route: '/inventario/servicios',
     },
     {
       label: 'Productos',
       icon: 'inventory_2',
-      children: [
-        { label: 'Productos', icon: 'inventory', route: '/inventario/productos' },
-        { label: 'Categoría Productos', icon: 'category', route: '/inventario/productos/categorias' },
-      ]
+      route: '/inventario/productos',
     },
     {
       label: 'R.R.H.H.',
@@ -146,8 +140,10 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('roles')) return 'Lista de roles';
     if (url.includes('maletines')) return 'Maletines';
     if (url.includes('cajas')) return 'Cajas';
+    if (url.includes('productos/nuevo')) return 'Nuevo Producto';
     if (url.includes('productos/categorias')) return 'Categorías de Productos';
     if (url.includes('productos')) return 'Productos';
+    if (url.includes('servicios/nuevo')) return 'Nuevo Servicio';
     if (url.includes('servicios/categorias')) return 'Categorías de Servicios';
     if (url.includes('servicios')) return 'Servicios';
     if (url.includes('sectores/zonas')) return 'Zonas';
