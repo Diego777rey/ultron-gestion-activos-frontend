@@ -2,13 +2,6 @@
   display: block;
 }
 
-.cell-code {
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--text-secondary);
-}
-
 .cell-name {
   font-weight: 500;
   color: var(--text-primary);
@@ -26,11 +19,13 @@
   gap: 6px;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
-  color: var(--text-secondary);
+  font-weight: 500;
+  color: var(--text-primary);
 
   .material-icons {
     font-size: 16px;
     opacity: 0.75;
+    color: var(--text-secondary);
   }
 }
 

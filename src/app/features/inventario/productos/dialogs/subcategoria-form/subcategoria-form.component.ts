@@ -54,10 +54,10 @@ export class SubcategoriaFormComponent {
     this.saving = true;
     this.error = null;
     this.categoriaService.create(payload).subscribe({
-      next: () => {
+      next: (sub) => {
         this.saving = false;
         this.saved.emit();
-        this.dialogRef?.close(true);
+        this.dialogRef?.close(sub);
       },
       error: (err: Error) => {
         this.saving = false;

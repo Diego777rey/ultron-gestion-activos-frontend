@@ -5,6 +5,7 @@ import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { CategoriaServicioService, CategoriaServicioInput } from '../../services/categoria-servicio.service';
+import { CategoriaServicioOutput } from '../../interfaces/servicio.interface';
 import { DialogRef } from '@angular/cdk/dialog';
 
 @Component({
@@ -17,7 +18,7 @@ import { DialogRef } from '@angular/cdk/dialog';
 export class SubcategoriaServicioFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly categoriaService = inject(CategoriaServicioService);
-  private readonly dialogRef = inject(DialogRef, { optional: true });
+  private readonly dialogRef = inject(DialogRef<CategoriaServicioOutput | undefined>, { optional: true });
 
   readonly idCategoriaPadre = input<number | null>(null);
   readonly nombrePadre = input<string>('');
@@ -54,10 +55,10 @@ export class SubcategoriaServicioFormComponent {
     this.saving = true;
     this.error = null;
     this.categoriaService.create(payload).subscribe({
-      next: () => {
+      next: (sub) => {
         this.saving = false;
         this.saved.emit();
-        this.dialogRef?.close(true);
+        this.dialogRef?.close(sub);
       },
       error: (err: Error) => {
         this.saving = false;

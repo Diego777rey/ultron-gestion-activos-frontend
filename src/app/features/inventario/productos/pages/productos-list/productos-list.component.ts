@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { GenericListComponent } from '../../../../../shared/components/generic-list/generic-list';
 import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
 import { ActionMenuComponent, MenuAction } from '../../../../../shared/components/action-menu/action-menu';
@@ -30,6 +31,7 @@ import { StockSectoresDialogComponent } from '../../dialogs/stock-sectores-dialo
 export class ProductosListComponent {
   private readonly productoService = inject(ProductoService);
   private readonly dialogService = inject(AppDialogService);
+  private readonly router = inject(Router);
 
   protected readonly productos = signal<ProductoOutput[]>([]);
   protected readonly loading = signal(false);
@@ -41,10 +43,9 @@ export class ProductosListComponent {
   protected readonly totalElements = signal(0);
 
   protected readonly columns: TableColumn<ProductoOutput>[] = [
-    { key: 'codigo', header: 'Código', width: '110px' },
-    { key: 'nombre', header: 'Nombre', width: '220px' },
+    { key: 'codigoBarras', header: 'Cód. barras', width: '160px' },
+    { key: 'nombre', header: 'Nombre', width: '240px' },
     { key: 'precioVenta', header: 'Precio', width: '110px', align: 'right' },
-    { key: 'codigoBarras', header: 'Cód. barras', width: '140px' },
     { key: 'categoria', header: 'Categoría', width: '220px' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
@@ -106,21 +107,9 @@ export class ProductosListComponent {
         this.load();
         break;
       case 'add':
-        this.openNewDialog();
+        this.router.navigate(['/inventario/productos/nuevo']);
         break;
     }
-  }
-
-  protected openNewDialog(): void {
-    this.dialogService.openForm(ProductoFormComponent, {
-      title: 'Nuevo Producto',
-      subtitle: 'Definí precio, código de barras, categoría y subcategoría',
-      maxWidth: '820px',
-    }).subscribe((saved) => {
-      if (saved) {
-        this.load();
-      }
-    });
   }
 
   protected openEditDialog(producto: ProductoOutput): void {

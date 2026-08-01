@@ -7,7 +7,7 @@
   [pageIndex]="pageIndex()"
   [pageSize]="pageSize()"
   [pageSizeOptions]="[15, 25, 50, 100]"
-  searchLabel="Buscar por nombre, código o código de barras..."
+  searchLabel="Buscar por nombre o código de barras..."
   [searchValue]="search()"
   (searchValueChange)="search.set($event)"
   [toolbarActions]="toolbarActions"
@@ -18,8 +18,15 @@
   (actionClicked)="onToolbarAction($event)"
   (searchSubmit)="pageIndex.set(0); load()"
 >
-  <ng-template appTableCell="codigo" [appTableCellFrom]="productos()" let-producto>
-    <span class="cell-code">{{ producto.codigo | defaultEmpty }}</span>
+  <ng-template appTableCell="codigoBarras" [appTableCellFrom]="productos()" let-producto>
+    @if (producto.codigoBarras || producto.codigo) {
+      <span class="cell-barcode">
+        <span class="material-icons" aria-hidden="true">qr_code_2</span>
+        {{ producto.codigoBarras || producto.codigo }}
+      </span>
+    } @else {
+      <span class="cell-muted">—</span>
+    }
   </ng-template>
 
   <ng-template appTableCell="nombre" [appTableCellFrom]="productos()" let-producto>
@@ -28,17 +35,6 @@
 
   <ng-template appTableCell="precioVenta" [appTableCellFrom]="productos()" let-producto>
     <span class="cell-price">{{ producto.precioVenta | number:'1.0-0' | defaultEmpty }}</span>
-  </ng-template>
-
-  <ng-template appTableCell="codigoBarras" [appTableCellFrom]="productos()" let-producto>
-    @if (producto.codigoBarras) {
-      <span class="cell-barcode">
-        <span class="material-icons" aria-hidden="true">qr_code_2</span>
-        {{ producto.codigoBarras }}
-      </span>
-    } @else {
-      <span class="cell-muted">—</span>
-    }
   </ng-template>
 
   <ng-template appTableCell="categoria" [appTableCellFrom]="productos()" let-producto>

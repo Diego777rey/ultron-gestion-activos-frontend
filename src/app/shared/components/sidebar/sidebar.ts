@@ -60,7 +60,6 @@ export class SidebarComponent implements OnInit {
     if (!this.isExpanded()) {
       this.isExpandedChange.emit(true);
       this.expandedMenus.set(new Set([item.label]));
-      this.navigateToFirstRoute(item);
       return;
     }
 
@@ -139,26 +138,6 @@ export class SidebarComponent implements OnInit {
         }
       }
     }
-  }
-
-  private navigateToFirstRoute(item: MenuItem): void {
-    const route = this.findFirstRoute(item);
-    if (route && !this.router.url.startsWith(route)) {
-      void this.router.navigateByUrl(route);
-    }
-  }
-
-  private findFirstRoute(item: MenuItem): string | undefined {
-    if (item.route) {
-      return item.route;
-    }
-    for (const child of item.children ?? []) {
-      const nested = this.findFirstRoute(child);
-      if (nested) {
-        return nested;
-      }
-    }
-    return undefined;
   }
 
   onLogout(): void {

@@ -70,9 +70,8 @@ export class ProductoFormComponent {
   });
 
   protected readonly form = this.fb.nonNullable.group({
-    codigo: ['', [Validators.required, Validators.maxLength(50)]],
     nombre: ['', [Validators.required, Validators.maxLength(100)]],
-    codigoBarras: ['', [Validators.maxLength(100)]],
+    codigoBarras: ['', [Validators.required, Validators.maxLength(100)]],
     precioVenta: [0, [Validators.required, Validators.min(0)]],
     descripcion: [''],
     estado: [true],
@@ -106,9 +105,8 @@ export class ProductoFormComponent {
         this.selectedCategoria.set(root);
         this.selectedSubcategoria.set(sub);
         this.form.reset({
-          codigo: p.codigo,
           nombre: p.nombre,
-          codigoBarras: p.codigoBarras ?? '',
+          codigoBarras: p.codigoBarras ?? p.codigo ?? '',
           precioVenta: p.precioVenta ?? 0,
           descripcion: p.descripcion ?? '',
           estado: p.estado ?? true,
@@ -126,7 +124,6 @@ export class ProductoFormComponent {
         this.selectedSubcategoria.set(null);
         this.subcategorias.set([]);
         this.form.reset({
-          codigo: '',
           nombre: '',
           codigoBarras: '',
           precioVenta: 0,
@@ -207,11 +204,13 @@ export class ProductoFormComponent {
       ? Number(v.idSubcategoria)
       : Number(v.idCategoriaRaiz);
 
+    const codigoBarras = v.codigoBarras.trim();
     const payload: ProductoInput = {
-      codigo: v.codigo.trim(),
+      // El backend aún exige `codigo` único; se reutiliza el código de barras.
+      codigo: codigoBarras,
       nombre: v.nombre.trim(),
       descripcion: v.descripcion?.trim() || undefined,
-      codigoBarras: v.codigoBarras?.trim() || undefined,
+      codigoBarras,
       precioCompra: p?.precioCompra ?? 0,
       precioVenta: v.precioVenta,
       stock: p?.stock ?? 0,

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -56,10 +56,6 @@ export class CategoriaProductoStepperComponent implements OnInit {
     descripcion: [''],
     estado: [true],
   });
-
-  protected readonly tituloPaso = computed(() =>
-    this.currentStep() === 1 ? 'Datos de la categoría' : 'Subcategorías de la categoría'
-  );
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
