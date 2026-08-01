@@ -1,19 +1,16 @@
-import { ChangeDetectionStrategy, Component, TemplateRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GenericListComponent } from '../../../../../shared/components/generic-list/generic-list';
-import { TableCellContext, TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
+import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
 import { ActionMenuComponent, MenuAction } from '../../../../../shared/components/action-menu/action-menu';
 import { DefaultEmptyPipe } from '../../../../../shared/pipes/default-empty.pipe';
-import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
 import { ProductoService } from '../../services/producto.service';
-import { PresentacionProductoService } from '../../services/presentacion-producto.service';
-import { ProductoOutput, PresentacionProductoOutput } from '../../interfaces/producto.interface';
+import { ProductoOutput } from '../../interfaces/producto.interface';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { ProductoFormComponent } from '../../dialogs/producto-form/producto-form.component';
-import { PresentacionFormComponent } from '../../dialogs/presentacion-form/presentacion-form.component';
 import { StockSectoresDialogComponent } from '../../dialogs/stock-sectores-dialog/stock-sectores-dialog.component';
 
 @Component({
@@ -24,7 +21,6 @@ import { StockSectoresDialogComponent } from '../../dialogs/stock-sectores-dialo
     TableCellDirective,
     ActionMenuComponent,
     DefaultEmptyPipe,
-    UiButtonComponent,
   ],
   templateUrl: './productos-list.component.html',
   styleUrl: './productos-list.component.scss',
@@ -33,10 +29,7 @@ import { StockSectoresDialogComponent } from '../../dialogs/stock-sectores-dialo
 })
 export class ProductosListComponent {
   private readonly productoService = inject(ProductoService);
-  private readonly presentacionService = inject(PresentacionProductoService);
   private readonly dialogService = inject(AppDialogService);
-
-  protected readonly presentacionesTemplate = viewChild<TemplateRef<TableCellContext<ProductoOutput>>>('presTpl');
 
   protected readonly productos = signal<ProductoOutput[]>([]);
   protected readonly loading = signal(false);
@@ -48,10 +41,11 @@ export class ProductosListComponent {
   protected readonly totalElements = signal(0);
 
   protected readonly columns: TableColumn<ProductoOutput>[] = [
-    { key: 'codigo', header: 'Código', width: '120px' },
-    { key: 'nombre', header: 'Nombre', width: '250px' },
+    { key: 'codigo', header: 'Código', width: '110px' },
+    { key: 'nombre', header: 'Nombre', width: '220px' },
+    { key: 'precioVenta', header: 'Precio', width: '110px', align: 'right' },
+    { key: 'codigoBarras', header: 'Cód. barras', width: '140px' },
     { key: 'categoria', header: 'Categoría', width: '220px' },
-    { key: 'presentaciones', header: 'Presentaciones', width: '120px', align: 'center' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
 
@@ -84,10 +78,6 @@ export class ProductosListComponent {
         this.loading.set(false);
       },
     });
-  }
-
-  protected presentacionesDe(producto: ProductoOutput): PresentacionProductoOutput[] {
-    return producto.presentaciones ?? [];
   }
 
   protected categoriaLabel(producto: ProductoOutput): string {
@@ -124,8 +114,8 @@ export class ProductosListComponent {
   protected openNewDialog(): void {
     this.dialogService.openForm(ProductoFormComponent, {
       title: 'Nuevo Producto',
-      subtitle: 'Completa los datos para registrar un producto',
-      maxWidth: '760px',
+      subtitle: 'Definí precio, código de barras, categoría y subcategoría',
+      maxWidth: '820px',
     }).subscribe((saved) => {
       if (saved) {
         this.load();
@@ -136,8 +126,8 @@ export class ProductosListComponent {
   protected openEditDialog(producto: ProductoOutput): void {
     this.dialogService.openForm(ProductoFormComponent, {
       title: 'Editar Producto',
-      subtitle: 'Modifica los datos del producto',
-      maxWidth: '760px',
+      subtitle: 'Actualizá los datos comerciales del producto',
+      maxWidth: '820px',
       inputs: { producto },
     }).subscribe((saved) => {
       if (saved) {
@@ -161,41 +151,6 @@ export class ProductosListComponent {
       maxWidth: '640px',
       inputs: { producto },
     }).subscribe();
-  }
-
-  protected openPresentacionForm(producto: ProductoOutput, presentacion?: PresentacionProductoOutput, event?: Event): void {
-    event?.stopPropagation();
-    this.dialogService.openForm(PresentacionFormComponent, {
-      title: presentacion ? 'Editar Presentación' : 'Nueva Presentación',
-      subtitle: producto.nombre,
-      maxWidth: '640px',
-      inputs: { idProducto: producto.id_producto, presentacion: presentacion ?? null },
-    }).subscribe((saved) => {
-      if (saved) {
-        this.recargarPresentaciones(producto.id_producto);
-      }
-    });
-  }
-
-  protected eliminarPresentacion(producto: ProductoOutput, presentacion: PresentacionProductoOutput, event?: Event): void {
-    event?.stopPropagation();
-    if (!presentacion.id_presentacion_producto) {
-      return;
-    }
-    this.presentacionService.remove(presentacion.id_presentacion_producto).subscribe({
-      next: () => this.recargarPresentaciones(producto.id_producto),
-      error: (err: Error) => this.error.set(err.message || 'No se pudo eliminar la presentación'),
-    });
-  }
-
-  private recargarPresentaciones(idProducto: number): void {
-    this.presentacionService.findByProducto(idProducto).subscribe({
-      next: (presentaciones) => {
-        this.productos.update((list) =>
-          list.map((p) => (p.id_producto === idProducto ? { ...p, presentaciones } : p))
-        );
-      },
-    });
   }
 
   protected trackById = (p: ProductoOutput): unknown => p.id_producto;

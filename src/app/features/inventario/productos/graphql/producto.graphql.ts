@@ -7,6 +7,7 @@ export const PRODUCTO_CRUD_CONFIG: CrudConfig = {
     codigo
     nombre
     descripcion
+    codigoBarras
     precioCompra
     precioVenta
     stock
@@ -20,16 +21,6 @@ export const PRODUCTO_CRUD_CONFIG: CrudConfig = {
         id_categoria_producto
         nombre
       }
-    }
-    presentaciones {
-      id_presentacion_producto
-      descripcion
-      tipo
-      cantidad
-      codigoBarras
-      precio
-      principal
-      estado
     }
   }`,
   operations: {

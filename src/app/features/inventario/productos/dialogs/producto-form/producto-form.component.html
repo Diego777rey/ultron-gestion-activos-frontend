@@ -6,55 +6,90 @@
 }
 
 <form class="producto-form" [formGroup]="form" (ngSubmit)="onSubmit()">
-  <div class="producto-form__grid">
-    <div class="field">
-      <input id="codigo" class="field__input" type="text" formControlName="codigo" appAutofocus appUppercase placeholder=" " />
-      <label class="field__label" for="codigo">Código*</label>
-      @if (form.controls.codigo.touched && form.controls.codigo.invalid) {
-        <span class="field__error">El código es obligatorio</span>
-      }
+  <section class="producto-form__section">
+    <header class="producto-form__section-header">
+      <span class="material-icons" aria-hidden="true">inventory_2</span>
+      <div>
+        <h3>Identificación</h3>
+        <p>Código interno, nombre comercial y código de barras</p>
+      </div>
+    </header>
+
+    <div class="producto-form__grid">
+      <div class="field">
+        <input id="codigo" class="field__input" type="text" formControlName="codigo" appAutofocus appUppercase placeholder=" " />
+        <label class="field__label" for="codigo">Código*</label>
+        @if (form.controls.codigo.touched && form.controls.codigo.invalid) {
+          <span class="field__error">El código es obligatorio</span>
+        }
+      </div>
+
+      <div class="field">
+        <input id="nombre" class="field__input" type="text" formControlName="nombre" appUppercase placeholder=" " />
+        <label class="field__label" for="nombre">Nombre*</label>
+        @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+          <span class="field__error">El nombre es obligatorio</span>
+        }
+      </div>
+
+      <div class="field">
+        <input id="codigoBarras" class="field__input" type="text" formControlName="codigoBarras" placeholder=" " />
+        <label class="field__label" for="codigoBarras">Código de barras</label>
+      </div>
+
+      <div class="field">
+        <input id="precioVenta" class="field__input" type="number" formControlName="precioVenta" min="0" step="1" placeholder=" " />
+        <label class="field__label" for="precioVenta">Precio de venta*</label>
+        @if (form.controls.precioVenta.touched && form.controls.precioVenta.invalid) {
+          <span class="field__error">Precio válido requerido</span>
+        }
+      </div>
     </div>
+  </section>
 
-    <div class="field">
-      <input id="nombre" class="field__input" type="text" formControlName="nombre" appUppercase placeholder=" " />
-      <label class="field__label" for="nombre">Nombre*</label>
-      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
-        <span class="field__error">El nombre es obligatorio</span>
-      }
+  <section class="producto-form__section">
+    <header class="producto-form__section-header">
+      <span class="material-icons" aria-hidden="true">category</span>
+      <div>
+        <h3>Clasificación</h3>
+        <p>Categoría y subcategoría del catálogo</p>
+      </div>
+    </header>
+
+    <div class="producto-form__grid">
+      <app-entity-searcher
+        [items]="categoriasDisponibles()"
+        [value]="form.controls.idCategoriaRaiz.value || null"
+        (itemChange)="onCategoriaSelected($event)"
+        [displayFn]="categoriaLabelFn"
+        [keyFn]="categoriaKeyFn"
+        [columns]="categoriaColumns"
+        [loading]="loadingCategorias()"
+        label="Categoría*"
+        searchPlaceholder="Buscar categoría…"
+        [error]="form.controls.idCategoriaRaiz.touched && form.controls.idCategoriaRaiz.invalid"
+        errorText="Selecciona una categoría válida"
+      />
+
+      <app-entity-searcher
+        [items]="subcategoriasDisponibles()"
+        [value]="form.controls.idSubcategoria.value || null"
+        (itemChange)="onSubcategoriaSelected($event)"
+        [displayFn]="subcategoriaLabelFn"
+        [keyFn]="subcategoriaKeyFn"
+        [columns]="categoriaColumns"
+        [loading]="loadingSubcategorias()"
+        [disabled]="!form.controls.idCategoriaRaiz.value"
+        label="Subcategoría"
+        searchPlaceholder="Buscar subcategoría…"
+      />
+
+      <div class="field field--full">
+        <input id="descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
+        <label class="field__label" for="descripcion">Descripción / Notas</label>
+      </div>
     </div>
-
-    <app-entity-searcher
-      [items]="categoriasDisponibles()"
-      [value]="form.controls.idCategoriaRaiz.value || null"
-      (itemChange)="onCategoriaSelected($event)"
-      [displayFn]="categoriaLabelFn"
-      [keyFn]="categoriaKeyFn"
-      [columns]="categoriaColumns"
-      [loading]="loadingCategorias()"
-      label="Categoría*"
-      searchPlaceholder="Ingresar texto"
-      [error]="form.controls.idCategoriaRaiz.touched && form.controls.idCategoriaRaiz.invalid"
-      errorText="Selecciona una categoría válida"
-    />
-
-    <app-entity-searcher
-      [items]="subcategoriasDisponibles()"
-      [value]="form.controls.idSubcategoria.value || null"
-      (itemChange)="onSubcategoriaSelected($event)"
-      [displayFn]="subcategoriaLabelFn"
-      [keyFn]="subcategoriaKeyFn"
-      [columns]="categoriaColumns"
-      [loading]="loadingSubcategorias()"
-      [disabled]="!form.controls.idCategoriaRaiz.value"
-      label="Subcategoría"
-      searchPlaceholder="Ingresar texto"
-    />
-
-    <div class="field field--full">
-      <input id="descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
-      <label class="field__label" for="descripcion">Descripción / Notas</label>
-    </div>
-  </div>
+  </section>
 </form>
 
 <div class="producto-form-footer">

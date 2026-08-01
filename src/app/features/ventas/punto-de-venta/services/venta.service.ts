@@ -19,8 +19,6 @@ const VENTA_SELECTION = `{
     id_detalle_venta
     idProducto
     productoNombre
-    idPresentacion
-    presentacionDescripcion
     cantidad
     precioUnitario
     subtotal

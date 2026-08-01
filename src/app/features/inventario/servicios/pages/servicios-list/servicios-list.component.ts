@@ -102,8 +102,8 @@ export class ServiciosListComponent {
   protected openNewDialog(): void {
     this.dialogService.openForm(ServicioFormComponent, {
       title: 'Nuevo Servicio',
-      subtitle: 'Completa los datos para registrar un servicio',
-      maxWidth: '760px',
+      subtitle: 'Definí precio, categoría y subcategoría',
+      maxWidth: '820px',
     }).subscribe((saved) => {
       if (saved) {
         this.load();
@@ -114,8 +114,8 @@ export class ServiciosListComponent {
   protected openEditDialog(servicio: ServicioOutput): void {
     this.dialogService.openForm(ServicioFormComponent, {
       title: 'Editar Servicio',
-      subtitle: 'Modifica los datos del servicio',
-      maxWidth: '760px',
+      subtitle: 'Actualizá los datos del servicio',
+      maxWidth: '820px',
       inputs: { servicio },
     }).subscribe((saved) => {
       if (saved) {

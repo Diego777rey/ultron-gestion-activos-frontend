@@ -29,7 +29,6 @@ import {
   RechazoDetalleDialogComponent,
   RechazoDetalleResult,
 } from '../../dialogs/rechazo-detalle-dialog/rechazo-detalle-dialog.component';
-import { PresentacionProductoOutput } from '../../../../../inventario/productos/interfaces/producto.interface';
 
 @Component({
   selector: 'app-transferencia-gestion',
@@ -64,9 +63,6 @@ export class TransferenciaGestionComponent {
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
 
-  /** Presentación seleccionada para el producto pendiente */
-  protected readonly presentacionSeleccionada = signal<PresentacionProductoOutput | null>(null);
-
   protected readonly stockItems = signal<StockProductoSectorOutput[]>([]);
   protected readonly stockTotal = signal(0);
   protected readonly stockPage = signal(0);
@@ -93,13 +89,6 @@ export class TransferenciaGestionComponent {
     () => this.productoPendiente()?.producto?.id_producto ?? null
   );
 
-  /** Presentaciones disponibles del producto seleccionado */
-  protected readonly presentacionesDisponibles = computed<PresentacionProductoOutput[]>(() => {
-    const stock = this.productoPendiente();
-    const presentaciones = stock?.producto?.presentaciones;
-    return presentaciones?.filter((p) => p.estado !== false) ?? [];
-  });
-
   protected readonly productoColumns: TableColumn<StockProductoSectorOutput>[] = [
     { key: 'codigo', header: 'Código', value: (s) => s.producto?.codigo ?? '' },
     { key: 'nombre', header: 'Producto', value: (s) => s.producto?.nombre ?? '' },
@@ -110,10 +99,8 @@ export class TransferenciaGestionComponent {
   protected readonly columns: TableColumn<TransferenciaDetalleOutput>[] = [
     { key: 'producto', header: 'Producto' },
     { key: 'codigo', header: 'Código' },
-    { key: 'presentacion', header: 'Presentación' },
     { key: 'precioVenta', header: 'Precio Vta.', align: 'right' },
     { key: 'cantidad', header: 'Cant.', align: 'right' },
-    { key: 'cantidadTotal', header: 'Cant. Total', align: 'right' },
     { key: 'estado', header: 'Estado' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
@@ -297,25 +284,11 @@ export class TransferenciaGestionComponent {
     if (!t || !this.esCreacion() || !stock?.producto?.id_producto) {
       return;
     }
-    const idProducto = stock.producto.id_producto;
-    // No bloqueamos duplicados a nivel frontend ya que con presentaciones puede haber varios
 
     this.error.set(null);
     this.productoPendiente.set(stock);
-    this.presentacionSeleccionada.set(null);
     this.cantidadNueva.set(1);
     setTimeout(() => this.focusCantidad(), 0);
-  }
-
-  protected onPresentacionChange(idPresentacion: string): void {
-    const presentaciones = this.presentacionesDisponibles();
-    const id = Number(idPresentacion);
-    if (!Number.isFinite(id) || id <= 0) {
-      this.presentacionSeleccionada.set(null);
-      return;
-    }
-    const found = presentaciones.find((p) => p.id_presentacion_producto === id);
-    this.presentacionSeleccionada.set(found ?? null);
   }
 
   protected confirmarAgregarProducto(): void {
@@ -326,22 +299,17 @@ export class TransferenciaGestionComponent {
       return;
     }
 
-    const presentacion = this.presentacionSeleccionada();
-    const idPresentacionProducto = presentacion?.id_presentacion_producto ?? null;
-
     this.saving.set(true);
     this.error.set(null);
     this.transferenciaService
       .agregarProducto(t.id_transferencia, {
         idProducto,
-        idPresentacionProducto,
         cantidad: Math.max(1, this.cantidadNueva()),
       })
       .subscribe({
         next: (updated) => {
           this.transferencia.set(updated);
           this.productoPendiente.set(null);
-          this.presentacionSeleccionada.set(null);
           this.cantidadNueva.set(1);
           this.saving.set(false);
           this.fetchStockPage(this.stockPage(), this.stockPageSize(), this.stockFilter());
@@ -510,7 +478,6 @@ export class TransferenciaGestionComponent {
       next: (updated) => {
         this.transferencia.set(updated);
         this.productoPendiente.set(null);
-        this.presentacionSeleccionada.set(null);
         this.saving.set(false);
         if (
           this.normalizarEstadoCabecera(updated.estado) === 'CREACION' &&

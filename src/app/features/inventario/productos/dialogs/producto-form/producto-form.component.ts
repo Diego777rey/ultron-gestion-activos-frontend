@@ -72,6 +72,8 @@ export class ProductoFormComponent {
   protected readonly form = this.fb.nonNullable.group({
     codigo: ['', [Validators.required, Validators.maxLength(50)]],
     nombre: ['', [Validators.required, Validators.maxLength(100)]],
+    codigoBarras: ['', [Validators.maxLength(100)]],
+    precioVenta: [0, [Validators.required, Validators.min(0)]],
     descripcion: [''],
     estado: [true],
     idCategoriaRaiz: [0, [Validators.required, Validators.min(1)]],
@@ -106,6 +108,8 @@ export class ProductoFormComponent {
         this.form.reset({
           codigo: p.codigo,
           nombre: p.nombre,
+          codigoBarras: p.codigoBarras ?? '',
+          precioVenta: p.precioVenta ?? 0,
           descripcion: p.descripcion ?? '',
           estado: p.estado ?? true,
           idCategoriaRaiz: rootId,
@@ -124,6 +128,8 @@ export class ProductoFormComponent {
         this.form.reset({
           codigo: '',
           nombre: '',
+          codigoBarras: '',
+          precioVenta: 0,
           descripcion: '',
           estado: true,
           idCategoriaRaiz: 0,
@@ -205,8 +211,9 @@ export class ProductoFormComponent {
       codigo: v.codigo.trim(),
       nombre: v.nombre.trim(),
       descripcion: v.descripcion?.trim() || undefined,
+      codigoBarras: v.codigoBarras?.trim() || undefined,
       precioCompra: p?.precioCompra ?? 0,
-      precioVenta: p?.precioVenta ?? 0,
+      precioVenta: v.precioVenta,
       stock: p?.stock ?? 0,
       stockMinimo: p?.stockMinimo ?? 0,
       ubicacion: p?.ubicacion,
@@ -215,6 +222,7 @@ export class ProductoFormComponent {
     };
 
     this.saving.set(true);
+    this.error.set(null);
     const request = (p && p.id_producto)
       ? this.productoService.update(p.id_producto, payload)
       : this.productoService.create(payload);

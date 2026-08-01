@@ -95,7 +95,6 @@ export class MainLayoutComponent implements OnInit {
       children: [
         { label: 'Productos', icon: 'inventory', route: '/inventario/productos' },
         { label: 'Categoría Productos', icon: 'category', route: '/inventario/productos/categorias' },
-        { label: 'Presentaciones', icon: 'layers', route: '/inventario/productos/presentaciones' },
       ]
     },
     {
@@ -147,7 +146,6 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('roles')) return 'Lista de roles';
     if (url.includes('maletines')) return 'Maletines';
     if (url.includes('cajas')) return 'Cajas';
-    if (url.includes('productos/presentaciones')) return 'Presentaciones';
     if (url.includes('productos/categorias')) return 'Categorías de Productos';
     if (url.includes('productos')) return 'Productos';
     if (url.includes('servicios/categorias')) return 'Categorías de Servicios';
