@@ -1,6 +1,5 @@
 export interface DetalleVentaInput {
   idProducto: number;
-  idPresentacion?: number | null;
   cantidad: number;
   precioUnitario?: number;
 }
@@ -16,8 +15,6 @@ export interface DetalleVentaOutput {
   id_detalle_venta?: number;
   idProducto?: number;
   productoNombre?: string;
-  idPresentacion?: number;
-  presentacionDescripcion?: string;
   cantidad: number;
   precioUnitario: number;
   subtotal: number;
@@ -39,11 +36,8 @@ export interface VentaOutput {
 
 export interface CartItem {
   idProducto: number;
-  idPresentacion?: number | null;
   nombre: string;
-  presentacionLabel?: string;
   cantidad: number;
   precioUnitario: number;
   stockDisponible: number;
-  factorPresentacion: number;
 }

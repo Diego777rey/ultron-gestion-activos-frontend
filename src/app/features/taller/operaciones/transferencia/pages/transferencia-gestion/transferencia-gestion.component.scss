@@ -163,23 +163,6 @@
   padding-bottom: 2px;
 }
 
-.presentacion-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  background: rgba(99, 102, 241, 0.15);
-  color: #a5b4fc;
-  letter-spacing: 0.01em;
-}
-
-.text-muted {
-  color: rgba(226, 232, 240, 0.45);
-  font-size: 12px;
-}
-
 .field--disabled {
   opacity: 0.45;
 }
@@ -305,9 +288,4 @@
   top: 0;
   font-size: 11px;
   color: var(--primary-color);
-}
-
-.field--presentacion {
-  min-width: 200px;
-  flex: 0 1 280px;
 }

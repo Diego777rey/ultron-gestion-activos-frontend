@@ -69,6 +69,7 @@ export class PuntoDeVentaComponent {
       (p) =>
         p.nombre.toLowerCase().includes(q) ||
         p.codigo.toLowerCase().includes(q) ||
+        (p.codigoBarras ?? '').toLowerCase().includes(q) ||
         (p.categoriaProducto?.nombre ?? '').toLowerCase().includes(q)
     );
   });
@@ -137,9 +138,7 @@ export class PuntoDeVentaComponent {
 
     this.ventaError.set(null);
     this.cart.update((items) => {
-      const idx = items.findIndex(
-        (i) => i.idProducto === producto.id_producto && !i.idPresentacion
-      );
+      const idx = items.findIndex((i) => i.idProducto === producto.id_producto);
       if (idx >= 0) {
         const current = items[idx];
         const nuevaCantidad = current.cantidad + 1;
@@ -155,12 +154,10 @@ export class PuntoDeVentaComponent {
         ...items,
         {
           idProducto: producto.id_producto,
-          idPresentacion: null,
           nombre: producto.nombre,
           cantidad: 1,
           precioUnitario: Number(producto.precioVenta),
           stockDisponible: stock,
-          factorPresentacion: 1,
         },
       ];
     });
@@ -178,8 +175,7 @@ export class PuntoDeVentaComponent {
         next.splice(index, 1);
         return next;
       }
-      const stockNecesario = cantidad * item.factorPresentacion;
-      if (stockNecesario > item.stockDisponible) {
+      if (cantidad > item.stockDisponible) {
         this.ventaError.set(`Stock insuficiente para ${item.nombre}`);
         return items;
       }
@@ -217,7 +213,6 @@ export class PuntoDeVentaComponent {
         descuento: 0,
         detalles: items.map((item) => ({
           idProducto: item.idProducto,
-          idPresentacion: item.idPresentacion,
           cantidad: item.cantidad,
           precioUnitario: item.precioUnitario,
         })),

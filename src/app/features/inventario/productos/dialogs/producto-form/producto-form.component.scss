@@ -7,10 +7,10 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
-  padding: 10px 12px;
-  background: rgba(255, 61, 113, 0.1);
-  border: 1px solid rgba(255, 61, 113, 0.3);
-  border-radius: 8px;
+  padding: 10px 14px;
+  background: rgba(255, 61, 113, 0.08);
+  border: 1px solid rgba(255, 61, 113, 0.28);
+  border-radius: 6px;
   color: #ff8aa3;
   font-size: 13px;
 
@@ -19,43 +19,75 @@
   }
 }
 
-.producto-form-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color);
-}
-
 .producto-form {
   display: flex;
   flex-direction: column;
+  gap: 20px;
+}
+
+.producto-form__section {
+  padding: 16px 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--border-color) 85%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface-elevated, var(--bg-secondary, #1e2430)) 55%, transparent);
+}
+
+.producto-form__section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+
+  .material-icons {
+    font-size: 22px;
+    color: var(--primary-color);
+    margin-top: 2px;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-primary);
+  }
+
+  p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
 }
 
 .producto-form__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+  gap: 20px 24px;
 
-  @media (max-width: 520px) {
+  @media (max-width: 560px) {
     grid-template-columns: 1fr;
   }
+}
+
+.producto-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
 }
 
 app-entity-searcher {
   display: block;
   padding-top: 16px;
 }
+
 .field {
   position: relative;
   display: flex;
   flex-direction: column;
   padding-top: 16px;
-
-  &--span-2 {
-    grid-column: span 2;
-  }
 
   &--full {
     grid-column: 1 / -1;
@@ -91,15 +123,8 @@ app-entity-searcher {
     border-bottom: 2px solid var(--primary-color);
   }
 
-  &::-webkit-calendar-picker-indicator {
-    filter: invert(50%) sepia(100%) saturate(3000%) hue-rotate(190deg) brightness(100%) contrast(100%);
-    cursor: pointer;
-  }
-
   &:focus ~ .field__label,
-  &:not(:placeholder-shown) ~ .field__label,
-  &[type="date"] ~ .field__label,
-  select.field__input ~ .field__label {
+  &:not(:placeholder-shown) ~ .field__label {
     top: 0;
     font-size: 11px;
     color: var(--primary-color);
@@ -110,25 +135,4 @@ app-entity-searcher {
   font-size: 11px;
   color: #ff6b8b;
   margin-top: 4px;
-}
-
-.field--checkbox {
-  flex-direction: row;
-  align-items: center;
-  padding-top: 8px;
-}
-
-.checkbox-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--text-primary);
-  cursor: pointer;
-
-  input {
-    accent-color: var(--primary-color);
-    width: 16px;
-    height: 16px;
-  }
 }

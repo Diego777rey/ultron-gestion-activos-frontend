@@ -31,11 +31,7 @@ export interface TransferenciaDetalleOutput {
   estado?: TransferenciaDetalleEstado;
   motivoRechazo?: MotivoRechazoTransferencia | null;
   motivoRechazoDetalle?: string | null;
-  idPresentacionProducto?: number | null;
-  presentacionDescripcion?: string | null;
-  cantidadPresentacion?: number | null;
   precioVenta?: number | null;
-  cantidadTotal?: number | null;
 }
 
 export interface TransferenciaOutput {
@@ -53,7 +49,6 @@ export interface TransferenciaOutput {
 
 export interface TransferenciaDetalleInput {
   idProducto: number;
-  idPresentacionProducto?: number | null;
   cantidad: number;
 }
 

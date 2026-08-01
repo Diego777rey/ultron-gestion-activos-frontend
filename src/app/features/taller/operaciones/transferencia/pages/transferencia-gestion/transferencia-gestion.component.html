@@ -75,25 +75,6 @@
             searchPlaceholder="Nombre, código o código de barras…"
           />
 
-          @if (presentacionesDisponibles().length > 0) {
-            <div class="field field--presentacion">
-              <select
-                id="presentacionSelect"
-                class="field__input field__select"
-                [disabled]="saving() || !puedeCargarCantidad()"
-                (change)="onPresentacionChange($any($event.target).value)"
-              >
-                <option value="">— Sin presentación —</option>
-                @for (pres of presentacionesDisponibles(); track pres.id_presentacion_producto) {
-                  <option [value]="pres.id_presentacion_producto">
-                    {{ pres.descripcion }} (x{{ pres.cantidad | number: '1.0-0' }}) - {{ pres.precio | number: '1.0-2' }}
-                  </option>
-                }
-              </select>
-              <label class="field__label field__label--select" for="presentacionSelect">Presentación</label>
-            </div>
-          }
-
           <div class="field field--qty" [class.field--disabled]="!puedeCargarCantidad()">
             <input
               #cantidadInput
@@ -168,26 +149,12 @@
       {{ item.producto?.codigo | defaultEmpty }}
     </ng-template>
 
-    <ng-template appTableCell="presentacion" [appTableCellFrom]="detallesPagina()" let-item>
-      @if (item.presentacionDescripcion) {
-        <span class="presentacion-badge">
-          {{ item.presentacionDescripcion }} (x{{ item.cantidadPresentacion | number: '1.0-0' }})
-        </span>
-      } @else {
-        <span class="text-muted">Unidad</span>
-      }
-    </ng-template>
-
     <ng-template appTableCell="precioVenta" [appTableCellFrom]="detallesPagina()" let-item>
       {{ item.precioVenta | number: '1.0-2' }}
     </ng-template>
 
     <ng-template appTableCell="cantidad" [appTableCellFrom]="detallesPagina()" let-item>
       {{ item.cantidad | number: '1.0-2' }}
-    </ng-template>
-
-    <ng-template appTableCell="cantidadTotal" [appTableCellFrom]="detallesPagina()" let-item>
-      <strong>{{ item.cantidadTotal | number: '1.0-2' }}</strong>
     </ng-template>
 
     <ng-template appTableCell="estado" [appTableCellFrom]="detallesPagina()" let-item>
