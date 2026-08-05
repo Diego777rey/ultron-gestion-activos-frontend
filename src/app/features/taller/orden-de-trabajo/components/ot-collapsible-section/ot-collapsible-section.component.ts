@@ -52,7 +52,7 @@ export type OtSectionStatus = 'ok' | 'pending' | 'error' | 'none';
       </div>
     </section>
   `,
-  styleUrl: '../../styles/ot-form.scss',
+  styleUrls: ['../../styles/ot-form.scss', './ot-collapsible-section.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OtCollapsibleSectionComponent {
