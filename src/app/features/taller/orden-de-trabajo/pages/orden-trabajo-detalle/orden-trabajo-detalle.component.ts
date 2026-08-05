@@ -97,7 +97,7 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
   protected accionPrincipal(): void {
     switch (this.currentStep()) {
       case 1:
-        this.guardarRecepcion();
+        this.iniciarDiagnostico();
         break;
       case 2:
         this.guardarDiagnostico();
@@ -116,7 +116,7 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
   protected labelAccionPrincipal(): string {
     switch (this.currentStep()) {
       case 1:
-        return this.isEdit() ? 'Guardar e iniciar diagnóstico' : 'Iniciar diagnóstico';
+        return 'Iniciar diagnóstico';
       case 2:
         return 'Aprobar e iniciar proceso';
       case 3:
@@ -126,6 +126,16 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
       default:
         return 'Volver al listado';
     }
+  }
+
+  /** Guarda la recepción sin avanzar de etapa (queda en RECEPCION y aparece en el listado). */
+  protected guardarRecepcion(): void {
+    this.persistirRecepcion(false);
+  }
+
+  /** Guarda la recepción y avanza a DIAGNOSTICO. */
+  private iniciarDiagnostico(): void {
+    this.persistirRecepcion(true);
   }
 
   private cargarOrden(id: string): void {
@@ -143,7 +153,7 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
     });
   }
 
-  private guardarRecepcion(): void {
+  private persistirRecepcion(avanzarADiagnostico: boolean): void {
     const input = this.recepcionStep()?.buildInput();
     if (!input) return;
 
@@ -159,6 +169,17 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
       next: (data) => {
         this.orden.set(data);
         this.isEdit.set(true);
+
+        if (!avanzarADiagnostico) {
+          this.saving.set(false);
+          if (data.id_orden_trabajo) {
+            this.router.navigate(['/taller/orden-de-trabajo/detalle', data.id_orden_trabajo], {
+              replaceUrl: true,
+            });
+          }
+          return;
+        }
+
         if (data.etapa === 'RECEPCION' && data.id_orden_trabajo) {
           this.ordenService.cambiarEtapa(data.id_orden_trabajo, 'DIAGNOSTICO').subscribe({
             next: (adv) => {

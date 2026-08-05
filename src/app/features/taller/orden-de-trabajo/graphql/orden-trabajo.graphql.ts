@@ -35,18 +35,34 @@ export const ORDEN_TRABAJO_SELECTION = `{
     id
     username
   }
-  descripcion_falla
-  fecha_inicio_estimada
-  fecha_fin_estimada
   fecha_creacion
   fecha_finalizacion
-  presupuesto_aprobado
-  total_presupuesto
-  observaciones
   caja {
     id_caja
     nombre
     activa
+  }
+  recepcion {
+    descripcion_falla
+  }
+  estado_vehiculo {
+    falla_mecanica
+    falla_electrica
+    estado_llantas
+    estado_pintura
+    estado_rayones
+    estado_golpes
+    estado_vidrios
+    nivel_combustible
+    kilometraje
+    observaciones_estado
+  }
+  diagnostico {
+    fecha_inicio_estimada
+    fecha_fin_estimada
+    presupuesto_aprobado
+    total_presupuesto
+    observaciones
   }
   detalles {
     id_detalle

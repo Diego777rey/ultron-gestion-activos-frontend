@@ -28,8 +28,8 @@
     {{ formatMecanico(orden) }}
   </ng-template>
 
-  <ng-template appTableCell="total_presupuesto" [appTableCellFrom]="ordenes()" let-orden>
-    <span class="ot-monto">{{ orden.total_presupuesto ? (orden.total_presupuesto | number:'1.0-0') + ' ₲' : '—' }}</span>
+  <ng-template appTableCell="diagnostico" [appTableCellFrom]="ordenes()" let-orden>
+    <span class="ot-monto">{{ orden.diagnostico?.total_presupuesto ? (orden.diagnostico.total_presupuesto | number:'1.0-0') + ' ₲' : '—' }}</span>
   </ng-template>
 
   <ng-template appTableCell="fecha_creacion" [appTableCellFrom]="ordenes()" let-orden>

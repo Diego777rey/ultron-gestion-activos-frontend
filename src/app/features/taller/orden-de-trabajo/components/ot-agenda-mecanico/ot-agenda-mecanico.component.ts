@@ -31,7 +31,7 @@ import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
                 }
               </span>
               <span>
-                {{ (ot.fecha_inicio_estimada || ot.fecha_creacion) | date: 'dd/MM/yyyy' }}
+                {{ (ot.diagnostico?.fecha_inicio_estimada || ot.fecha_creacion) | date: 'dd/MM/yyyy' }}
               </span>
             </li>
           }

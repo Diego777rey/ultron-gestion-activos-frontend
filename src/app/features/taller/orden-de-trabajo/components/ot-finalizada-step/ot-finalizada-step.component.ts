@@ -40,7 +40,7 @@ import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas
         </li>
         <li class="ot-panel__item">
           <span>Total</span>
-          <span class="ot-total">{{ orden().total_presupuesto | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</span>
+          <span class="ot-total">{{ orden().diagnostico?.total_presupuesto | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</span>
         </li>
       </ul>
     </section>
