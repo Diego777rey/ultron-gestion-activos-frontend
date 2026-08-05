@@ -9,13 +9,18 @@
   }
 
   <section class="stepper-body">
-    @if (currentStep() !== 1) {
-      <h2 class="stepper-body__title">
-        {{ tituloPaso() }}
-        @if (orden()?.numero_orden) {
-          <span class="stepper-body__subtitle">({{ orden()?.numero_orden }})</span>
-        }
-      </h2>
+    <h2 class="stepper-body__title">
+      {{ tituloPaso() }}
+      @if (orden()?.numero_orden) {
+        <span class="stepper-body__subtitle">({{ orden()?.numero_orden }})</span>
+      }
+    </h2>
+
+    @if (currentStep() === 1) {
+      <p class="stepper-body__hint">
+        Completá los datos y guardá la recepción para que la orden quede registrada.
+        Podés salir y retomarla después desde el listado.
+      </p>
     }
 
     @if (loading()) {
@@ -56,6 +61,16 @@
     <app-ui-button label="Volver / Cancelar" variant="ghost" (clicked)="cancelar()" />
 
     <div class="stepper-footer__right">
+      @if (currentStep() === 1) {
+        <app-ui-button
+          label="Guardar recepción"
+          icon="save"
+          variant="outline"
+          [loading]="saving()"
+          (clicked)="guardarRecepcion()"
+        />
+      }
+
       @if (currentStep() < 5) {
         <app-ui-button
           [label]="labelAccionPrincipal()"

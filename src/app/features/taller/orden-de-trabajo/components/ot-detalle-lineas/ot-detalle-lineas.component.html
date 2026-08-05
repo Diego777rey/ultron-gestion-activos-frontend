@@ -121,7 +121,7 @@
         <tr>
           <td colspan="4" style="text-align: right;">Total presupuesto:</td>
           <td [attr.colspan]="editable() ? 2 : 1" class="ot-total">
-            {{ orden().total_presupuesto | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}
+            {{ orden().diagnostico?.total_presupuesto | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}
           </td>
         </tr>
       </tfoot>

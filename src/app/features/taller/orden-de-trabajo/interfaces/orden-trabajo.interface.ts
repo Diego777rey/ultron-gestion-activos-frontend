@@ -2,6 +2,31 @@ import { ClienteOutput } from '../../../personas/clientes/interfaces/cliente.int
 import { VehiculoOutput } from '../../../activos/vehiculos/interfaces/vehiculo.interface';
 import { CajaOutput } from '../../../financiero/cajas/interfaces/caja.interface';
 
+export interface OrdenRecepcionOutput {
+  descripcion_falla?: string | null;
+}
+
+export interface OrdenEstadoVehiculoOutput {
+  falla_mecanica?: boolean | null;
+  falla_electrica?: boolean | null;
+  estado_llantas?: boolean | null;
+  estado_pintura?: boolean | null;
+  estado_rayones?: boolean | null;
+  estado_golpes?: boolean | null;
+  estado_vidrios?: boolean | null;
+  nivel_combustible?: string | null;
+  kilometraje?: number | null;
+  observaciones_estado?: string | null;
+}
+
+export interface OrdenDiagnosticoOutput {
+  fecha_inicio_estimada?: string | null;
+  fecha_fin_estimada?: string | null;
+  presupuesto_aprobado?: boolean | null;
+  total_presupuesto?: number | null;
+  observaciones?: string | null;
+}
+
 export interface OrdenTrabajoOutput {
   id_orden_trabajo?: string | null;
   numero_orden?: string | null;
@@ -11,15 +36,12 @@ export interface OrdenTrabajoOutput {
   mecanico?: FuncionarioResumen | null;
   sector?: SectorResumen | null;
   responsable?: UsuarioResumen | null;
-  descripcion_falla?: string | null;
-  fecha_inicio_estimada?: string | null;
-  fecha_fin_estimada?: string | null;
   fecha_creacion?: string | null;
   fecha_finalizacion?: string | null;
-  presupuesto_aprobado?: boolean | null;
-  total_presupuesto?: number | null;
-  observaciones?: string | null;
   caja?: CajaOutput | null;
+  recepcion?: OrdenRecepcionOutput | null;
+  estado_vehiculo?: OrdenEstadoVehiculoOutput | null;
+  diagnostico?: OrdenDiagnosticoOutput | null;
   detalles?: OrdenTrabajoDetalleOutput[] | null;
 }
 
@@ -37,18 +59,40 @@ export interface OrdenTrabajoDetalleOutput {
   etapa_origen?: string | null;
 }
 
+export interface OrdenRecepcionInput {
+  descripcion_falla?: string | null;
+}
+
+export interface OrdenEstadoVehiculoInput {
+  falla_mecanica?: boolean | null;
+  falla_electrica?: boolean | null;
+  estado_llantas?: boolean | null;
+  estado_pintura?: boolean | null;
+  estado_rayones?: boolean | null;
+  estado_golpes?: boolean | null;
+  estado_vidrios?: boolean | null;
+  nivel_combustible?: string | null;
+  kilometraje?: number | null;
+  observaciones_estado?: string | null;
+}
+
+export interface OrdenDiagnosticoInput {
+  fecha_inicio_estimada?: string | null;
+  fecha_fin_estimada?: string | null;
+  presupuesto_aprobado?: boolean | null;
+  observaciones?: string | null;
+}
+
 export interface OrdenTrabajoInput {
   id_sector?: string | null;
   id_responsable?: string | null;
   id_cliente?: string | null;
   id_vehiculo?: string | null;
   id_mecanico?: string | null;
-  descripcion_falla?: string | null;
-  fecha_inicio_estimada?: string | null;
-  fecha_fin_estimada?: string | null;
-  presupuesto_aprobado?: boolean | null;
-  observaciones?: string | null;
   id_caja?: string | null;
+  recepcion?: OrdenRecepcionInput | null;
+  estado_vehiculo?: OrdenEstadoVehiculoInput | null;
+  diagnostico?: OrdenDiagnosticoInput | null;
 }
 
 export interface OrdenTrabajoDetalleInput {

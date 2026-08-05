@@ -37,6 +37,14 @@
   font-size: 15px;
 }
 
+.stepper-body__hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.58);
+  max-width: 720px;
+}
+
 .loading-state {
   padding: 24px;
   color: var(--text-secondary);

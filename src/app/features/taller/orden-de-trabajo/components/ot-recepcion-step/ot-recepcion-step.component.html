@@ -1,135 +1,251 @@
 <div class="ot-recepcion-layout">
-  <div class="ot-recepcion-layout__main">
-    <section class="ot-section">
-      <form class="ot-form ot-form--wide" [formGroup]="form">
-        <div class="ot-form__grid--2">
-          <div class="ot-field">
-            <label class="ot-field__label-static">Sector (reparaciones)*</label>
-            <app-entity-searcher
-              [items]="sectores()"
-              [columns]="sectorColumns"
-              [totalItems]="sectoresTotal()"
-              [loading]="loadingSectores()"
-              [displayFn]="sectorLabelFn"
-              [keyFn]="sectorKeyFn"
-              [value]="form.controls.id_sector.value"
-              (searchChange)="fetchSectores(0, 10, $event)"
-              (pageChange)="fetchSectores($event.pageIndex, $event.pageSize, '')"
-              (itemChange)="onSectorSelected($event)"
-              [backendPagination]="true"
-              placeholder="Buscar sector..."
-            />
-            @if (form.controls.id_sector.touched && form.controls.id_sector.invalid) {
-              <span class="ot-field__error">Debes seleccionar un sector</span>
-            }
-          </div>
-
-          <div class="ot-field">
-            <label class="ot-field__label-static">Usuario responsable*</label>
-            <app-entity-searcher
-              [items]="usuarios()"
-              [columns]="usuarioColumns"
-              [totalItems]="usuariosTotal()"
-              [loading]="loadingUsuarios()"
-              [displayFn]="usuarioLabelFn"
-              [keyFn]="usuarioKeyFn"
-              [value]="form.controls.id_responsable.value"
-              (searchChange)="fetchUsuarios(0, 10, $event)"
-              (pageChange)="fetchUsuarios($event.pageIndex, $event.pageSize, '')"
-              (itemChange)="onUsuarioSelected($event)"
-              [backendPagination]="true"
-              placeholder="Buscar responsable..."
-            />
-            @if (form.controls.id_responsable.touched && form.controls.id_responsable.invalid) {
-              <span class="ot-field__error">Debes seleccionar un responsable</span>
-            }
-          </div>
-
-          <div class="ot-field">
-            <label class="ot-field__label-static">Cliente*</label>
-            <app-entity-searcher
-              [items]="clientes()"
-              [columns]="clienteColumns"
-              [totalItems]="clientesTotal()"
-              [loading]="loadingClientes()"
-              [displayFn]="clienteLabelFn"
-              [keyFn]="clienteKeyFn"
-              [value]="form.controls.id_cliente.value"
-              (searchChange)="fetchClientes(0, 10, $event)"
-              (pageChange)="fetchClientes($event.pageIndex, $event.pageSize, '')"
-              (itemChange)="onClienteSelected($event)"
-              [allowAdd]="true"
-              [backendPagination]="true"
-              (addClicked)="onAddCliente()"
-              placeholder="Buscar cliente..."
-            />
-            @if (form.controls.id_cliente.touched && form.controls.id_cliente.invalid) {
-              <span class="ot-field__error">Debes seleccionar un cliente</span>
-            }
-          </div>
-
-          <div class="ot-field">
-            <label class="ot-field__label-static">Vehículo*</label>
-            <app-entity-searcher
-              [items]="vehiculos()"
-              [columns]="vehiculoColumns"
-              [totalItems]="vehiculosTotal()"
-              [loading]="loadingVehiculos()"
-              [displayFn]="vehiculoLabelFn"
-              [keyFn]="vehiculoKeyFn"
-              [value]="form.controls.id_vehiculo.value"
-              (searchChange)="fetchVehiculos(0, 10, $event)"
-              (pageChange)="fetchVehiculos($event.pageIndex, $event.pageSize, '')"
-              (itemChange)="onVehiculoSelected($event)"
-              [allowAdd]="true"
-              [backendPagination]="true"
-              (addClicked)="onAddVehiculo()"
-              placeholder="Buscar vehículo..."
-            />
-            @if (form.controls.id_vehiculo.touched && form.controls.id_vehiculo.invalid) {
-              <span class="ot-field__error">Debes seleccionar un vehículo</span>
-            }
-          </div>
-
-          <div class="ot-field ot-field--full">
-            <label class="ot-field__label-static">Mecánico asignado*</label>
-            <app-entity-searcher
-              [items]="mecanicos()"
-              [columns]="mecanicoColumns"
-              [totalItems]="mecanicosTotal()"
-              [loading]="loadingMecanicos()"
-              [displayFn]="mecanicoLabelFn"
-              [keyFn]="mecanicoKeyFn"
-              [value]="form.controls.id_mecanico.value"
-              (searchChange)="fetchMecanicos(0, 10, $event)"
-              (pageChange)="fetchMecanicos($event.pageIndex, $event.pageSize, '')"
-              (itemChange)="onMecanicoSelected($event)"
-              [backendPagination]="true"
-              placeholder="Buscar mecánico..."
-            />
-            @if (form.controls.id_mecanico.touched && form.controls.id_mecanico.invalid) {
-              <span class="ot-field__error">Debes asignar un mecánico</span>
-            }
-          </div>
-
-          <div class="ot-field ot-field--full">
-            <label class="ot-field__label-static" for="ot-falla">Descripción de la falla*</label>
-            <textarea id="ot-falla" class="ot-field__input" formControlName="descripcion_falla" rows="3"></textarea>
-            @if (form.controls.descripcion_falla.touched && form.controls.descripcion_falla.invalid) {
-              <span class="ot-field__error">Debes ingresar la descripción de la falla</span>
-            }
-          </div>
-        </div>
-      </form>
-    </section>
-
-    <app-ot-agenda-mecanico [idMecanico]="form.controls.id_mecanico.value || null" />
+  <div class="ot-recepcion-topbar">
+    <p class="ot-recepcion-topbar__hint">
+      Completá los datos obligatorios. El estado del vehículo es opcional y podés dejarlo colapsado.
+    </p>
+    <app-ui-button
+      [label]="historialLabel()"
+      icon="history"
+      variant="outline"
+      size="sm"
+      [disabled]="!puedeVerHistorial()"
+      (clicked)="abrirHistorial()"
+    />
   </div>
 
-  <aside class="ot-recepcion-layout__side">
-    <app-ot-historial-panel
-      [idCliente]="form.controls.id_cliente.value || null"
-      [idVehiculo]="form.controls.id_vehiculo.value || null"
-    />
-  </aside>
+  <form class="ot-form ot-form--wide" [formGroup]="form">
+    <!-- Cliente y vehículo -->
+    <app-ot-collapsible-section
+      icon="directions_car"
+      title="Cliente y vehículo"
+      hint="Busca existentes o registra nuevos"
+      [summary]="resumenClienteVehiculo()"
+      [status]="statusClienteVehiculo()"
+      [(expanded)]="openClienteVehiculo"
+    >
+      <div class="ot-form__grid--2">
+        <div class="ot-field">
+          <label class="ot-field__label-static">Cliente*</label>
+          <app-entity-searcher
+            [items]="clientes()"
+            [columns]="clienteColumns"
+            [totalItems]="clientesTotal()"
+            [loading]="loadingClientes()"
+            [displayFn]="clienteLabelFn"
+            [keyFn]="clienteKeyFn"
+            [value]="form.controls.id_cliente.value"
+            (searchChange)="fetchClientes(0, 10, $event)"
+            (pageChange)="fetchClientes($event.pageIndex, $event.pageSize, '')"
+            (itemChange)="onClienteSelected($event)"
+            [allowAdd]="true"
+            [backendPagination]="true"
+            (addClicked)="onAddCliente()"
+            label="Buscar cliente..."
+          />
+          @if (form.controls.id_cliente.touched && form.controls.id_cliente.invalid) {
+            <span class="ot-field__error">Debes seleccionar un cliente</span>
+          }
+        </div>
+
+        <div class="ot-field">
+          <label class="ot-field__label-static">Vehículo*</label>
+          <app-entity-searcher
+            [items]="vehiculos()"
+            [columns]="vehiculoColumns"
+            [totalItems]="vehiculosTotal()"
+            [loading]="loadingVehiculos()"
+            [displayFn]="vehiculoLabelFn"
+            [keyFn]="vehiculoKeyFn"
+            [value]="form.controls.id_vehiculo.value"
+            (searchChange)="fetchVehiculos(0, 10, $event)"
+            (pageChange)="fetchVehiculos($event.pageIndex, $event.pageSize, '')"
+            (itemChange)="onVehiculoSelected($event)"
+            [allowAdd]="true"
+            [backendPagination]="true"
+            (addClicked)="onAddVehiculo()"
+            label="Buscar vehículo..."
+          />
+          @if (form.controls.id_vehiculo.touched && form.controls.id_vehiculo.invalid) {
+            <span class="ot-field__error">Debes seleccionar un vehículo</span>
+          }
+        </div>
+      </div>
+    </app-ot-collapsible-section>
+
+    <!-- Datos de la orden -->
+    <app-ot-collapsible-section
+      icon="assignment"
+      title="Datos de la orden"
+      hint="Sector, responsable y mecánico asignado"
+      [summary]="resumenDatos()"
+      [status]="statusDatos()"
+      [(expanded)]="openDatos"
+    >
+      <div class="ot-form__grid--2">
+        <div class="ot-field">
+          <label class="ot-field__label-static">Sector (reparaciones)*</label>
+          <app-entity-searcher
+            [items]="sectores()"
+            [columns]="sectorColumns"
+            [totalItems]="sectoresTotal()"
+            [loading]="loadingSectores()"
+            [displayFn]="sectorLabelFn"
+            [keyFn]="sectorKeyFn"
+            [value]="form.controls.id_sector.value"
+            (searchChange)="fetchSectores(0, 10, $event)"
+            (pageChange)="fetchSectores($event.pageIndex, $event.pageSize, '')"
+            (itemChange)="onSectorSelected($event)"
+            [backendPagination]="true"
+            label="Buscar sector..."
+          />
+          @if (form.controls.id_sector.touched && form.controls.id_sector.invalid) {
+            <span class="ot-field__error">Debes seleccionar un sector</span>
+          }
+        </div>
+
+        <div class="ot-field">
+          <label class="ot-field__label-static">Usuario responsable*</label>
+          <app-entity-searcher
+            [items]="usuarios()"
+            [columns]="usuarioColumns"
+            [totalItems]="usuariosTotal()"
+            [loading]="loadingUsuarios()"
+            [displayFn]="usuarioLabelFn"
+            [keyFn]="usuarioKeyFn"
+            [value]="form.controls.id_responsable.value"
+            (searchChange)="fetchUsuarios(0, 10, $event)"
+            (pageChange)="fetchUsuarios($event.pageIndex, $event.pageSize, '')"
+            (itemChange)="onUsuarioSelected($event)"
+            [backendPagination]="true"
+            label="Buscar responsable..."
+          />
+          @if (form.controls.id_responsable.touched && form.controls.id_responsable.invalid) {
+            <span class="ot-field__error">Debes seleccionar un responsable</span>
+          }
+        </div>
+
+        <div class="ot-field ot-field--full">
+          <label class="ot-field__label-static">Mecánico asignado*</label>
+          <app-entity-searcher
+            [items]="mecanicos()"
+            [columns]="mecanicoColumns"
+            [totalItems]="mecanicosTotal()"
+            [loading]="loadingMecanicos()"
+            [displayFn]="mecanicoLabelFn"
+            [keyFn]="mecanicoKeyFn"
+            [value]="form.controls.id_mecanico.value"
+            (searchChange)="fetchMecanicos(0, 10, $event)"
+            (pageChange)="fetchMecanicos($event.pageIndex, $event.pageSize, '')"
+            (itemChange)="onMecanicoSelected($event)"
+            [backendPagination]="true"
+            label="Buscar mecánico..."
+          />
+          @if (form.controls.id_mecanico.touched && form.controls.id_mecanico.invalid) {
+            <span class="ot-field__error">Debes asignar un mecánico</span>
+          }
+        </div>
+      </div>
+    </app-ot-collapsible-section>
+
+    <!-- Descripción de la falla -->
+    <app-ot-collapsible-section
+      icon="report_problem"
+      title="Descripción de la falla*"
+      hint="Lo que el cliente reporta sobre el problema"
+      [summary]="resumenFalla()"
+      [status]="statusFalla()"
+      [(expanded)]="openFalla"
+    >
+      <div class="ot-field">
+        <textarea
+          id="ot-falla"
+          class="ot-field__input ot-field__input--tall"
+          formControlName="descripcion_falla"
+          rows="4"
+          placeholder="Describe con detalle los síntomas, ruidos, luces de tablero, etc."
+        ></textarea>
+        @if (form.controls.descripcion_falla.touched && form.controls.descripcion_falla.invalid) {
+          <span class="ot-field__error">Debes ingresar la descripción de la falla</span>
+        }
+      </div>
+    </app-ot-collapsible-section>
+
+    <!-- Estado inicial del vehículo -->
+    <app-ot-collapsible-section
+      icon="fact_check"
+      title="Estado inicial del vehículo"
+      hint="Marca el tipo de falla y las condiciones observadas al ingreso"
+      [summary]="resumenEstado()"
+      [status]="statusEstado()"
+      [(expanded)]="openEstado"
+    >
+      <div class="ot-estado-block">
+        <span class="ot-estado-block__label">Tipo de falla</span>
+        <div class="ot-chip-grid" role="group" aria-label="Tipo de falla">
+          @for (op of opcionesPorGrupo('falla'); track op.control) {
+            <button
+              type="button"
+              class="ot-chip"
+              [class.ot-chip--active]="isChecked(op.control)"
+              (click)="toggleEstado(op.control)"
+            >
+              <span class="material-icons" aria-hidden="true">{{ op.icon }}</span>
+              {{ op.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="ot-estado-block">
+        <span class="ot-estado-block__label">Condición al ingreso</span>
+        <div class="ot-chip-grid" role="group" aria-label="Condición del vehículo">
+          @for (op of opcionesPorGrupo('condicion'); track op.control) {
+            <button
+              type="button"
+              class="ot-chip"
+              [class.ot-chip--active]="isChecked(op.control)"
+              (click)="toggleEstado(op.control)"
+            >
+              <span class="material-icons" aria-hidden="true">{{ op.icon }}</span>
+              {{ op.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="ot-form__grid--2">
+        <div class="ot-field">
+          <label class="ot-field__label-static" for="ot-km">Kilometraje</label>
+          <input
+            id="ot-km"
+            class="ot-field__input"
+            type="number"
+            min="0"
+            formControlName="kilometraje"
+            placeholder="Ej: 85400"
+          />
+        </div>
+
+        <div class="ot-field">
+          <label class="ot-field__label-static" for="ot-combustible">Nivel de combustible</label>
+          <select id="ot-combustible" class="ot-field__input" formControlName="nivel_combustible">
+            @for (nivel of nivelesCombustible; track nivel.value) {
+              <option [value]="nivel.value">{{ nivel.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="ot-field ot-field--full">
+          <label class="ot-field__label-static" for="ot-obs-estado">Observaciones del estado</label>
+          <textarea
+            id="ot-obs-estado"
+            class="ot-field__input"
+            formControlName="observaciones_estado"
+            rows="2"
+            placeholder="Detalle adicional: accesorios, objetos en el interior, etc."
+          ></textarea>
+        </div>
+      </div>
+    </app-ot-collapsible-section>
+  </form>
 </div>

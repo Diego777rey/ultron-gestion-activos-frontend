@@ -1,14 +1,19 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
+  effect,
   inject,
   input,
   OnInit,
   output,
   signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { distinctUntilChanged, map, startWith } from 'rxjs';
 import { EntitySearcherComponent } from '../../../../../shared/components/entity-searcher/entity-searcher';
+import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { ClienteService } from '../../../../personas/clientes/services/cliente.service';
@@ -24,16 +29,27 @@ import { SectorOutput } from '../../../../sectores/interfaces/sector.interface';
 import { UsuarioService } from '../../../../personas/usuarios/services/usuario.service';
 import { UsuarioOutput } from '../../../../personas/usuarios/interfaces/usuario.interface';
 import { OrdenTrabajoInput, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
+import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 import { OtHistorialPanelComponent } from '../ot-historial-panel/ot-historial-panel.component';
-import { OtAgendaMecanicoComponent } from '../ot-agenda-mecanico/ot-agenda-mecanico.component';
+import {
+  OtCollapsibleSectionComponent,
+  OtSectionStatus,
+} from '../ot-collapsible-section/ot-collapsible-section.component';
+
+export interface EstadoInicialOpcion {
+  control: string;
+  label: string;
+  icon: string;
+  group: 'falla' | 'condicion';
+}
 
 @Component({
   selector: 'app-ot-recepcion-step',
   imports: [
     ReactiveFormsModule,
     EntitySearcherComponent,
-    OtHistorialPanelComponent,
-    OtAgendaMecanicoComponent,
+    UiButtonComponent,
+    OtCollapsibleSectionComponent,
   ],
   templateUrl: './ot-recepcion-step.component.html',
   styleUrl: '../../styles/ot-form.scss',
@@ -47,9 +63,46 @@ export class OtRecepcionStepComponent implements OnInit {
   private readonly funcionarioService = inject(FuncionarioService);
   private readonly sectorService = inject(SectorService);
   private readonly usuarioService = inject(UsuarioService);
+  private readonly ordenService = inject(OrdenTrabajoService);
 
   readonly orden = input<OrdenTrabajoOutput | null>(null);
   readonly formReady = output<FormGroup>();
+
+  protected readonly openClienteVehiculo = signal(true);
+  protected readonly openDatos = signal(true);
+  protected readonly openFalla = signal(true);
+  protected readonly openEstado = signal(false);
+
+  /** Fuerza recomputo de badges cuando se marca touched al guardar. */
+  private readonly formTick = signal(0);
+
+  protected readonly historial = signal<OrdenTrabajoOutput[]>([]);
+  protected readonly historialLoading = signal(false);
+
+  protected readonly selectedCliente = signal<ClienteOutput | null>(null);
+  protected readonly selectedVehiculo = signal<VehiculoOutput | null>(null);
+  protected readonly selectedSector = signal<SectorOutput | null>(null);
+  protected readonly selectedUsuario = signal<UsuarioOutput | null>(null);
+  protected readonly selectedMecanico = signal<FuncionarioOutput | null>(null);
+
+  protected readonly nivelesCombustible = [
+    { value: '', label: 'Sin indicar' },
+    { value: 'VACIO', label: 'Vacío' },
+    { value: 'CUARTO', label: '1/4' },
+    { value: 'MEDIO', label: '1/2' },
+    { value: 'TRES_CUARTOS', label: '3/4' },
+    { value: 'LLENO', label: 'Lleno' },
+  ];
+
+  protected readonly opcionesEstado: EstadoInicialOpcion[] = [
+    { control: 'falla_mecanica', label: 'Falla mecánica', icon: 'build', group: 'falla' },
+    { control: 'falla_electrica', label: 'Falla eléctrica', icon: 'bolt', group: 'falla' },
+    { control: 'estado_llantas', label: 'Llantas', icon: 'trip_origin', group: 'condicion' },
+    { control: 'estado_pintura', label: 'Pintura', icon: 'format_paint', group: 'condicion' },
+    { control: 'estado_rayones', label: 'Rayones', icon: 'brush', group: 'condicion' },
+    { control: 'estado_golpes', label: 'Golpes', icon: 'warning', group: 'condicion' },
+    { control: 'estado_vidrios', label: 'Vidrios', icon: 'crop_square', group: 'condicion' },
+  ];
 
   protected readonly form = this.fb.group({
     id_sector: ['', Validators.required],
@@ -58,6 +111,113 @@ export class OtRecepcionStepComponent implements OnInit {
     id_vehiculo: ['', Validators.required],
     id_mecanico: ['', Validators.required],
     descripcion_falla: ['', Validators.required],
+    falla_mecanica: [false],
+    falla_electrica: [false],
+    estado_llantas: [false],
+    estado_pintura: [false],
+    estado_rayones: [false],
+    estado_golpes: [false],
+    estado_vidrios: [false],
+    nivel_combustible: [''],
+    kilometraje: [null as number | null],
+    observaciones_estado: [''],
+  });
+
+  private readonly formValue = toSignal(
+    this.form.valueChanges.pipe(startWith(this.form.getRawValue())),
+    { initialValue: this.form.getRawValue() }
+  );
+
+  private readonly historialKeys = toSignal(
+    this.form.valueChanges.pipe(
+      startWith(this.form.getRawValue()),
+      map((v) => ({
+        idCliente: (v.id_cliente as string) || null,
+        idVehiculo: (v.id_vehiculo as string) || null,
+      })),
+      distinctUntilChanged(
+        (a, b) => a.idCliente === b.idCliente && a.idVehiculo === b.idVehiculo
+      )
+    ),
+    { initialValue: { idCliente: null as string | null, idVehiculo: null as string | null } }
+  );
+
+  protected readonly resumenClienteVehiculo = computed(() => {
+    this.formValue();
+    const cliente = this.selectedCliente();
+    const vehiculo = this.selectedVehiculo();
+    const parts: string[] = [];
+    if (cliente) parts.push(this.clienteLabel(cliente));
+    if (vehiculo) parts.push(this.vehiculoLabel(vehiculo));
+    return parts.length ? parts.join(' · ') : 'Sin seleccionar';
+  });
+
+  protected readonly resumenDatos = computed(() => {
+    this.formValue();
+    const parts: string[] = [];
+    const sector = this.selectedSector();
+    const usuario = this.selectedUsuario();
+    const mecanico = this.selectedMecanico();
+    if (sector?.nombre) parts.push(sector.nombre);
+    if (usuario) parts.push(this.usuarioLabelFn(usuario));
+    if (mecanico) parts.push(this.mecanicoLabel(mecanico));
+    return parts.length ? parts.join(' · ') : 'Sin asignar';
+  });
+
+  protected readonly resumenFalla = computed(() => {
+    const v = this.formValue();
+    const text = (v.descripcion_falla ?? '').trim();
+    if (!text) return 'Sin descripción';
+    return text.length > 90 ? `${text.slice(0, 90)}…` : text;
+  });
+
+  protected readonly resumenEstado = computed(() => {
+    const v = this.formValue();
+    const fallas = this.opcionesEstado.filter(
+      (o) => o.group === 'falla' && !!(v as Record<string, unknown>)[o.control]
+    ).length;
+    const condiciones = this.opcionesEstado.filter(
+      (o) => o.group === 'condicion' && !!(v as Record<string, unknown>)[o.control]
+    ).length;
+    const parts: string[] = [];
+    if (fallas) parts.push(`${fallas} falla${fallas > 1 ? 's' : ''}`);
+    if (condiciones) parts.push(`${condiciones} condición${condiciones > 1 ? 'es' : ''}`);
+    const km = v.kilometraje;
+    if (km !== null && km !== undefined && String(km).trim() !== '') {
+      const n = Number(km);
+      if (!Number.isNaN(n)) {
+        parts.push(`${n.toLocaleString('es-PY')} km`);
+      }
+    }
+    const nivel = this.nivelesCombustible.find((n) => n.value === (v.nivel_combustible || ''));
+    if (nivel?.value) parts.push(nivel.label);
+    return parts.length ? parts.join(' · ') : 'Sin registrar';
+  });
+
+  protected readonly statusClienteVehiculo = computed(() =>
+    this.sectionStatus(['id_cliente', 'id_vehiculo'])
+  );
+  protected readonly statusDatos = computed(() =>
+    this.sectionStatus(['id_sector', 'id_responsable', 'id_mecanico'])
+  );
+  protected readonly statusFalla = computed(() => this.sectionStatus(['descripcion_falla']));
+  protected readonly statusEstado = computed((): OtSectionStatus => {
+    this.formTick();
+    this.formValue();
+    return this.resumenEstado() === 'Sin registrar' ? 'none' : 'ok';
+  });
+
+  protected readonly puedeVerHistorial = computed(() => {
+    this.formValue();
+    return !!(this.form.controls.id_cliente.value || this.form.controls.id_vehiculo.value);
+  });
+
+  protected readonly historialCount = computed(() => this.historial().length);
+
+  protected readonly historialLabel = computed(() => {
+    if (!this.puedeVerHistorial()) return 'Ver historial';
+    if (this.historialLoading()) return 'Ver historial…';
+    return `Ver historial (${this.historialCount()})`;
   });
 
   protected readonly clientes = signal<ClienteOutput[]>([]);
@@ -116,9 +276,25 @@ export class OtRecepcionStepComponent implements OnInit {
     `${u.funcionario?.persona?.nombre ?? ''} ${u.funcionario?.persona?.apellido ?? ''}`.trim();
   protected readonly usuarioKeyFn = (u: UsuarioOutput) => u.id;
 
+  constructor() {
+    effect(() => {
+      this.patchFromOrden(this.orden());
+    });
+
+    effect(() => {
+      const { idCliente, idVehiculo } = this.historialKeys();
+      if (idVehiculo) {
+        this.cargarHistorialPorVehiculo(idVehiculo);
+      } else if (idCliente) {
+        this.cargarHistorialPorCliente(idCliente);
+      } else {
+        this.historial.set([]);
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.formReady.emit(this.form);
-    this.patchFromOrden(this.orden());
     this.fetchClientes(0, 10, '');
     this.fetchVehiculos(0, 10, '');
     this.fetchMecanicos(0, 10, '');
@@ -130,29 +306,126 @@ export class OtRecepcionStepComponent implements OnInit {
   buildInput(): OrdenTrabajoInput | null {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.formTick.update((n) => n + 1);
+      this.revealInvalidSections();
       return null;
     }
     const v = this.form.getRawValue();
+    const kmRaw = v.kilometraje;
+    const kilometraje =
+      kmRaw === null || kmRaw === undefined || String(kmRaw).trim() === ''
+        ? null
+        : Number(kmRaw);
+
     return {
       id_sector: v.id_sector,
       id_responsable: v.id_responsable,
       id_cliente: v.id_cliente,
       id_vehiculo: v.id_vehiculo,
       id_mecanico: v.id_mecanico,
-      descripcion_falla: v.descripcion_falla,
+      recepcion: {
+        descripcion_falla: v.descripcion_falla,
+      },
+      estado_vehiculo: {
+        falla_mecanica: !!v.falla_mecanica,
+        falla_electrica: !!v.falla_electrica,
+        estado_llantas: !!v.estado_llantas,
+        estado_pintura: !!v.estado_pintura,
+        estado_rayones: !!v.estado_rayones,
+        estado_golpes: !!v.estado_golpes,
+        estado_vidrios: !!v.estado_vidrios,
+        nivel_combustible: v.nivel_combustible || null,
+        kilometraje: kilometraje !== null && !Number.isNaN(kilometraje) ? kilometraje : null,
+        observaciones_estado: v.observaciones_estado || null,
+      },
     };
+  }
+
+  protected abrirHistorial(): void {
+    if (!this.puedeVerHistorial()) return;
+    this.dialogService
+      .openForm(OtHistorialPanelComponent, {
+        title: 'Historial de órdenes',
+        subtitle: 'Órdenes anteriores del cliente o vehículo seleccionado',
+        maxWidth: '820px',
+        inputs: {
+          items: this.historial(),
+          loading: this.historialLoading(),
+        },
+      })
+      .subscribe();
+  }
+
+  protected opcionesPorGrupo(group: 'falla' | 'condicion'): EstadoInicialOpcion[] {
+    return this.opcionesEstado.filter((o) => o.group === group);
+  }
+
+  protected isChecked(control: string): boolean {
+    return !!this.form.get(control)?.value;
+  }
+
+  protected toggleEstado(control: string): void {
+    const ctrl = this.form.get(control);
+    if (!ctrl) return;
+    ctrl.setValue(!ctrl.value);
+    ctrl.markAsDirty();
   }
 
   protected patchFromOrden(data: OrdenTrabajoOutput | null): void {
     if (!data) return;
+    const estado = data.estado_vehiculo;
     this.form.patchValue({
       id_sector: data.sector?.id_sector ? String(data.sector.id_sector) : '',
       id_responsable: data.responsable?.id ? String(data.responsable.id) : '',
       id_cliente: data.cliente?.id_cliente ?? '',
       id_vehiculo: data.vehiculo?.id_bien ?? '',
       id_mecanico: data.mecanico?.id_funcionario ?? '',
-      descripcion_falla: data.descripcion_falla || '',
+      descripcion_falla: data.recepcion?.descripcion_falla || '',
+      falla_mecanica: !!estado?.falla_mecanica,
+      falla_electrica: !!estado?.falla_electrica,
+      estado_llantas: !!estado?.estado_llantas,
+      estado_pintura: !!estado?.estado_pintura,
+      estado_rayones: !!estado?.estado_rayones,
+      estado_golpes: !!estado?.estado_golpes,
+      estado_vidrios: !!estado?.estado_vidrios,
+      nivel_combustible: estado?.nivel_combustible || '',
+      kilometraje: estado?.kilometraje ?? null,
+      observaciones_estado: estado?.observaciones_estado || '',
     });
+
+    if (data.cliente) {
+      this.selectedCliente.set(data.cliente);
+      this.clientes.update((list) => this.ensureInList(list, data.cliente!, (c) => c.id_cliente));
+    }
+    if (data.vehiculo) {
+      this.selectedVehiculo.set(data.vehiculo);
+      this.vehiculos.update((list) => this.ensureInList(list, data.vehiculo!, (v) => v.id_bien));
+    }
+    if (data.sector) {
+      const sector = {
+        id_sector: data.sector.id_sector != null ? Number(data.sector.id_sector) : 0,
+        nombre: data.sector.nombre ?? '',
+      } as SectorOutput;
+      this.selectedSector.set(sector);
+      this.sectores.update((list) => this.ensureInList(list, sector, (s) => s.id_sector));
+    }
+    if (data.responsable) {
+      const usuario = {
+        id: data.responsable.id ?? '',
+        username: data.responsable.username ?? undefined,
+        funcionario: data.responsable.funcionario ?? undefined,
+      } as UsuarioOutput;
+      this.selectedUsuario.set(usuario);
+      this.usuarios.update((list) => this.ensureInList(list, usuario, (u) => u.id));
+    }
+    if (data.mecanico) {
+      const mecanico = {
+        id_funcionario: data.mecanico.id_funcionario ?? '',
+        persona: data.mecanico.persona ?? undefined,
+      } as FuncionarioOutput;
+      this.selectedMecanico.set(mecanico);
+      this.mecanicos.update((list) => this.ensureInList(list, mecanico, (m) => m.id_funcionario));
+    }
   }
 
   protected fetchClientes(page: number, size: number, filter: string): void {
@@ -169,7 +442,9 @@ export class OtRecepcionStepComponent implements OnInit {
 
   protected onClienteSelected(cliente: ClienteOutput | null): void {
     this.form.controls.id_cliente.setValue(cliente?.id_cliente ?? '');
+    this.selectedCliente.set(cliente);
     this.form.controls.id_vehiculo.setValue('');
+    this.selectedVehiculo.set(null);
     this.fetchVehiculos(0, 10, '');
   }
 
@@ -219,11 +494,14 @@ export class OtRecepcionStepComponent implements OnInit {
 
   protected onVehiculoSelected(vehiculo: VehiculoOutput | null): void {
     this.form.controls.id_vehiculo.setValue(vehiculo?.id_bien ?? '');
+    this.selectedVehiculo.set(vehiculo);
   }
 
   protected onAddVehiculo(): void {
     const idCliente = this.form.controls.id_cliente.value;
-    const cliente = this.clientes().find((c) => c.id_cliente === idCliente) ?? null;
+    const cliente = this.selectedCliente()
+      ?? this.clientes().find((c) => c.id_cliente === idCliente)
+      ?? null;
     this.dialogService
       .openForm(VehiculoFormComponent, {
         title: 'Nuevo Vehículo',
@@ -250,6 +528,7 @@ export class OtRecepcionStepComponent implements OnInit {
 
   protected onMecanicoSelected(mecanico: FuncionarioOutput | null): void {
     this.form.controls.id_mecanico.setValue(mecanico?.id_funcionario ?? '');
+    this.selectedMecanico.set(mecanico);
   }
 
   protected fetchSectores(page: number, size: number, filter: string): void {
@@ -268,6 +547,7 @@ export class OtRecepcionStepComponent implements OnInit {
     this.form.controls.id_sector.setValue(
       sector?.id_sector != null ? String(sector.id_sector) : ''
     );
+    this.selectedSector.set(sector);
   }
 
   protected fetchUsuarios(page: number, size: number, filter: string): void {
@@ -284,6 +564,76 @@ export class OtRecepcionStepComponent implements OnInit {
 
   protected onUsuarioSelected(usuario: UsuarioOutput | null): void {
     this.form.controls.id_responsable.setValue(usuario?.id ?? '');
+    this.selectedUsuario.set(usuario);
+  }
+
+  private sectionStatus(controls: string[]): OtSectionStatus {
+    this.formTick();
+    this.formValue();
+    let hasError = false;
+    let allValid = true;
+    for (const name of controls) {
+      const ctrl = this.form.get(name);
+      if (!ctrl) continue;
+      if (ctrl.invalid) {
+        allValid = false;
+        if (ctrl.touched) hasError = true;
+      }
+    }
+    if (hasError) return 'error';
+    if (allValid) return 'ok';
+    return 'pending';
+  }
+
+  private revealInvalidSections(): void {
+    if (this.form.controls.id_cliente.invalid || this.form.controls.id_vehiculo.invalid) {
+      this.openClienteVehiculo.set(true);
+    }
+    if (
+      this.form.controls.id_sector.invalid ||
+      this.form.controls.id_responsable.invalid ||
+      this.form.controls.id_mecanico.invalid
+    ) {
+      this.openDatos.set(true);
+    }
+    if (this.form.controls.descripcion_falla.invalid) {
+      this.openFalla.set(true);
+    }
+  }
+
+  private cargarHistorialPorCliente(id: string): void {
+    this.historialLoading.set(true);
+    this.ordenService.findByCliente(id, 0, 8).subscribe({
+      next: (list) => {
+        this.historial.set(list);
+        this.historialLoading.set(false);
+      },
+      error: () => {
+        this.historial.set([]);
+        this.historialLoading.set(false);
+      },
+    });
+  }
+
+  private cargarHistorialPorVehiculo(id: string): void {
+    this.historialLoading.set(true);
+    this.ordenService.findByVehiculo(id, 0, 8).subscribe({
+      next: (list) => {
+        this.historial.set(list);
+        this.historialLoading.set(false);
+      },
+      error: () => {
+        this.historial.set([]);
+        this.historialLoading.set(false);
+      },
+    });
+  }
+
+  private ensureInList<T>(list: T[], item: T, keyFn: (item: T) => unknown): T[] {
+    const key = keyFn(item);
+    if (key == null || key === '') return list;
+    if (list.some((x) => keyFn(x) === key)) return list;
+    return [item, ...list];
   }
 
   private clienteLabel(c: ClienteOutput | null): string {

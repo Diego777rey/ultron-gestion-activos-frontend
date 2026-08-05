@@ -50,7 +50,7 @@ export class OrdenDeTrabajoComponent {
     { key: 'cliente', header: 'Cliente', width: '200px' },
     { key: 'vehiculo', header: 'Vehículo', width: '180px' },
     { key: 'mecanico', header: 'Mecánico', width: '160px' },
-    { key: 'total_presupuesto', header: 'Presupuesto', width: '130px', align: 'right' },
+    { key: 'diagnostico', header: 'Presupuesto', width: '130px', align: 'right' },
     { key: 'fecha_creacion', header: 'Fecha', width: '120px', align: 'center' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];

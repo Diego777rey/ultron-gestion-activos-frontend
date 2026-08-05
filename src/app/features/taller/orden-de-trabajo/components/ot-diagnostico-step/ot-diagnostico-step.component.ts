@@ -66,23 +66,26 @@ export class OtDiagnosticoStepComponent implements OnInit {
   ngOnInit(): void {
     this.formReady.emit(this.form);
     const o = this.orden();
+    const d = o.diagnostico;
     this.form.patchValue({
-      fecha_inicio_estimada: this.formatDate(o.fecha_inicio_estimada),
-      fecha_fin_estimada: this.formatDate(o.fecha_fin_estimada),
-      presupuesto_aprobado: o.presupuesto_aprobado ?? false,
+      fecha_inicio_estimada: this.formatDate(d?.fecha_inicio_estimada),
+      fecha_fin_estimada: this.formatDate(d?.fecha_fin_estimada),
+      presupuesto_aprobado: d?.presupuesto_aprobado ?? false,
     });
   }
 
   buildInput(): OrdenTrabajoInput {
     const val = this.form.getRawValue();
     return {
-      fecha_inicio_estimada: val.fecha_inicio_estimada
-        ? new Date(val.fecha_inicio_estimada).toISOString()
-        : null,
-      fecha_fin_estimada: val.fecha_fin_estimada
-        ? new Date(val.fecha_fin_estimada).toISOString()
-        : null,
-      presupuesto_aprobado: val.presupuesto_aprobado,
+      diagnostico: {
+        fecha_inicio_estimada: val.fecha_inicio_estimada
+          ? new Date(val.fecha_inicio_estimada).toISOString()
+          : null,
+        fecha_fin_estimada: val.fecha_fin_estimada
+          ? new Date(val.fecha_fin_estimada).toISOString()
+          : null,
+        presupuesto_aprobado: val.presupuesto_aprobado,
+      },
     };
   }
 
