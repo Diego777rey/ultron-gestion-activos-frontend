@@ -14,6 +14,10 @@ export interface OrdenEstadoVehiculoOutput {
   estado_rayones?: boolean | null;
   estado_golpes?: boolean | null;
   estado_vidrios?: boolean | null;
+  perdida_aceite?: boolean | null;
+  luces_danadas?: boolean | null;
+  espejos_danados?: boolean | null;
+  accesorios_faltantes?: boolean | null;
   nivel_combustible?: string | null;
   kilometraje?: number | null;
   observaciones_estado?: string | null;
@@ -71,6 +75,10 @@ export interface OrdenEstadoVehiculoInput {
   estado_rayones?: boolean | null;
   estado_golpes?: boolean | null;
   estado_vidrios?: boolean | null;
+  perdida_aceite?: boolean | null;
+  luces_danadas?: boolean | null;
+  espejos_danados?: boolean | null;
+  accesorios_faltantes?: boolean | null;
   nivel_combustible?: string | null;
   kilometraje?: number | null;
   observaciones_estado?: string | null;

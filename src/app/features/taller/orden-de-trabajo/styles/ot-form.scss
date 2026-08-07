@@ -68,96 +68,6 @@
   font-size: 12px;
 }
 
-.ot-recepcion-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 4px;
-}
-
-.ot-recepcion-topbar__hint {
-  margin: 0;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.62);
-  flex: 1;
-  min-width: 200px;
-}
-
-.ot-estado-block {
-  margin-bottom: 16px;
-}
-
-.ot-estado-block__label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-  margin-bottom: 8px;
-}
-
-.ot-chip-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.ot-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.78);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.1s ease;
-
-  .material-icons {
-    font-size: 18px;
-    opacity: 0.85;
-  }
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.09);
-    border-color: rgba(148, 163, 184, 0.45);
-    color: #fff;
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-}
-
-.ot-chip--active {
-  background: rgba(25, 118, 210, 0.28);
-  border-color: rgba(66, 165, 245, 0.65);
-  color: #e3f2fd;
-  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.16);
-
-  .material-icons {
-    opacity: 1;
-    color: #90caf9;
-  }
-}
-
-.ot-field__input--tall {
-  height: auto;
-  min-height: 96px;
-}
-
 .ot-section .ot-hint {
   margin-bottom: 14px;
 }
@@ -314,23 +224,6 @@ textarea.ot-field__input {
   font-size: 11px;
   color: #ff8aa3;
   margin-top: 2px;
-}
-
-.ot-recepcion-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  max-width: 1040px;
-
-  .ot-section {
-    max-width: none;
-    margin-bottom: 0;
-  }
-
-  .ot-form {
-    gap: 16px;
-  }
 }
 
 .ot-panels {

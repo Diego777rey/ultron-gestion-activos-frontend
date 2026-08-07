@@ -12,15 +12,36 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  padding: 24px 32px;
+  padding: 24px 32px 0;
   gap: 20px;
-  overflow-y: auto;
+  overflow: hidden;
   background: var(--content-bg);
 }
 
 .stepper-body {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
+}
+
+/* El paso administra el scroll de sus propias columnas */
+.stepper-body > app-ot-recepcion-step {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.stepper-body > app-ot-diagnostico-step,
+.stepper-body > app-ot-en-proceso-step,
+.stepper-body > app-ot-finalizada-step,
+.stepper-body > app-ot-facturado-step {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: 8px;
 }
 
 .stepper-body__title {
@@ -68,14 +89,18 @@
 }
 
 .stepper-footer {
+  position: relative;
+  z-index: 20;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 -32px -24px;
+  margin: 0 -32px;
   padding: 16px 32px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   background: #1a1a1a;
+  isolation: isolate;
 }
 
 .stepper-footer__right {
