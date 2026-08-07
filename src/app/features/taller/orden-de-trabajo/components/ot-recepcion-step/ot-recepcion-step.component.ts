@@ -53,7 +53,7 @@ export interface EstadoInicialOpcion {
     OtHistorialPanelComponent,
   ],
   templateUrl: './ot-recepcion-step.component.html',
-  styleUrl: '../../styles/ot-form.scss',
+  styleUrls: ['../../styles/ot-form.scss', './ot-recepcion-step.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OtRecepcionStepComponent implements OnInit {
