@@ -53,6 +53,10 @@ export const ORDEN_TRABAJO_SELECTION = `{
     estado_rayones
     estado_golpes
     estado_vidrios
+    perdida_aceite
+    luces_danadas
+    espejos_danados
+    accesorios_faltantes
     nivel_combustible
     kilometraje
     observaciones_estado

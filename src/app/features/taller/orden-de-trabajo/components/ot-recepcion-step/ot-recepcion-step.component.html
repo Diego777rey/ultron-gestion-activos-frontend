@@ -1,19 +1,21 @@
-<div class="ot-recepcion-layout">
-  <div class="ot-recepcion-topbar">
-    <p class="ot-recepcion-topbar__hint">
-      Completá los datos obligatorios. El estado del vehículo es opcional y podés dejarlo colapsado.
-    </p>
-    <app-ui-button
-      [label]="historialLabel()"
-      icon="history"
-      variant="outline"
-      size="sm"
-      [disabled]="!puedeVerHistorial()"
-      (clicked)="abrirHistorial()"
-    />
-  </div>
+<div class="ot-recepcion-split" [class.ot-recepcion-split--con-historial]="historialAbierto()">
+  <div class="ot-recepcion-layout">
+    <div class="ot-recepcion-topbar">
+      <p class="ot-recepcion-topbar__hint">
+        Completá los datos obligatorios. El estado del vehículo es opcional y podés dejarlo
+        colapsado.
+      </p>
+      <app-ui-button
+        [label]="historialLabel()"
+        [icon]="historialAbierto() ? 'chevron_right' : 'history'"
+        variant="outline"
+        size="sm"
+        [disabled]="!puedeVerHistorial() && !historialAbierto()"
+        (clicked)="toggleHistorial()"
+      />
+    </div>
 
-  <form class="ot-form ot-form--wide" [formGroup]="form">
+    <form class="ot-form ot-form--wide" [formGroup]="form">
     <!-- Cliente y vehículo -->
     <app-ot-collapsible-section
       icon="directions_car"
@@ -247,5 +249,31 @@
         </div>
       </div>
     </app-ot-collapsible-section>
-  </form>
+    </form>
+  </div>
+
+  @if (historialAbierto()) {
+    <aside class="ot-historial-aside" aria-label="Historial de órdenes">
+      <header class="ot-historial-aside__header">
+        <h3 class="ot-historial-aside__title">
+          <span class="material-icons" aria-hidden="true">history</span>
+          Historial
+        </h3>
+        <button
+          type="button"
+          class="ot-historial-aside__close"
+          aria-label="Cerrar historial"
+          (click)="cerrarHistorial()"
+        >
+          <span class="material-icons" aria-hidden="true">close</span>
+        </button>
+      </header>
+      <p class="ot-historial-aside__hint">
+        Órdenes anteriores del cliente o vehículo seleccionado
+      </p>
+      <div class="ot-historial-aside__body">
+        <app-ot-historial-panel [items]="historial()" [loading]="historialLoading()" />
+      </div>
+    </aside>
+  }
 </div>

@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DOCUMENT,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  inject,
+  input,
+  output,
+} from '@angular/core';
 
 /**
  * Modal / diálogo genérico reutilizable.
@@ -15,7 +25,9 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
     '(document:keydown.escape)': 'onEscape()',
   },
 })
-export class ModalComponent {
+export class ModalComponent implements OnInit, OnDestroy {
+  private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly document = inject(DOCUMENT);
   /** Controla la visibilidad del modal. */
   readonly open = input<boolean>(false);
   /** Título mostrado en el encabezado. */
@@ -33,6 +45,19 @@ export class ModalComponent {
 
   /** Se emite al solicitar el cierre del modal. */
   readonly closed = output<void>();
+
+  /**
+   * El overlay es `position: fixed`, pero un ancestro con `transform`, `filter`,
+   * `backdrop-filter` o `contain` lo convertiría en su bloque contenedor y el modal
+   * quedaría recortado dentro de esa tarjeta. Montarlo en `body` lo evita siempre.
+   */
+  ngOnInit(): void {
+    this.document.body.appendChild(this.hostEl.nativeElement);
+  }
+
+  ngOnDestroy(): void {
+    this.hostEl.nativeElement.remove();
+  }
 
   protected onBackdrop(): void {
     if (this.closeOnBackdrop()) {

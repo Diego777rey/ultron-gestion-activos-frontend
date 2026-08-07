@@ -50,6 +50,7 @@ export interface EstadoInicialOpcion {
     EntitySearcherComponent,
     UiButtonComponent,
     OtCollapsibleSectionComponent,
+    OtHistorialPanelComponent,
   ],
   templateUrl: './ot-recepcion-step.component.html',
   styleUrl: '../../styles/ot-form.scss',
@@ -78,6 +79,7 @@ export class OtRecepcionStepComponent implements OnInit {
 
   protected readonly historial = signal<OrdenTrabajoOutput[]>([]);
   protected readonly historialLoading = signal(false);
+  protected readonly historialAbierto = signal(false);
 
   protected readonly selectedCliente = signal<ClienteOutput | null>(null);
   protected readonly selectedVehiculo = signal<VehiculoOutput | null>(null);
@@ -95,13 +97,17 @@ export class OtRecepcionStepComponent implements OnInit {
   ];
 
   protected readonly opcionesEstado: EstadoInicialOpcion[] = [
-    { control: 'falla_mecanica', label: 'Falla mecánica', icon: 'build', group: 'falla' },
-    { control: 'falla_electrica', label: 'Falla eléctrica', icon: 'bolt', group: 'falla' },
-    { control: 'estado_llantas', label: 'Llantas', icon: 'trip_origin', group: 'condicion' },
-    { control: 'estado_pintura', label: 'Pintura', icon: 'format_paint', group: 'condicion' },
-    { control: 'estado_rayones', label: 'Rayones', icon: 'brush', group: 'condicion' },
-    { control: 'estado_golpes', label: 'Golpes', icon: 'warning', group: 'condicion' },
-    { control: 'estado_vidrios', label: 'Vidrios', icon: 'crop_square', group: 'condicion' },
+    { control: 'falla_mecanica', label: 'Reporta falla mecánica', icon: 'build', group: 'falla' },
+    { control: 'falla_electrica', label: 'Reporta falla eléctrica', icon: 'bolt', group: 'falla' },
+    { control: 'estado_llantas', label: 'Tiene ruedas dañadas o ponchadas', icon: 'trip_origin', group: 'condicion' },
+    { control: 'estado_pintura', label: 'Tiene pintura dañada', icon: 'format_paint', group: 'condicion' },
+    { control: 'estado_rayones', label: 'Posee rayones', icon: 'brush', group: 'condicion' },
+    { control: 'estado_golpes', label: 'Tiene golpes o abolladuras', icon: 'warning', group: 'condicion' },
+    { control: 'estado_vidrios', label: 'Tiene vidrios dañados', icon: 'crop_square', group: 'condicion' },
+    { control: 'perdida_aceite', label: 'Presenta pérdida de aceite', icon: 'oil_barrel', group: 'condicion' },
+    { control: 'luces_danadas', label: 'Tiene luces dañadas', icon: 'lightbulb', group: 'condicion' },
+    { control: 'espejos_danados', label: 'Tiene espejos dañados', icon: 'flip', group: 'condicion' },
+    { control: 'accesorios_faltantes', label: 'Tiene piezas o accesorios faltantes', icon: 'extension_off', group: 'condicion' },
   ];
 
   protected readonly form = this.fb.group({
@@ -118,6 +124,10 @@ export class OtRecepcionStepComponent implements OnInit {
     estado_rayones: [false],
     estado_golpes: [false],
     estado_vidrios: [false],
+    perdida_aceite: [false],
+    luces_danadas: [false],
+    espejos_danados: [false],
+    accesorios_faltantes: [false],
     nivel_combustible: [''],
     kilometraje: [null as number | null],
     observaciones_estado: [''],
@@ -215,6 +225,7 @@ export class OtRecepcionStepComponent implements OnInit {
   protected readonly historialCount = computed(() => this.historial().length);
 
   protected readonly historialLabel = computed(() => {
+    if (this.historialAbierto()) return 'Ocultar historial';
     if (!this.puedeVerHistorial()) return 'Ver historial';
     if (this.historialLoading()) return 'Ver historial…';
     return `Ver historial (${this.historialCount()})`;
@@ -334,6 +345,10 @@ export class OtRecepcionStepComponent implements OnInit {
         estado_rayones: !!v.estado_rayones,
         estado_golpes: !!v.estado_golpes,
         estado_vidrios: !!v.estado_vidrios,
+        perdida_aceite: !!v.perdida_aceite,
+        luces_danadas: !!v.luces_danadas,
+        espejos_danados: !!v.espejos_danados,
+        accesorios_faltantes: !!v.accesorios_faltantes,
         nivel_combustible: v.nivel_combustible || null,
         kilometraje: kilometraje !== null && !Number.isNaN(kilometraje) ? kilometraje : null,
         observaciones_estado: v.observaciones_estado || null,
@@ -341,19 +356,13 @@ export class OtRecepcionStepComponent implements OnInit {
     };
   }
 
-  protected abrirHistorial(): void {
-    if (!this.puedeVerHistorial()) return;
-    this.dialogService
-      .openForm(OtHistorialPanelComponent, {
-        title: 'Historial de órdenes',
-        subtitle: 'Órdenes anteriores del cliente o vehículo seleccionado',
-        maxWidth: '820px',
-        inputs: {
-          items: this.historial(),
-          loading: this.historialLoading(),
-        },
-      })
-      .subscribe();
+  protected toggleHistorial(): void {
+    if (!this.puedeVerHistorial() && !this.historialAbierto()) return;
+    this.historialAbierto.update((abierto) => !abierto);
+  }
+
+  protected cerrarHistorial(): void {
+    this.historialAbierto.set(false);
   }
 
   protected opcionesPorGrupo(group: 'falla' | 'condicion'): EstadoInicialOpcion[] {
@@ -388,6 +397,10 @@ export class OtRecepcionStepComponent implements OnInit {
       estado_rayones: !!estado?.estado_rayones,
       estado_golpes: !!estado?.estado_golpes,
       estado_vidrios: !!estado?.estado_vidrios,
+      perdida_aceite: !!estado?.perdida_aceite,
+      luces_danadas: !!estado?.luces_danadas,
+      espejos_danados: !!estado?.espejos_danados,
+      accesorios_faltantes: !!estado?.accesorios_faltantes,
       nivel_combustible: estado?.nivel_combustible || '',
       kilometraje: estado?.kilometraje ?? null,
       observaciones_estado: estado?.observaciones_estado || '',
