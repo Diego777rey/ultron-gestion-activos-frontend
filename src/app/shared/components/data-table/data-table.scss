@@ -11,7 +11,7 @@
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: auto;
+  table-layout: fixed;
   font-size: 14px;
   font-family: Roboto, 'Helvetica Neue', sans-serif;
   background-color: rgb(70, 70, 70);
@@ -20,19 +20,19 @@
 .data-table__th {
   padding: 0 16px;
   height: 48px;
-  text-align: center;
+  text-align: left;
   font-size: 14px;
   font-weight: 500;
   color: #fff;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   background: #3c3c3c;
   position: sticky;
   top: 0;
   z-index: 10;
 }
-
-
 
 .data-table__row {
   height: 48px;
@@ -62,11 +62,11 @@
   color: #fff;
   vertical-align: middle;
   font-size: 14px;
-  text-align: center;
+  text-align: left;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
-
 
 /* Detail / expanded row */
 .data-table__row--detail {
@@ -80,6 +80,9 @@
 .data-table__td--detail {
   padding: 0 !important;
   border-bottom: 2px solid rgba(76, 175, 80, 0.3);
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 .detail-panel {

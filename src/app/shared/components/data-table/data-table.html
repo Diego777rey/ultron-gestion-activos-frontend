@@ -1,12 +1,12 @@
 <div class="data-table__scroll">
-  <table class="data-table">
+  <table class="data-table" appTableLayout>
     <thead>
       <tr>
         @for (column of visibleColumns(); track column.key) {
           <th
             class="data-table__th"
             [style.width]="column.width"
-            [style.text-align]="column.align || 'left'"
+            [appColumnAlign]="columnAlign(column)"
           >
             {{ column.header }}
           </th>
@@ -19,7 +19,9 @@
         @for (skeleton of [1, 2, 3, 4, 5]; track skeleton) {
           <tr class="data-table__row data-table__row--skeleton">
             @for (column of visibleColumns(); track column.key) {
-              <td class="data-table__td"><span class="data-table__skeleton"></span></td>
+              <td class="data-table__td" [appColumnAlign]="columnAlign(column)">
+                <span class="data-table__skeleton"></span>
+              </td>
             }
           </tr>
         }
@@ -40,7 +42,8 @@
             @for (column of visibleColumns(); track column.key) {
               <td
                 class="data-table__td"
-                [style.text-align]="column.align || 'left'"
+                [style.width]="column.width"
+                [appColumnAlign]="columnAlign(column)"
               >
                 @if (templateFor(column.key); as tpl) {
                   <ng-container

@@ -9,7 +9,9 @@ import {
   TemplateRef,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { TableColumn } from '../../models/table-column.model';
+import { ColumnAlign, TableColumn } from '../../models/table-column.model';
+import { ColumnAlignDirective } from '../../directives/column-align.directive';
+import { TableLayoutDirective } from '../../directives/table-layout.directive';
 import { TableCellContext, TableCellDirective } from './table-cell.directive';
 
 /**
@@ -20,12 +22,13 @@ import { TableCellContext, TableCellDirective } from './table-cell.directive';
  *   provista por el consumidor mediante la directiva `appTableCell`.
  * - Maneja estados de carga y vacío de forma uniforme.
  * - Soporta filas expandibles cuando se provee `expandTemplate`.
+ * - Alinea cabecera y celdas con `appColumnAlign` / `columns[].align`.
  *
  * @template T Tipo de la fila de datos.
  */
 @Component({
   selector: 'app-data-table',
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, ColumnAlignDirective, TableLayoutDirective],
   templateUrl: './data-table.html',
   styleUrl: './data-table.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -120,4 +123,9 @@ export class DataTableComponent<T = Record<string, unknown>> {
   }
 
   protected trackRow = (index: number, row: T): unknown => this.trackBy()(row) ?? index;
+
+  /** Alineación efectiva de una columna (default: left). */
+  protected columnAlign(column: TableColumn<T>): ColumnAlign {
+    return column.align ?? 'left';
+  }
 }
