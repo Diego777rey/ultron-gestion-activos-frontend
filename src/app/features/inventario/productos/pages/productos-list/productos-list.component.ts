@@ -44,10 +44,10 @@ export class ProductosListComponent {
 
   protected readonly columns: TableColumn<ProductoOutput>[] = [
     { key: 'codigoBarras', header: 'Cód. barras', width: '160px' },
-    { key: 'nombre', header: 'Nombre', width: '240px' },
-    { key: 'precioVenta', header: 'Precio', width: '110px', align: 'right' },
-    { key: 'categoria', header: 'Categoría', width: '220px' },
-    { key: 'acciones', header: '...', width: '50px', align: 'center' },
+    { key: 'nombre', header: 'Nombre' },
+    { key: 'precioVenta', header: 'Precio', width: '120px', align: 'right' },
+    { key: 'categoria', header: 'Categoría', width: '260px' },
+    { key: 'acciones', header: '...', width: '56px', align: 'center' },
   ];
 
   protected readonly toolbarActions: ListToolbarAction[] = [

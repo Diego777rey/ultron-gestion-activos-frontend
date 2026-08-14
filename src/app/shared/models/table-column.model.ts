@@ -12,9 +12,16 @@ export interface TableColumn<T = unknown> {
    * Si no se define, se usa `row[key]`.
    */
   value?: (row: T) => string | number | null | undefined;
-  /** Ancho CSS opcional de la columna (ej: '120px', '20%'). */
+  /**
+   * Ancho CSS opcional de la columna (ej: '120px', '20%').
+   * Con `table-layout: fixed`, dejá al menos una columna sin `width`
+   * para que absorba el espacio restante y evite huecos irregulares.
+   */
   width?: string;
-  /** Alineación del contenido de la celda. */
+  /**
+   * Alineación del encabezado y de las celdas (`appColumnAlign`).
+   * Default: `left`. Usá `right` para números/montos y `center` para acciones/ids.
+   */
   align?: 'left' | 'center' | 'right';
   /** Oculta la columna sin eliminarla de la configuración. */
   hidden?: boolean;

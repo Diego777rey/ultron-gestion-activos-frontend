@@ -108,3 +108,25 @@ select option:focus {
   color: var(--text-primary);
 }
 
+/*
+ * Alineación de columnas (directivas appColumnAlign / appTableLayout).
+ * Globales para que cualquier módulo/tabla custom las reutilice.
+ */
+.app-table-layout {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.col-align-left {
+  text-align: left !important;
+}
+
+.col-align-center {
+  text-align: center !important;
+}
+
+.col-align-right {
+  text-align: right !important;
+}
+
