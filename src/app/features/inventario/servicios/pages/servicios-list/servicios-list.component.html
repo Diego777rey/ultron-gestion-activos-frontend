@@ -31,7 +31,11 @@
   </ng-template>
 
   <ng-template appTableCell="categoria" [appTableCellFrom]="servicios()" let-servicio>
-    {{ categoriaLabel(servicio) | defaultEmpty }}
+    {{ categoriaNombre(servicio) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="subcategoria" [appTableCellFrom]="servicios()" let-servicio>
+    {{ subcategoriaNombre(servicio) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="acciones" [appTableCellFrom]="servicios()" let-servicio>

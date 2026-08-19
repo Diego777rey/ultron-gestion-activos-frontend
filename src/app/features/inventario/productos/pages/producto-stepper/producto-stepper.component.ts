@@ -71,8 +71,6 @@ export class ProductoStepperComponent implements OnInit {
     descripcion: [''],
   });
 
-  protected readonly datosSnapshot = signal(this.datosForm.getRawValue());
-
   protected readonly categoriasFiltradas = computed(() => {
     const q = this.categoriaSearch().trim().toLowerCase();
     const list = this.categorias().filter((c) => c.estado !== false);
@@ -119,18 +117,7 @@ export class ProductoStepperComponent implements OnInit {
     Math.max(1, Math.ceil(this.subcategoriasFiltradas().length / this.pageSize))
   );
 
-  protected readonly resumenNombre = computed(() => this.datosSnapshot().nombre.trim() || '—');
-  protected readonly resumenBarcode = computed(() => this.datosSnapshot().codigoBarras.trim() || '—');
-  protected readonly resumenPrecio = computed(() => {
-    const n = this.datosSnapshot().precioVenta;
-    return Number.isFinite(n) ? String(n) : '—';
-  });
-  protected readonly resumenDescripcion = computed(() => this.datosSnapshot().descripcion.trim() || '—');
-
   ngOnInit(): void {
-    this.datosForm.valueChanges.subscribe(() => {
-      this.datosSnapshot.set(this.datosForm.getRawValue());
-    });
     this.loadCategorias();
   }
 
