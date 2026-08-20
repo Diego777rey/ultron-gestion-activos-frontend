@@ -24,7 +24,6 @@ import { StockSectoresDialogComponent } from '../../dialogs/stock-sectores-dialo
     DefaultEmptyPipe,
   ],
   templateUrl: './productos-list.component.html',
-  styleUrl: './productos-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'app-list-view' },
 })
@@ -44,10 +43,11 @@ export class ProductosListComponent {
 
   protected readonly columns: TableColumn<ProductoOutput>[] = [
     { key: 'codigoBarras', header: 'Cód. barras', width: '160px' },
-    { key: 'nombre', header: 'Nombre' },
-    { key: 'precioVenta', header: 'Precio', width: '120px', align: 'right' },
-    { key: 'categoria', header: 'Categoría', width: '260px' },
-    { key: 'acciones', header: '...', width: '56px', align: 'center' },
+    { key: 'nombre', header: 'Nombre', width: '300px' },
+    { key: 'precioVenta', header: 'Precio', width: '150px' },
+    { key: 'categoria', header: 'Categoría', width: '200px' },
+    { key: 'subcategoria', header: 'Subcategoría', width: '200px' },
+    { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
 
   protected readonly toolbarActions: ListToolbarAction[] = [
@@ -81,12 +81,20 @@ export class ProductosListComponent {
     });
   }
 
-  protected categoriaLabel(producto: ProductoOutput): string {
+  protected categoriaNombre(producto: ProductoOutput): string {
     const cat = producto.categoriaProducto;
     if (!cat) {
       return '';
     }
-    return cat.categoriaPadre ? `${cat.categoriaPadre.nombre} › ${cat.nombre}` : cat.nombre;
+    return cat.categoriaPadre?.nombre ?? cat.nombre;
+  }
+
+  protected subcategoriaNombre(producto: ProductoOutput): string {
+    const cat = producto.categoriaProducto;
+    if (!cat?.categoriaPadre) {
+      return '';
+    }
+    return cat.nombre;
   }
 
   protected onPageChange(event: PageChange): void {

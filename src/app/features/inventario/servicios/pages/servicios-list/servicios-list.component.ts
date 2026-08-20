@@ -45,6 +45,7 @@ export class ServiciosListComponent {
     { key: 'nombre', header: 'Nombre', width: '300px' },
     { key: 'precio', header: 'Precio', width: '150px' },
     { key: 'categoria', header: 'Categoría', width: '200px' },
+    { key: 'subcategoria', header: 'Subcategoría', width: '200px' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
 
@@ -120,12 +121,20 @@ export class ServiciosListComponent {
     }
   }
 
-  protected categoriaLabel(servicio: ServicioOutput): string {
+  protected categoriaNombre(servicio: ServicioOutput): string {
     const cat = servicio.categoriaServicio;
     if (!cat) {
       return '';
     }
-    return cat.categoriaPadre ? `${cat.categoriaPadre.nombre} › ${cat.nombre}` : cat.nombre;
+    return cat.categoriaPadre?.nombre ?? cat.nombre;
+  }
+
+  protected subcategoriaNombre(servicio: ServicioOutput): string {
+    const cat = servicio.categoriaServicio;
+    if (!cat?.categoriaPadre) {
+      return '';
+    }
+    return cat.nombre;
   }
 
   protected trackById = (s: ServicioOutput): unknown => s.id_servicio;

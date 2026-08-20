@@ -19,26 +19,23 @@
   (searchSubmit)="pageIndex.set(0); load()"
 >
   <ng-template appTableCell="codigoBarras" [appTableCellFrom]="productos()" let-producto>
-    @if (producto.codigoBarras || producto.codigo) {
-      <span class="cell-barcode">
-        <span class="material-icons" aria-hidden="true">qr_code_2</span>
-        {{ producto.codigoBarras || producto.codigo }}
-      </span>
-    } @else {
-      <span class="cell-muted">—</span>
-    }
+    {{ (producto.codigoBarras || producto.codigo) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="nombre" [appTableCellFrom]="productos()" let-producto>
-    <span class="cell-name">{{ producto.nombre | defaultEmpty }}</span>
+    {{ producto.nombre | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="precioVenta" [appTableCellFrom]="productos()" let-producto>
-    <span class="cell-price">{{ producto.precioVenta | number:'1.0-0' | defaultEmpty }}</span>
+    {{ producto.precioVenta | number:'1.0-0' | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="categoria" [appTableCellFrom]="productos()" let-producto>
-    <span class="cell-category">{{ categoriaLabel(producto) | defaultEmpty }}</span>
+    {{ categoriaNombre(producto) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="subcategoria" [appTableCellFrom]="productos()" let-producto>
+    {{ subcategoriaNombre(producto) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="acciones" [appTableCellFrom]="productos()" let-producto>

@@ -29,36 +29,6 @@
   }
 
   <div class="wizard">
-    <aside class="wizard__summary">
-      <h2 class="wizard__summary-title">Resumen del producto</h2>
-      <dl class="summary-list">
-        <div class="summary-list__row">
-          <dt>Nombre</dt>
-          <dd>{{ resumenNombre() }}</dd>
-        </div>
-        <div class="summary-list__row">
-          <dt>Categoría</dt>
-          <dd>{{ selectedCategoria()?.nombre || '—' }}</dd>
-        </div>
-        <div class="summary-list__row">
-          <dt>Subcategoría</dt>
-          <dd>{{ selectedSubcategoria()?.nombre || '—' }}</dd>
-        </div>
-        <div class="summary-list__row">
-          <dt>Código de barras</dt>
-          <dd>{{ resumenBarcode() }}</dd>
-        </div>
-        <div class="summary-list__row">
-          <dt>Precio venta</dt>
-          <dd>{{ resumenPrecio() }}</dd>
-        </div>
-        <div class="summary-list__row">
-          <dt>Descripción</dt>
-          <dd>{{ resumenDescripcion() }}</dd>
-        </div>
-      </dl>
-    </aside>
-
     <section class="wizard__main">
       <!-- Paso 1: Categoría -->
       @if (currentStep() === 1) {
