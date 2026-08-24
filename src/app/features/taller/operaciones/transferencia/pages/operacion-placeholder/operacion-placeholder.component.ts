@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 
 @Component({
   selector: 'app-operacion-placeholder',
-  imports: [RouterLink],
   templateUrl: './operacion-placeholder.component.html',
   styleUrl: './operacion-placeholder.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -67,9 +67,14 @@ export class MainLayoutComponent implements OnInit {
       icon: 'sync_alt',
       children: [
         {
-          label: 'Transferencia',
-          icon: 'swap_horiz',
+          label: 'Transferencias',
+          icon: 'history',
           route: '/taller/operaciones/transferencia',
+        },
+        {
+          label: 'Solicitudes de repuesto',
+          icon: 'request_quote',
+          route: '/taller/operaciones/transferencia/solicitudes',
         },
       ],
     },
@@ -150,9 +155,8 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('servicios')) return 'Servicios';
     if (url.includes('sectores/zonas')) return 'Zonas';
     if (url.includes('sectores')) return 'Sectores';
-    if (url.includes('operaciones/transferencia/historico')) return 'Histórico de transferencias';
     if (url.includes('operaciones/transferencia/solicitudes')) return 'Solicitudes de repuestos';
-    if (url.includes('operaciones/transferencia')) return 'Transferencia';
+    if (url.includes('operaciones/transferencia')) return 'Transferencias';
     if (url.includes('orden-de-trabajo')) return 'Orden de Trabajo';
     if (url.includes('taller/historial')) return 'Historial';
     if (url.includes('taller/calendario')) return 'Calendario';

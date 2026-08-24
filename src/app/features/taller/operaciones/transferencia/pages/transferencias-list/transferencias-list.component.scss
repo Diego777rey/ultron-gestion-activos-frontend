@@ -15,27 +15,6 @@
   }
 }
 
-.list-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 16px;
-  color: var(--text-secondary, #94a3b8);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-
-  .material-icons {
-    font-size: 18px;
-  }
-
-  &:hover,
-  &:focus-visible {
-    color: var(--text-primary, #e2e8f0);
-    outline: none;
-  }
-}
-
 .estado-pill {
   display: inline-flex;
   align-items: center;
