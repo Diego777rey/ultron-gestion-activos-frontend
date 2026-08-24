@@ -4,22 +4,19 @@ export const TRANSFERENCIA_ROUTES: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./pages/transferencia-hub/transferencia-hub.component').then(
-        (m) => m.TransferenciaHubComponent
-      ),
-    data: { tabTitle: 'Transferencia' },
-  },
-  {
-    path: 'historico',
-    loadComponent: () =>
       import('./pages/transferencias-list/transferencias-list.component').then(
         (m) => m.TransferenciasListComponent
       ),
-    data: { tabTitle: 'Histórico de transferencias' },
+    data: { tabTitle: 'Transferencias' },
+  },
+  {
+    path: 'historico',
+    redirectTo: '',
+    pathMatch: 'full',
   },
   {
     path: 'nueva',
-    redirectTo: 'historico',
+    redirectTo: '',
     pathMatch: 'full',
   },
   {

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { GenericListComponent } from '../../../../../../shared/components/generic-list/generic-list';
 import { TableCellDirective } from '../../../../../../shared/components/data-table/table-cell.directive';
 import { ActionMenuComponent, MenuAction } from '../../../../../../shared/components/action-menu/action-menu';
@@ -19,7 +19,6 @@ import { TransferenciaFormComponent } from '../../dialogs/transferencia-form/tra
     TableCellDirective,
     ActionMenuComponent,
     DefaultEmptyPipe,
-    RouterLink,
   ],
   templateUrl: './transferencias-list.component.html',
   styleUrl: './transferencias-list.component.scss',

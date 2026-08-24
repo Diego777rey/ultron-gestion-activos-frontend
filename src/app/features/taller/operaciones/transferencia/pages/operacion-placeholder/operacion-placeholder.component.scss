@@ -9,27 +9,6 @@
     radial-gradient(ellipse 70% 40% at 50% 0%, rgba(100, 116, 139, 0.15), transparent 60%),
     #14171c;
 
-  &__back {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 32px;
-    color: #94a3b8;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-
-    .material-icons {
-      font-size: 18px;
-    }
-
-    &:hover,
-    &:focus-visible {
-      color: #e2e8f0;
-      outline: none;
-    }
-  }
-
   &__card {
     max-width: 480px;
     margin: 0 auto;
