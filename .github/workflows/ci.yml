@@ -12,6 +12,8 @@ jobs:
   frontend:
     name: Build y tests
     runs-on: ubuntu-latest
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
 
     steps:
       - name: Checkout

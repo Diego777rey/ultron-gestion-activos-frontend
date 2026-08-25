@@ -14,6 +14,7 @@
 3. Commitear, pushear y abrir PR hacia `main`.
 4. Esperar CI en verde y mergear.
 5. El workflow de release versiona automaticamente segun el prefijo de la rama.
+6. El mismo workflow empaqueta un instalador `.exe` (Windows) y un `AppImage` (Linux) y los adjunta al release de GitHub.
 
 ## Convencion de ramas
 
@@ -33,7 +34,9 @@
 - Version inicial: `1.0.0`
 - Version independiente de otros repositorios
 - Tags en formato `vX.Y.Z`
-- Releases publicados automaticamente en GitHub
+- Releases publicados automaticamente en GitHub, con ejecutables de escritorio:
+  - `Ultron-Gestion-Activos-X.Y.Z-windows.exe`
+  - `Ultron-Gestion-Activos-X.Y.Z-linux.AppImage`
 
 ## Ejemplos
 

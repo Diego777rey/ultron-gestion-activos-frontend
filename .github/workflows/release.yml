@@ -35,3 +35,92 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROJECT_TYPE: npm
         run: bash .github/scripts/release.sh
+
+  desktop-linux:
+    name: Empaquetar Linux (AppImage)
+    needs: release
+    if: github.event.head_commit.author.email != '41898282+github-actions[bot]@users.noreply.github.com'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Empaquetar AppImage
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npm run electron:build:linux
+
+      - name: Leer version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar AppImage en el release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          files: release/*.AppImage
+          fail_on_unmatched_files: true
+
+      - name: Guardar artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage
+          path: release/*.AppImage
+          if-no-files-found: error
+
+  desktop-windows:
+    name: Empaquetar Windows (exe)
+    needs: release
+    if: github.event.head_commit.author.email != '41898282+github-actions[bot]@users.noreply.github.com'
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Empaquetar instalador Windows
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npm run electron:build:win
+
+      - name: Leer version
+        id: version
+        shell: bash
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar exe en el release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          files: release/*-windows.exe
+          fail_on_unmatched_files: true
+
+      - name: Guardar artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: release/*-windows.exe
+          if-no-files-found: error
