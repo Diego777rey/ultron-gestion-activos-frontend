@@ -10,13 +10,17 @@ Este proyecto fue generado con [Angular CLI](https://github.com/angular/angular-
 
 ## Development server
 
-To start a local development server, run:
+`npm start` abre la app en una ventana de escritorio (Electron). Arranca Angular y espera a `http://localhost:4200/` antes de lanzar Electron.
 
 ```bash
-ng serve
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Si solo quieres el navegador, sin ventana de escritorio:
+
+```bash
+npm run start:web
+```
 
 ## Code scaffolding
 
@@ -41,6 +45,27 @@ ng build
 ```
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+
+## Aplicación de escritorio (Electron)
+
+La misma UI de Angular se empaqueta con Electron para Linux (AppImage) y Windows (instalador `.exe`). El backend GraphQL sigue corriendo aparte (por defecto `http://localhost:8081`).
+
+Desarrollo con recarga de Angular dentro de la ventana de Electron:
+
+```bash
+npm start
+```
+
+Empaquetado local:
+
+```bash
+npm run electron:build:linux   # AppImage
+npm run electron:build:win     # instalador NSIS (.exe), requiere Windows o CI
+```
+
+Para apuntar a otro backend sin recompilar, crear `config.json` en el directorio de datos de usuario de Electron (ver `electron/resources/config.example.json`) o definir `ULTRON_API_BASE_URL`.
+
+Cada merge a `main` dispara el workflow de release: versiona según la rama y publica ambos ejecutables en el GitHub Release.
 
 ## Running unit tests
 

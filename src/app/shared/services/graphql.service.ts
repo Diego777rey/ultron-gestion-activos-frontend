@@ -43,7 +43,10 @@ export class GraphqlRequestError extends Error {
 @Injectable({ providedIn: 'root' })
 export class GraphqlService {
   private readonly http = inject(HttpClient);
-  private readonly endpoint = API_CONFIG.graphqlEndpoint;
+
+  private get endpoint(): string {
+    return API_CONFIG.graphqlEndpoint;
+  }
 
   /** Ejecuta una query GraphQL y devuelve el objeto `data` tipado. */
   query<T>(query: string, variables?: Record<string, unknown>): Observable<T> {

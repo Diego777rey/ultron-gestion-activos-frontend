@@ -1,15 +1,82 @@
 {
   "name": "ultron-gestion-activos-frontend",
   "version": "1.32.0",
+  "main": "electron/dist/main.js",
+  "description": "Ultron Gestión de Activos — aplicación de escritorio para talleres",
+  "author": "Ultron Sistemas",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "npm run electron:dev",
+    "start:web": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "electron:compile": "tsc -p electron/tsconfig.json",
+    "electron:dev": "npm run electron:compile && concurrently -k \"ng serve\" \"wait-on http://localhost:4200 && electron . --dev\"",
+    "electron:build:linux": "npm run build && npm run electron:compile && electron-builder --linux AppImage --publish never",
+    "electron:build:win": "npm run build && npm run electron:compile && electron-builder --win nsis --publish never",
+    "electron:pack": "npm run build && npm run electron:compile && electron-builder --publish never"
   },
   "private": true,
   "packageManager": "npm@10.9.4",
+  "build": {
+    "appId": "com.dev.ultron.gestionactivos",
+    "productName": "Ultron Gestion de Activos",
+    "copyright": "Copyright © Ultron Sistemas",
+    "asar": true,
+    "directories": {
+      "output": "release",
+      "buildResources": "electron/resources"
+    },
+    "files": [
+      "electron/dist/**/*",
+      "electron/resources/icon.png",
+      "dist/ultron-gestion-activos-frontend/**/*",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/resources/config.example.json",
+        "to": "config.example.json"
+      }
+    ],
+    "extraMetadata": {
+      "main": "electron/dist/main.js"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Office",
+      "artifactName": "Ultron-Gestion-Activos-${version}-linux.${ext}",
+      "icon": "icon.png",
+      "synopsis": "Gestion de talleres y activos"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Ultron-Gestion-Activos-${version}-windows.${ext}",
+      "icon": "icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "Ultron Gestion de Activos"
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    }
+  },
   "dependencies": {
     "@angular/animations": "^22.0.5",
     "@angular/cdk": "^21.2.0",
@@ -27,9 +94,15 @@
     "@angular/build": "^22.0.5",
     "@angular/cli": "^22.0.5",
     "@angular/compiler-cli": "^22.0.5",
+    "@types/node": "^26.3.0",
+    "concurrently": "^10.0.5",
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3",
     "jsdom": "^28.0.0",
+    "material-icons": "^1.13.14",
     "prettier": "^3.8.1",
     "typescript": "~6.0.3",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.8",
+    "wait-on": "^9.1.0"
   }
 }
