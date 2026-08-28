@@ -9,7 +9,7 @@ import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-
   imports: [CurrencyPipe, DatePipe, OtDetalleLineasComponent, OtDiagnosticoHallazgosComponent],
   template: `
     <p class="ot-hint">
-      La orden fue enviada a caja. Cuando se cobre, márcala como facturada.
+      El trabajo está finalizado. Cuando corresponda, marcá la orden como facturada.
     </p>
 
     <section class="ot-section ot-section--narrow">
@@ -30,10 +30,6 @@ import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-
         <li class="ot-panel__item">
           <span>Vehículo</span>
           <span>{{ orden().vehiculo?.chapa }} · {{ orden().vehiculo?.marca }} {{ orden().vehiculo?.modelo }}</span>
-        </li>
-        <li class="ot-panel__item">
-          <span>Caja asignada</span>
-          <span>{{ orden().caja?.nombre || '—' }}</span>
         </li>
         <li class="ot-panel__item">
           <span>Finalizada</span>

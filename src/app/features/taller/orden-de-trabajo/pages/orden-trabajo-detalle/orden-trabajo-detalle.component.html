@@ -94,25 +94,6 @@
         />
       }
 
-      @if (currentStep() === 3) {
-        <div class="stepper-footer__caja">
-          <label class="stepper-footer__caja-label">Caja abierta</label>
-          <app-entity-searcher
-            [items]="cajas()"
-            [columns]="cajaColumns"
-            [totalItems]="cajas().length"
-            [loading]="loadingCajas()"
-            [displayFn]="cajaLabelFn"
-            [keyFn]="cajaKeyFn"
-            [value]="cajaSeleccionada()"
-            (searchChange)="filtrarCajas($event)"
-            (itemChange)="onCajaSelected($event)"
-            [backendPagination]="false"
-            placeholder="Seleccionar caja..."
-          />
-        </div>
-      }
-
       @if (currentStep() < 5) {
         <app-ui-button
           [label]="labelAccionPrincipal()"
