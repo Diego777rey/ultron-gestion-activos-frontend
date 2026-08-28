@@ -30,6 +30,13 @@
       </p>
     }
 
+    @if (currentStep() === 3) {
+      <p class="stepper-body__hint">
+        El mecánico está trabajando. El presupuesto del diagnóstico se mantiene.
+        Se ajusta solo si pedís un repuesto que no estaba cargado, o un servicio por un defecto nuevo.
+      </p>
+    }
+
     @if (loading()) {
       <div class="loading-state">Cargando datos de la orden...</div>
     } @else {
@@ -50,7 +57,6 @@
           [orden]="orden()!"
           (ordenChange)="onOrdenChange($event)"
           (errorChange)="onError($event)"
-          (cajaSeleccionada)="cajaSeleccionada.set($event)"
         />
       }
 
@@ -86,6 +92,25 @@
           [loading]="saving()"
           (clicked)="guardarDiagnostico()"
         />
+      }
+
+      @if (currentStep() === 3) {
+        <div class="stepper-footer__caja">
+          <label class="stepper-footer__caja-label">Caja abierta</label>
+          <app-entity-searcher
+            [items]="cajas()"
+            [columns]="cajaColumns"
+            [totalItems]="cajas().length"
+            [loading]="loadingCajas()"
+            [displayFn]="cajaLabelFn"
+            [keyFn]="cajaKeyFn"
+            [value]="cajaSeleccionada()"
+            (searchChange)="filtrarCajas($event)"
+            (itemChange)="onCajaSelected($event)"
+            [backendPagination]="false"
+            placeholder="Seleccionar caja..."
+          />
+        </div>
       }
 
       @if (currentStep() < 5) {

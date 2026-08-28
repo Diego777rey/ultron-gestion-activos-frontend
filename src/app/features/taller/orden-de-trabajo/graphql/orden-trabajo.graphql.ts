@@ -88,6 +88,7 @@ export const ORDEN_TRABAJO_SELECTION = `{
     gravedad
     sistema
     descripcion
+    etapa_origen
   }
 }`;
 

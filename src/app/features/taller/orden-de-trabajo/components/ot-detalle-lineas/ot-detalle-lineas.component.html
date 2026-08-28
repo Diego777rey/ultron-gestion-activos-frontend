@@ -108,7 +108,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (det of orden().detalles; track det.id_detalle) {
+            @for (det of lineasVisibles(); track det.id_detalle) {
               <tr>
                 <td>
                   <span class="ot-diag-badge" [class.ot-diag-badge--green]="det.tipo === 'SERVICIO'">
@@ -149,9 +149,17 @@
   </div>
 } @else {
   <div class="ot-section presupuesto-section">
-    <h3 class="ot-section-title">Presupuesto detallado</h3>
+    <h3 class="ot-section-title">
+      {{ modoEnProceso() ? 'Ajuste automático de presupuesto' : 'Presupuesto detallado' }}
+    </h3>
+    @if (modoEnProceso()) {
+      <p class="ot-hint">
+        El presupuesto del diagnóstico se mantiene. Acá solo aparecen ítems nuevos:
+        un repuesto que no estaba cargado, o un servicio si descubriste un defecto.
+      </p>
+    }
 
-    @if (editable()) {
+    @if (editable() && !modoEnProceso()) {
       <form class="ot-form ot-form--wide" [formGroup]="detalleForm" (ngSubmit)="agregarDetalle()">
         <div class="ot-form__row ot-form__row--lineas">
           <div class="ot-field">
@@ -225,6 +233,57 @@
       </form>
     }
 
+    @if (editable() && modoEnProceso()) {
+      @if (!tieneDefectoNuevo()) {
+        <p class="ot-hint">
+          Para sumar un servicio extra, primero registrá un defecto nuevo descubierto durante el trabajo.
+        </p>
+      } @else {
+        <form class="ot-form ot-form--wide" [formGroup]="detalleForm" (ngSubmit)="agregarDetalle()">
+          <div class="ot-form__row ot-form__row--lineas">
+            <div class="ot-field">
+              <label class="ot-field__label-static">Servicio extra*</label>
+              <app-entity-searcher
+                [items]="servicios()"
+                [columns]="servicioColumns"
+                [totalItems]="serviciosTotal()"
+                [loading]="loadingServicios()"
+                [displayFn]="servicioLabelFn"
+                [keyFn]="servicioKeyFn"
+                [value]="detalleForm.controls.id_item.value"
+                (searchChange)="fetchServicios(0, 10, $event)"
+                (pageChange)="fetchServicios($event.pageIndex, $event.pageSize, '')"
+                (itemChange)="onServicioSelected($event)"
+                [allowAdd]="allowCreateServicio()"
+                (addClicked)="onAddServicio()"
+                [backendPagination]="true"
+                placeholder="Buscar servicio..."
+              />
+            </div>
+            <div class="ot-field">
+              <label class="ot-field__label-static" for="ot-det-cant-ep">Cantidad*</label>
+              <input id="ot-det-cant-ep" type="number" class="ot-field__input" formControlName="cantidad" min="0.01" step="0.01" />
+            </div>
+            <div class="ot-field">
+              <label class="ot-field__label-static" for="ot-det-precio-ep">Precio*</label>
+              <input id="ot-det-precio-ep" type="number" class="ot-field__input" formControlName="precio_unitario" min="0" step="1" />
+            </div>
+            <div class="ot-field">
+              <label class="ot-field__label-static" aria-hidden="true">&nbsp;</label>
+              <app-ui-button
+                type="submit"
+                label="Agregar servicio"
+                icon="add"
+                variant="outline"
+                [loading]="isAdding()"
+                [disabled]="detalleForm.invalid"
+              />
+            </div>
+          </div>
+        </form>
+      }
+    }
+
     <div class="ot-table-wrap">
       <table class="ot-table">
         <thead>
@@ -240,7 +299,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (det of orden().detalles; track det.id_detalle) {
+          @for (det of lineasVisibles(); track det.id_detalle) {
             <tr>
               <td>
                 <span class="ot-badge" [class.ot-badge--servicio]="det.tipo === 'SERVICIO'">
@@ -262,12 +321,24 @@
           } @empty {
             <tr>
               <td [attr.colspan]="editable() ? 6 : 5" style="text-align: center; color: rgba(255,255,255,0.45); padding: 22px;">
-                No hay productos ni servicios en el presupuesto.
+                @if (modoEnProceso()) {
+                  Sin ajustes. El presupuesto queda como en el diagnóstico.
+                } @else {
+                  No hay productos ni servicios en el presupuesto.
+                }
               </td>
             </tr>
           }
         </tbody>
         <tfoot>
+          @if (modoEnProceso()) {
+            <tr>
+              <td colspan="4" style="text-align: right;">Ajuste en esta etapa:</td>
+              <td [attr.colspan]="editable() ? 2 : 1" class="ot-total">
+                {{ totalAjuste() | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}
+              </td>
+            </tr>
+          }
           <tr>
             <td colspan="4" style="text-align: right;">Total presupuesto:</td>
             <td [attr.colspan]="editable() ? 2 : 1" class="ot-total">

@@ -38,6 +38,7 @@ export class OtSolicitudRepuestoComponent implements OnInit {
   readonly idOrden = input.required<string>();
   readonly editable = input(true);
   readonly errorChange = output<string>();
+  readonly solicitudCreada = output<void>();
 
   protected readonly solicitudes = signal<SolicitudRepuestoOutput[]>([]);
   protected readonly loading = signal(false);
@@ -175,6 +176,7 @@ export class OtSolicitudRepuestoComponent implements OnInit {
         this.form.patchValue({ observacion: '' });
         this.saving.set(false);
         this.cargar();
+        this.solicitudCreada.emit();
       },
       error: (err) => {
         this.errorChange.emit(err?.message ?? 'No se pudo crear la solicitud');

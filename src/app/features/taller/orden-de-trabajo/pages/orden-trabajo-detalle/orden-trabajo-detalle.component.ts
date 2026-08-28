@@ -9,8 +9,11 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
+import { EntitySearcherComponent } from '../../../../../shared/components/entity-searcher/entity-searcher';
+import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 import { EtapaOrdenTrabajo, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
+import { CajaOutput } from '../../../../financiero/cajas/interfaces/caja.interface';
 import {
   OtStepDef,
   OtStepperHeaderComponent,
@@ -25,6 +28,7 @@ import { OtFacturadoStepComponent } from '../../components/ot-facturado-step/ot-
   selector: 'app-orden-trabajo-detalle',
   imports: [
     UiButtonComponent,
+    EntitySearcherComponent,
     OtStepperHeaderComponent,
     OtRecepcionStepComponent,
     OtDiagnosticoStepComponent,
@@ -43,7 +47,6 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
 
   private readonly recepcionStep = viewChild(OtRecepcionStepComponent);
   private readonly diagnosticoStep = viewChild(OtDiagnosticoStepComponent);
-  private readonly enProcesoStep = viewChild(OtEnProcesoStepComponent);
 
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
@@ -51,6 +54,16 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
   protected readonly orden = signal<OrdenTrabajoOutput | null>(null);
   protected readonly isEdit = signal(false);
   protected readonly cajaSeleccionada = signal<string | null>(null);
+  protected readonly cajas = signal<CajaOutput[]>([]);
+  protected readonly cajasAll = signal<CajaOutput[]>([]);
+  protected readonly loadingCajas = signal(false);
+  protected readonly cajaColumns: TableColumn<CajaOutput>[] = [
+    { key: 'nombre', header: 'Caja', value: (c) => c.nombre ?? '' },
+    { key: 'sector', header: 'Sector', value: (c) => c.sector?.nombre ?? '' },
+  ];
+  protected readonly cajaLabelFn = (c: CajaOutput) =>
+    `${c.nombre}${c.sector?.nombre ? ' · ' + c.sector.nombre : ''}`;
+  protected readonly cajaKeyFn = (c: CajaOutput) => String(c.id_caja);
 
   protected readonly steps: OtStepDef[] = [
     { index: 1, etapa: 'RECEPCION', label: 'Recepción', icon: 'login' },
@@ -145,6 +158,9 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
       next: (data) => {
         this.orden.set(data);
         this.loading.set(false);
+        if (data?.etapa === 'EN_PROCESO') {
+          this.cargarCajas();
+        }
       },
       error: (err) => {
         this.error.set('No se pudo cargar la orden. ' + (err?.message ?? ''));
@@ -245,6 +261,7 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
           next: (adv) => {
             this.orden.set(adv);
             this.saving.set(false);
+            this.cargarCajas();
           },
           error: (err) => {
             this.error.set(err?.message ?? 'Error al avanzar a En Proceso');
@@ -261,11 +278,10 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
 
   private enviarACaja(): void {
     const orden = this.orden();
-    const idCaja =
-      this.cajaSeleccionada() || this.enProcesoStep()?.getSelectedCajaId() || null;
+    const idCaja = this.cajaSeleccionada();
     if (!orden?.id_orden_trabajo) return;
     if (!idCaja) {
-      this.error.set('Selecciona una caja con sesión abierta');
+      this.error.set('Seleccioná una caja con sesión abierta para finalizar');
       return;
     }
 
@@ -297,6 +313,41 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
       error: (err) => {
         this.error.set(err?.message ?? 'No se pudo marcar como facturada');
         this.saving.set(false);
+      },
+    });
+  }
+
+  protected filtrarCajas(filter: string): void {
+    const q = (filter || '').toLowerCase();
+    if (!q) {
+      this.cajas.set(this.cajasAll());
+      return;
+    }
+    this.cajas.set(
+      this.cajasAll().filter(
+        (c) =>
+          (c.nombre || '').toLowerCase().includes(q) ||
+          (c.sector?.nombre || '').toLowerCase().includes(q)
+      )
+    );
+  }
+
+  protected onCajaSelected(caja: CajaOutput | null): void {
+    this.cajaSeleccionada.set(caja?.id_caja != null ? String(caja.id_caja) : null);
+  }
+
+  private cargarCajas(): void {
+    if (this.cajasAll().length > 0) return;
+    this.loadingCajas.set(true);
+    this.ordenService.listarCajasConSesionAbierta().subscribe({
+      next: (list) => {
+        this.cajasAll.set(list);
+        this.cajas.set(list);
+        this.loadingCajas.set(false);
+      },
+      error: (err) => {
+        this.error.set(err?.message ?? 'No se pudieron cargar las cajas abiertas');
+        this.loadingCajas.set(false);
       },
     });
   }

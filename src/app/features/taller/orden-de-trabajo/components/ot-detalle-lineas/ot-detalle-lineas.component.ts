@@ -43,6 +43,7 @@ export class OtDetalleLineasComponent implements OnInit {
   readonly editable = input(true);
   readonly allowCreateServicio = input(true);
   readonly diagnosticoLook = input(false);
+  readonly modoEnProceso = input(false);
   readonly ordenChange = output<OrdenTrabajoOutput>();
   readonly errorChange = output<string>();
 
@@ -87,9 +88,30 @@ export class OtDetalleLineasComponent implements OnInit {
   ngOnInit(): void {
     this.fetchProductos(0, 10, '');
     this.fetchServicios(0, 10, '');
+    if (this.modoEnProceso()) {
+      this.detalleForm.patchValue({ tipo: 'SERVICIO' });
+    }
     this.detalleForm.get('tipo')?.valueChanges.subscribe(() => {
       this.detalleForm.patchValue({ id_item: '', precio_unitario: 0, descripcion: '' });
     });
+  }
+
+  protected tieneDefectoNuevo(): boolean {
+    return (this.orden().hallazgos ?? []).some(
+      (h) => h.tipo === 'DEFECTO' && h.etapa_origen === 'EN_PROCESO'
+    );
+  }
+
+  protected lineasVisibles(): OrdenTrabajoDetalleOutput[] {
+    const all = this.orden().detalles ?? [];
+    if (!this.modoEnProceso()) {
+      return all;
+    }
+    return all.filter((d) => d.etapa_origen === 'EN_PROCESO');
+  }
+
+  protected totalAjuste(): number {
+    return this.lineasVisibles().reduce((sum, d) => sum + Number(d.subtotal ?? 0), 0);
   }
 
   protected fetchProductos(page: number, size: number, filter: string): void {
@@ -150,6 +172,12 @@ export class OtDetalleLineasComponent implements OnInit {
     const orden = this.orden();
     if (this.detalleForm.invalid || !orden.id_orden_trabajo) {
       this.detalleForm.markAllAsTouched();
+      return;
+    }
+    if (this.modoEnProceso() && !this.tieneDefectoNuevo()) {
+      this.errorChange.emit(
+        'Solo se puede agregar un servicio extra si se descubrió un defecto nuevo durante el trabajo'
+      );
       return;
     }
 
