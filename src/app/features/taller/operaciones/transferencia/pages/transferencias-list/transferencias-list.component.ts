@@ -11,6 +11,7 @@ import { AppDialogService } from '../../../../../../shared/services/app-dialog.s
 import { TransferenciaService } from '../../services/transferencia.service';
 import { TransferenciaOutput } from '../../interfaces/transferencia.interface';
 import { TransferenciaFormComponent } from '../../dialogs/transferencia-form/transferencia-form.component';
+import { ReporteService } from '../../../../../../shared/services/reporte.service';
 
 @Component({
   selector: 'app-transferencias-list',
@@ -29,9 +30,11 @@ export class TransferenciasListComponent {
   private readonly transferenciaService = inject(TransferenciaService);
   private readonly dialogService = inject(AppDialogService);
   private readonly router = inject(Router);
+  private readonly reporteService = inject(ReporteService);
 
   protected readonly transferencias = signal<TransferenciaOutput[]>([]);
   protected readonly loading = signal(false);
+  protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
   protected readonly pageIndex = signal(0);
@@ -52,6 +55,7 @@ export class TransferenciasListComponent {
     { id: 'search', label: 'Buscar' },
     { id: 'clear', label: 'Limpiar Filtro' },
     { id: 'add', label: '+ Adicionar' },
+    { id: 'generar', label: 'Reporte' },
   ];
 
   constructor() {
@@ -96,7 +100,21 @@ export class TransferenciasListComponent {
       case 'add':
         this.openNewDialog();
         break;
+      case 'generar':
+        this.generarReporte();
+        break;
     }
+  }
+
+  protected generarReporte(): void {
+    if (this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('transferencia', { filtro: this.search() }).subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
   }
 
   protected openNewDialog(): void {

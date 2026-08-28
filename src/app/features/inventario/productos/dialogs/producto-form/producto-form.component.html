@@ -88,6 +88,13 @@
 </form>
 
 <div class="producto-form-footer">
+  @if (isEdit && producto()?.id_producto) {
+    <app-ui-button
+      label="Reporte"
+      [loading]="generando()"
+      (clicked)="generarReporte()"
+    />
+  }
   <app-ui-button
     [label]="isEdit ? 'Guardar Cambios' : 'Registrar Producto'"
     icon="save"

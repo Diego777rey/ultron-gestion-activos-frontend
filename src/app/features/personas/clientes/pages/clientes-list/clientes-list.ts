@@ -16,6 +16,7 @@ import { ClienteFormComponent } from '../../dialogs/cliente-form/cliente-form';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { VehiculoService } from '../../../../activos/vehiculos/services/vehiculo.service';
 import { VehiculoOutput } from '../../../../activos/vehiculos/interfaces/vehiculo.interface';
+import { ReporteService } from '../../../../../shared/services/reporte.service';
 
 /** Estado de carga de los vehículos asociados a un cliente. */
 interface VehiculosClienteState {
@@ -41,9 +42,11 @@ interface VehiculosClienteState {
 export class ClientesListComponent {
   private readonly clienteService = inject(ClienteService);
   private readonly vehiculoService = inject(VehiculoService);
+  private readonly reporteService = inject(ReporteService);
 
   protected readonly clientes = signal<ClienteOutput[]>([]);
   protected readonly loading = signal(false);
+  protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
 
@@ -64,6 +67,7 @@ export class ClientesListComponent {
     { id: 'search', label: 'Buscar' },
     { id: 'clear', label: 'Limpiar Filtro' },
     { id: 'add', label: '+ Adicionar' },
+    { id: 'generar', label: 'Reporte' },
   ];
 
   protected readonly rowActions: MenuAction[] = [
@@ -113,7 +117,21 @@ export class ClientesListComponent {
       case 'add':
         this.openNewDialog();
         break;
+      case 'generar':
+        this.generarReporte();
+        break;
     }
+  }
+
+  protected generarReporte(): void {
+    if (this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('cliente', { filtro: this.search() }).subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
   }
 
   private readonly dialogService = inject(AppDialogService);

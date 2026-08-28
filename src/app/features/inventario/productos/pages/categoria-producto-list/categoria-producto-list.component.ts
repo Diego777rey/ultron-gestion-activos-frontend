@@ -11,6 +11,7 @@ import { CategoriaProductoService } from '../../services/categoria-producto.serv
 import { CategoriaProductoOutput } from '../../interfaces/producto.interface';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { SubcategoriaFormComponent } from '../../dialogs/subcategoria-form/subcategoria-form.component';
+import { ReporteService } from '../../../../../shared/services/reporte.service';
 
 @Component({
   selector: 'app-categoria-producto-list',
@@ -29,12 +30,14 @@ export class CategoriaProductoListComponent {
   private readonly categoriaService = inject(CategoriaProductoService);
   private readonly router = inject(Router);
   private readonly dialogService = inject(AppDialogService);
+  private readonly reporteService = inject(ReporteService);
 
   protected readonly subcatTemplate = viewChild<TemplateRef<TableCellContext<CategoriaProductoOutput>>>('subcatTpl');
 
   protected readonly categorias = signal<CategoriaProductoOutput[]>([]);
   protected readonly subcatMap = signal<Record<number, CategoriaProductoOutput[]>>({});
   protected readonly loading = signal(false);
+  protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
 
@@ -54,6 +57,7 @@ export class CategoriaProductoListComponent {
     { id: 'search', label: 'Buscar' },
     { id: 'clear', label: 'Limpiar Filtro' },
     { id: 'add', label: '+ Adicionar' },
+    { id: 'generar', label: 'Reporte' },
   ];
 
   protected readonly rowActions: MenuAction[] = [
@@ -122,7 +126,21 @@ export class CategoriaProductoListComponent {
       case 'add':
         this.router.navigate(['/inventario/productos/categorias/nueva']);
         break;
+      case 'generar':
+        this.generarReporte();
+        break;
     }
+  }
+
+  protected generarReporte(): void {
+    if (this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('producto').subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
   }
 
   protected onRowAction(actionId: string, categoria: CategoriaProductoOutput): void {

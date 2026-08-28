@@ -85,6 +85,13 @@
 </form>
 
 <div class="servicio-form-footer">
+  @if (isEdit && servicio()?.id_servicio) {
+    <app-ui-button
+      label="Reporte"
+      [loading]="generando()"
+      (clicked)="generarReporte()"
+    />
+  }
   <app-ui-button
     [label]="isEdit ? 'Guardar Cambios' : 'Registrar Servicio'"
     icon="save"

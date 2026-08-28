@@ -37,4 +37,7 @@ export const API_CONFIG = {
   get graphqlEndpoint(): string {
     return `${resolveApiBaseUrl()}/graphql`;
   },
+  get reportesEndpoint(): string {
+    return `${resolveApiBaseUrl()}/api/reportes`;
+  },
 };

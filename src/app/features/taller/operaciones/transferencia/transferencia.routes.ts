@@ -30,6 +30,7 @@ export const TRANSFERENCIA_ROUTES: Routes = [
       title: 'Solicitudes de repuestos',
       subtitle: 'Gestión de pedidos de repuestos entre sectores',
       icon: 'request_quote',
+      reporteTipo: 'solicitud_repuesto',
     },
   },
   {

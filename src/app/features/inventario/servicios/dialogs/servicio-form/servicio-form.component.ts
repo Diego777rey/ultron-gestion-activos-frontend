@@ -10,6 +10,7 @@ import { ServicioInput, ServicioOutput, CategoriaServicioOutput } from '../../in
 import { ServicioService } from '../../services/servicio.service';
 import { CategoriaServicioService } from '../../services/categoria-servicio.service';
 import { DialogRef } from '@angular/cdk/dialog';
+import { ReporteService } from '../../../../../shared/services/reporte.service';
 
 @Component({
   selector: 'app-servicio-form',
@@ -30,11 +31,13 @@ export class ServicioFormComponent {
   private readonly servicioService = inject(ServicioService);
   private readonly categoriaService = inject(CategoriaServicioService);
   private readonly dialogRef = inject(DialogRef, { optional: true });
+  private readonly reporteService = inject(ReporteService);
 
   readonly servicio = input<ServicioOutput | null>(null);
   readonly saved = output<void>();
 
   protected saving = false;
+  protected readonly generando = signal(false);
   protected error: string | null = null;
   protected isEdit = false;
 
@@ -189,6 +192,18 @@ export class ServicioFormComponent {
   protected readonly subcategoriaLabelFn = (c: CategoriaServicioOutput) =>
     c.nombre ?? `Subcategoría #${c.id_categoria_servicio}`;
   protected readonly subcategoriaKeyFn = (c: CategoriaServicioOutput) => c.id_categoria_servicio;
+
+  protected generarReporte(): void {
+    const id = this.servicio()?.id_servicio;
+    if (!id || this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('servicio', { id }).subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
+  }
 
   protected onSubmit(): void {
     if (this.form.invalid) {

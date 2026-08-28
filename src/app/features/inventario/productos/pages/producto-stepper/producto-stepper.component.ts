@@ -18,6 +18,7 @@ import { ProductoService } from '../../services/producto.service';
 import { CategoriaProductoOutput, ProductoInput } from '../../interfaces/producto.interface';
 import { CategoriaRapidaFormComponent } from '../../dialogs/categoria-rapida-form/categoria-rapida-form.component';
 import { SubcategoriaFormComponent } from '../../dialogs/subcategoria-form/subcategoria-form.component';
+import { ReporteService } from '../../../../../shared/services/reporte.service';
 
 interface StepDef {
   index: number;
@@ -39,6 +40,7 @@ export class ProductoStepperComponent implements OnInit {
   private readonly dialogService = inject(AppDialogService);
   private readonly categoriaService = inject(CategoriaProductoService);
   private readonly productoService = inject(ProductoService);
+  private readonly reporteService = inject(ReporteService);
 
   protected readonly steps: StepDef[] = [
     { index: 1, label: 'Categoría', icon: 'category' },
@@ -49,6 +51,7 @@ export class ProductoStepperComponent implements OnInit {
   protected readonly currentStep = signal(1);
   protected readonly error = signal<string | null>(null);
   protected readonly saving = signal(false);
+  protected readonly generando = signal(false);
 
   protected readonly categorias = signal<CategoriaProductoOutput[]>([]);
   protected readonly subcategorias = signal<CategoriaProductoOutput[]>([]);
@@ -310,6 +313,17 @@ export class ProductoStepperComponent implements OnInit {
         this.saving.set(false);
         this.error.set(err.message || 'No se pudo registrar el producto');
       },
+    });
+  }
+
+  protected generarReporte(): void {
+    if (this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('producto').subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
     });
   }
 

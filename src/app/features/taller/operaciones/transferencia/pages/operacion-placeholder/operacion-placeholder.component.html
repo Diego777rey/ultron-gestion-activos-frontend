@@ -8,5 +8,16 @@
       <p>{{ subtitle() }}</p>
     }
     <p class="placeholder__badge">Próximamente</p>
+    @if (reporteTipo()) {
+      <div class="placeholder__actions">
+        <app-ui-button
+          label="Reporte"
+          size="sm"
+          [loading]="generando()"
+          [disabled]="generando()"
+          (clicked)="generarReporte()"
+        />
+      </div>
+    }
   </div>
 </section>

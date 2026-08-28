@@ -137,6 +137,11 @@
     <app-ui-button label="Cancelar" variant="ghost" (clicked)="cancelar()" />
 
     <div class="stepper-footer__right">
+      <app-ui-button
+        label="Reporte"
+        [loading]="generando()"
+        (clicked)="generarReporte()"
+      />
       @if (currentStep() === 2) {
         <app-ui-button label="Atrás" icon="arrow_back" variant="outline" (clicked)="volverPaso1()" />
       }
