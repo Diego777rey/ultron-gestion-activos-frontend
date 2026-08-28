@@ -38,6 +38,7 @@ export interface OrdenDiagnosticoHallazgoOutput {
   gravedad?: string | null;
   sistema?: string | null;
   descripcion?: string | null;
+  etapa_origen?: string | null;
 }
 
 export interface OrdenTrabajoOutput {

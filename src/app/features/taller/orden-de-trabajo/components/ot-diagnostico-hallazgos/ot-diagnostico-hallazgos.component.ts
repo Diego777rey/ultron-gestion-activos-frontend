@@ -4,6 +4,7 @@ import {
   HostListener,
   inject,
   input,
+  OnInit,
   output,
   signal,
 } from '@angular/core';
@@ -26,12 +27,13 @@ import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OtDiagnosticoHallazgosComponent {
+export class OtDiagnosticoHallazgosComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly ordenService = inject(OrdenTrabajoService);
 
   readonly orden = input.required<OrdenTrabajoOutput>();
   readonly editable = input(true);
+  readonly modoEnProceso = input(false);
   readonly ordenChange = output<OrdenTrabajoOutput>();
   readonly errorChange = output<string>();
 
@@ -71,6 +73,30 @@ export class OtDiagnosticoHallazgosComponent {
   protected readonly isAdding = signal(false);
   protected readonly sistemaOpen = signal(false);
 
+  ngOnInit(): void {
+    if (this.modoEnProceso()) {
+      this.form.controls.tipo.setValue('DEFECTO');
+    }
+  }
+
+  protected tituloCard(): string {
+    return this.modoEnProceso() ? 'Nuevo defecto descubierto' : 'Fallos y defectos encontrados';
+  }
+
+  protected hintCard(): string {
+    return this.modoEnProceso()
+      ? 'Solo si durante el trabajo aparece un daño o condición que no estaba en el diagnóstico. Eso habilita un servicio extra.'
+      : 'Un fallo es algo que no funciona. Un defecto es daño, desgaste o una condición irregular.';
+  }
+
+  protected hallazgosVisibles(): OrdenDiagnosticoHallazgoOutput[] {
+    const all = this.orden().hallazgos ?? [];
+    if (!this.modoEnProceso()) {
+      return all;
+    }
+    return all.filter((h) => h.etapa_origen === 'EN_PROCESO');
+  }
+
   @HostListener('document:click')
   protected closeSistema(): void {
     this.sistemaOpen.set(false);
@@ -96,7 +122,7 @@ export class OtDiagnosticoHallazgosComponent {
     this.isAdding.set(true);
     const val = this.form.getRawValue();
     const input: OrdenDiagnosticoHallazgoInput = {
-      tipo: val.tipo!,
+      tipo: this.modoEnProceso() ? 'DEFECTO' : val.tipo!,
       gravedad: val.gravedad,
       sistema: val.sistema || null,
       descripcion: val.descripcion!.trim(),
@@ -121,7 +147,9 @@ export class OtDiagnosticoHallazgosComponent {
     if (!orden.id_orden_trabajo || !item.id_hallazgo) {
       return;
     }
-    if (!confirm('¿Eliminar este hallazgo del diagnóstico?')) {
+    if (!confirm(this.modoEnProceso()
+      ? '¿Eliminar este defecto descubierto?'
+      : '¿Eliminar este hallazgo del diagnóstico?')) {
       return;
     }
     this.ordenService.eliminarHallazgo(orden.id_orden_trabajo, item.id_hallazgo).subscribe({

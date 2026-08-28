@@ -1,35 +1,37 @@
 <div class="ot-diag-card">
   <div class="ot-diag-card__head">
     <span class="ot-diag-card__icon" aria-hidden="true">
-      <span class="material-icons">search</span>
+        <span class="material-icons">{{ modoEnProceso() ? 'warning' : 'search' }}</span>
     </span>
     <div class="ot-diag-card__titles">
-      <h3 class="ot-diag-card__title">Fallos y defectos encontrados</h3>
-      <p class="ot-diag-card__hint">
-        Un fallo es algo que no funciona. Un defecto es daño, desgaste o una condición irregular.
-      </p>
+        <h3 class="ot-diag-card__title">{{ tituloCard() }}</h3>
+        <p class="ot-diag-card__hint">
+          {{ hintCard() }}
+        </p>
     </div>
   </div>
 
   <div class="ot-diag-card__body">
     @if (editable()) {
       <form [formGroup]="form" (ngSubmit)="agregar()">
-        <div class="ot-diag-field" style="margin-bottom: 12px;">
-          <span class="ot-diag-field__label">Tipo*</span>
-          <div class="ot-diag-chips" role="radiogroup" aria-label="Tipo de hallazgo">
-            @for (t of tipos; track t.value) {
-              <button
-                type="button"
-                class="ot-diag-chip"
-                [class.ot-diag-chip--on]="form.controls.tipo.value === t.value"
-                (click)="form.controls.tipo.setValue(t.value)"
-              >
-                <span class="material-icons" aria-hidden="true">{{ t.icon }}</span>
-                {{ t.label }}
-              </button>
-            }
+        @if (!modoEnProceso()) {
+          <div class="ot-diag-field" style="margin-bottom: 12px;">
+            <span class="ot-diag-field__label">Tipo*</span>
+            <div class="ot-diag-chips" role="radiogroup" aria-label="Tipo de hallazgo">
+              @for (t of tipos; track t.value) {
+                <button
+                  type="button"
+                  class="ot-diag-chip"
+                  [class.ot-diag-chip--on]="form.controls.tipo.value === t.value"
+                  (click)="form.controls.tipo.setValue(t.value)"
+                >
+                  <span class="material-icons" aria-hidden="true">{{ t.icon }}</span>
+                  {{ t.label }}
+                </button>
+              }
+            </div>
           </div>
-        </div>
+        }
 
         <div class="ot-diag-field" style="margin-bottom: 14px;">
           <span class="ot-diag-field__label">Gravedad*</span>
@@ -134,7 +136,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (item of orden().hallazgos ?? []; track item.id_hallazgo) {
+          @for (item of hallazgosVisibles(); track item.id_hallazgo) {
             <tr>
               <td>
                 <span class="ot-diag-badge" [class.ot-diag-badge--green]="item.tipo === 'DEFECTO'">
@@ -169,7 +171,11 @@
           } @empty {
             <tr>
               <td [attr.colspan]="editable() ? 5 : 4" class="ot-diag-empty">
-                Todavía no hay fallos ni defectos cargados.
+                @if (modoEnProceso()) {
+                  Todavía no se descubrió un defecto nuevo en esta etapa.
+                } @else {
+                  Todavía no hay fallos ni defectos cargados.
+                }
               </td>
             </tr>
           }
