@@ -1,0 +1,180 @@
+<div class="ot-diag-card">
+  <div class="ot-diag-card__head">
+    <span class="ot-diag-card__icon" aria-hidden="true">
+      <span class="material-icons">search</span>
+    </span>
+    <div class="ot-diag-card__titles">
+      <h3 class="ot-diag-card__title">Fallos y defectos encontrados</h3>
+      <p class="ot-diag-card__hint">
+        Un fallo es algo que no funciona. Un defecto es daño, desgaste o una condición irregular.
+      </p>
+    </div>
+  </div>
+
+  <div class="ot-diag-card__body">
+    @if (editable()) {
+      <form [formGroup]="form" (ngSubmit)="agregar()">
+        <div class="ot-diag-field" style="margin-bottom: 12px;">
+          <span class="ot-diag-field__label">Tipo*</span>
+          <div class="ot-diag-chips" role="radiogroup" aria-label="Tipo de hallazgo">
+            @for (t of tipos; track t.value) {
+              <button
+                type="button"
+                class="ot-diag-chip"
+                [class.ot-diag-chip--on]="form.controls.tipo.value === t.value"
+                (click)="form.controls.tipo.setValue(t.value)"
+              >
+                <span class="material-icons" aria-hidden="true">{{ t.icon }}</span>
+                {{ t.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="ot-diag-field" style="margin-bottom: 14px;">
+          <span class="ot-diag-field__label">Gravedad*</span>
+          <div class="ot-diag-chips" role="radiogroup" aria-label="Gravedad">
+            @for (g of gravedades; track g.value) {
+              <button
+                type="button"
+                class="ot-diag-chip"
+                [class.ot-diag-chip--on]="form.controls.gravedad.value === g.value"
+                [class.ot-diag-chip--green]="g.value === 'BAJA'"
+                [class.ot-diag-chip--warn]="g.value === 'ALTA'"
+                [class.ot-diag-chip--danger]="g.value === 'CRITICA'"
+                (click)="form.controls.gravedad.setValue(g.value)"
+              >
+                {{ g.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="ot-diag-row ot-diag-row--hallazgos">
+          <div class="ot-diag-field">
+            <span class="ot-diag-field__label">Sistema</span>
+            <div class="ot-diag-select" [class.ot-diag-select--open]="sistemaOpen()">
+              <button
+                type="button"
+                class="ot-diag-select__trigger"
+                [attr.aria-expanded]="sistemaOpen()"
+                aria-haspopup="listbox"
+                (click)="toggleSistema($event)"
+              >
+                <span>{{ labelSistema(form.controls.sistema.value) }}</span>
+                <span class="material-icons" aria-hidden="true">expand_more</span>
+              </button>
+              @if (sistemaOpen()) {
+                <ul class="ot-diag-select__menu" role="listbox" (click)="$event.stopPropagation()">
+                  <li>
+                    <button
+                      type="button"
+                      class="ot-diag-select__option"
+                      [class.ot-diag-select__option--on]="!form.controls.sistema.value"
+                      (click)="pickSistema('')"
+                    >
+                      Sin especificar
+                    </button>
+                  </li>
+                  @for (s of sistemas; track s.value) {
+                    <li>
+                      <button
+                        type="button"
+                        class="ot-diag-select__option"
+                        [class.ot-diag-select__option--on]="form.controls.sistema.value === s.value"
+                        (click)="pickSistema(s.value)"
+                      >
+                        {{ s.label }}
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </div>
+
+          <div class="ot-diag-field">
+            <label class="ot-diag-field__label" for="ot-h-desc">Descripción*</label>
+            <input
+              id="ot-h-desc"
+              type="text"
+              class="ot-diag-field__control"
+              formControlName="descripcion"
+              placeholder="Ej. holgura en rótula, ruido en caja..."
+            />
+          </div>
+
+          <div class="ot-diag-field">
+            <span class="ot-diag-field__label" aria-hidden="true">&nbsp;</span>
+            <app-ui-button
+              class="ot-diag-add"
+              type="submit"
+              label="Agregar"
+              icon="add"
+              variant="primary"
+              [loading]="isAdding()"
+              [disabled]="form.invalid"
+            />
+          </div>
+        </div>
+      </form>
+    }
+
+    <div class="ot-diag-table-wrap">
+      <table class="ot-diag-table">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Gravedad</th>
+            <th>Sistema</th>
+            <th>Descripción</th>
+            @if (editable()) {
+              <th style="width: 52px;"></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of orden().hallazgos ?? []; track item.id_hallazgo) {
+            <tr>
+              <td>
+                <span class="ot-diag-badge" [class.ot-diag-badge--green]="item.tipo === 'DEFECTO'">
+                  {{ labelTipo(item.tipo) }}
+                </span>
+              </td>
+              <td>
+                <span
+                  class="ot-diag-badge"
+                  [class.ot-diag-badge--green]="item.gravedad === 'BAJA'"
+                  [class.ot-diag-badge--warn]="item.gravedad === 'ALTA'"
+                  [class.ot-diag-badge--danger]="item.gravedad === 'CRITICA'"
+                >
+                  {{ labelGravedad(item.gravedad) }}
+                </span>
+              </td>
+              <td>{{ labelSistema(item.sistema, '—') }}</td>
+              <td>{{ item.descripcion }}</td>
+              @if (editable()) {
+                <td>
+                  <button
+                    type="button"
+                    class="ot-diag-icon-btn"
+                    (click)="eliminar(item)"
+                    aria-label="Eliminar hallazgo"
+                  >
+                    <span class="material-icons" aria-hidden="true">delete</span>
+                  </button>
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="editable() ? 5 : 4" class="ot-diag-empty">
+                Todavía no hay fallos ni defectos cargados.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

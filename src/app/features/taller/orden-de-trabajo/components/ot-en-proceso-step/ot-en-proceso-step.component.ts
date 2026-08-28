@@ -13,15 +13,21 @@ import { CajaOutput } from '../../../../financiero/cajas/interfaces/caja.interfa
 import { OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas.component';
+import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-diagnostico-hallazgos.component';
 import { OtSolicitudRepuestoComponent } from '../ot-solicitud-repuesto/ot-solicitud-repuesto.component';
 
 @Component({
   selector: 'app-ot-en-proceso-step',
-  imports: [EntitySearcherComponent, OtDetalleLineasComponent, OtSolicitudRepuestoComponent],
+  imports: [EntitySearcherComponent, OtDetalleLineasComponent, OtSolicitudRepuestoComponent, OtDiagnosticoHallazgosComponent],
   template: `
     <p class="ot-hint">
       Ajusta productos/servicios, solicita repuestos y al finalizar envía la orden a una caja abierta.
     </p>
+
+    <app-ot-diagnostico-hallazgos
+      [orden]="orden()"
+      [editable]="false"
+    />
 
     <app-ot-detalle-lineas
       [orden]="orden()"

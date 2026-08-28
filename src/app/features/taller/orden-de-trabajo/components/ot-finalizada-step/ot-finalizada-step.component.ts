@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
 import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas.component';
+import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-diagnostico-hallazgos.component';
 
 @Component({
   selector: 'app-ot-finalizada-step',
-  imports: [CurrencyPipe, DatePipe, OtDetalleLineasComponent],
+  imports: [CurrencyPipe, DatePipe, OtDetalleLineasComponent, OtDiagnosticoHallazgosComponent],
   template: `
     <p class="ot-hint">
       La orden fue enviada a caja. Cuando se cobre, márcala como facturada.
@@ -39,12 +40,17 @@ import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas
           <span>{{ orden().fecha_finalizacion | date: 'dd/MM/yyyy HH:mm' }}</span>
         </li>
         <li class="ot-panel__item">
+          <span>Plazo estimado</span>
+          <span>{{ resumenPlazo() }}</span>
+        </li>
+        <li class="ot-panel__item">
           <span>Total</span>
           <span class="ot-total">{{ orden().diagnostico?.total_presupuesto | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</span>
         </li>
       </ul>
     </section>
 
+    <app-ot-diagnostico-hallazgos [orden]="orden()" [editable]="false" />
     <app-ot-detalle-lineas [orden]="orden()" [editable]="false" />
   `,
   styleUrl: '../../styles/ot-form.scss',
@@ -52,4 +58,21 @@ import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas
 })
 export class OtFinalizadaStepComponent {
   readonly orden = input.required<OrdenTrabajoOutput>();
+
+  protected resumenPlazo(): string {
+    const d = this.orden().diagnostico;
+    if (!d) return '—';
+    const partes: string[] = [];
+    if (d.fecha_inicio_estimada) {
+      partes.push(d.fecha_inicio_estimada.split('T')[0]);
+    }
+    if (d.fecha_fin_estimada) {
+      partes.push(d.fecha_fin_estimada.split('T')[0]);
+    }
+    if (d.duracion_estimada_dias && d.duracion_estimada_dias > 0) {
+      const n = d.duracion_estimada_dias;
+      partes.push(`${n} ${n === 1 ? 'día' : 'días'}`);
+    }
+    return partes.length ? partes.join(' · ') : '—';
+  }
 }

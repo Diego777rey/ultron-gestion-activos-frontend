@@ -23,6 +23,13 @@
       </p>
     }
 
+    @if (currentStep() === 2) {
+      <p class="stepper-body__hint">
+        El mecánico revisa el vehículo, carga fallos y defectos, arma el presupuesto
+        y estima plazos. Podés guardar el diagnóstico y retomarlo después.
+      </p>
+    }
+
     @if (loading()) {
       <div class="loading-state">Cargando datos de la orden...</div>
     } @else {
@@ -68,6 +75,16 @@
           variant="outline"
           [loading]="saving()"
           (clicked)="guardarRecepcion()"
+        />
+      }
+
+      @if (currentStep() === 2) {
+        <app-ui-button
+          label="Guardar diagnóstico"
+          icon="save"
+          variant="outline"
+          [loading]="saving()"
+          (clicked)="guardarDiagnostico()"
         />
       }
 

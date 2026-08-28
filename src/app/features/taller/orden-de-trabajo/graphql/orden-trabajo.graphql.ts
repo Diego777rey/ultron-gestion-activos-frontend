@@ -64,6 +64,7 @@ export const ORDEN_TRABAJO_SELECTION = `{
   diagnostico {
     fecha_inicio_estimada
     fecha_fin_estimada
+    duracion_estimada_dias
     presupuesto_aprobado
     total_presupuesto
     observaciones
@@ -80,6 +81,13 @@ export const ORDEN_TRABAJO_SELECTION = `{
     precio_unitario
     subtotal
     etapa_origen
+  }
+  hallazgos {
+    id_hallazgo
+    tipo
+    gravedad
+    sistema
+    descripcion
   }
 }`;
 
