@@ -100,7 +100,7 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
         this.iniciarDiagnostico();
         break;
       case 2:
-        this.guardarDiagnostico();
+        this.aprobarEIniciarReparacion();
         break;
       case 3:
         this.enviarACaja();
@@ -118,7 +118,7 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
       case 1:
         return 'Iniciar diagnóstico';
       case 2:
-        return 'Aprobar e iniciar proceso';
+        return 'Aprobar e iniciar reparación';
       case 3:
         return 'Finalizar y enviar a caja';
       case 4:
@@ -210,7 +210,22 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
     });
   }
 
-  private guardarDiagnostico(): void {
+  /** Guarda el diagnóstico sin avanzar de etapa. */
+  protected guardarDiagnostico(): void {
+    this.persistirDiagnostico(false);
+  }
+
+  /** Guarda el diagnóstico y avanza a EN_PROCESO. */
+  private aprobarEIniciarReparacion(): void {
+    const error = this.diagnosticoStep()?.validarParaAvanzar();
+    if (error) {
+      this.error.set(error);
+      return;
+    }
+    this.persistirDiagnostico(true);
+  }
+
+  private persistirDiagnostico(avanzarAEnProceso: boolean): void {
     const orden = this.orden();
     const step = this.diagnosticoStep();
     if (!orden?.id_orden_trabajo || !step) return;
@@ -222,6 +237,10 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
     this.ordenService.update(orden.id_orden_trabajo, input).subscribe({
       next: (res) => {
         this.orden.set(res);
+        if (!avanzarAEnProceso) {
+          this.saving.set(false);
+          return;
+        }
         this.ordenService.cambiarEtapa(res.id_orden_trabajo!, 'EN_PROCESO').subscribe({
           next: (adv) => {
             this.orden.set(adv);

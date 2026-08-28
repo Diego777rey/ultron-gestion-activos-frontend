@@ -1,0 +1,170 @@
+.ot-diag-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.85fr);
+  grid-template-areas:
+    "recepcion plazos"
+    "hallazgos plazos"
+    "presupuesto presupuesto";
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+}
+
+.ot-diag-layout__recepcion {
+  grid-area: recepcion;
+  min-width: 0;
+}
+
+.ot-diag-layout__plazos {
+  grid-area: plazos;
+  min-width: 0;
+}
+
+.ot-diag-layout__hallazgos,
+.ot-diag-layout__presupuesto {
+  min-width: 0;
+}
+
+.ot-diag-layout__hallazgos {
+  grid-area: hallazgos;
+}
+
+.ot-diag-layout__presupuesto {
+  grid-area: presupuesto;
+}
+
+.ot-diag-layout > *,
+.ot-diag-layout .ot-diag-card {
+  margin: 0;
+}
+
+@media (max-width: 1080px) {
+  .ot-diag-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "recepcion"
+      "hallazgos"
+      "presupuesto"
+      "plazos";
+  }
+}
+
+.ot-diag-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .ot-diag-facts {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ot-diag-fact {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.ot-diag-fact__icon {
+  color: #64b5f6;
+  font-size: 20px;
+  margin-top: 1px;
+}
+
+.ot-diag-fact__label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ot-diag-fact__value {
+  display: block;
+  margin-top: 2px;
+  font-size: 13.5px;
+  color: #fff;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.ot-diag-row--plazos {
+  grid-template-columns: 1fr 1fr auto;
+  align-items: stretch;
+}
+
+.ot-diag-layout__plazos .ot-diag-row--plazos {
+  grid-template-columns: 1fr 1fr;
+}
+
+.ot-diag-layout__plazos .ot-diag-duration {
+  grid-column: 1 / -1;
+}
+
+.ot-diag-duration {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 132px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--ot-diag-green-soft);
+  border: 1px solid var(--ot-diag-green-line);
+  color: #c8e6c9;
+}
+
+.ot-diag-duration__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.ot-diag-duration__value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e8f5e9;
+}
+
+.ot-diag-approve {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(67, 160, 71, 0.1);
+  border: 1px solid rgba(129, 199, 132, 0.28);
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+
+  input {
+    margin-top: 3px;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--ot-diag-green);
+    flex-shrink: 0;
+  }
+}
+
+.ot-diag-approve__text {
+  font-size: 14px;
+  font-weight: 650;
+  color: #e8f5e9;
+}
+
+.ot-diag-approve__sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.58);
+}

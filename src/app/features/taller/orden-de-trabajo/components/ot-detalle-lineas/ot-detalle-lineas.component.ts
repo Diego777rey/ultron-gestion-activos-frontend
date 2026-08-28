@@ -29,7 +29,7 @@ import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
   selector: 'app-ot-detalle-lineas',
   imports: [CurrencyPipe, ReactiveFormsModule, UiButtonComponent, EntitySearcherComponent],
   templateUrl: './ot-detalle-lineas.component.html',
-  styleUrl: '../../styles/ot-form.scss',
+  styleUrls: ['../../styles/ot-form.scss', '../../styles/ot-diagnostico.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OtDetalleLineasComponent implements OnInit {
@@ -42,12 +42,13 @@ export class OtDetalleLineasComponent implements OnInit {
   readonly orden = input.required<OrdenTrabajoOutput>();
   readonly editable = input(true);
   readonly allowCreateServicio = input(true);
+  readonly diagnosticoLook = input(false);
   readonly ordenChange = output<OrdenTrabajoOutput>();
   readonly errorChange = output<string>();
 
   protected readonly detalleTipos = [
-    { value: 'PRODUCTO', label: 'Producto (Repuesto)' },
-    { value: 'SERVICIO', label: 'Servicio (Mano de obra)' },
+    { value: 'PRODUCTO', label: 'Producto (Repuesto)', short: 'Producto' },
+    { value: 'SERVICIO', label: 'Servicio (Mano de obra)', short: 'Servicio' },
   ];
 
   protected readonly detalleForm = this.fb.group({

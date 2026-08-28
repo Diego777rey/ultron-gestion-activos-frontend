@@ -7,6 +7,7 @@ import {
   OrdenTrabajoOutput,
   OrdenTrabajoInput,
   OrdenTrabajoDetalleInput,
+  OrdenDiagnosticoHallazgoInput,
 } from '../interfaces/orden-trabajo.interface';
 import { CajaOutput } from '../../../financiero/cajas/interfaces/caja.interface';
 
@@ -43,6 +44,24 @@ export class OrdenTrabajoService extends BaseCrudService<OrdenTrabajoOutput, Ord
     return this.gql
       .mutate<{ eliminarDetalleOrdenTrabajo: OrdenTrabajoOutput }>(document, { idOrden, idDetalle })
       .pipe(map((data) => data.eliminarDetalleOrdenTrabajo));
+  }
+
+  agregarHallazgo(idOrden: string, input: OrdenDiagnosticoHallazgoInput): Observable<OrdenTrabajoOutput> {
+    const document = `mutation($idOrden: ID!, $input: OrdenDiagnosticoHallazgoInput!) {
+      agregarHallazgoOrdenTrabajo(idOrden: $idOrden, input: $input) ${ORDEN_TRABAJO_SELECTION}
+    }`;
+    return this.gql
+      .mutate<{ agregarHallazgoOrdenTrabajo: OrdenTrabajoOutput }>(document, { idOrden, input })
+      .pipe(map((data) => data.agregarHallazgoOrdenTrabajo));
+  }
+
+  eliminarHallazgo(idOrden: string, idHallazgo: string): Observable<OrdenTrabajoOutput> {
+    const document = `mutation($idOrden: ID!, $idHallazgo: ID!) {
+      eliminarHallazgoOrdenTrabajo(idOrden: $idOrden, idHallazgo: $idHallazgo) ${ORDEN_TRABAJO_SELECTION}
+    }`;
+    return this.gql
+      .mutate<{ eliminarHallazgoOrdenTrabajo: OrdenTrabajoOutput }>(document, { idOrden, idHallazgo })
+      .pipe(map((data) => data.eliminarHallazgoOrdenTrabajo));
   }
 
   enviarACaja(idOrden: string, idCaja: string): Observable<OrdenTrabajoOutput> {

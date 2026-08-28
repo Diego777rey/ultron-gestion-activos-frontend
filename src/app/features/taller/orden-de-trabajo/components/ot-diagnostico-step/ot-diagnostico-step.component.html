@@ -1,0 +1,144 @@
+<div class="ot-diag-layout">
+  <div class="ot-diag-layout__recepcion">
+    <div class="ot-diag-card">
+      <div class="ot-diag-card__head">
+        <span class="ot-diag-card__icon" aria-hidden="true">
+          <span class="material-icons">directions_car</span>
+        </span>
+        <div class="ot-diag-card__titles">
+          <h3 class="ot-diag-card__title">Datos de recepción</h3>
+          <p class="ot-diag-card__hint">Lo que se registró al ingresar el vehículo.</p>
+        </div>
+      </div>
+      <div class="ot-diag-card__body">
+        <div class="ot-diag-facts">
+          <div class="ot-diag-fact">
+            <span class="material-icons ot-diag-fact__icon" aria-hidden="true">person</span>
+            <div>
+              <span class="ot-diag-fact__label">Cliente</span>
+              <span class="ot-diag-fact__value">{{ resumenCliente() }}</span>
+            </div>
+          </div>
+          <div class="ot-diag-fact">
+            <span class="material-icons ot-diag-fact__icon" aria-hidden="true">directions_car</span>
+            <div>
+              <span class="ot-diag-fact__label">Vehículo</span>
+              <span class="ot-diag-fact__value">{{ resumenVehiculo() }}</span>
+            </div>
+          </div>
+          <div class="ot-diag-fact">
+            <span class="material-icons ot-diag-fact__icon" aria-hidden="true">build</span>
+            <div>
+              <span class="ot-diag-fact__label">Mecánico</span>
+              <span class="ot-diag-fact__value">{{ resumenMecanico() }}</span>
+            </div>
+          </div>
+          <div class="ot-diag-fact">
+            <span class="material-icons ot-diag-fact__icon" aria-hidden="true">report_problem</span>
+            <div>
+              <span class="ot-diag-fact__label">Falla reportada</span>
+              <span class="ot-diag-fact__value">{{ orden().recepcion?.descripcion_falla || '—' }}</span>
+            </div>
+          </div>
+          @if (orden().estado_vehiculo?.kilometraje != null) {
+            <div class="ot-diag-fact">
+              <span class="material-icons ot-diag-fact__icon" aria-hidden="true">speed</span>
+              <div>
+                <span class="ot-diag-fact__label">Kilometraje</span>
+                <span class="ot-diag-fact__value">{{ orden().estado_vehiculo?.kilometraje }} km</span>
+              </div>
+            </div>
+          }
+        </div>
+        @if (condicionesIngreso().length) {
+          <div class="ot-diag-chips">
+            @for (c of condicionesIngreso(); track c) {
+              <span class="ot-diag-chip ot-diag-chip--readonly">{{ c }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="ot-diag-layout__plazos">
+    <div class="ot-diag-card">
+      <div class="ot-diag-card__head">
+        <span class="ot-diag-card__icon" aria-hidden="true">
+          <span class="material-icons">event</span>
+        </span>
+        <div class="ot-diag-card__titles">
+          <h3 class="ot-diag-card__title">Plazos estimados</h3>
+          <p class="ot-diag-card__hint">Indicá cuándo empieza y cuándo termina el trabajo. El tiempo se calcula solo.</p>
+        </div>
+      </div>
+      <div class="ot-diag-card__body">
+        <form class="ot-form ot-form--wide" [formGroup]="form">
+          <div class="ot-diag-row ot-diag-row--plazos">
+            <div class="ot-diag-field">
+              <label class="ot-diag-field__label" for="ot-f-inicio">Fecha de inicio</label>
+              <input
+                id="ot-f-inicio"
+                type="date"
+                class="ot-diag-field__control"
+                formControlName="fecha_inicio_estimada"
+              />
+            </div>
+            <div class="ot-diag-field">
+              <label class="ot-diag-field__label" for="ot-f-fin">Fecha de fin</label>
+              <input
+                id="ot-f-fin"
+                type="date"
+                class="ot-diag-field__control"
+                formControlName="fecha_fin_estimada"
+              />
+            </div>
+            <div class="ot-diag-duration" aria-live="polite">
+              <span class="ot-diag-duration__label">Tiempo</span>
+              <span class="ot-diag-duration__value">{{ resumenDuracion() }}</span>
+            </div>
+          </div>
+
+          <div class="ot-diag-field" style="margin-top: 14px;">
+            <label class="ot-diag-field__label" for="ot-f-obs">Observaciones del diagnóstico</label>
+            <textarea
+              id="ot-f-obs"
+              class="ot-diag-field__control"
+              formControlName="observaciones"
+              rows="4"
+              placeholder="Notas técnicas, recomendaciones, pendientes..."
+            ></textarea>
+          </div>
+
+          <label class="ot-diag-approve" for="ot-p-aprobado">
+            <input id="ot-p-aprobado" type="checkbox" formControlName="presupuesto_aprobado" />
+            <span>
+              <span class="ot-diag-approve__text">Presupuesto aprobado por el cliente</span>
+              <span class="ot-diag-approve__sub">Necesario para iniciar la reparación</span>
+            </span>
+          </label>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="ot-diag-layout__hallazgos">
+    <app-ot-diagnostico-hallazgos
+      [orden]="orden()"
+      [editable]="true"
+      (ordenChange)="ordenChange.emit($event)"
+      (errorChange)="errorChange.emit($event)"
+    />
+  </div>
+
+  <div class="ot-diag-layout__presupuesto">
+    <app-ot-detalle-lineas
+      [orden]="orden()"
+      [editable]="true"
+      [allowCreateServicio]="true"
+      [diagnosticoLook]="true"
+      (ordenChange)="ordenChange.emit($event)"
+      (errorChange)="errorChange.emit($event)"
+    />
+  </div>
+</div>

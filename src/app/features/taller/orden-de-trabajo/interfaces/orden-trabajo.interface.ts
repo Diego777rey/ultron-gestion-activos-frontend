@@ -26,9 +26,18 @@ export interface OrdenEstadoVehiculoOutput {
 export interface OrdenDiagnosticoOutput {
   fecha_inicio_estimada?: string | null;
   fecha_fin_estimada?: string | null;
+  duracion_estimada_dias?: number | null;
   presupuesto_aprobado?: boolean | null;
   total_presupuesto?: number | null;
   observaciones?: string | null;
+}
+
+export interface OrdenDiagnosticoHallazgoOutput {
+  id_hallazgo?: string | null;
+  tipo?: string | null;
+  gravedad?: string | null;
+  sistema?: string | null;
+  descripcion?: string | null;
 }
 
 export interface OrdenTrabajoOutput {
@@ -47,6 +56,7 @@ export interface OrdenTrabajoOutput {
   estado_vehiculo?: OrdenEstadoVehiculoOutput | null;
   diagnostico?: OrdenDiagnosticoOutput | null;
   detalles?: OrdenTrabajoDetalleOutput[] | null;
+  hallazgos?: OrdenDiagnosticoHallazgoOutput[] | null;
 }
 
 export interface OrdenTrabajoDetalleOutput {
@@ -87,8 +97,16 @@ export interface OrdenEstadoVehiculoInput {
 export interface OrdenDiagnosticoInput {
   fecha_inicio_estimada?: string | null;
   fecha_fin_estimada?: string | null;
+  duracion_estimada_dias?: number | null;
   presupuesto_aprobado?: boolean | null;
   observaciones?: string | null;
+}
+
+export interface OrdenDiagnosticoHallazgoInput {
+  tipo: string;
+  gravedad?: string | null;
+  sistema?: string | null;
+  descripcion: string;
 }
 
 export interface OrdenTrabajoInput {
