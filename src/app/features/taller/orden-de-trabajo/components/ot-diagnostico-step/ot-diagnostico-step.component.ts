@@ -16,7 +16,11 @@ import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-
   selector: 'app-ot-diagnostico-step',
   imports: [ReactiveFormsModule, OtDetalleLineasComponent, OtDiagnosticoHallazgosComponent],
   templateUrl: './ot-diagnostico-step.component.html',
-  styleUrls: ['../../styles/ot-form.scss', '../../styles/ot-diagnostico.scss'],
+  styleUrls: [
+    '../../styles/ot-form.scss',
+    '../../styles/ot-diagnostico.scss',
+    './ot-diagnostico-step.component.scss',
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OtDiagnosticoStepComponent implements OnInit {

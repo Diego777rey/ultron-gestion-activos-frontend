@@ -20,7 +20,10 @@ import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
   selector: 'app-ot-diagnostico-hallazgos',
   imports: [ReactiveFormsModule, UiButtonComponent],
   templateUrl: './ot-diagnostico-hallazgos.component.html',
-  styleUrls: ['../../styles/ot-form.scss', '../../styles/ot-diagnostico.scss'],
+  styleUrls: [
+    '../../styles/ot-diagnostico.scss',
+    './ot-diagnostico-hallazgos.component.scss',
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OtDiagnosticoHallazgosComponent {

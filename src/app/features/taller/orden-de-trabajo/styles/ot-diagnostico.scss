@@ -1,8 +1,7 @@
-/* Tema Material de la etapa Diagnóstico — azul app + acentos verdes */
+/* Tema compartido de Diagnóstico — azul app + acentos verdes */
 
 :host {
   --ot-diag-blue: #1976d2;
-  --ot-diag-blue-dark: #1565c0;
   --ot-diag-blue-soft: rgba(25, 118, 210, 0.16);
   --ot-diag-blue-line: rgba(66, 165, 245, 0.45);
   --ot-diag-green: #43a047;
@@ -14,60 +13,6 @@
   min-width: 0;
 }
 
-.ot-diag-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.85fr);
-  grid-template-areas:
-    "recepcion plazos"
-    "hallazgos plazos"
-    "presupuesto presupuesto";
-  gap: 16px;
-  align-items: start;
-  width: 100%;
-}
-
-.ot-diag-layout__recepcion {
-  grid-area: recepcion;
-  min-width: 0;
-}
-
-.ot-diag-layout__plazos {
-  grid-area: plazos;
-  min-width: 0;
-}
-
-.ot-diag-layout__hallazgos,
-.ot-diag-layout__presupuesto {
-  min-width: 0;
-}
-
-.ot-diag-layout__hallazgos {
-  grid-area: hallazgos;
-}
-
-.ot-diag-layout__presupuesto {
-  grid-area: presupuesto;
-}
-
-.ot-diag-layout > * {
-  margin: 0;
-}
-
-.ot-diag-layout .ot-diag-card {
-  margin-bottom: 0;
-}
-
-@media (max-width: 1080px) {
-  .ot-diag-layout {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "recepcion"
-      "hallazgos"
-      "presupuesto"
-      "plazos";
-  }
-}
-
 .ot-diag-card {
   background: linear-gradient(180deg, rgba(25, 118, 210, 0.1) 0%, rgba(30, 30, 30, 0.92) 48px);
   border: 1px solid rgba(66, 165, 245, 0.22);
@@ -75,9 +20,7 @@
   padding: 0;
   margin-bottom: 0;
   overflow: visible;
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .ot-diag-card--green {
@@ -139,52 +82,6 @@
   padding: 4px 18px 18px;
 }
 
-.ot-diag-facts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-@media (max-width: 640px) {
-  .ot-diag-facts {
-    grid-template-columns: 1fr;
-  }
-}
-
-.ot-diag-fact {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 12px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(148, 163, 184, 0.16);
-}
-
-.ot-diag-fact__icon {
-  color: #64b5f6;
-  font-size: 20px;
-  margin-top: 1px;
-}
-
-.ot-diag-fact__label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.ot-diag-fact__value {
-  display: block;
-  margin-top: 2px;
-  font-size: 13.5px;
-  color: #fff;
-  line-height: 1.35;
-  word-break: break-word;
-}
-
 .ot-diag-chips {
   display: flex;
   flex-wrap: wrap;
@@ -205,12 +102,6 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.1s ease;
 
   .material-icons {
     font-size: 16px;
@@ -219,10 +110,6 @@
   &:hover {
     background: rgba(255, 255, 255, 0.09);
     color: #fff;
-  }
-
-  &:active {
-    transform: scale(0.98);
   }
 }
 
@@ -286,7 +173,6 @@
   font-size: 14px;
   outline: none;
   color-scheme: dark;
-  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
     background: rgba(255, 255, 255, 0.08);
@@ -305,88 +191,6 @@ textarea.ot-diag-field__control {
   line-height: 1.45;
 }
 
-.ot-diag-select {
-  position: relative;
-}
-
-.ot-diag-select__trigger {
-  width: 100%;
-  min-height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px 8px 12px;
-  border-radius: 10px;
-  border: none;
-  border-bottom: 2px solid rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-  text-align: left;
-
-  .material-icons {
-    color: #90caf9;
-    transition: transform 0.15s ease;
-  }
-}
-
-.ot-diag-select--open .ot-diag-select__trigger {
-  border-bottom-color: var(--ot-diag-blue);
-  background: rgba(25, 118, 210, 0.12);
-  box-shadow: 0 3px 0 0 rgba(25, 118, 210, 0.25);
-
-  .material-icons {
-    transform: rotate(180deg);
-  }
-}
-
-.ot-diag-select__menu {
-  position: absolute;
-  z-index: 8;
-  left: 0;
-  right: 0;
-  top: calc(100% + 6px);
-  margin: 0;
-  padding: 6px;
-  list-style: none;
-  max-height: 240px;
-  overflow: auto;
-  border-radius: 12px;
-  background: #1e1e1e;
-  border: 1px solid rgba(66, 165, 245, 0.28);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-}
-
-.ot-diag-select__option {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 9px 10px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.9);
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-
-  &:hover {
-    background: rgba(25, 118, 210, 0.18);
-  }
-}
-
-.ot-diag-select__option--on {
-  background: rgba(25, 118, 210, 0.22);
-  color: #bbdefb;
-  font-weight: 600;
-}
-
 .ot-diag-row {
   display: grid;
   gap: 12px;
@@ -400,19 +204,6 @@ textarea.ot-diag-field__control {
 .ot-diag-field app-entity-searcher {
   display: block;
   width: 100%;
-}
-
-.ot-diag-row--plazos {
-  grid-template-columns: 1fr 1fr auto;
-  align-items: stretch;
-}
-
-.ot-diag-layout__plazos .ot-diag-row--plazos {
-  grid-template-columns: 1fr 1fr;
-}
-
-.ot-diag-layout__plazos .ot-diag-duration {
-  grid-column: 1 / -1;
 }
 
 .ot-diag-row--lineas {
@@ -437,67 +228,6 @@ textarea.ot-diag-field__control {
   .ot-diag-row--plazos {
     grid-template-columns: 1fr;
   }
-}
-
-.ot-diag-duration {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-width: 132px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: var(--ot-diag-green-soft);
-  border: 1px solid var(--ot-diag-green-line);
-  color: #c8e6c9;
-}
-
-.ot-diag-duration__label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  opacity: 0.8;
-}
-
-.ot-diag-duration__value {
-  font-size: 18px;
-  font-weight: 700;
-  color: #e8f5e9;
-}
-
-.ot-diag-approve {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-top: 14px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: rgba(67, 160, 71, 0.1);
-  border: 1px solid rgba(129, 199, 132, 0.28);
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.9);
-
-  input {
-    margin-top: 3px;
-    width: 18px;
-    height: 18px;
-    accent-color: var(--ot-diag-green);
-    flex-shrink: 0;
-  }
-}
-
-.ot-diag-approve__text {
-  font-size: 14px;
-  font-weight: 650;
-  color: #e8f5e9;
-}
-
-.ot-diag-approve__sub {
-  display: block;
-  margin-top: 2px;
-  font-size: 12px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.58);
 }
 
 .ot-diag-table {
