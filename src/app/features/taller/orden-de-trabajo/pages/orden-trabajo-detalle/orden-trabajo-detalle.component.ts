@@ -9,11 +9,8 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
-import { EntitySearcherComponent } from '../../../../../shared/components/entity-searcher/entity-searcher';
-import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 import { EtapaOrdenTrabajo, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
-import { CajaOutput } from '../../../../financiero/cajas/interfaces/caja.interface';
 import {
   OtStepDef,
   OtStepperHeaderComponent,
@@ -28,7 +25,6 @@ import { OtFacturadoStepComponent } from '../../components/ot-facturado-step/ot-
   selector: 'app-orden-trabajo-detalle',
   imports: [
     UiButtonComponent,
-    EntitySearcherComponent,
     OtStepperHeaderComponent,
     OtRecepcionStepComponent,
     OtDiagnosticoStepComponent,
@@ -53,17 +49,6 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly orden = signal<OrdenTrabajoOutput | null>(null);
   protected readonly isEdit = signal(false);
-  protected readonly cajaSeleccionada = signal<string | null>(null);
-  protected readonly cajas = signal<CajaOutput[]>([]);
-  protected readonly cajasAll = signal<CajaOutput[]>([]);
-  protected readonly loadingCajas = signal(false);
-  protected readonly cajaColumns: TableColumn<CajaOutput>[] = [
-    { key: 'nombre', header: 'Caja', value: (c) => c.nombre ?? '' },
-    { key: 'sector', header: 'Sector', value: (c) => c.sector?.nombre ?? '' },
-  ];
-  protected readonly cajaLabelFn = (c: CajaOutput) =>
-    `${c.nombre}${c.sector?.nombre ? ' · ' + c.sector.nombre : ''}`;
-  protected readonly cajaKeyFn = (c: CajaOutput) => String(c.id_caja);
 
   protected readonly steps: OtStepDef[] = [
     { index: 1, etapa: 'RECEPCION', label: 'Recepción', icon: 'login' },
@@ -116,7 +101,7 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
         this.aprobarEIniciarReparacion();
         break;
       case 3:
-        this.enviarACaja();
+        this.finalizarTrabajo();
         break;
       case 4:
         this.marcarFacturada();
@@ -133,7 +118,7 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
       case 2:
         return 'Aprobar e iniciar reparación';
       case 3:
-        return 'Finalizar y enviar a caja';
+        return 'Finalizar trabajo';
       case 4:
         return 'Marcar facturado';
       default:
@@ -158,9 +143,6 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
       next: (data) => {
         this.orden.set(data);
         this.loading.set(false);
-        if (data?.etapa === 'EN_PROCESO') {
-          this.cargarCajas();
-        }
       },
       error: (err) => {
         this.error.set('No se pudo cargar la orden. ' + (err?.message ?? ''));
@@ -261,7 +243,6 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
           next: (adv) => {
             this.orden.set(adv);
             this.saving.set(false);
-            this.cargarCajas();
           },
           error: (err) => {
             this.error.set(err?.message ?? 'Error al avanzar a En Proceso');
@@ -276,24 +257,19 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
     });
   }
 
-  private enviarACaja(): void {
+  private finalizarTrabajo(): void {
     const orden = this.orden();
-    const idCaja = this.cajaSeleccionada();
     if (!orden?.id_orden_trabajo) return;
-    if (!idCaja) {
-      this.error.set('Seleccioná una caja con sesión abierta para finalizar');
-      return;
-    }
 
     this.saving.set(true);
     this.error.set(null);
-    this.ordenService.enviarACaja(orden.id_orden_trabajo, idCaja).subscribe({
+    this.ordenService.cambiarEtapa(orden.id_orden_trabajo, 'FINALIZADA').subscribe({
       next: (adv) => {
         this.orden.set(adv);
         this.saving.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message ?? 'No se pudo enviar a caja');
+        this.error.set(err?.message ?? 'No se pudo finalizar el trabajo');
         this.saving.set(false);
       },
     });
@@ -313,41 +289,6 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
       error: (err) => {
         this.error.set(err?.message ?? 'No se pudo marcar como facturada');
         this.saving.set(false);
-      },
-    });
-  }
-
-  protected filtrarCajas(filter: string): void {
-    const q = (filter || '').toLowerCase();
-    if (!q) {
-      this.cajas.set(this.cajasAll());
-      return;
-    }
-    this.cajas.set(
-      this.cajasAll().filter(
-        (c) =>
-          (c.nombre || '').toLowerCase().includes(q) ||
-          (c.sector?.nombre || '').toLowerCase().includes(q)
-      )
-    );
-  }
-
-  protected onCajaSelected(caja: CajaOutput | null): void {
-    this.cajaSeleccionada.set(caja?.id_caja != null ? String(caja.id_caja) : null);
-  }
-
-  private cargarCajas(): void {
-    if (this.cajasAll().length > 0) return;
-    this.loadingCajas.set(true);
-    this.ordenService.listarCajasConSesionAbierta().subscribe({
-      next: (list) => {
-        this.cajasAll.set(list);
-        this.cajas.set(list);
-        this.loadingCajas.set(false);
-      },
-      error: (err) => {
-        this.error.set(err?.message ?? 'No se pudieron cargar las cajas abiertas');
-        this.loadingCajas.set(false);
       },
     });
   }

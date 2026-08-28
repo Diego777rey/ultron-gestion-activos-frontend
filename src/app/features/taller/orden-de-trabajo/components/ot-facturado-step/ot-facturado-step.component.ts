@@ -22,9 +22,6 @@ import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas
           <span>Estado</span><span>{{ orden().etapa }}</span>
         </li>
         <li class="ot-panel__item">
-          <span>Caja</span><span>{{ orden().caja?.nombre || '—' }}</span>
-        </li>
-        <li class="ot-panel__item">
           <span>Total cobrado</span>
           <span class="ot-total">{{ orden().diagnostico?.total_presupuesto | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</span>
         </li>
