@@ -15,7 +15,8 @@ import {
   OrdenTrabajoOutput,
   ETAPAS_ORDEN,
 } from './interfaces/orden-trabajo.interface';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ReporteService } from '../../../shared/services/reporte.service';
 
 @Component({
   selector: 'app-orden-de-trabajo',
@@ -34,9 +35,14 @@ import { Router } from '@angular/router';
 export class OrdenDeTrabajoComponent {
   private readonly ordenService = inject(OrdenTrabajoService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly reporteService = inject(ReporteService);
+
+  protected readonly esHistorial = this.route.snapshot.data['modoHistorial'] === true;
 
   protected readonly ordenes = signal<OrdenTrabajoOutput[]>([]);
   protected readonly loading = signal(false);
+  protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
 
@@ -55,16 +61,25 @@ export class OrdenDeTrabajoComponent {
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
 
-  protected readonly toolbarActions: ListToolbarAction[] = [
-    { id: 'search', label: 'Buscar' },
-    { id: 'clear', label: 'Limpiar Filtro' },
-    { id: 'add', label: '+ Nueva Orden' },
-  ];
+  protected readonly toolbarActions: ListToolbarAction[] = this.esHistorial
+    ? [
+        { id: 'search', label: 'Buscar' },
+        { id: 'clear', label: 'Limpiar Filtro' },
+        { id: 'generar', label: 'Reporte' },
+      ]
+    : [
+        { id: 'search', label: 'Buscar' },
+        { id: 'clear', label: 'Limpiar Filtro' },
+        { id: 'add', label: '+ Nueva Orden' },
+        { id: 'generar', label: 'Reporte' },
+      ];
 
-  protected readonly rowActions: MenuAction[] = [
-    { id: 'view', label: 'Ver Detalle', icon: 'visibility' },
-    { id: 'delete', label: 'Eliminar', icon: 'delete' },
-  ];
+  protected readonly rowActions: MenuAction[] = this.esHistorial
+    ? [{ id: 'view', label: 'Ver Detalle', icon: 'visibility' }]
+    : [
+        { id: 'view', label: 'Ver Detalle', icon: 'visibility' },
+        { id: 'delete', label: 'Eliminar', icon: 'delete' },
+      ];
 
   constructor() {
     this.load();
@@ -106,7 +121,22 @@ export class OrdenDeTrabajoComponent {
       case 'add':
         this.crearNuevaOrden();
         break;
+      case 'generar':
+        this.generarReporte();
+        break;
     }
+  }
+
+  protected generarReporte(): void {
+    if (this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    const tipo = this.esHistorial ? 'historial' : 'orden_trabajo';
+    this.reporteService.generarInventario(tipo, { filtro: this.search() }).subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
   }
 
   protected crearNuevaOrden(): void {

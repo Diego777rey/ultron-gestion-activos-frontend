@@ -12,6 +12,7 @@ import { ServicioService } from '../../services/servicio.service';
 import { ServicioOutput } from '../../interfaces/servicio.interface';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { ServicioFormComponent } from '../../dialogs/servicio-form/servicio-form.component';
+import { ReporteService } from '../../../../../shared/services/reporte.service';
 
 @Component({
   selector: 'app-servicios-list',
@@ -30,9 +31,11 @@ export class ServiciosListComponent {
   private readonly servicioService = inject(ServicioService);
   private readonly dialogService = inject(AppDialogService);
   private readonly router = inject(Router);
+  private readonly reporteService = inject(ReporteService);
 
   protected readonly servicios = signal<ServicioOutput[]>([]);
   protected readonly loading = signal(false);
+  protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
 
@@ -53,10 +56,12 @@ export class ServiciosListComponent {
     { id: 'search', label: 'Buscar' },
     { id: 'clear', label: 'Limpiar Filtro' },
     { id: 'add', label: '+ Adicionar' },
+    { id: 'generar', label: 'Reporte' },
   ];
 
   protected readonly rowActions: MenuAction[] = [
     { id: 'edit', label: 'Editar', icon: 'edit' },
+    { id: 'generar', label: 'Reporte', icon: 'picture_as_pdf' },
   ];
 
   constructor() {
@@ -99,7 +104,32 @@ export class ServiciosListComponent {
       case 'add':
         this.router.navigate(['/inventario/servicios/nuevo']);
         break;
+      case 'generar':
+        this.generarReporte();
+        break;
     }
+  }
+
+  protected generarReporte(): void {
+    if (this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('servicio', { filtro: this.search() }).subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
+  }
+
+  protected generarFicha(servicio: ServicioOutput): void {
+    if (this.generando() || !servicio.id_servicio) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('servicio', { id: servicio.id_servicio }).subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
   }
 
   protected openEditDialog(servicio: ServicioOutput): void {
@@ -118,6 +148,8 @@ export class ServiciosListComponent {
   protected onRowAction(actionId: string, servicio: ServicioOutput): void {
     if (actionId === 'edit') {
       this.openEditDialog(servicio);
+    } else if (actionId === 'generar') {
+      this.generarFicha(servicio);
     }
   }
 

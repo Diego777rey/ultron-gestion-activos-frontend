@@ -7,6 +7,7 @@ import { AutofocusDirective } from '../../../../../shared/directives/autofocus.d
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { CategoriaServicioService, CategoriaServicioInput } from '../../services/categoria-servicio.service';
 import { CategoriaServicioOutput } from '../../interfaces/servicio.interface';
+import { ReporteService } from '../../../../../shared/services/reporte.service';
 
 interface StepDef {
   index: number;
@@ -27,6 +28,7 @@ export class CategoriaServicioStepperComponent implements OnInit {
   private readonly categoriaService = inject(CategoriaServicioService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly reporteService = inject(ReporteService);
 
   protected readonly steps: StepDef[] = [
     { index: 1, label: 'Categoría', icon: 'category' },
@@ -38,6 +40,7 @@ export class CategoriaServicioStepperComponent implements OnInit {
   protected readonly savingSub = signal(false);
   protected readonly loadingSubs = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly generando = signal(false);
 
   /** Categoría padre ya creada/editada. */
   protected readonly categoria = signal<CategoriaServicioOutput | null>(null);
@@ -191,5 +194,16 @@ export class CategoriaServicioStepperComponent implements OnInit {
 
   protected cancelar(): void {
     this.router.navigate(['/inventario/servicios/categorias']);
+  }
+
+  protected generarReporte(): void {
+    if (this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('servicio').subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
   }
 }

@@ -13,6 +13,7 @@ import { ProductoOutput } from '../../interfaces/producto.interface';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { ProductoFormComponent } from '../../dialogs/producto-form/producto-form.component';
 import { StockSectoresDialogComponent } from '../../dialogs/stock-sectores-dialog/stock-sectores-dialog.component';
+import { ReporteService } from '../../../../../shared/services/reporte.service';
 
 @Component({
   selector: 'app-productos-list',
@@ -31,9 +32,11 @@ export class ProductosListComponent {
   private readonly productoService = inject(ProductoService);
   private readonly dialogService = inject(AppDialogService);
   private readonly router = inject(Router);
+  private readonly reporteService = inject(ReporteService);
 
   protected readonly productos = signal<ProductoOutput[]>([]);
   protected readonly loading = signal(false);
+  protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
 
@@ -54,11 +57,13 @@ export class ProductosListComponent {
     { id: 'search', label: 'Buscar' },
     { id: 'clear', label: 'Limpiar Filtro' },
     { id: 'add', label: '+ Adicionar' },
+    { id: 'generar', label: 'Reporte' },
   ];
 
   protected readonly rowActions: MenuAction[] = [
     { id: 'edit', label: 'Editar', icon: 'edit' },
     { id: 'stock', label: 'Ver Stock', icon: 'inventory_2' },
+    { id: 'generar', label: 'Reporte', icon: 'picture_as_pdf' },
   ];
 
   constructor() {
@@ -117,7 +122,21 @@ export class ProductosListComponent {
       case 'add':
         this.router.navigate(['/inventario/productos/nuevo']);
         break;
+      case 'generar':
+        this.generarReporte();
+        break;
     }
+  }
+
+  protected generarReporte(): void {
+    if (this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('producto', { filtro: this.search() }).subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
   }
 
   protected openEditDialog(producto: ProductoOutput): void {
@@ -138,7 +157,20 @@ export class ProductosListComponent {
       this.openEditDialog(producto);
     } else if (actionId === 'stock') {
       this.openStockDialog(producto);
+    } else if (actionId === 'generar') {
+      this.generarFicha(producto);
     }
+  }
+
+  protected generarFicha(producto: ProductoOutput): void {
+    if (this.generando() || !producto.id_producto) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('producto', { id: producto.id_producto }).subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
   }
 
   protected openStockDialog(producto: ProductoOutput): void {

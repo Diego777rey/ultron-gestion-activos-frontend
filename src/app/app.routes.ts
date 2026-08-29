@@ -72,6 +72,14 @@ export const routes: Routes = [
         data: { tabTitle: 'Órdenes de Trabajo' },
       },
       {
+        path: 'taller/historial',
+        loadComponent: () =>
+          import('./features/taller/orden-de-trabajo/orden-de-trabajo.component').then(
+            (m) => m.OrdenDeTrabajoComponent
+          ),
+        data: { tabTitle: 'Historial', modoHistorial: true },
+      },
+      {
         path: 'taller/operaciones/transferencia',
         loadChildren: () =>
           import('./features/taller/operaciones/transferencia/transferencia.routes').then(

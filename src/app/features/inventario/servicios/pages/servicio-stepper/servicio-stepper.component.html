@@ -239,6 +239,11 @@
 
     <div class="stepper-footer__right">
       <app-ui-button
+        label="Reporte"
+        [loading]="generando()"
+        (clicked)="generarReporte()"
+      />
+      <app-ui-button
         [label]="currentStep() === 3 ? 'Registrar servicio' : 'Siguiente'"
         [icon]="currentStep() === 3 ? 'save' : 'arrow_forward'"
         variant="primary"

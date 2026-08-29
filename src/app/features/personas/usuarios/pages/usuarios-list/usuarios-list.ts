@@ -16,6 +16,7 @@ import { UsuarioOutput } from '../../interfaces/usuario.interface';
 import { UsuarioFormComponent } from '../../dialogs/usuario-form/usuario-form';
 import { UsuarioRolesPanelComponent } from '../../components/usuario-roles-panel/usuario-roles-panel';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
+import { ReporteService } from '../../../../../shared/services/reporte.service';
 
 @Component({
   selector: 'app-usuarios-list',
@@ -33,9 +34,11 @@ import { AppDialogService } from '../../../../../shared/services/app-dialog.serv
 })
 export class UsuariosListComponent {
   private readonly usuarioService = inject(UsuarioService);
+  private readonly reporteService = inject(ReporteService);
 
   protected readonly usuarios = signal<UsuarioOutput[]>([]);
   protected readonly loading = signal(false);
+  protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
   
@@ -64,6 +67,7 @@ export class UsuariosListComponent {
     { id: 'search', label: 'Buscar' },
     { id: 'clear', label: 'Limpiar Filtro' },
     { id: 'add', label: '+ Adicionar' },
+    { id: 'generar', label: 'Reporte' },
   ];
 
   protected readonly rowActions: MenuAction[] = [
@@ -110,7 +114,21 @@ export class UsuariosListComponent {
       case 'add':
         this.openNewDialog();
         break;
+      case 'generar':
+        this.generarReporte();
+        break;
     }
+  }
+
+  protected generarReporte(): void {
+    if (this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('usuario', { filtro: this.search() }).subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
   }
 
   private readonly dialogService = inject(AppDialogService);

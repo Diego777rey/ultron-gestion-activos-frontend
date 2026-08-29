@@ -1,7 +1,8 @@
 <app-generic-list [columns]="columns" [data]="ordenes()" [loading]="loading()" [error]="error()"
   [total]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[15, 25, 50, 100]"
   searchLabel="Nº orden, etapa, cliente, chapa" [searchValue]="search()" (searchValueChange)="search.set($event)"
-  [toolbarActions]="toolbarActions" emptyMessage="No hay órdenes de trabajo que coincidan con la búsqueda"
+  [toolbarActions]="toolbarActions"
+  [emptyMessage]="esHistorial ? 'No hay órdenes en el historial que coincidan con la búsqueda' : 'No hay órdenes de trabajo que coincidan con la búsqueda'"
   [trackBy]="trackById" (pageChange)="onPageChange($event)" (retry)="load()"
   (actionClicked)="onToolbarAction($event)" (searchSubmit)="pageIndex.set(0); load()">
 

@@ -5,4 +5,5 @@ export interface ListToolbarAction {
   id: string;
   label: string;
   variant?: ButtonVariant;
+  icon?: string;
 }

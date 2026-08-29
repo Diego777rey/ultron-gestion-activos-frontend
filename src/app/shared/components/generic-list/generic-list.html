@@ -23,6 +23,7 @@
             <app-ui-button
               [label]="action.label"
               [variant]="action.variant ?? 'primary'"
+              [icon]="action.icon ?? ''"
               size="sm"
               (clicked)="onActionClick(action.id)"
             />

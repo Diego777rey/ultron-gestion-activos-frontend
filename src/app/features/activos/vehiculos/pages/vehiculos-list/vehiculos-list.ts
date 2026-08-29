@@ -14,6 +14,7 @@ import { VehiculoService } from '../../services/vehiculo.service';
 import { VehiculoOutput } from '../../interfaces/vehiculo.interface';
 import { VehiculoFormComponent } from '../../dialogs/vehiculo-form/vehiculo-form';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
+import { ReporteService } from '../../../../../shared/services/reporte.service';
 
 @Component({
   selector: 'app-vehiculos-list',
@@ -30,9 +31,11 @@ import { AppDialogService } from '../../../../../shared/services/app-dialog.serv
 })
 export class VehiculosListComponent {
   private readonly vehiculoService = inject(VehiculoService);
+  private readonly reporteService = inject(ReporteService);
 
   protected readonly vehiculos = signal<VehiculoOutput[]>([]);
   protected readonly loading = signal(false);
+  protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
 
@@ -54,6 +57,7 @@ export class VehiculosListComponent {
     { id: 'search', label: 'Buscar' },
     { id: 'clear', label: 'Limpiar Filtro' },
     { id: 'add', label: '+ Adicionar' },
+    { id: 'generar', label: 'Reporte' },
   ];
 
   protected readonly rowActions: MenuAction[] = [
@@ -100,7 +104,21 @@ export class VehiculosListComponent {
       case 'add':
         this.openNewDialog();
         break;
+      case 'generar':
+        this.generarReporte();
+        break;
     }
+  }
+
+  protected generarReporte(): void {
+    if (this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService.generarInventario('vehiculo', { filtro: this.search() }).subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
   }
 
   private readonly dialogService = inject(AppDialogService);
