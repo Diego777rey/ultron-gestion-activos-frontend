@@ -154,6 +154,9 @@ export class ZonaFormComponent {
         title: 'Nuevo Sector',
         subtitle: 'Registrá una ubicación física (depósito, salón de ventas, etc.)',
         maxWidth: '640px',
+        inputs: {
+          onSaved: () => this.fetchSectoresPage(0, this.sectoresPageSize(), ''),
+        },
       })
       .subscribe((saved) => {
         if (saved) {

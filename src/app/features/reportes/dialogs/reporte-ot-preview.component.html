@@ -1,0 +1,162 @@
+<div class="ot-preview">
+  <div class="ot-preview__toolbar">
+    <p class="ot-preview__hint">
+      @if (id() != null) {
+        Vista previa de la orden seleccionada. El PDF incluye todos los detalles.
+      } @else {
+        Vista previa de las órdenes listadas. El PDF descarga el detalle de todas las que coincidan con el filtro.
+      }
+    </p>
+    <app-ui-button
+      label="Descargar PDF"
+      icon="picture_as_pdf"
+      [loading]="generando()"
+      [disabled]="!ordenes().length"
+      (clicked)="descargarPdf()"
+    />
+  </div>
+
+  @for (orden of ordenes(); track trackOrden(orden)) {
+    @let etapa = etapaInfo(orden.etapa);
+    @let estado = condiciones(orden);
+    <article class="ot-doc">
+      <header class="ot-doc__head">
+        <div>
+          <p class="ot-doc__kicker">Orden de trabajo</p>
+          <h3 class="ot-doc__numero">{{ orden.numero_orden | defaultEmpty }}</h3>
+        </div>
+        <span class="ot-etapa-badge" [style.background]="etapa.color">
+          <span class="material-icons ot-etapa-badge__icon">{{ etapa.icono }}</span>
+          {{ etapa.label }}
+        </span>
+      </header>
+
+      <section class="ot-doc__grid">
+        <div>
+          <span class="ot-doc__label">Cliente</span>
+          <strong>{{ formatCliente(orden) }}</strong>
+          <small>{{ formatDocumento(orden) }}</small>
+        </div>
+        <div>
+          <span class="ot-doc__label">Vehículo</span>
+          <strong>{{ formatVehiculo(orden) }}</strong>
+          <small>{{ orden.vehiculo?.tipo_vehiculo | defaultEmpty }}</small>
+        </div>
+        <div>
+          <span class="ot-doc__label">Sector</span>
+          <strong>{{ orden.sector?.nombre | defaultEmpty }}</strong>
+        </div>
+        <div>
+          <span class="ot-doc__label">Mecánico</span>
+          <strong>{{ formatPersona(orden.mecanico?.persona) }}</strong>
+        </div>
+        <div>
+          <span class="ot-doc__label">Responsable</span>
+          <strong>{{ orden.responsable?.username | defaultEmpty }}</strong>
+        </div>
+        <div>
+          <span class="ot-doc__label">Fecha</span>
+          <strong>{{ formatFechaHora(orden.fecha_creacion) }}</strong>
+        </div>
+      </section>
+
+      <section class="ot-doc__block">
+        <h4>Recepción</h4>
+        <p>{{ orden.recepcion?.descripcion_falla | defaultEmpty }}</p>
+      </section>
+
+      <section class="ot-doc__block">
+        <h4>Estado del vehículo</h4>
+        @if (estado.length || orden.estado_vehiculo?.kilometraje || orden.estado_vehiculo?.nivel_combustible) {
+          <div class="ot-doc__chips">
+            @for (item of estado; track item) {
+              <span class="ot-chip">{{ item }}</span>
+            }
+            @if (orden.estado_vehiculo?.kilometraje != null) {
+              <span class="ot-chip">Km {{ orden.estado_vehiculo?.kilometraje }}</span>
+            }
+            @if (orden.estado_vehiculo?.nivel_combustible) {
+              <span class="ot-chip">Combustible {{ orden.estado_vehiculo?.nivel_combustible }}</span>
+            }
+          </div>
+          @if (orden.estado_vehiculo?.observaciones_estado) {
+            <p>{{ orden.estado_vehiculo?.observaciones_estado }}</p>
+          }
+        } @else {
+          <p class="ot-doc__empty">Sin observaciones de ingreso.</p>
+        }
+      </section>
+
+      <section class="ot-doc__block">
+        <h4>Diagnóstico</h4>
+        <div class="ot-doc__grid ot-doc__grid--3">
+          <div>
+            <span class="ot-doc__label">Inicio estimado</span>
+            <strong>{{ formatFecha(orden.diagnostico?.fecha_inicio_estimada) }}</strong>
+          </div>
+          <div>
+            <span class="ot-doc__label">Fin estimado</span>
+            <strong>{{ formatFecha(orden.diagnostico?.fecha_fin_estimada) }}</strong>
+          </div>
+          <div>
+            <span class="ot-doc__label">Presupuesto</span>
+            <strong>{{ formatMoneda(orden.diagnostico?.total_presupuesto) }}</strong>
+            <small>{{ orden.diagnostico?.presupuesto_aprobado ? 'Aprobado' : 'Pendiente' }}</small>
+          </div>
+        </div>
+        <p>{{ orden.diagnostico?.observaciones | defaultEmpty }}</p>
+      </section>
+
+      <section class="ot-doc__block">
+        <h4>Hallazgos</h4>
+        @if (orden.hallazgos?.length) {
+          <ul class="ot-doc__list">
+            @for (item of orden.hallazgos ?? []; track item.id_hallazgo) {
+              <li>{{ hallazgoTexto(item) }}</li>
+            }
+          </ul>
+        } @else {
+          <p class="ot-doc__empty">Sin hallazgos registrados.</p>
+        }
+      </section>
+
+      <section class="ot-doc__block">
+        <h4>Productos y servicios</h4>
+        @if (orden.detalles?.length) {
+          <table class="ot-doc__table">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Ítem</th>
+                <th>Cant.</th>
+                <th>Precio</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (detalle of orden.detalles ?? []; track trackDetalle(detalle)) {
+                <tr>
+                  <td>{{ detalle.tipo | defaultEmpty }}</td>
+                  <td>{{ nombreLinea(detalle) }}</td>
+                  <td>{{ detalle.cantidad ?? '—' }}</td>
+                  <td>{{ formatMoneda(detalle.precio_unitario) }}</td>
+                  <td>{{ formatMoneda(detalle.subtotal) }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4">Total líneas</td>
+                <td>{{ formatMoneda(totalLineas(orden)) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        } @else {
+          <p class="ot-doc__empty">Sin productos ni servicios cargados.</p>
+        }
+      </section>
+    </article>
+  } @empty {
+    <p class="ot-doc__empty">No hay órdenes para previsualizar.</p>
+  }
+</div>

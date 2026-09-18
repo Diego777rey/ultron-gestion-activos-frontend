@@ -1,0 +1,108 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="ordenes()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Nº orden, etapa, cliente, chapa"
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="No hay órdenes de trabajo que coincidan con la búsqueda"
+  [trackBy]="trackById"
+  [expandTemplate]="detalleTpl"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()"
+>
+  <ng-template appTableCell="numero_orden" [appTableCellFrom]="ordenes()" let-orden>
+    <span class="ot-numero">{{ orden.numero_orden | defaultEmpty }}</span>
+  </ng-template>
+
+  <ng-template appTableCell="etapa" [appTableCellFrom]="ordenes()" let-orden>
+    <span class="ot-etapa-badge" [style.background]="getEtapaInfo(orden.etapa).color">
+      <span class="material-icons ot-etapa-badge__icon">{{ getEtapaInfo(orden.etapa).icono }}</span>
+      {{ getEtapaInfo(orden.etapa).label }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableCell="cliente" [appTableCellFrom]="ordenes()" let-orden>
+    {{ formatCliente(orden) }}
+  </ng-template>
+
+  <ng-template appTableCell="vehiculo" [appTableCellFrom]="ordenes()" let-orden>
+    {{ formatVehiculo(orden) }}
+  </ng-template>
+
+  <ng-template appTableCell="fecha_creacion" [appTableCellFrom]="ordenes()" let-orden>
+    {{ formatFecha(orden.fecha_creacion) }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="ordenes()" let-orden>
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, orden)" />
+  </ng-template>
+</app-generic-list>
+
+<ng-template #detalleTpl let-orden>
+  <section class="ot-expand">
+    <header class="ot-expand__header">
+      <span class="material-icons" aria-hidden="true">assignment</span>
+      <h4 class="ot-expand__title">Información principal</h4>
+      <app-ui-button
+        label="Vista previa"
+        icon="visibility"
+        variant="outline"
+        size="sm"
+        (clicked)="abrirVistaPrevia([orden], search(), ordenId(orden))"
+      />
+    </header>
+
+    <div class="ot-expand__grid">
+      <div>
+        <span class="ot-expand__label">Sector</span>
+        <strong>{{ orden.sector?.nombre | defaultEmpty }}</strong>
+      </div>
+      <div>
+        <span class="ot-expand__label">Mecánico</span>
+        <strong>{{ formatPersona(orden.mecanico?.persona) }}</strong>
+      </div>
+      <div>
+        <span class="ot-expand__label">Presupuesto</span>
+        <strong>{{ formatMoneda(orden.diagnostico?.total_presupuesto) }}</strong>
+      </div>
+      <div class="ot-expand__falla">
+        <span class="ot-expand__label">Falla</span>
+        <strong>{{ orden.recepcion?.descripcion_falla | defaultEmpty }}</strong>
+      </div>
+    </div>
+
+    @if (orden.detalles?.length) {
+      <table class="ot-expand__table">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Ítem</th>
+            <th>Cant.</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (detalle of orden.detalles ?? []; track trackDetalle(detalle)) {
+            <tr>
+              <td>{{ detalle.tipo | defaultEmpty }}</td>
+              <td>{{ nombreLinea(detalle) }}</td>
+              <td>{{ detalle.cantidad ?? '—' }}</td>
+              <td>{{ formatMoneda(detalle.subtotal) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p class="ot-expand__empty">Esta orden no tiene productos ni servicios cargados.</p>
+    }
+  </section>
+</ng-template>

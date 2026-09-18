@@ -99,6 +99,9 @@
             (itemChange)="onSectorSelected($event)"
             [backendPagination]="true"
             label="Buscar sector..."
+            [allowAdd]="true"
+            addLabel="Nuevo sector"
+            (addClicked)="onAddSector()"
           />
           @if (form.controls.id_sector.touched && form.controls.id_sector.invalid) {
             <span class="ot-field__error">Debes seleccionar un sector</span>
