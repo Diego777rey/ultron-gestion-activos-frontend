@@ -1,6 +1,6 @@
 import { ButtonVariant } from '../components/ui-button/ui-button';
 
-/** Acción estándar de la barra lateral del listado genérico (Buscar, Limpiar, Adicionar, etc.). */
+/** Acción estándar de la barra lateral del listado genérico (Buscar, Limpiar, Agregar, etc.). */
 export interface ListToolbarAction {
   id: string;
   label: string;

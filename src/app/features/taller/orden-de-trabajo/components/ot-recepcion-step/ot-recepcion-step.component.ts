@@ -26,6 +26,8 @@ import { FuncionarioService } from '../../../../personas/funcionarios/services/f
 import { FuncionarioOutput } from '../../../../personas/funcionarios/interfaces/funcionario.interface';
 import { SectorService } from '../../../../sectores/services/sector.service';
 import { SectorOutput } from '../../../../sectores/interfaces/sector.interface';
+import { SectorFormComponent } from '../../../../sectores/dialogs/sector-form/sector-form.component';
+import { UltimoSectorStore } from '../../../../sectores/services/ultimo-sector.store';
 import { UsuarioService } from '../../../../personas/usuarios/services/usuario.service';
 import { UsuarioOutput } from '../../../../personas/usuarios/interfaces/usuario.interface';
 import { OrdenTrabajoInput, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
@@ -63,6 +65,7 @@ export class OtRecepcionStepComponent implements OnInit {
   private readonly vehiculoService = inject(VehiculoService);
   private readonly funcionarioService = inject(FuncionarioService);
   private readonly sectorService = inject(SectorService);
+  private readonly ultimoSector = inject(UltimoSectorStore);
   private readonly usuarioService = inject(UsuarioService);
   private readonly ordenService = inject(OrdenTrabajoService);
 
@@ -548,12 +551,30 @@ export class OtRecepcionStepComponent implements OnInit {
     this.loadingSectores.set(true);
     this.sectorService.findPaginated(page, size, filter).subscribe({
       next: (res) => {
-        this.sectores.set(res.content);
+        const last = this.ultimoSector.lastCreated();
+        const list = last
+          ? this.ensureInList(res.content, last, (s) => s.id_sector)
+          : res.content;
+        this.sectores.set(list);
         this.sectoresTotal.set(res.pageInfo.totalElements);
         this.loadingSectores.set(false);
       },
       error: () => this.loadingSectores.set(false),
     });
+  }
+
+  protected onAddSector(): void {
+    this.dialogService
+      .openForm(SectorFormComponent, {
+        title: 'Nuevo Sector',
+        subtitle: 'Registrá una ubicación física (depósito, salón de ventas, etc.)',
+        maxWidth: '640px',
+      })
+      .subscribe((saved) => {
+        if (saved) {
+          this.fetchSectores(0, 10, '');
+        }
+      });
   }
 
   protected onSectorSelected(sector: SectorOutput | null): void {

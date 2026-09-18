@@ -88,13 +88,9 @@
     cursor: pointer;
   }
 
-  &:focus ~ .field__label,
-  &:not(:placeholder-shown) ~ .field__label,
-  &[type="date"] ~ .field__label,
-  select.field__input ~ .field__label {
-    top: 0;
-    font-size: 11px;
-    color: var(--primary-color);
+  &:not(:placeholder-shown) ~ .field__label {
+    opacity: 0;
+    visibility: hidden;
   }
 }
 

@@ -131,6 +131,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reportes',
+        loadChildren: () =>
+          import('./features/reportes/reportes.routes').then(
+            (m) => m.REPORTES_ROUTES
+          ),
+        data: { tabTitle: 'Reporte' },
+      },
+      {
         path: '',
         redirectTo: 'pantalla-principal',
         pathMatch: 'full',

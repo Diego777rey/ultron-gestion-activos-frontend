@@ -94,13 +94,9 @@
     cursor: pointer;
   }
 
-  &:focus ~ .field__label,
-  &:not(:placeholder-shown) ~ .field__label,
-  &[type="date"] ~ .field__label,
-  select.field__input ~ .field__label {
-    top: 0;
-    font-size: 11px;
-    color: var(--primary-color);
+  &:not(:placeholder-shown) ~ .field__label {
+    opacity: 0;
+    visibility: hidden;
   }
 }
 
@@ -118,9 +114,9 @@
     top: 8px; // Adjusted since it's now inside the wrapper which doesn't have the 16px top padding
   }
 
-  .field__input:focus ~ .field__label,
   .field__input:not(:placeholder-shown) ~ .field__label {
-    top: -16px;
+    opacity: 0;
+    visibility: hidden;
   }
 }
 

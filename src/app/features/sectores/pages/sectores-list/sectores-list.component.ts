@@ -46,7 +46,7 @@ export class SectoresListComponent {
   protected readonly toolbarActions: ListToolbarAction[] = [
     { id: 'search', label: 'Buscar' },
     { id: 'clear', label: 'Limpiar Filtro' },
-    { id: 'add', label: '+ Adicionar' },
+    { id: 'add', label: '+ Agregar' },
   ];
 
   protected readonly rowActions: MenuAction[] = [
@@ -103,6 +103,7 @@ export class SectoresListComponent {
         title: 'Nuevo Sector',
         subtitle: 'Registrá una ubicación física (depósito, salón de ventas, etc.)',
         maxWidth: '640px',
+        inputs: { onSaved: () => this.load() },
       })
       .subscribe((saved) => {
         if (saved) {

@@ -13,6 +13,7 @@ export type TipoReporteInventario =
   | 'transferencia'
   | 'solicitud_repuesto'
   | 'orden_trabajo'
+  | 'orden_trabajo_detalle'
   | 'historial'
   | 'vehiculo';
 

@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 /**
  * Contenedor genérico de encabezado de página.
  * Muestra título + subtítulo a la izquierda y proyecta acciones a la derecha
- * (botones de adicionar, generar PDF, etc.) mediante `<ng-content>`.
+ * (botones de agregar, generar PDF, etc.) mediante `<ng-content>`.
  * Pensado para colocarse arriba de cualquier tabla/listado del sistema.
  */
 @Component({

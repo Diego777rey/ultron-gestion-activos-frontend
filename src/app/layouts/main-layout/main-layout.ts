@@ -17,7 +17,6 @@ import { TabService } from '../../shared/services/tab.service';
     <div class="layout-body">
       <app-sidebar 
         [items]="menuItems" 
-        userName="Diego Paulinho Amarilla Mercado"
         [isExpanded]="sidebarOpen()"
         (isExpandedChange)="sidebarOpen.set($event)"
       ></app-sidebar>
@@ -115,7 +114,18 @@ export class MainLayoutComponent implements OnInit {
         { label: 'Sectores', icon: 'grid_view', route: '/sectores' },
         // { label: 'Zonas', icon: 'place', route: '/sectores/zonas' },
       ]
-    }
+    },
+    {
+      label: 'Reporte',
+      icon: 'summarize',
+      children: [
+        {
+          label: 'Detalle de orden de trabajo',
+          icon: 'assignment',
+          route: '/reportes/orden-de-trabajo',
+        },
+      ],
+    },
   ];
 
   ngOnInit(): void {
@@ -160,6 +170,7 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('orden-de-trabajo')) return 'Orden de Trabajo';
     if (url.includes('taller/historial')) return 'Historial';
     if (url.includes('taller/calendario')) return 'Calendario';
+    if (url.includes('reportes/orden-de-trabajo')) return 'Detalle de orden de trabajo';
     return 'Pantalla';
   }
 

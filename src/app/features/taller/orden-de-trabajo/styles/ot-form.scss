@@ -219,14 +219,9 @@
     box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.18);
   }
 
-  &:focus ~ .ot-field__label,
   &:not(:placeholder-shown) ~ .ot-field__label {
-    top: -7px;
-    left: 8px;
-    font-size: 11px;
-    padding: 0 4px;
-    background: #2a3140;
-    color: var(--primary-color);
+    opacity: 0;
+    visibility: hidden;
   }
 }
 

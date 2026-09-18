@@ -256,11 +256,9 @@
     border-bottom: 2px solid var(--primary-color);
   }
 
-  &:focus ~ .field__label,
   &:not(:placeholder-shown) ~ .field__label {
-    top: 0;
-    font-size: 11px;
-    color: var(--primary-color);
+    opacity: 0;
+    visibility: hidden;
   }
 
   &:disabled {

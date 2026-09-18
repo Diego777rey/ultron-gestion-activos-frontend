@@ -50,7 +50,7 @@ export class MaletinesPageComponent {
   protected readonly toolbarActions: ListToolbarAction[] = [
     { id: 'search', label: 'Buscar' },
     { id: 'clear', label: 'Limpiar Filtro' },
-    { id: 'add', label: '+ Adicionar' },
+    { id: 'add', label: '+ Agregar' },
   ];
 
   protected readonly rowActions: MenuAction[] = [
