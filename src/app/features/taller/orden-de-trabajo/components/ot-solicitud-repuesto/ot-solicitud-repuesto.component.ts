@@ -184,22 +184,4 @@ export class OtSolicitudRepuestoComponent implements OnInit {
       },
     });
   }
-
-  protected aprobar(sol: SolicitudRepuestoOutput): void {
-    if (!sol.id_solicitud_repuesto) return;
-    this.solicitudService.aprobar(sol.id_solicitud_repuesto).subscribe({
-      next: () => this.cargar(),
-      error: (err) => this.errorChange.emit(err?.message ?? 'No se pudo aprobar'),
-    });
-  }
-
-  protected rechazar(sol: SolicitudRepuestoOutput): void {
-    if (!sol.id_solicitud_repuesto) return;
-    const motivo = prompt('Motivo del rechazo:');
-    if (!motivo?.trim()) return;
-    this.solicitudService.rechazar(sol.id_solicitud_repuesto, motivo.trim()).subscribe({
-      next: () => this.cargar(),
-      error: (err) => this.errorChange.emit(err?.message ?? 'No se pudo rechazar'),
-    });
-  }
 }

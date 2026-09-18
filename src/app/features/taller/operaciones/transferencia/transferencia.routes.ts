@@ -22,16 +22,10 @@ export const TRANSFERENCIA_ROUTES: Routes = [
   {
     path: 'solicitudes',
     loadComponent: () =>
-      import('./pages/operacion-placeholder/operacion-placeholder.component').then(
-        (m) => m.OperacionPlaceholderComponent
+      import('./pages/solicitudes-repuesto-list/solicitudes-repuesto-list.component').then(
+        (m) => m.SolicitudesRepuestoListComponent
       ),
-    data: {
-      tabTitle: 'Solicitudes de repuestos',
-      title: 'Solicitudes de repuestos',
-      subtitle: 'Gestión de pedidos de repuestos entre sectores',
-      icon: 'request_quote',
-      reporteTipo: 'solicitud_repuesto',
-    },
+    data: { tabTitle: 'Solicitudes de repuestos' },
   },
   {
     path: ':id',

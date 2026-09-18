@@ -1,0 +1,94 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="solicitudes()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Buscar por OT, sector o estado..."
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="No hay solicitudes de repuestos registradas"
+  [trackBy]="trackById"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()"
+>
+  <ng-template appTableCell="fecha" [appTableCellFrom]="solicitudes()" let-item>
+    {{ item.fecha | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="numero_orden" [appTableCellFrom]="solicitudes()" let-item>
+    @if (item.id_orden_trabajo) {
+      <button type="button" class="link-btn" (click)="openOt(item)">
+        {{ item.numero_orden || ('OT #' + item.id_orden_trabajo) }}
+      </button>
+    } @else {
+      {{ item.numero_orden | defaultEmpty }}
+    }
+  </ng-template>
+
+  <ng-template appTableCell="sector_origen" [appTableCellFrom]="solicitudes()" let-item>
+    {{ item.sector_origen?.nombre | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="sector_destino" [appTableCellFrom]="solicitudes()" let-item>
+    {{ item.sector_destino?.nombre | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="productos" [appTableCellFrom]="solicitudes()" let-item>
+    <div class="productos-list">
+      @for (d of item.detalles ?? []; track d.id_detalle ?? d.id_producto) {
+        <div class="producto-item">
+          @if (d.codigo_producto) {
+            <span class="producto-codigo">{{ d.codigo_producto }}</span>
+          }
+          <span class="producto-nombre">{{ d.nombre_producto }}</span>
+          <span class="producto-cantidad">({{ d.cantidad }})</span>
+        </div>
+      }
+      @if (!item.detalles?.length) {
+        <span class="text-muted">—</span>
+      }
+    </div>
+  </ng-template>
+
+  <ng-template appTableCell="estado" [appTableCellFrom]="solicitudes()" let-item>
+    <span
+      class="estado-pill"
+      [class.estado-pill--pendiente]="item.estado === 'PENDIENTE'"
+      [class.estado-pill--aprobada]="item.estado === 'APROBADA'"
+      [class.estado-pill--rechazada]="item.estado === 'RECHAZADA'"
+    >
+      {{ estadoLabel(item.estado) | defaultEmpty }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableCell="transferencia" [appTableCellFrom]="solicitudes()" let-item>
+    @if (item.id_transferencia) {
+      <button type="button" class="link-btn" (click)="openTransferencia(item)">
+        {{ item.numero_transferencia || ('TRF #' + item.id_transferencia) }}
+      </button>
+    } @else {
+      <span class="text-muted">—</span>
+    }
+  </ng-template>
+
+  <ng-template appTableCell="observacion" [appTableCellFrom]="solicitudes()" let-item>
+    @if (item.estado === 'RECHAZADA' && item.motivo_rechazo) {
+      <span class="motivo-rechazo" [title]="item.motivo_rechazo">
+        Rechazo: {{ item.motivo_rechazo }}
+      </span>
+    } @else {
+      {{ item.observacion | defaultEmpty }}
+    }
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="solicitudes()" let-item>
+    <app-action-menu [actions]="rowActionsFor(item)" (actionSelected)="onRowAction($event, item)" />
+  </ng-template>
+</app-generic-list>

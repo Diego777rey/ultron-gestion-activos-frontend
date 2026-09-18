@@ -1,7 +1,9 @@
 <section class="ot-section solicitud-block">
   <h3 class="ot-section-title">Solicitud de repuesto</h3>
   <p class="ot-hint">
-    Pedí productos desde otro sector. Si el repuesto no estaba en el diagnóstico, se suma solo al presupuesto.
+    Pedí productos desde otro sector. La aprobación se hace en Operaciones → Solicitudes de
+    repuestos; al aprobar se crea la transferencia. Si el repuesto no estaba en el diagnóstico, se
+    suma solo al presupuesto.
   </p>
 
   @if (editable()) {
@@ -110,9 +112,6 @@
             <th>Estado</th>
             <th>Transferencia</th>
             <th>Productos</th>
-            @if (editable()) {
-              <th style="width: 180px;"></th>
-            }
           </tr>
         </thead>
         <tbody>
@@ -136,16 +135,6 @@
                   <div>{{ d.codigo_producto }} {{ d.nombre_producto }} ({{ d.cantidad }})</div>
                 }
               </td>
-              @if (editable()) {
-                <td>
-                  @if (sol.estado === 'PENDIENTE') {
-                    <div class="ot-actions" style="margin-top: 0;">
-                      <app-ui-button label="Aprobar" icon="check" variant="outline" (clicked)="aprobar(sol)" />
-                      <app-ui-button label="Rechazar" icon="close" variant="ghost" (clicked)="rechazar(sol)" />
-                    </div>
-                  }
-                </td>
-              }
             </tr>
           }
         </tbody>
