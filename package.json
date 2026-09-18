@@ -1,6 +1,6 @@
 {
   "name": "ultron-gestion-activos-frontend",
-  "version": "1.39.0",
+  "version": "1.40.0",
   "main": "electron/dist/main.js",
   "description": "Ultron Gestión de Activos — aplicación de escritorio para talleres",
   "author": "Ultron Sistemas",
