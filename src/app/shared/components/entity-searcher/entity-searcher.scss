@@ -54,11 +54,9 @@
     opacity: 0.6;
   }
 
-  &:focus ~ .field__label,
   &:not(:placeholder-shown) ~ .field__label {
-    top: -16px;
-    font-size: 11px;
-    color: var(--primary-color);
+    opacity: 0;
+    visibility: hidden;
   }
 }
 
@@ -141,11 +139,9 @@
     border-bottom-color: var(--primary-color);
   }
 
-  &:focus ~ .search-field__label,
   &:not(:placeholder-shown) ~ .search-field__label {
-    top: -12px;
-    font-size: 11px;
-    color: var(--text-muted);
+    opacity: 0;
+    visibility: hidden;
   }
 }
 
