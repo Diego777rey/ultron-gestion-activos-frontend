@@ -49,10 +49,10 @@ export class EntitySearcherComponent<T> {
   readonly loading = input<boolean>(false);
   readonly modalWidth = input<string>('900px');
 
-  // Botón "Adicionar": permite crear la entidad (cliente, funcionario, etc.)
+  // Botón "Agregar": permite crear la entidad (cliente, funcionario, etc.)
   // desde el propio buscador cuando no se encuentra por su documento.
   readonly allowAdd = input<boolean>(false);
-  readonly addLabel = input<string>('Adicionar');
+  readonly addLabel = input<string>('Agregar');
 
   readonly valueChange = output<any>();
   readonly itemChange = output<T | null>();

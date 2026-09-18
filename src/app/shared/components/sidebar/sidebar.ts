@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, output, signal, inject, OnInit, DestroyRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, input, output, signal, inject, OnInit, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
@@ -23,7 +23,10 @@ export class SidebarComponent implements OnInit {
   private readonly authService = inject(AuthService);
 
   items = input<MenuItem[]>([]);
-  userName = input<string>('Diego Paulinho Amarilla Mercado');
+  userName = input<string>('');
+  protected readonly displayName = computed(
+    () => this.userName().trim() || this.authService.currentUsername() || 'Usuario',
+  );
 
   isExpanded = input<boolean>(false);
   isExpandedChange = output<boolean>();

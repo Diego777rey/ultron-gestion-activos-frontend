@@ -17,7 +17,6 @@ import { TabService } from '../../shared/services/tab.service';
     <div class="layout-body">
       <app-sidebar 
         [items]="menuItems" 
-        userName="Diego Paulinho Amarilla Mercado"
         [isExpanded]="sidebarOpen()"
         (isExpandedChange)="sidebarOpen.set($event)"
       ></app-sidebar>
