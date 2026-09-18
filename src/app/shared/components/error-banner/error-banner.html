@@ -1,0 +1,16 @@
+@if (message()) {
+  <div class="error-banner" role="alert" aria-live="assertive">
+    <span class="error-banner__icon material-icons" aria-hidden="true">error_outline</span>
+    <p class="error-banner__message">{{ message() }}</p>
+    @if (showRetry()) {
+      <button
+        type="button"
+        class="error-banner__retry"
+        (click)="onRetry()"
+        [attr.aria-label]="'Reintentar: ' + message()"
+      >
+        {{ retryLabel() }}
+      </button>
+    }
+  </div>
+}

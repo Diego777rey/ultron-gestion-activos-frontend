@@ -1,0 +1,85 @@
+// ============================================================
+// Error Banner — banda roja con icono, mensaje y botón reintentar
+// ============================================================
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(211, 47, 47, 0.12);
+  border: 1px solid rgba(211, 47, 47, 0.35);
+  border-left: 4px solid #d32f2f;
+  border-radius: 4px;
+  width: 100%;
+  animation: banner-in 0.2s ease-out;
+}
+
+// --- Icono de advertencia ---
+.error-banner__icon {
+  flex-shrink: 0;
+  font-size: 20px;
+  color: #ef5350;
+  line-height: 1;
+}
+
+// --- Texto del mensaje ---
+.error-banner__message {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #ef9a9a;
+  word-break: break-word;
+}
+
+// --- Botón "Reintentar" ---
+.error-banner__retry {
+  flex-shrink: 0;
+  padding: 5px 14px;
+  border: 1px solid rgba(211, 47, 47, 0.6);
+  border-radius: 4px;
+  background: transparent;
+  color: #ef9a9a;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: rgba(211, 47, 47, 0.2);
+    color: #ffffff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ef5350;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    background: rgba(211, 47, 47, 0.3);
+  }
+}
+
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .error-banner {
+    animation: none;
+  }
+}

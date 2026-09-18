@@ -58,8 +58,8 @@ export class MainLayoutComponent implements OnInit {
       icon: 'construction',
       children: [
         { label: 'Orden de Trabajo', icon: 'assignment', route: '/taller/orden-de-trabajo' },
-        { label: 'Historial', icon: 'history', route: '/taller/historial' },
-        { label: 'Calendario', icon: 'calendar_month', route: '/taller/calendario' },
+        // { label: 'Historial', icon: 'history', route: '/taller/historial' },
+        // { label: 'Calendario', icon: 'calendar_month', route: '/taller/calendario' },
       ]
     },
     {
@@ -113,7 +113,7 @@ export class MainLayoutComponent implements OnInit {
       icon: 'map',
       children: [
         { label: 'Sectores', icon: 'grid_view', route: '/sectores' },
-        { label: 'Zonas', icon: 'place', route: '/sectores/zonas' },
+        // { label: 'Zonas', icon: 'place', route: '/sectores/zonas' },
       ]
     }
   ];

@@ -1,0 +1,18 @@
+@if (loading()) {
+  <div
+    class="loading-overlay"
+    [class.loading-overlay--fullscreen]="fullscreen()"
+    role="status"
+    [attr.aria-label]="message() || 'Cargando...'"
+  >
+    @if (fullscreen()) {
+      <div class="loading-overlay__backdrop"></div>
+    }
+    <div class="loading-overlay__content">
+      <div class="spinner" aria-hidden="true"></div>
+      @if (message()) {
+        <p class="loading-overlay__message">{{ message() }}</p>
+      }
+    </div>
+  </div>
+}
