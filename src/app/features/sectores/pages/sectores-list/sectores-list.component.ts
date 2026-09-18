@@ -103,6 +103,7 @@ export class SectoresListComponent {
         title: 'Nuevo Sector',
         subtitle: 'Registrá una ubicación física (depósito, salón de ventas, etc.)',
         maxWidth: '640px',
+        inputs: { onSaved: () => this.load() },
       })
       .subscribe((saved) => {
         if (saved) {

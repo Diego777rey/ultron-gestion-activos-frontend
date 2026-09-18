@@ -6,6 +6,7 @@ import { AutofocusDirective } from '../../../../shared/directives/autofocus.dire
 import { UppercaseDirective } from '../../../../shared/directives/uppercase.directive';
 import { SectorInput, SectorOutput } from '../../interfaces/sector.interface';
 import { SectorService } from '../../services/sector.service';
+import { UltimoSectorStore } from '../../services/ultimo-sector.store';
 
 @Component({
   selector: 'app-sector-form',
@@ -17,9 +18,11 @@ import { SectorService } from '../../services/sector.service';
 export class SectorFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly sectorService = inject(SectorService);
+  private readonly ultimoSector = inject(UltimoSectorStore);
   private readonly dialogRef = inject(DialogRef, { optional: true });
 
   readonly sector = input<SectorOutput | null>(null);
+  readonly onSaved = input<(() => void) | undefined>(undefined);
   readonly saved = output<void>();
 
   protected saving = false;
@@ -75,9 +78,14 @@ export class SectorFormComponent {
         : this.sectorService.create(payload);
 
     request.subscribe({
-      next: () => {
+      next: (saved) => {
         this.saving = false;
+        this.error = null;
+        if (!this.isEdit && saved) {
+          this.ultimoSector.remember(saved);
+        }
         this.saved.emit();
+        this.onSaved()?.();
         this.dialogRef?.close(true);
       },
       error: (err: Error) => {

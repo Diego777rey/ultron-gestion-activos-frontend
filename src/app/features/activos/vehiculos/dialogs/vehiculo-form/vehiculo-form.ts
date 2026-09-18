@@ -70,7 +70,6 @@ export class VehiculoFormComponent implements OnInit {
     tipo_vehiculo: ['', [Validators.required, Validators.maxLength(50)]],
     anio: [new Date().getFullYear(), [Validators.required, Validators.min(1900), Validators.max(2100)]],
     descripcion: [''],
-    valor: [0, [Validators.min(0)]],
     id_cliente: ['', [Validators.required]],
     cliente_doc: [''],
     estado: ['ACTIVO'],
@@ -92,7 +91,6 @@ export class VehiculoFormComponent implements OnInit {
           tipo_vehiculo: v.tipo_vehiculo ?? '',
           anio: v.anio ?? new Date().getFullYear(),
           descripcion: v.descripcion ?? '',
-          valor: v.valor ?? 0,
           id_cliente: v.cliente?.id_cliente ?? '',
           cliente_doc: v.cliente?.persona?.documento ?? '',
         }, { emitEvent: false });
@@ -108,7 +106,6 @@ export class VehiculoFormComponent implements OnInit {
           tipo_vehiculo: '',
           anio: new Date().getFullYear(),
           descripcion: '',
-          valor: 0,
           id_cliente: '',
           cliente_doc: '',
           estado: 'ACTIVO',
@@ -219,7 +216,7 @@ export class VehiculoFormComponent implements OnInit {
       tipo_vehiculo: v.tipo_vehiculo.trim(),
       anio: v.anio,
       descripcion: v.descripcion?.trim() || null,
-      valor: v.valor,
+      valor: null,
       estado: v.estado,
     };
 

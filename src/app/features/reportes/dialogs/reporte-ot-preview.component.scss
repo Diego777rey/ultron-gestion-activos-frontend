@@ -1,0 +1,205 @@
+:host {
+  display: block;
+  max-height: calc(90vh - 160px);
+  overflow: auto;
+}
+
+.ot-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ot-preview__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-bottom: 8px;
+  background: var(--surface-color);
+}
+
+.ot-preview__hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.ot-doc {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--hover-color);
+}
+
+.ot-doc__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ot-doc__kicker {
+  margin: 0 0 2px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ot-doc__numero {
+  margin: 0;
+  font-size: 20px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  color: #90caf9;
+}
+
+.ot-doc__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 16px;
+
+  &--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  strong,
+  small {
+    display: block;
+  }
+
+  small {
+    margin-top: 2px;
+    color: var(--text-muted);
+  }
+}
+
+.ot-doc__label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ot-doc__block {
+  h4 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+}
+
+.ot-doc__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ot-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(144, 202, 249, 0.12);
+  color: #90caf9;
+  font-size: 12px;
+}
+
+.ot-doc__list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.ot-doc__empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.ot-doc__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 7px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  th {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  td {
+    color: var(--text-secondary);
+  }
+
+  tfoot td {
+    font-weight: 700;
+    color: var(--text-primary);
+    border-bottom: none;
+  }
+
+  th:nth-child(3),
+  th:nth-child(4),
+  th:nth-child(5),
+  td:nth-child(3),
+  td:nth-child(4),
+  td:nth-child(5) {
+    text-align: right;
+  }
+}
+
+.ot-etapa-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  text-transform: uppercase;
+
+  &__icon {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 760px) {
+  .ot-preview__toolbar,
+  .ot-doc__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ot-doc__grid,
+  .ot-doc__grid--3 {
+    grid-template-columns: 1fr;
+  }
+}
