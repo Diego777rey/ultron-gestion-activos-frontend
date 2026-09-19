@@ -78,7 +78,7 @@
     <app-ot-collapsible-section
       icon="assignment"
       title="Datos de la orden"
-      hint="Sector, responsable y mecánico asignado"
+      hint="Sector, responsable y mecánicos asignados"
       [summary]="resumenDatos()"
       [status]="statusDatos()"
       [(expanded)]="openDatos"
@@ -130,7 +130,7 @@
         </div>
 
         <div class="ot-field ot-field--full">
-          <label class="ot-field__label-static">Mecánico asignado*</label>
+          <label class="ot-field__label-static">Mecánicos asignados*</label>
           <app-entity-searcher
             [items]="mecanicos()"
             [columns]="mecanicoColumns"
@@ -138,15 +138,33 @@
             [loading]="loadingMecanicos()"
             [displayFn]="mecanicoLabelFn"
             [keyFn]="mecanicoKeyFn"
-            [value]="form.controls.id_mecanico.value"
+            [value]="mecanicoBusquedaId()"
             (searchChange)="fetchMecanicos(0, 10, $event)"
             (pageChange)="fetchMecanicos($event.pageIndex, $event.pageSize, '')"
             (itemChange)="onMecanicoSelected($event)"
             [backendPagination]="true"
-            label="Buscar mecánico..."
+            label="Agregar mecánico..."
           />
-          @if (form.controls.id_mecanico.touched && form.controls.id_mecanico.invalid) {
-            <span class="ot-field__error">Debes asignar un mecánico</span>
+          @if (selectedMecanicos().length) {
+            <ul class="ot-mecanico-list">
+              @for (mecanico of selectedMecanicos(); track mecanico.id_funcionario) {
+                <li class="ot-mecanico-chip">
+                  <span class="material-icons" aria-hidden="true">engineering</span>
+                  <span>{{ mecanicoLabelFn(mecanico) }}</span>
+                  <button
+                    type="button"
+                    class="ot-mecanico-chip__remove"
+                    (click)="quitarMecanico(mecanico)"
+                    [attr.aria-label]="'Quitar a ' + mecanicoLabelFn(mecanico)"
+                  >
+                    <span class="material-icons" aria-hidden="true">close</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+          @if (form.controls.ids_mecanicos.touched && form.controls.ids_mecanicos.invalid) {
+            <span class="ot-field__error">Debes asignar al menos un mecánico</span>
           }
         </div>
       </div>

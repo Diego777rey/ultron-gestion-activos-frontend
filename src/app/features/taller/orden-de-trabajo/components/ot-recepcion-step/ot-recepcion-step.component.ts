@@ -30,6 +30,7 @@ import { SectorFormComponent } from '../../../../sectores/dialogs/sector-form/se
 import { UltimoSectorStore } from '../../../../sectores/services/ultimo-sector.store';
 import { UsuarioService } from '../../../../personas/usuarios/services/usuario.service';
 import { UsuarioOutput } from '../../../../personas/usuarios/interfaces/usuario.interface';
+import { AuthService } from '../../../../../core/auth/auth.service';
 import { OrdenTrabajoInput, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 import { OtHistorialPanelComponent } from '../ot-historial-panel/ot-historial-panel.component';
@@ -68,6 +69,7 @@ export class OtRecepcionStepComponent implements OnInit {
   private readonly ultimoSector = inject(UltimoSectorStore);
   private readonly usuarioService = inject(UsuarioService);
   private readonly ordenService = inject(OrdenTrabajoService);
+  private readonly authService = inject(AuthService);
 
   readonly orden = input<OrdenTrabajoOutput | null>(null);
   readonly formReady = output<FormGroup>();
@@ -88,7 +90,8 @@ export class OtRecepcionStepComponent implements OnInit {
   protected readonly selectedVehiculo = signal<VehiculoOutput | null>(null);
   protected readonly selectedSector = signal<SectorOutput | null>(null);
   protected readonly selectedUsuario = signal<UsuarioOutput | null>(null);
-  protected readonly selectedMecanico = signal<FuncionarioOutput | null>(null);
+  protected readonly selectedMecanicos = signal<FuncionarioOutput[]>([]);
+  protected readonly mecanicoBusquedaId = signal('');
 
   protected readonly nivelesCombustible = [
     { value: '', label: 'Sin indicar' },
@@ -118,7 +121,8 @@ export class OtRecepcionStepComponent implements OnInit {
     id_responsable: ['', Validators.required],
     id_cliente: ['', Validators.required],
     id_vehiculo: ['', Validators.required],
-    id_mecanico: ['', Validators.required],
+    id_mecanico: [''],
+    ids_mecanicos: this.fb.nonNullable.control<string[]>([], Validators.minLength(1)),
     descripcion_falla: ['', Validators.required],
     falla_mecanica: [false],
     falla_electrica: [false],
@@ -170,10 +174,12 @@ export class OtRecepcionStepComponent implements OnInit {
     const parts: string[] = [];
     const sector = this.selectedSector();
     const usuario = this.selectedUsuario();
-    const mecanico = this.selectedMecanico();
+    const mecanicos = this.selectedMecanicos();
     if (sector?.nombre) parts.push(sector.nombre);
     if (usuario) parts.push(this.usuarioLabelFn(usuario));
-    if (mecanico) parts.push(this.mecanicoLabel(mecanico));
+    if (mecanicos.length) {
+      parts.push(mecanicos.map((m) => this.mecanicoLabel(m)).join(', '));
+    }
     return parts.length ? parts.join(' · ') : 'Sin asignar';
   });
 
@@ -211,7 +217,7 @@ export class OtRecepcionStepComponent implements OnInit {
     this.sectionStatus(['id_cliente', 'id_vehiculo'])
   );
   protected readonly statusDatos = computed(() =>
-    this.sectionStatus(['id_sector', 'id_responsable', 'id_mecanico'])
+    this.sectionStatus(['id_sector', 'id_responsable', 'ids_mecanicos'])
   );
   protected readonly statusFalla = computed(() => this.sectionStatus(['descripcion_falla']));
   protected readonly statusEstado = computed((): OtSectionStatus => {
@@ -314,6 +320,7 @@ export class OtRecepcionStepComponent implements OnInit {
     this.fetchMecanicos(0, 10, '');
     this.fetchSectores(0, 10, '');
     this.fetchUsuarios(0, 10, '');
+    this.precargarResponsableDeSesion();
   }
 
   /** Expone el input tipado para el padre. */
@@ -336,7 +343,8 @@ export class OtRecepcionStepComponent implements OnInit {
       id_responsable: v.id_responsable,
       id_cliente: v.id_cliente,
       id_vehiculo: v.id_vehiculo,
-      id_mecanico: v.id_mecanico,
+      id_mecanico: v.ids_mecanicos[0] ?? v.id_mecanico ?? null,
+      ids_mecanicos: v.ids_mecanicos,
       recepcion: {
         descripcion_falla: v.descripcion_falla,
       },
@@ -391,7 +399,6 @@ export class OtRecepcionStepComponent implements OnInit {
       id_responsable: data.responsable?.id ? String(data.responsable.id) : '',
       id_cliente: data.cliente?.id_cliente ?? '',
       id_vehiculo: data.vehiculo?.id_bien ?? '',
-      id_mecanico: data.mecanico?.id_funcionario ?? '',
       descripcion_falla: data.recepcion?.descripcion_falla || '',
       falla_mecanica: !!estado?.falla_mecanica,
       falla_electrica: !!estado?.falla_electrica,
@@ -434,12 +441,15 @@ export class OtRecepcionStepComponent implements OnInit {
       this.selectedUsuario.set(usuario);
       this.usuarios.update((list) => this.ensureInList(list, usuario, (u) => u.id));
     }
-    if (data.mecanico) {
-      const mecanico = {
-        id_funcionario: data.mecanico.id_funcionario ?? '',
-        persona: data.mecanico.persona ?? undefined,
-      } as FuncionarioOutput;
-      this.selectedMecanico.set(mecanico);
+    const mecanicosAsignados = (data.mecanicos?.length ? data.mecanicos : data.mecanico ? [data.mecanico] : [])
+      .map((m) => ({
+        id_funcionario: m.id_funcionario ?? '',
+        persona: m.persona ?? undefined,
+      } as FuncionarioOutput))
+      .filter((m) => !!m.id_funcionario);
+    this.selectedMecanicos.set(mecanicosAsignados);
+    this.syncIdsMecanicos(false);
+    for (const mecanico of mecanicosAsignados) {
       this.mecanicos.update((list) => this.ensureInList(list, mecanico, (m) => m.id_funcionario));
     }
   }
@@ -534,7 +544,11 @@ export class OtRecepcionStepComponent implements OnInit {
     this.loadingMecanicos.set(true);
     this.funcionarioService.findPaginated(page, size, filter).subscribe({
       next: (res) => {
-        this.mecanicos.set(res.content);
+        let list = res.content;
+        for (const selected of this.selectedMecanicos()) {
+          list = this.ensureInList(list, selected, (m) => m.id_funcionario);
+        }
+        this.mecanicos.set(list);
         this.mecanicosTotal.set(res.pageInfo.totalElements);
         this.loadingMecanicos.set(false);
       },
@@ -543,8 +557,34 @@ export class OtRecepcionStepComponent implements OnInit {
   }
 
   protected onMecanicoSelected(mecanico: FuncionarioOutput | null): void {
-    this.form.controls.id_mecanico.setValue(mecanico?.id_funcionario ?? '');
-    this.selectedMecanico.set(mecanico);
+    if (!mecanico?.id_funcionario) return;
+    if (this.selectedMecanicos().some((m) => m.id_funcionario === mecanico.id_funcionario)) {
+      this.mecanicoBusquedaId.set('');
+      return;
+    }
+    this.selectedMecanicos.update((list) => [...list, mecanico]);
+    this.mecanicos.update((list) => this.ensureInList(list, mecanico, (m) => m.id_funcionario));
+    this.syncIdsMecanicos(true);
+    this.mecanicoBusquedaId.set('');
+  }
+
+  protected quitarMecanico(mecanico: FuncionarioOutput): void {
+    this.selectedMecanicos.update((list) =>
+      list.filter((m) => m.id_funcionario !== mecanico.id_funcionario)
+    );
+    this.syncIdsMecanicos(true);
+  }
+
+  private syncIdsMecanicos(markTouched: boolean): void {
+    const ids = this.selectedMecanicos()
+      .map((m) => m.id_funcionario)
+      .filter((id): id is string => !!id);
+    this.form.controls.ids_mecanicos.setValue(ids);
+    this.form.controls.id_mecanico.setValue(ids[0] ?? '');
+    if (markTouched) {
+      this.form.controls.ids_mecanicos.markAsTouched();
+      this.form.controls.ids_mecanicos.markAsDirty();
+    }
   }
 
   protected fetchSectores(page: number, size: number, filter: string): void {
@@ -588,7 +628,10 @@ export class OtRecepcionStepComponent implements OnInit {
     this.loadingUsuarios.set(true);
     this.usuarioService.findPaginated(page, size, filter).subscribe({
       next: (res) => {
-        this.usuarios.set(res.content);
+        const selected = this.selectedUsuario();
+        this.usuarios.set(
+          selected ? this.ensureInList(res.content, selected, (u) => u.id) : res.content
+        );
         this.usuariosTotal.set(res.pageInfo.totalElements);
         this.loadingUsuarios.set(false);
       },
@@ -599,6 +642,27 @@ export class OtRecepcionStepComponent implements OnInit {
   protected onUsuarioSelected(usuario: UsuarioOutput | null): void {
     this.form.controls.id_responsable.setValue(usuario?.id ?? '');
     this.selectedUsuario.set(usuario);
+  }
+
+  /** En una orden nueva, el responsable es el usuario con sesión abierta. */
+  private precargarResponsableDeSesion(): void {
+    if (this.orden() || this.form.controls.id_responsable.value) {
+      return;
+    }
+    const username = this.authService.currentUsername().trim().toUpperCase();
+    if (!username) return;
+
+    this.usuarioService.findPaginated(0, 10, username).subscribe({
+      next: (res) => {
+        if (this.orden() || this.form.controls.id_responsable.value) return;
+        const found = (res.content ?? []).find(
+          (u) => (u.username ?? '').trim().toUpperCase() === username
+        );
+        if (!found) return;
+        this.usuarios.update((list) => this.ensureInList(list, found, (u) => u.id));
+        this.onUsuarioSelected(found);
+      },
+    });
   }
 
   private sectionStatus(controls: string[]): OtSectionStatus {
@@ -626,7 +690,7 @@ export class OtRecepcionStepComponent implements OnInit {
     if (
       this.form.controls.id_sector.invalid ||
       this.form.controls.id_responsable.invalid ||
-      this.form.controls.id_mecanico.invalid
+      this.form.controls.ids_mecanicos.invalid
     ) {
       this.openDatos.set(true);
     }

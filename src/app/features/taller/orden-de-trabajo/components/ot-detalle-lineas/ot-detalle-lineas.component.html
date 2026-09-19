@@ -6,7 +6,7 @@
       </span>
       <div class="ot-diag-card__titles">
         <h3 class="ot-diag-card__title">Presupuesto detallado</h3>
-        <p class="ot-diag-card__hint">Cargá servicios y productos que van a hacer falta para la reparación.</p>
+        <p class="ot-diag-card__hint">Cargá servicios y productos. En cada servicio indicá qué mecánico lo va a realizar.</p>
       </div>
     </div>
     <div class="ot-diag-card__body">
@@ -67,6 +67,18 @@
               }
             </div>
 
+            @if (esServicio()) {
+              <div class="ot-diag-field">
+                <label class="ot-diag-field__label" for="ot-det-mec">Mecánico*</label>
+                <select id="ot-det-mec" class="ot-diag-field__control" formControlName="id_mecanico">
+                  <option value="">Seleccionar mecánico...</option>
+                  @for (m of mecanicosAsignados(); track m.id_funcionario) {
+                    <option [value]="m.id_funcionario">{{ nombreMecanico(m) }}</option>
+                  }
+                </select>
+              </div>
+            }
+
             <div class="ot-diag-field">
               <label class="ot-diag-field__label" for="ot-det-cant">Cantidad*</label>
               <input id="ot-det-cant" type="number" class="ot-diag-field__control" formControlName="cantidad" min="0.01" step="0.01" />
@@ -99,6 +111,7 @@
             <tr>
               <th>Tipo</th>
               <th>Descripción</th>
+              <th>Mecánico</th>
               <th>Cant.</th>
               <th>Precio U.</th>
               <th>Subtotal</th>
@@ -116,6 +129,7 @@
                   </span>
                 </td>
                 <td>{{ nombreItem(det) }}</td>
+                <td>{{ det.tipo === 'SERVICIO' ? nombreMecanico(det.mecanico) : '—' }}</td>
                 <td>{{ det.cantidad }}</td>
                 <td>{{ det.precio_unitario | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</td>
                 <td>{{ det.subtotal | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</td>
@@ -129,7 +143,7 @@
               </tr>
             } @empty {
               <tr>
-                <td [attr.colspan]="editable() ? 6 : 5" class="ot-diag-empty">
+                <td [attr.colspan]="editable() ? 7 : 6" class="ot-diag-empty">
                   No hay productos ni servicios en el presupuesto.
                 </td>
               </tr>
@@ -137,7 +151,7 @@
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="4" style="text-align: right;">Total presupuesto:</td>
+              <td colspan="5" style="text-align: right;">Total presupuesto:</td>
               <td [attr.colspan]="editable() ? 2 : 1" class="ot-diag-total">
                 {{ orden().diagnostico?.total_presupuesto | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}
               </td>
@@ -208,6 +222,18 @@
             }
           </div>
 
+          @if (esServicio()) {
+            <div class="ot-field">
+              <label class="ot-field__label-static" for="ot-det-mec-std">Mecánico*</label>
+              <select id="ot-det-mec-std" class="ot-field__input" formControlName="id_mecanico">
+                <option value="">Seleccionar mecánico...</option>
+                @for (m of mecanicosAsignados(); track m.id_funcionario) {
+                  <option [value]="m.id_funcionario">{{ nombreMecanico(m) }}</option>
+                }
+              </select>
+            </div>
+          }
+
           <div class="ot-field">
             <label class="ot-field__label-static" for="ot-det-cant-std">Cantidad*</label>
             <input id="ot-det-cant-std" type="number" class="ot-field__input" formControlName="cantidad" min="0.01" step="0.01" />
@@ -261,6 +287,15 @@
               />
             </div>
             <div class="ot-field">
+              <label class="ot-field__label-static" for="ot-det-mec-ep">Mecánico*</label>
+              <select id="ot-det-mec-ep" class="ot-field__input" formControlName="id_mecanico">
+                <option value="">Seleccionar mecánico...</option>
+                @for (m of mecanicosAsignados(); track m.id_funcionario) {
+                  <option [value]="m.id_funcionario">{{ nombreMecanico(m) }}</option>
+                }
+              </select>
+            </div>
+            <div class="ot-field">
               <label class="ot-field__label-static" for="ot-det-cant-ep">Cantidad*</label>
               <input id="ot-det-cant-ep" type="number" class="ot-field__input" formControlName="cantidad" min="0.01" step="0.01" />
             </div>
@@ -290,6 +325,7 @@
           <tr>
             <th>Tipo</th>
             <th>Descripción</th>
+            <th>Mecánico</th>
             <th>Cant.</th>
             <th>Precio U.</th>
             <th>Subtotal</th>
@@ -307,6 +343,7 @@
                 </span>
               </td>
               <td>{{ nombreItem(det) }}</td>
+              <td>{{ det.tipo === 'SERVICIO' ? nombreMecanico(det.mecanico) : '—' }}</td>
               <td>{{ det.cantidad }}</td>
               <td>{{ det.precio_unitario | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</td>
               <td>{{ det.subtotal | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</td>
@@ -320,7 +357,7 @@
             </tr>
           } @empty {
             <tr>
-              <td [attr.colspan]="editable() ? 6 : 5" style="text-align: center; color: rgba(255,255,255,0.45); padding: 22px;">
+              <td [attr.colspan]="editable() ? 7 : 6" style="text-align: center; color: rgba(255,255,255,0.45); padding: 22px;">
                 @if (modoEnProceso()) {
                   Sin ajustes. El presupuesto queda como en el diagnóstico.
                 } @else {
@@ -333,14 +370,14 @@
         <tfoot>
           @if (modoEnProceso()) {
             <tr>
-              <td colspan="4" style="text-align: right;">Ajuste en esta etapa:</td>
+              <td colspan="5" style="text-align: right;">Ajuste en esta etapa:</td>
               <td [attr.colspan]="editable() ? 2 : 1" class="ot-total">
                 {{ totalAjuste() | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}
               </td>
             </tr>
           }
           <tr>
-            <td colspan="4" style="text-align: right;">Total presupuesto:</td>
+            <td colspan="5" style="text-align: right;">Total presupuesto:</td>
             <td [attr.colspan]="editable() ? 2 : 1" class="ot-total">
               {{ orden().diagnostico?.total_presupuesto | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}
             </td>

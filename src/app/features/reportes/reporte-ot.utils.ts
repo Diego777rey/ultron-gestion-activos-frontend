@@ -26,6 +26,25 @@ export function formatPersonaOt(persona?: { nombre?: string | null; apellido?: s
   return `${persona.nombre ?? ''} ${persona.apellido ?? ''}`.trim() || '—';
 }
 
+export function mecanicosDeOrden(orden: OrdenTrabajoOutput): NonNullable<OrdenTrabajoOutput['mecanicos']> {
+  if (orden.mecanicos?.length) {
+    return orden.mecanicos;
+  }
+  return orden.mecanico ? [orden.mecanico] : [];
+}
+
+export function formatMecanicosOt(orden: OrdenTrabajoOutput): string {
+  const names = mecanicosDeOrden(orden)
+    .map((m) => formatPersonaOt(m.persona))
+    .filter((n) => n !== '—');
+  return names.length ? names.join(', ') : '—';
+}
+
+export function formatMecanicoLineaOt(detalle: OrdenTrabajoDetalleOutput): string {
+  if (detalle.tipo !== 'SERVICIO') return '—';
+  return formatPersonaOt(detalle.mecanico?.persona);
+}
+
 export function formatFechaOt(fecha?: string | null): string {
   if (!fecha) return '—';
   try {

@@ -52,9 +52,16 @@ export class OtDiagnosticoStepComponent implements OnInit {
   });
 
   protected readonly resumenMecanico = computed(() => {
-    const p = this.orden().mecanico?.persona;
-    if (!p) return '—';
-    return `${p.nombre ?? ''} ${p.apellido ?? ''}`.trim() || '—';
+    const list = this.orden().mecanicos?.length
+      ? this.orden().mecanicos
+      : this.orden().mecanico
+        ? [this.orden().mecanico]
+        : [];
+    const names = (list ?? [])
+      .filter((m): m is NonNullable<typeof m> => !!m)
+      .map((m) => `${m.persona?.nombre ?? ''} ${m.persona?.apellido ?? ''}`.trim())
+      .filter(Boolean);
+    return names.length ? names.join(', ') : '—';
   });
 
   protected readonly condicionesIngreso = computed(() => {

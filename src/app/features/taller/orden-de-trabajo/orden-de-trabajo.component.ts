@@ -177,8 +177,11 @@ export class OrdenDeTrabajoComponent {
   }
 
   protected formatMecanico(o: OrdenTrabajoOutput): string {
-    const p = o.mecanico?.persona;
-    return p ? `${p.nombre ?? ''} ${p.apellido ?? ''}`.trim() : '—';
+    const list = o.mecanicos?.length ? o.mecanicos : o.mecanico ? [o.mecanico] : [];
+    const names = list
+      .map((m) => `${m.persona?.nombre ?? ''} ${m.persona?.apellido ?? ''}`.trim())
+      .filter(Boolean);
+    return names.length ? names.join(', ') : '—';
   }
 
   protected formatFecha(fecha?: string | null): string {

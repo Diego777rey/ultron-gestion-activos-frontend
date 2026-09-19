@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   input,
   OnInit,
@@ -19,6 +20,7 @@ import { ServicioService } from '../../../../inventario/servicios/services/servi
 import { ServicioOutput } from '../../../../inventario/servicios/interfaces/servicio.interface';
 import { ServicioFormComponent } from '../../../../inventario/servicios/dialogs/servicio-form/servicio-form.component';
 import {
+  FuncionarioResumen,
   OrdenTrabajoDetalleInput,
   OrdenTrabajoDetalleOutput,
   OrdenTrabajoOutput,
@@ -55,6 +57,7 @@ export class OtDetalleLineasComponent implements OnInit {
   protected readonly detalleForm = this.fb.group({
     tipo: ['PRODUCTO', Validators.required],
     id_item: ['', Validators.required],
+    id_mecanico: [''],
     cantidad: [1, [Validators.required, Validators.min(0.01)]],
     precio_unitario: [0, [Validators.required, Validators.min(0)]],
     descripcion: [''],
@@ -85,14 +88,22 @@ export class OtDetalleLineasComponent implements OnInit {
   protected readonly servicioLabelFn = (s: ServicioOutput) => `${s.codigo ?? ''} - ${s.nombre ?? ''}`;
   protected readonly servicioKeyFn = (s: ServicioOutput) => String(s.id_servicio);
 
+  protected readonly mecanicosAsignados = computed(() => {
+    const orden = this.orden();
+    if (orden.mecanicos?.length) return orden.mecanicos;
+    return orden.mecanico ? [orden.mecanico] : [];
+  });
+
   ngOnInit(): void {
     this.fetchProductos(0, 10, '');
     this.fetchServicios(0, 10, '');
     if (this.modoEnProceso()) {
       this.detalleForm.patchValue({ tipo: 'SERVICIO' });
     }
-    this.detalleForm.get('tipo')?.valueChanges.subscribe(() => {
-      this.detalleForm.patchValue({ id_item: '', precio_unitario: 0, descripcion: '' });
+    this.aplicarValidadorMecanico(this.detalleForm.controls.tipo.value);
+    this.detalleForm.controls.tipo.valueChanges.subscribe((tipo) => {
+      this.detalleForm.patchValue({ id_item: '', precio_unitario: 0, descripcion: '', id_mecanico: '' });
+      this.aplicarValidadorMecanico(tipo);
     });
   }
 
@@ -193,6 +204,7 @@ export class OtDetalleLineasComponent implements OnInit {
       input.id_producto = val.id_item;
     } else {
       input.id_servicio = val.id_item;
+      input.id_mecanico = val.id_mecanico || null;
     }
 
     this.ordenService.agregarDetalle(orden.id_orden_trabajo, input).subscribe({
@@ -201,6 +213,7 @@ export class OtDetalleLineasComponent implements OnInit {
         this.isAdding.set(false);
         this.detalleForm.patchValue({
           id_item: '',
+          id_mecanico: this.mecanicoPorDefecto(),
           cantidad: 1,
           precio_unitario: 0,
           descripcion: '',
@@ -233,5 +246,31 @@ export class OtDetalleLineasComponent implements OnInit {
       return det.nombre_producto || det.descripcion || '';
     }
     return det.nombre_servicio || det.descripcion || '';
+  }
+
+  protected nombreMecanico(mecanico: FuncionarioResumen | null | undefined): string {
+    if (!mecanico?.persona) return '—';
+    return `${mecanico.persona.nombre ?? ''} ${mecanico.persona.apellido ?? ''}`.trim() || '—';
+  }
+
+  protected esServicio(): boolean {
+    return this.detalleForm.controls.tipo.value === 'SERVICIO';
+  }
+
+  private aplicarValidadorMecanico(tipo: string | null): void {
+    const ctrl = this.detalleForm.controls.id_mecanico;
+    if (tipo === 'SERVICIO') {
+      ctrl.setValidators(Validators.required);
+      ctrl.setValue(this.mecanicoPorDefecto());
+    } else {
+      ctrl.clearValidators();
+      ctrl.setValue('');
+    }
+    ctrl.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private mecanicoPorDefecto(): string {
+    const asignados = this.mecanicosAsignados();
+    return asignados.length === 1 ? (asignados[0].id_funcionario ?? '') : '';
   }
 }
