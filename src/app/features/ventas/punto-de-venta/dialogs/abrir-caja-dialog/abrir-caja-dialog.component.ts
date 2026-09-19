@@ -10,6 +10,8 @@ import {
 import { DecimalPipe } from '@angular/common';
 import { ModalComponent } from '../../../../../shared/components/modal/modal';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
+import { EntitySearcherComponent } from '../../../../../shared/components/entity-searcher/entity-searcher';
+import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { CajaService } from '../../../../financiero/cajas/services/caja.service';
 import { MaletinService } from '../../../../financiero/maletines/services/maletin.service';
 import { CajaOutput } from '../../../../financiero/cajas/interfaces/caja.interface';
@@ -79,7 +81,7 @@ function crearMonedasVacias(): MonedaConfig[] {
 
 @Component({
   selector: 'app-abrir-caja-dialog',
-  imports: [ModalComponent, UiButtonComponent, DecimalPipe],
+  imports: [ModalComponent, UiButtonComponent, DecimalPipe, EntitySearcherComponent],
   templateUrl: './abrir-caja-dialog.component.html',
   styleUrl: './abrir-caja-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -116,6 +118,62 @@ export class AbrirCajaDialogComponent {
   protected readonly maletines = signal<MaletinOutput[]>([]);
   protected readonly idCajaSeleccionada = signal<number | null>(null);
   protected readonly idMaletinSeleccionado = signal<number | null>(null);
+  protected readonly selectedCaja = signal<CajaOutput | null>(null);
+  protected readonly selectedMaletin = signal<MaletinOutput | null>(null);
+  protected readonly loadingCajas = signal(false);
+  protected readonly loadingMaletines = signal(false);
+
+  protected readonly cajaColumns: TableColumn<CajaOutput>[] = [
+    { key: 'id_caja', header: 'Id', width: '80px' },
+    { key: 'nombre', header: 'Nombre', value: (c) => c.nombre ?? '' },
+    { key: 'sector', header: 'Sector', value: (c) => c.sector?.nombre ?? '' },
+  ];
+
+  protected readonly maletinColumns: TableColumn<MaletinOutput>[] = [
+    { key: 'id_maletin', header: 'Id', width: '80px' },
+    { key: 'nombre', header: 'Código', value: (m) => m.nombre ?? '' },
+    { key: 'sector', header: 'Sector', value: (m) => m.sector?.nombre ?? '' },
+  ];
+
+  protected readonly cajaLabelFn = (c: CajaOutput) => c.nombre ?? `Caja #${c.id_caja}`;
+  protected readonly cajaKeyFn = (c: CajaOutput) => c.id_caja;
+  protected readonly maletinLabelFn = (m: MaletinOutput) =>
+    m.nombre ?? `Maletín #${m.id_maletin}`;
+  protected readonly maletinKeyFn = (m: MaletinOutput) => m.id_maletin;
+  protected readonly maletinSearchFn = (m: MaletinOutput, query: string): boolean =>
+    (m.nombre ?? '').toLowerCase().includes(query);
+  protected readonly cajaSearchFn = (c: CajaOutput, query: string): boolean =>
+    (c.nombre ?? '').toLowerCase().includes(query) || String(c.id_caja).includes(query);
+
+  protected readonly maletinDeshabilitado = computed(
+    () => this.cajaOpen() || this.idCajaSeleccionada() == null
+  );
+
+  protected readonly mismoSector = computed(() =>
+    this.esMismoSector(this.selectedCaja(), this.selectedMaletin())
+  );
+
+  protected readonly cajasParaBuscador = computed(() => {
+    const list = this.cajas();
+    const selected = this.selectedCaja();
+    if (selected && !list.some((c) => c.id_caja === selected.id_caja)) {
+      return [selected, ...list];
+    }
+    return list;
+  });
+
+  protected readonly maletinesParaBuscador = computed(() => {
+    const selected = this.selectedMaletin();
+    const idSectorCaja = this.selectedCaja()?.sector?.id_sector;
+    const list =
+      idSectorCaja == null
+        ? []
+        : this.maletines().filter((m) => m.sector?.id_sector === idSectorCaja);
+    if (selected && !list.some((m) => m.id_maletin === selected.id_maletin)) {
+      return [selected, ...list];
+    }
+    return list;
+  });
 
   protected readonly monedasApertura = signal<MonedaConfig[]>(crearMonedasVacias());
   protected readonly monedasCierre = signal<MonedaConfig[]>(crearMonedasVacias());
@@ -127,12 +185,15 @@ export class AbrirCajaDialogComponent {
       this.cajaOpen.set(this.cajaAbierta());
       this.currentStep.set(this.initialStep());
       const sesion = this.sesionActual();
-      if (sesion?.caja?.id_caja) {
+      if (sesion?.caja) {
+        this.selectedCaja.set(sesion.caja);
         this.idCajaSeleccionada.set(sesion.caja.id_caja);
       }
-      if (sesion?.maletin?.id_maletin) {
+      if (sesion?.maletin) {
+        this.selectedMaletin.set(sesion.maletin);
         this.idMaletinSeleccionado.set(sesion.maletin.id_maletin);
       }
+      this.loadMaletinesDisponibles();
     });
   }
 
@@ -186,7 +247,10 @@ export class AbrirCajaDialogComponent {
   );
 
   protected readonly puedeVerificar = computed(
-    () => this.idCajaSeleccionada() != null && this.idMaletinSeleccionado() != null
+    () =>
+      this.idCajaSeleccionada() != null &&
+      this.idMaletinSeleccionado() != null &&
+      this.mismoSector()
   );
 
   protected isStepEnabled(stepIndex: number): boolean {
@@ -218,16 +282,24 @@ export class AbrirCajaDialogComponent {
     this.monedaActiva.set(codigo);
   }
 
-  protected onCajaChange(raw: string): void {
-    const id = Number(raw);
-    this.idCajaSeleccionada.set(Number.isFinite(id) && id > 0 ? id : null);
+  protected onCajaSelected(caja: CajaOutput | null): void {
+    this.selectedCaja.set(caja);
+    this.idCajaSeleccionada.set(caja?.id_caja ?? null);
+    this.selectedMaletin.set(null);
     this.idMaletinSeleccionado.set(null);
+    this.maletinOk.set(false);
+    this.error.set(null);
     this.loadMaletinesDisponibles();
   }
 
-  protected onMaletinChange(raw: string): void {
-    const id = Number(raw);
-    this.idMaletinSeleccionado.set(Number.isFinite(id) && id > 0 ? id : null);
+  protected onMaletinSelected(maletin: MaletinOutput | null): void {
+    if (maletin && !this.esMismoSector(this.selectedCaja(), maletin)) {
+      return;
+    }
+    this.selectedMaletin.set(maletin);
+    this.idMaletinSeleccionado.set(maletin?.id_maletin ?? null);
+    this.maletinOk.set(false);
+    this.error.set(null);
   }
 
   protected verificarMaletin(): void {
@@ -235,6 +307,10 @@ export class AbrirCajaDialogComponent {
     const idMaletin = this.idMaletinSeleccionado();
     if (idCaja == null || idMaletin == null) {
       this.error.set('Seleccioná una caja y un maletín para continuar');
+      return;
+    }
+    if (!this.mismoSector()) {
+      this.error.set('El maletín debe ser del mismo sector que la caja');
       return;
     }
     this.error.set(null);
@@ -249,6 +325,11 @@ export class AbrirCajaDialogComponent {
     const idMaletin = this.idMaletinSeleccionado();
     if (idCaja == null || idMaletin == null) {
       this.error.set('Seleccioná caja y maletín antes de abrir');
+      this.currentStep.set(1);
+      return;
+    }
+    if (!this.mismoSector()) {
+      this.error.set('El maletín debe ser del mismo sector que la caja');
       this.currentStep.set(1);
       return;
     }
@@ -351,18 +432,35 @@ export class AbrirCajaDialogComponent {
   }
 
   private loadCatalogos(): void {
+    this.fetchCajas();
+  }
+
+  private fetchCajas(): void {
+    this.loadingCajas.set(true);
     this.cajaService.findAll().subscribe({
-      next: (items) => this.cajas.set(items.filter((c) => c.activa !== false)),
-      error: () => this.error.set('No se pudieron cargar las cajas'),
+      next: (items) => {
+        this.cajas.set(items.filter((c) => c.activa !== false));
+        this.loadingCajas.set(false);
+      },
+      error: () => {
+        this.error.set('No se pudieron cargar las cajas');
+        this.loadingCajas.set(false);
+      },
     });
-    this.loadMaletinesDisponibles();
   }
 
   private loadMaletinesDisponibles(): void {
-    const idCaja = this.idCajaSeleccionada();
-    const caja = this.cajas().find((c) => c.id_caja === idCaja);
+    const caja =
+      this.selectedCaja() ?? this.cajas().find((c) => c.id_caja === this.idCajaSeleccionada());
     const idSector = caja?.sector?.id_sector ?? null;
 
+    if (idSector == null) {
+      this.maletines.set([]);
+      this.loadingMaletines.set(false);
+      return;
+    }
+
+    this.loadingMaletines.set(true);
     this.maletinService.findDisponibles(idSector).subscribe({
       next: (items) => {
         const sesion = this.sesionActual();
@@ -371,8 +469,12 @@ export class AbrirCajaDialogComponent {
         } else {
           this.maletines.set(items);
         }
+        this.loadingMaletines.set(false);
       },
-      error: () => this.error.set('No se pudieron cargar los maletines'),
+      error: () => {
+        this.error.set('No se pudieron cargar los maletines');
+        this.loadingMaletines.set(false);
+      },
     });
   }
 
@@ -401,5 +503,15 @@ export class AbrirCajaDialogComponent {
       return;
     }
     this.monedasApertura.update(updater);
+  }
+
+  private esMismoSector(caja: CajaOutput | null, maletin: MaletinOutput | null): boolean {
+    const idSectorCaja = caja?.sector?.id_sector;
+    const idSectorMaletin = maletin?.sector?.id_sector;
+    return (
+      idSectorCaja != null &&
+      idSectorMaletin != null &&
+      idSectorCaja === idSectorMaletin
+    );
   }
 }

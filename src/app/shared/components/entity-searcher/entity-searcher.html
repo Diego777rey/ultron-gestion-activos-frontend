@@ -33,7 +33,7 @@
           (input)="onSearch($any($event.target).value)"
           placeholder=" "
         />
-        <label class="search-field__label">Ingresar texto</label>
+        <label class="search-field__label">{{ searchPlaceholder() }}</label>
         @if (searchQuery()) {
           <button type="button" class="search-field__clear" aria-label="Limpiar búsqueda" (click)="clearSearch()">
             <span class="material-icons">close</span>
