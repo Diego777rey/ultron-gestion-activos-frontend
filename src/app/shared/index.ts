@@ -23,6 +23,7 @@ export * from './pipes/default-empty.pipe';
 
 // Directivas
 export * from './directives/click-outside.directive';
+export * from './directives/no-close-on-outside.directive';
 export * from './directives/autofocus.directive';
 export * from './directives/uppercase.directive';
 export * from './directives/column-align.directive';
