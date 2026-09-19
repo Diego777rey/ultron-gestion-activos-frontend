@@ -9,6 +9,8 @@ import { ListToolbarAction } from '../../../../../../shared/models/list-toolbar-
 import { PageChange } from '../../../../../../shared/models/pagination.model';
 import { ReporteService } from '../../../../../../shared/services/reporte.service';
 import { NotificationService } from '../../../../../../shared/services/notification.service';
+import { LoadingService } from '../../../../../../shared/services/loading.service';
+import { resolveLoadingErrorMessage } from '../../../../../../shared/utils/loading-error.util';
 import { SolicitudRepuestoService } from '../../../../orden-de-trabajo/services/solicitud-repuesto.service';
 import { SolicitudRepuestoOutput } from '../../../../orden-de-trabajo/interfaces/solicitud-repuesto.interface';
 
@@ -29,6 +31,7 @@ export class SolicitudesRepuestoListComponent {
   private readonly solicitudService = inject(SolicitudRepuestoService);
   private readonly reporteService = inject(ReporteService);
   private readonly notificationService = inject(NotificationService);
+  private readonly loadingService = inject(LoadingService);
   private readonly router = inject(Router);
 
   protected readonly solicitudes = signal<SolicitudRepuestoOutput[]>([]);
@@ -65,16 +68,16 @@ export class SolicitudesRepuestoListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.solicitudService
-      .findPaginated(this.pageIndex(), this.pageSize(), this.search())
+    this.loadingService
+      .pageLoad(this.solicitudService.findPaginated(this.pageIndex(), this.pageSize(), this.search()))
       .subscribe({
         next: (response) => {
           this.solicitudes.set(response.content);
           this.totalElements.set(response.pageInfo.totalElements);
           this.loading.set(false);
         },
-        error: (err: Error) => {
-          this.error.set(err.message || 'No se pudo conectar con el servidor');
+        error: (err: unknown) => {
+          this.error.set(resolveLoadingErrorMessage(err));
           this.loading.set(false);
         },
       });

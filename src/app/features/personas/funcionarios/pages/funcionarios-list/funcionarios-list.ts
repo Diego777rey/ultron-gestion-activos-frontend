@@ -71,7 +71,7 @@ export class FuncionariosListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.funcionarioService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
+    this.funcionarioService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), true).subscribe({
       next: (response) => {
         this.funcionarios.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);

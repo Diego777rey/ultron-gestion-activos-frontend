@@ -72,7 +72,7 @@ export class CategoriaProductoListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.categoriaService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
+    this.categoriaService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), true).subscribe({
       next: (response) => {
         this.categorias.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);

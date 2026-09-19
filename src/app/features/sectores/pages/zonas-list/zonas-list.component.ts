@@ -62,7 +62,7 @@ export class ZonasListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.zonaService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
+    this.zonaService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), true).subscribe({
       next: (response) => {
         this.zonas.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);

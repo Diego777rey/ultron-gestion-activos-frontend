@@ -2,21 +2,9 @@
   display: block;
 }
 
-.producto-form__error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+app-error-banner {
+  display: block;
   margin-bottom: 16px;
-  padding: 10px 14px;
-  background: rgba(255, 61, 113, 0.08);
-  border: 1px solid rgba(255, 61, 113, 0.28);
-  border-radius: 6px;
-  color: #ff8aa3;
-  font-size: 13px;
-
-  .material-icons {
-    font-size: 18px;
-  }
 }
 
 .producto-form {

@@ -73,7 +73,7 @@ export class CategoriaServicioStepperComponent implements OnInit {
   }
 
   private cargarParaEdicion(id: number): void {
-    this.categoriaService.findById(id).subscribe({
+    this.categoriaService.findById(id, true).subscribe({
       next: (cat) => {
         if (!cat) {
           this.error.set('No se encontró la categoría');

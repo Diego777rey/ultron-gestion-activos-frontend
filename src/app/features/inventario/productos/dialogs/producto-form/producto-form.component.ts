@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { EntitySearcherComponent } from '../../../../../shared/components/entity-searcher/entity-searcher';
+import { ErrorBannerComponent } from '../../../../../shared/components/error-banner/error-banner';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
@@ -11,6 +12,7 @@ import { ProductoService } from '../../services/producto.service';
 import { CategoriaProductoService } from '../../services/categoria-producto.service';
 import { DialogRef } from '@angular/cdk/dialog';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { resolveLoadingErrorMessage } from '../../../../../shared/utils/loading-error.util';
 
 @Component({
   selector: 'app-producto-form',
@@ -21,6 +23,7 @@ import { ReporteService } from '../../../../../shared/services/reporte.service';
     AutofocusDirective,
     UppercaseDirective,
     EntitySearcherComponent,
+    ErrorBannerComponent,
   ],
   templateUrl: './producto-form.component.html',
   styleUrl: './producto-form.component.scss',
@@ -247,9 +250,9 @@ export class ProductoFormComponent {
         this.saved.emit();
         this.dialogRef?.close(true);
       },
-      error: (err: Error) => {
+      error: (err: unknown) => {
         this.saving.set(false);
-        this.error.set(err.message || 'No se pudo guardar el producto');
+        this.error.set(resolveLoadingErrorMessage(err, 'No se pudo guardar el producto'));
       },
     });
   }
