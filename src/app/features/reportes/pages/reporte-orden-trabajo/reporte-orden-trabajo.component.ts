@@ -23,6 +23,8 @@ import {
   formatFechaOt,
   formatMonedaOt,
   formatPersonaOt,
+  formatMecanicoLineaOt,
+  formatMecanicosOt,
   formatVehiculoOt,
   nombreLineaOt,
 } from '../../reporte-ot.utils';
@@ -173,6 +175,8 @@ export class ReporteOrdenTrabajoComponent {
   protected formatVehiculo = formatVehiculoOt;
   protected formatFecha = formatFechaOt;
   protected formatPersona = formatPersonaOt;
+  protected formatMecanicos = formatMecanicosOt;
+  protected formatMecanicoLinea = formatMecanicoLineaOt;
   protected formatMoneda = formatMonedaOt;
   protected nombreLinea = nombreLineaOt;
   protected getEtapaInfo = etapaInfoOt;

@@ -229,3 +229,56 @@
   background: rgba(255, 255, 255, 0.04);
   font-size: 13px;
 }
+
+.ot-mecanico-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ot-mecanico-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(66, 165, 245, 0.35);
+  background: rgba(25, 118, 210, 0.18);
+  color: #e3f2fd;
+  font-size: 13px;
+  font-weight: 500;
+
+  .material-icons {
+    font-size: 16px;
+    color: #90caf9;
+  }
+}
+
+.ot-mecanico-chip__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(255, 255, 255, 0.18);
+    outline: 2px solid rgba(144, 202, 249, 0.7);
+    outline-offset: 1px;
+  }
+
+  .material-icons {
+    font-size: 14px;
+    color: #fff;
+  }
+}

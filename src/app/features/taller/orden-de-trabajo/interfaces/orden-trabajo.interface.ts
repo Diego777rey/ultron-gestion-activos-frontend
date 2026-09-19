@@ -48,6 +48,7 @@ export interface OrdenTrabajoOutput {
   cliente?: ClienteOutput | null;
   vehiculo?: VehiculoOutput | null;
   mecanico?: FuncionarioResumen | null;
+  mecanicos?: FuncionarioResumen[] | null;
   sector?: SectorResumen | null;
   responsable?: UsuarioResumen | null;
   fecha_creacion?: string | null;
@@ -67,6 +68,7 @@ export interface OrdenTrabajoDetalleOutput {
   nombre_producto?: string | null;
   id_servicio?: string | null;
   nombre_servicio?: string | null;
+  mecanico?: FuncionarioResumen | null;
   descripcion?: string | null;
   cantidad?: number | null;
   precio_unitario?: number | null;
@@ -116,6 +118,7 @@ export interface OrdenTrabajoInput {
   id_cliente?: string | null;
   id_vehiculo?: string | null;
   id_mecanico?: string | null;
+  ids_mecanicos?: string[] | null;
   id_caja?: string | null;
   recepcion?: OrdenRecepcionInput | null;
   estado_vehiculo?: OrdenEstadoVehiculoInput | null;
@@ -126,6 +129,7 @@ export interface OrdenTrabajoDetalleInput {
   tipo: string;
   id_producto?: string | null;
   id_servicio?: string | null;
+  id_mecanico?: string | null;
   descripcion?: string | null;
   cantidad?: number | null;
   precio_unitario?: number | null;

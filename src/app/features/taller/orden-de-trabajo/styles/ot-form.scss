@@ -114,7 +114,7 @@
 
 /* Fila compacta: tipo | ítem | cant | precio | botón */
 .ot-form__row--lineas {
-  grid-template-columns: 150px minmax(180px, 1.4fr) 88px 110px auto;
+  grid-template-columns: 150px minmax(160px, 1.3fr) minmax(150px, 1fr) 88px 110px auto;
 }
 
 /* Fila hallazgos: tipo | gravedad | sistema | descripción | botón */

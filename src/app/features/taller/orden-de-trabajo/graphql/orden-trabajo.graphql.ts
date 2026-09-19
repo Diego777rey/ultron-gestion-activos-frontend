@@ -27,6 +27,13 @@ export const ORDEN_TRABAJO_SELECTION = `{
       apellido
     }
   }
+  mecanicos {
+    id_funcionario
+    persona {
+      nombre
+      apellido
+    }
+  }
   sector {
     id_sector
     nombre
@@ -76,6 +83,13 @@ export const ORDEN_TRABAJO_SELECTION = `{
     nombre_producto
     id_servicio
     nombre_servicio
+    mecanico {
+      id_funcionario
+      persona {
+        nombre
+        apellido
+      }
+    }
     descripcion
     cantidad
     precio_unitario

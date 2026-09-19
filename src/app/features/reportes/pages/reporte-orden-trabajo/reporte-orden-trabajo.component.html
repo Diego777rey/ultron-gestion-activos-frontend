@@ -67,8 +67,8 @@
         <strong>{{ orden.sector?.nombre | defaultEmpty }}</strong>
       </div>
       <div>
-        <span class="ot-expand__label">Mecánico</span>
-        <strong>{{ formatPersona(orden.mecanico?.persona) }}</strong>
+        <span class="ot-expand__label">Mecánicos</span>
+        <strong>{{ formatMecanicos(orden) }}</strong>
       </div>
       <div>
         <span class="ot-expand__label">Presupuesto</span>
@@ -86,6 +86,7 @@
           <tr>
             <th>Tipo</th>
             <th>Ítem</th>
+            <th>Mecánico</th>
             <th>Cant.</th>
             <th>Subtotal</th>
           </tr>
@@ -95,6 +96,7 @@
             <tr>
               <td>{{ detalle.tipo | defaultEmpty }}</td>
               <td>{{ nombreLinea(detalle) }}</td>
+              <td>{{ formatMecanicoLinea(detalle) }}</td>
               <td>{{ detalle.cantidad ?? '—' }}</td>
               <td>{{ formatMoneda(detalle.subtotal) }}</td>
             </tr>

@@ -16,6 +16,8 @@ import {
   formatFechaOt,
   formatMonedaOt,
   formatPersonaOt,
+  formatMecanicoLineaOt,
+  formatMecanicosOt,
   formatVehiculoOt,
   hallazgoTextoOt,
   nombreLineaOt,
@@ -56,6 +58,8 @@ export class ReporteOtPreviewComponent {
   protected formatDocumento = formatDocumentoOt;
   protected formatVehiculo = formatVehiculoOt;
   protected formatPersona = formatPersonaOt;
+  protected formatMecanicos = formatMecanicosOt;
+  protected formatMecanicoLinea = formatMecanicoLineaOt;
   protected formatFecha = formatFechaOt;
   protected formatFechaHora = formatFechaHoraOt;
   protected formatMoneda = formatMonedaOt;
