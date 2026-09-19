@@ -1,0 +1,43 @@
+<form class="config-form" [formGroup]="form" (ngSubmit)="onSave()">
+  <div class="config-form__grid">
+    <div class="field">
+      <label class="field__label" for="serverIp">IP Servidor*</label>
+      <input
+        id="serverIp"
+        class="field__input"
+        type="text"
+        formControlName="serverIp"
+        placeholder="ej: 167.99.15.121 o localhost"
+        autocomplete="off"
+      />
+      @if (form.controls.serverIp.touched && form.controls.serverIp.invalid) {
+        <span class="field__error">La IP del servidor es obligatoria</span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="serverPort">Puerto Servidor*</label>
+      <input
+        id="serverPort"
+        class="field__input"
+        type="text"
+        formControlName="serverPort"
+        placeholder="8081"
+        inputmode="numeric"
+        autocomplete="off"
+      />
+      @if (form.controls.serverPort.touched && form.controls.serverPort.invalid) {
+        <span class="field__error">Puerto válido requerido (ej: 8081)</span>
+      }
+    </div>
+  </div>
+
+  <p class="config-form__hint">
+    Esta configuración se guarda en el equipo y se usa hasta que la cambies manualmente.
+  </p>
+
+  <div class="config-form__actions">
+    <app-ui-button type="button" variant="ghost" label="Cancelar" (clicked)="onCancel()" />
+    <app-ui-button type="submit" variant="primary" label="Guardar" [disabled]="form.invalid" />
+  </div>
+</form>

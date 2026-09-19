@@ -38,6 +38,8 @@ export class ModalComponent implements OnInit, OnDestroy {
   readonly maxWidth = input<string>('560px');
   /** Permite cerrar al hacer click en el backdrop. */
   readonly closeOnBackdrop = input<boolean>(true);
+  /** Permite cerrar con la tecla Escape. */
+  readonly closeOnEscape = input<boolean>(true);
   /** Elimina el padding del cuerpo del modal. */
   readonly noPadding = input<boolean>(false);
   /** Variante del encabezado. */
@@ -66,7 +68,7 @@ export class ModalComponent implements OnInit, OnDestroy {
   }
 
   protected onEscape(): void {
-    if (this.open()) {
+    if (this.open() && this.closeOnEscape()) {
       this.closed.emit();
     }
   }

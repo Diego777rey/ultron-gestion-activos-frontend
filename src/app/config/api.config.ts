@@ -1,13 +1,32 @@
 /**
  * Configuración central de acceso al backend.
- * En el navegador usa el host local por defecto.
- * En Electron puede sobreescribirse con `window.ultronDesktop.apiBaseUrl`
- * (config.json en userData o ULTRON_API_BASE_URL) sin recompilar Angular.
+ *
+ * Prioridad:
+ * 1. Configuración persistida (engranaje / localStorage)
+ * 2. Electron `window.ultronDesktop.apiBaseUrl`
+ * 3. localhost:8081
  */
-const DEFAULT_BASE_URL = 'http://localhost:8081';
+import {
+  DEFAULT_CONFIGURACION,
+  buildApiBaseUrl,
+  readStoredConfiguracion,
+} from '../shared/models/configuracion-sistema.model';
+
+const DEFAULT_BASE_URL = buildApiBaseUrl(
+  DEFAULT_CONFIGURACION.serverIp,
+  DEFAULT_CONFIGURACION.serverPort,
+);
 
 function normalizeBaseUrl(url: string): string {
   return url.trim().replace(/\/$/, '');
+}
+
+function readPersistedBaseUrl(): string | undefined {
+  const config = readStoredConfiguracion();
+  if (!config) {
+    return undefined;
+  }
+  return buildApiBaseUrl(config.serverIp, config.serverPort);
 }
 
 function readDesktopBaseUrl(): string | undefined {
@@ -24,7 +43,7 @@ function readDesktopBaseUrl(): string | undefined {
 }
 
 export function resolveApiBaseUrl(): string {
-  return readDesktopBaseUrl() ?? DEFAULT_BASE_URL;
+  return readPersistedBaseUrl() ?? readDesktopBaseUrl() ?? DEFAULT_BASE_URL;
 }
 
 export const API_CONFIG = {

@@ -1,5 +1,15 @@
 <div class="login-container">
     <div class="login-card">
+        <button
+            type="button"
+            class="settings-btn"
+            (click)="openConfiguracion()"
+            aria-label="Configuración del servidor"
+            title="Configuración del servidor"
+        >
+            <span class="material-icons" aria-hidden="true">settings</span>
+        </button>
+
         <div class="login-header">
             <div class="icon-circle">
                 <span class="material-icons">engineering</span>
@@ -8,7 +18,7 @@
         </div>
 
         <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-            
+
             @if (errorMessage()) {
                 <div class="error-text global-error">
                     <span class="material-icons error-icon">error</span> {{ errorMessage() }}
@@ -19,7 +29,7 @@
                 <label for="username">Usuario*</label>
                 <div class="input-container">
                     <span class="material-icons prefix-icon">person</span>
-                    <input type="text" id="username" formControlName="username" appUppercase placeholder="Usuario*" 
+                    <input type="text" id="username" formControlName="username" appUppercase placeholder="Usuario*"
                            [class.error-input]="loginForm.controls.username.invalid && loginForm.controls.username.touched" />
                 </div>
                 @if (loginForm.controls.username.invalid && loginForm.controls.username.touched) {

@@ -7,6 +7,7 @@ import { UppercaseDirective } from '../../../shared/directives/uppercase.directi
 import { normalizeLoginCredentials } from '../../../core/auth/auth.models';
 import { LoadingService } from '../../../shared/services/loading.service';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { ConfiguracionService } from '../../../shared/services/configuracion.service';
 import { MIN_SUCCESS_DELAY_MS } from '../../../shared/models/loading.model';
 import {
   NO_CONNECTION_MESSAGE,
@@ -27,6 +28,7 @@ export class PantallaLogin implements OnInit {
   private readonly router = inject(Router);
   private readonly loading = inject(LoadingService);
   private readonly notifications = inject(NotificationService);
+  private readonly configuracion = inject(ConfiguracionService);
 
   loginForm = this.fb.group({
     username: ['', [Validators.required]],
@@ -43,6 +45,19 @@ export class PantallaLogin implements OnInit {
 
   togglePasswordVisibility(): void {
     this.isPasswordVisible.update((val) => !val);
+  }
+
+  openConfiguracion(): void {
+    this.configuracion.showConfigDialog().subscribe((saved) => {
+      if (!saved) {
+        return;
+      }
+      this.errorMessage.set(null);
+      this.notifications.success('Configuración del servidor guardada', {
+        title: 'Servidor actualizado',
+        duration: 3500,
+      });
+    });
   }
 
   onSubmit(): void {

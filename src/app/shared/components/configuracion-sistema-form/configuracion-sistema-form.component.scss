@@ -1,0 +1,68 @@
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.config-form__grid {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #adb5bd;
+}
+
+.field__input {
+  width: 100%;
+  background: #212529;
+  border: 1px solid #495057;
+  border-radius: 6px;
+  padding: 0.7rem 0.85rem;
+  color: #f8f9fa;
+  font-size: 0.95rem;
+
+  &:focus {
+    outline: none;
+    border-color: #0dcaf0;
+    box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.2);
+  }
+
+  &::placeholder {
+    color: #6c757d;
+  }
+}
+
+.field__error {
+  color: #dc3545;
+  font-size: 0.75rem;
+}
+
+.config-form__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #adb5bd;
+  line-height: 1.4;
+}
+
+.config-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+@media (max-width: 520px) {
+  .config-form__grid {
+    grid-template-columns: 1fr;
+  }
+}
