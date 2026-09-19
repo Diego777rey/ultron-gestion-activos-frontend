@@ -7,6 +7,7 @@ export * from './models/crud-config.model';
 export * from './models/menu-item.model';
 export * from './models/configuracion-sistema.model';
 export * from './models/list-toolbar-action.model';
+export * from './models/reporte-sesion.model';
 export * from './models/notification.model';
 export * from './models/loading.model';
 
@@ -16,6 +17,8 @@ export * from './services/base-crud.service';
 export * from './services/notification.service';
 export * from './services/loading.service';
 export * from './services/configuracion.service';
+export * from './services/reporte.service';
+export * from './services/reporte-visor.service';
 
 // Pipes
 export * from './pipes/search-filter.pipe';
@@ -42,6 +45,7 @@ export * from './components/generic-list/generic-list';
 export * from './components/notification-container/notification-container';
 export * from './components/loading-overlay/loading-overlay';
 export * from './components/error-banner/error-banner';
+export * from './components/pdf-viewer/pdf-viewer.component';
 
 // Utilidades
 export * from './utils/list-pagination.util';

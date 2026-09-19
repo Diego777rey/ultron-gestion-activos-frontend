@@ -76,7 +76,7 @@ export class ReporteOrdenTrabajoComponent {
 
   protected readonly rowActions: MenuAction[] = [
     { id: 'preview', label: 'Vista previa', icon: 'visibility' },
-    { id: 'generar', label: 'Descargar PDF', icon: 'picture_as_pdf' },
+    { id: 'generar', label: 'Ver PDF', icon: 'picture_as_pdf' },
   ];
 
   constructor() {

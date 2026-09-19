@@ -25,4 +25,9 @@ export class AppDialogService {
 
     return dialogRef.closed;
   }
+
+  /** Cierra todos los modales abiertos (p. ej. al mostrar el visor de reportes). */
+  closeAll(): void {
+    this.dialog.closeAll();
+  }
 }

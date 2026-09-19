@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { Router, RouteReuseStrategy } from '@angular/router';
 import { TabService } from '../../shared/services/tab.service';
+import { ReporteVisorService } from '../../shared/services/reporte-visor.service';
 import { AppRouteReuseStrategy } from '../../shared/strategies/route-reuse.strategy';
 import { API_CONFIG } from '../../config/api.config';
 import { LoginRequest, LoginResponse, normalizeLoginCredentials } from './auth.models';
@@ -17,6 +18,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
   private tabService = inject(TabService);
+  private reporteVisor = inject(ReporteVisorService);
   private routeReuseStrategy = inject(RouteReuseStrategy);
 
   isAuthenticated = signal<boolean>(this.hasToken());
@@ -40,6 +42,7 @@ export class AuthService {
     this.clearSession();
 
     this.tabService.clear();
+    this.reporteVisor.limpiar();
 
     if (this.routeReuseStrategy instanceof AppRouteReuseStrategy) {
       (this.routeReuseStrategy as AppRouteReuseStrategy).clear();

@@ -120,6 +120,11 @@ export class MainLayoutComponent implements OnInit {
       icon: 'summarize',
       children: [
         {
+          label: 'Visor de reportes',
+          icon: 'picture_as_pdf',
+          route: '/reportes/visor',
+        },
+        {
           label: 'Detalle de orden de trabajo',
           icon: 'assignment',
           route: '/reportes/orden-de-trabajo',
@@ -170,6 +175,7 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('orden-de-trabajo')) return 'Orden de Trabajo';
     if (url.includes('taller/historial')) return 'Historial';
     if (url.includes('taller/calendario')) return 'Calendario';
+    if (url.includes('reportes/visor')) return 'Reportes';
     if (url.includes('reportes/orden-de-trabajo')) return 'Detalle de orden de trabajo';
     return 'Pantalla';
   }

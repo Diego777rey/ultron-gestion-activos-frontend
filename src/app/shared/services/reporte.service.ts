@@ -1,8 +1,11 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, from, map, switchMap, throwError } from 'rxjs';
+import { Observable, catchError, from, map, switchMap, tap, throwError } from 'rxjs';
 import { API_CONFIG } from '../../config/api.config';
+import { AbrirReporteOpciones, REPORTE_TITULO_HEADER } from '../models/reporte-sesion.model';
+import { LoadingService } from './loading.service';
 import { NotificationService } from './notification.service';
+import { ReporteVisorService } from './reporte-visor.service';
 
 export type TipoReporteInventario =
   | 'producto'
@@ -20,21 +23,37 @@ export type TipoReporteInventario =
 export interface ReporteOpciones {
   filtro?: string | null;
   id?: number | null;
+  titulo?: string | null;
 }
 
 /**
  * Cliente REST del paquete de reportes del backend.
- * En Electron abre el PDF en una ventana nueva de la app.
- * En el navegador lo muestra en una pestaña con visor embebido.
+ * Abre el PDF en el visor in-app (tab Reportes), reutilizable desde cualquier pantalla.
  */
 @Injectable({ providedIn: 'root' })
 export class ReporteService {
   private readonly http = inject(HttpClient);
   private readonly notifications = inject(NotificationService);
+  private readonly visor = inject(ReporteVisorService);
+  private readonly loading = inject(LoadingService);
 
   generar(tipo: TipoReporteInventario, opciones?: ReporteOpciones): Observable<void> {
-    return this.obtenerPdf(tipo, opciones).pipe(
-      switchMap((pdf) => from(this.abrirPdf(pdf.blob, pdf.filename))),
+    return this.loading.track(
+      this.obtenerPdf(tipo, opciones).pipe(
+        tap((pdf) => {
+          this.abrirPdf({
+            titulo: opciones?.titulo?.trim() || pdf.titulo || tituloDesdeTipo(tipo),
+            filename: pdf.filename,
+            blob: pdf.blob,
+          });
+        }),
+        map(() => undefined),
+      ),
+      {
+        message: 'Generando reporte…',
+        notifyError: false,
+        errorTitle: 'No se pudo generar el reporte',
+      },
     );
   }
 
@@ -42,47 +61,15 @@ export class ReporteService {
     return this.generar(tipo, opciones);
   }
 
-  private async abrirPdf(blob: Blob, filename: string): Promise<void> {
-    if (window.ultronDesktop?.openPdf) {
-      const bytes = new Uint8Array(await blob.arrayBuffer());
-      await window.ultronDesktop.openPdf(bytes, filename);
-      return;
-    }
-    this.abrirEnPestaña(blob, filename);
-  }
-
-  private abrirEnPestaña(blob: Blob, filename: string): void {
-    const objectUrl = URL.createObjectURL(blob);
-    const tab = window.open('', '_blank');
-    if (!tab) {
-      this.notifications.error('No se pudo abrir la pestaña del reporte.');
-      URL.revokeObjectURL(objectUrl);
-      return;
-    }
-
-    const title = this.escapeHtml(filename);
-    tab.document.open();
-    tab.document.write(`<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>${title}</title>
-    <style>
-      html, body { margin: 0; height: 100%; background: #323639; }
-      iframe { border: 0; width: 100%; height: 100%; }
-    </style>
-  </head>
-  <body>
-    <iframe src="${objectUrl}" title="${title}"></iframe>
-  </body>
-</html>`);
-    tab.document.close();
+  /** Abre cualquier PDF en el visor in-app, aunque no venga de /api/reportes. */
+  abrirPdf(opciones: AbrirReporteOpciones): void {
+    this.visor.abrir(opciones);
   }
 
   private obtenerPdf(
     tipo: TipoReporteInventario,
     opciones?: ReporteOpciones,
-  ): Observable<{ blob: Blob; filename: string }> {
+  ): Observable<{ blob: Blob; filename: string; titulo: string | null }> {
     let params = new HttpParams();
     const filtro = opciones?.filtro?.trim();
     if (filtro) {
@@ -110,7 +97,8 @@ export class ReporteService {
           const filename =
             this.filenameFromDisposition(response.headers.get('Content-Disposition')) ??
             `reporte-${tipo}.pdf`;
-          return { blob, filename };
+          const titulo = decodeHeader(response.headers.get(REPORTE_TITULO_HEADER));
+          return { blob, filename, titulo };
         }),
         catchError((err: unknown) => this.handleError(err)),
       );
@@ -126,14 +114,6 @@ export class ReporteService {
     }
     const asciiMatch = /filename="?([^";]+)"?/i.exec(header);
     return asciiMatch?.[1] ?? null;
-  }
-
-  private escapeHtml(value: string): string {
-    return value
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;');
   }
 
   private handleError(err: unknown): Observable<never> {
@@ -158,4 +138,23 @@ export class ReporteService {
     this.notifications.error(message || fallback);
     return throwError(() => (err instanceof Error ? err : new Error(fallback)));
   }
+}
+
+function decodeHeader(value: string | null): string | null {
+  if (!value?.trim()) {
+    return null;
+  }
+  try {
+    return decodeURIComponent(value).trim() || null;
+  } catch {
+    return value.trim();
+  }
+}
+
+function tituloDesdeTipo(tipo: TipoReporteInventario): string {
+  return tipo
+    .split('_')
+    .filter((parte) => parte.length > 0)
+    .map((parte) => parte.charAt(0).toUpperCase() + parte.slice(1))
+    .join(' ');
 }

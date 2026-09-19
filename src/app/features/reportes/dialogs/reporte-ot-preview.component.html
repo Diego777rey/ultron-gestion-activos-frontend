@@ -4,11 +4,11 @@
       @if (id() != null) {
         Vista previa de la orden seleccionada. El PDF incluye todos los detalles.
       } @else {
-        Vista previa de las órdenes listadas. El PDF descarga el detalle de todas las que coincidan con el filtro.
+        Vista previa de las órdenes listadas. El PDF abre el detalle de todas las que coincidan con el filtro.
       }
     </p>
     <app-ui-button
-      label="Descargar PDF"
+      label="Ver PDF"
       icon="picture_as_pdf"
       [loading]="generando()"
       [disabled]="!ordenes().length"

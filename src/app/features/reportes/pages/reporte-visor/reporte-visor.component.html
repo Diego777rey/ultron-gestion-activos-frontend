@@ -1,0 +1,48 @@
+<div class="visor">
+  <aside class="visor__historial">
+    <h2 class="visor__historial-titulo">Últimos reportes</h2>
+
+    @if (visor.sesiones().length === 0) {
+      <p class="visor__vacio">Todavía no hay reportes en esta sesión.</p>
+    } @else {
+      <ul class="visor__lista">
+        @for (sesion of visor.sesiones(); track sesion.id) {
+          <li class="visor__item" [class.visor__item--activo]="sesion.id === visor.activaId()">
+            <button
+              type="button"
+              class="visor__item-select"
+              [attr.aria-current]="sesion.id === visor.activaId() ? 'true' : null"
+              (click)="seleccionar(sesion.id)"
+            >
+              <span class="visor__item-nombre">{{ sesion.titulo }}</span>
+              <span class="visor__item-fecha">{{ formatFecha(sesion.creadoEn) }}</span>
+            </button>
+            <button
+              type="button"
+              class="visor__item-cerrar"
+              [attr.aria-label]="'Cerrar ' + sesion.titulo"
+              (click)="cerrar($event, sesion.id)"
+            >
+              <span class="material-icons" aria-hidden="true">close</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </aside>
+
+  <section class="visor__documento" aria-label="Vista del reporte">
+    @if (visor.sesionActiva(); as activa) {
+      <p class="visor__sr-only" aria-live="polite">Mostrando {{ activa.titulo }}</p>
+      <app-pdf-viewer
+        [src]="activa.objectUrl"
+        [title]="activa.titulo"
+      />
+    } @else {
+      <div class="visor__placeholder">
+        <span class="material-icons visor__placeholder-icon" aria-hidden="true">picture_as_pdf</span>
+        <p>Generá un reporte desde cualquier listado para verlo aquí.</p>
+      </div>
+    }
+  </section>
+</div>
