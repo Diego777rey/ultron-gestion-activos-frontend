@@ -38,6 +38,14 @@
   letter-spacing: 0.01em;
 }
 
+.ot-section__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .ot-section--card {
   max-width: none;
 }
@@ -126,9 +134,9 @@
   margin-top: 12px;
 }
 
-/* Fila solicitud: sector | observación */
+/* Fila solicitud: origen | destino | observación */
 .ot-form__row--solicitud-top {
-  grid-template-columns: minmax(180px, 1fr) minmax(160px, 1fr);
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(160px, 1fr);
 }
 
 /* Fila solicitud: producto | cant | botón */
@@ -419,6 +427,32 @@ textarea.ot-field__input {
 
   .material-icons {
     font-size: 18px;
+  }
+}
+
+.ot-icon-btn--accent {
+  color: var(--primary-color);
+
+  &:hover {
+    background: var(--active-bg);
+    color: var(--primary-color-dark, var(--primary-color));
+  }
+}
+
+.ot-link-btn {
+  border: none;
+  background: transparent;
+  color: var(--primary-color);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+    outline: none;
   }
 }
 

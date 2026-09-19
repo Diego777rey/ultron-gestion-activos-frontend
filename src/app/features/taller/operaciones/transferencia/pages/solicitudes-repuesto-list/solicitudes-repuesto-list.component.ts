@@ -11,8 +11,11 @@ import { ReporteService } from '../../../../../../shared/services/reporte.servic
 import { NotificationService } from '../../../../../../shared/services/notification.service';
 import { LoadingService } from '../../../../../../shared/services/loading.service';
 import { resolveLoadingErrorMessage } from '../../../../../../shared/utils/loading-error.util';
+import { AppDialogService } from '../../../../../../shared/services/app-dialog.service';
 import { SolicitudRepuestoService } from '../../../../orden-de-trabajo/services/solicitud-repuesto.service';
 import { SolicitudRepuestoOutput } from '../../../../orden-de-trabajo/interfaces/solicitud-repuesto.interface';
+import { RechazoSolicitudDialogComponent } from '../../dialogs/rechazo-solicitud-dialog/rechazo-solicitud-dialog.component';
+import { AprobarSolicitudDialogComponent } from '../../dialogs/aprobar-solicitud-dialog/aprobar-solicitud-dialog.component';
 
 @Component({
   selector: 'app-solicitudes-repuesto-list',
@@ -29,6 +32,7 @@ import { SolicitudRepuestoOutput } from '../../../../orden-de-trabajo/interfaces
 })
 export class SolicitudesRepuestoListComponent {
   private readonly solicitudService = inject(SolicitudRepuestoService);
+  private readonly dialogService = inject(AppDialogService);
   private readonly reporteService = inject(ReporteService);
   private readonly notificationService = inject(NotificationService);
   private readonly loadingService = inject(LoadingService);
@@ -135,7 +139,7 @@ export class SolicitudesRepuestoListComponent {
     const actions: MenuAction[] = [];
     if (item.estado === 'PENDIENTE') {
       actions.push({ id: 'aprobar', label: 'Aprobar solicitud', icon: 'check' });
-      actions.push({ id: 'rechazar', label: 'Rechazar solicitud', icon: 'close' });
+      actions.push({ id: 'rechazar', label: 'Rechazar solicitud', icon: 'close', danger: true });
     }
     if (item.id_transferencia) {
       actions.push({ id: 'transferencia', label: 'Ver transferencia', icon: 'sync_alt' });
@@ -165,36 +169,62 @@ export class SolicitudesRepuestoListComponent {
 
   protected aprobar(item: SolicitudRepuestoOutput): void {
     if (!item.id_solicitud_repuesto) return;
-    const confirmacion = confirm(
-      `¿Aprobar solicitud de repuestos para la orden ${item.numero_orden ?? ''}? Al aprobar se generará la transferencia correspondiente.`
-    );
-    if (!confirmacion) return;
 
-    this.solicitudService.aprobar(item.id_solicitud_repuesto).subscribe({
-      next: () => {
-        this.notificationService.success('Solicitud aprobada y transferencia creada');
-        this.load();
-      },
-      error: (err: Error) => {
-        this.notificationService.error(err?.message || 'No se pudo aprobar la solicitud');
-      },
-    });
+    this.dialogService
+      .openForm<boolean>(AprobarSolicitudDialogComponent, {
+        title: 'Aprobar solicitud',
+        subtitle: 'Se va a generar la transferencia',
+        maxWidth: '480px',
+        inputs: {
+          numeroOrden: item.numero_orden ?? '',
+          origenNombre: item.sector_origen?.nombre ?? '',
+          destinoNombre: item.sector_destino?.nombre ?? '',
+        },
+      })
+      .subscribe((confirmado) => {
+        if (!confirmado || !item.id_solicitud_repuesto) {
+          return;
+        }
+        this.solicitudService.aprobar(item.id_solicitud_repuesto).subscribe({
+          next: () => {
+            this.notificationService.success('Solicitud aprobada y transferencia creada');
+            this.load();
+          },
+          error: (err: Error) => {
+            this.notificationService.error(err?.message || 'No se pudo aprobar la solicitud');
+          },
+        });
+      });
   }
 
   protected rechazar(item: SolicitudRepuestoOutput): void {
     if (!item.id_solicitud_repuesto) return;
-    const motivo = prompt('Motivo del rechazo de la solicitud:');
-    if (!motivo?.trim()) return;
 
-    this.solicitudService.rechazar(item.id_solicitud_repuesto, motivo.trim()).subscribe({
-      next: () => {
-        this.notificationService.info('Solicitud rechazada');
-        this.load();
-      },
-      error: (err: Error) => {
-        this.notificationService.error(err?.message || 'No se pudo rechazar la solicitud');
-      },
-    });
+    this.dialogService
+      .openForm<string>(RechazoSolicitudDialogComponent, {
+        title: 'Rechazar solicitud',
+        subtitle: 'La observación es obligatoria',
+        maxWidth: '480px',
+        inputs: {
+          numeroOrden: item.numero_orden ?? '',
+          origenNombre: item.sector_origen?.nombre ?? '',
+          destinoNombre: item.sector_destino?.nombre ?? '',
+        },
+      })
+      .subscribe((motivo) => {
+        if (!motivo?.trim() || !item.id_solicitud_repuesto) {
+          return;
+        }
+        this.solicitudService.rechazar(item.id_solicitud_repuesto, motivo.trim()).subscribe({
+          next: () => {
+            this.notificationService.info('Solicitud rechazada');
+            this.load();
+          },
+          error: (err: Error) => {
+            this.notificationService.error(err?.message || 'No se pudo rechazar la solicitud');
+          },
+        });
+      });
   }
 
   protected estadoLabel(estado?: string | null): string {

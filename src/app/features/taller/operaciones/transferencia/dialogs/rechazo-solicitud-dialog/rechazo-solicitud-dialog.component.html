@@ -1,0 +1,34 @@
+<form class="entity-form" [formGroup]="form" (ngSubmit)="confirmar()">
+  <p class="entity-form__hint">
+    @if (numeroOrden()) {
+      Vas a rechazar la solicitud de <strong>{{ numeroOrden() }}</strong>
+      @if (origenNombre() || destinoNombre()) {
+        ({{ origenNombre() || '—' }} → {{ destinoNombre() || '—' }}).
+      }
+    } @else {
+      Vas a rechazar esta solicitud de repuesto.
+    }
+    La observación queda registrada y es obligatoria.
+  </p>
+
+  <div class="field field--full">
+    <textarea
+      id="obsRechazoSolicitud"
+      class="field__input field__input--textarea"
+      formControlName="observacion"
+      appAutofocus
+      rows="4"
+      maxlength="255"
+      placeholder=" "
+    ></textarea>
+    <label class="field__label" for="obsRechazoSolicitud">Observación*</label>
+    @if (form.controls.observacion.touched && form.controls.observacion.invalid) {
+      <span class="field__error">La observación es obligatoria</span>
+    }
+  </div>
+</form>
+
+<div class="entity-form-footer">
+  <app-ui-button type="button" label="Cancelar" icon="close" variant="ghost" (clicked)="cancelar()" />
+  <app-ui-button type="button" label="Rechazar" icon="cancel" variant="danger" (clicked)="confirmar()" />
+</div>
