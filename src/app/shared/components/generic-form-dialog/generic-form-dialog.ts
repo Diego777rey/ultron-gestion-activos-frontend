@@ -7,6 +7,10 @@ export interface GenericDialogData {
   title: string;
   subtitle?: string;
   maxWidth?: string;
+  /** Si es false, el modal no se cierra al clickear el backdrop. Default: true. */
+  closeOnBackdrop?: boolean;
+  /** Si es false, el modal no se cierra con Escape. Default: true. */
+  closeOnEscape?: boolean;
   component: Type<any>;
   inputs?: Record<string, unknown>;
 }
@@ -20,6 +24,8 @@ export interface GenericDialogData {
       [title]="data.title"
       [subtitle]="data.subtitle || ''"
       [maxWidth]="data.maxWidth || '560px'"
+      [closeOnBackdrop]="data.closeOnBackdrop !== false"
+      [closeOnEscape]="data.closeOnEscape !== false"
       (closed)="close()"
     >
       <ng-container *ngComponentOutlet="data.component; inputs: data.inputs || {}"></ng-container>

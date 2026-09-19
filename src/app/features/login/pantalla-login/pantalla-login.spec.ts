@@ -5,6 +5,7 @@ import { PantallaLogin } from './pantalla-login';
 import { AuthService } from '../../../core/auth/auth.service';
 import { LoadingService } from '../../../shared/services/loading.service';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { ConfiguracionService } from '../../../shared/services/configuracion.service';
 
 describe('PantallaLogin', () => {
   let component: PantallaLogin;
@@ -32,6 +33,13 @@ describe('PantallaLogin', () => {
         {
           provide: NotificationService,
           useValue: { success: vi.fn(), error: vi.fn() },
+        },
+        {
+          provide: ConfiguracionService,
+          useValue: {
+            getApiBaseUrl: () => 'http://localhost:8081',
+            showConfigDialog: () => of(false),
+          },
         },
       ],
     }).compileComponents();

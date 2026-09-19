@@ -5,6 +5,7 @@ export * from './models/table-column.model';
 export * from './models/pagination.model';
 export * from './models/crud-config.model';
 export * from './models/menu-item.model';
+export * from './models/configuracion-sistema.model';
 export * from './models/list-toolbar-action.model';
 export * from './models/notification.model';
 export * from './models/loading.model';
@@ -14,6 +15,7 @@ export * from './services/graphql.service';
 export * from './services/base-crud.service';
 export * from './services/notification.service';
 export * from './services/loading.service';
+export * from './services/configuracion.service';
 
 // Pipes
 export * from './pipes/search-filter.pipe';
