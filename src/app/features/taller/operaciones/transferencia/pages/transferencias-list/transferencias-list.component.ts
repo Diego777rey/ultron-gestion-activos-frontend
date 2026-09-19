@@ -8,10 +8,12 @@ import { TableColumn } from '../../../../../../shared/models/table-column.model'
 import { ListToolbarAction } from '../../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../../shared/models/pagination.model';
 import { AppDialogService } from '../../../../../../shared/services/app-dialog.service';
+import { LoadingService } from '../../../../../../shared/services/loading.service';
 import { TransferenciaService } from '../../services/transferencia.service';
 import { TransferenciaOutput } from '../../interfaces/transferencia.interface';
 import { TransferenciaFormComponent } from '../../dialogs/transferencia-form/transferencia-form.component';
 import { ReporteService } from '../../../../../../shared/services/reporte.service';
+import { resolveLoadingErrorMessage } from '../../../../../../shared/utils/loading-error.util';
 
 @Component({
   selector: 'app-transferencias-list',
@@ -31,6 +33,7 @@ export class TransferenciasListComponent {
   private readonly dialogService = inject(AppDialogService);
   private readonly router = inject(Router);
   private readonly reporteService = inject(ReporteService);
+  private readonly loadingService = inject(LoadingService);
 
   protected readonly transferencias = signal<TransferenciaOutput[]>([]);
   protected readonly loading = signal(false);
@@ -65,16 +68,16 @@ export class TransferenciasListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.transferenciaService
-      .findPaginated(this.pageIndex(), this.pageSize(), this.search())
+    this.loadingService
+      .pageLoad(this.transferenciaService.findPaginated(this.pageIndex(), this.pageSize(), this.search()))
       .subscribe({
         next: (response) => {
           this.transferencias.set(response.content);
           this.totalElements.set(response.pageInfo.totalElements);
           this.loading.set(false);
         },
-        error: (err: Error) => {
-          this.error.set(err.message || 'No se pudo conectar con el servidor');
+        error: (err: unknown) => {
+          this.error.set(resolveLoadingErrorMessage(err));
           this.loading.set(false);
         },
       });

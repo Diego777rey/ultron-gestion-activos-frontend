@@ -81,7 +81,7 @@ export class UsuariosListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.usuarioService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
+    this.usuarioService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), true).subscribe({
       next: (response) => {
         this.usuarios.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);

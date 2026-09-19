@@ -139,7 +139,7 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
   private cargarOrden(id: string): void {
     this.loading.set(true);
     this.error.set(null);
-    this.ordenService.findById(id).subscribe({
+    this.ordenService.findById(id, true).subscribe({
       next: (data) => {
         this.orden.set(data);
         this.loading.set(false);

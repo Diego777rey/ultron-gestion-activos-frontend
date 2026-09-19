@@ -18,6 +18,8 @@ import { DefaultEmptyPipe } from '../../../../../../shared/pipes/default-empty.p
 import { TableColumn } from '../../../../../../shared/models/table-column.model';
 import { PageChange } from '../../../../../../shared/models/pagination.model';
 import { AppDialogService } from '../../../../../../shared/services/app-dialog.service';
+import { LoadingService } from '../../../../../../shared/services/loading.service';
+import { resolveLoadingErrorMessage } from '../../../../../../shared/utils/loading-error.util';
 import { TransferenciaService } from '../../services/transferencia.service';
 import {
   MotivoRechazoTransferencia,
@@ -50,6 +52,7 @@ export class TransferenciaGestionComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly transferenciaService = inject(TransferenciaService);
   private readonly dialogService = inject(AppDialogService);
+  private readonly loadingService = inject(LoadingService);
   private readonly cantidadInput = viewChild<ElementRef<HTMLInputElement>>('cantidadInput');
 
   protected readonly transferencia = signal<TransferenciaOutput | null>(null);
@@ -212,7 +215,7 @@ export class TransferenciaGestionComponent {
     }
     this.loading.set(true);
     this.error.set(null);
-    this.transferenciaService.findById(transferId).subscribe({
+    this.loadingService.pageLoad(this.transferenciaService.findById(transferId)).subscribe({
       next: (t) => {
         if (!t) {
           this.error.set('Transferencia no encontrada');
@@ -229,8 +232,8 @@ export class TransferenciaGestionComponent {
           this.fetchStockPage(0, this.stockPageSize());
         }
       },
-      error: (err: Error) => {
-        this.error.set(err.message || 'No se pudo cargar la transferencia');
+      error: (err: unknown) => {
+        this.error.set(resolveLoadingErrorMessage(err, 'No se pudo cargar la transferencia'));
         this.loading.set(false);
       },
     });

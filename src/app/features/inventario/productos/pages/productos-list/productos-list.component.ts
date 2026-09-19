@@ -73,7 +73,7 @@ export class ProductosListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.productoService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
+    this.productoService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), true).subscribe({
       next: (response) => {
         this.productos.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);

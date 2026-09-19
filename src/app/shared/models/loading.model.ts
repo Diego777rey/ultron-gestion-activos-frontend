@@ -23,5 +23,44 @@ export type MutationState =
   | { status: 'loading' }
   | { status: 'error'; message: string };
 
-/** Tiempo mínimo (ms) que el spinner permanece visible ante un error. */
-export const MIN_ERROR_DELAY_MS = 3500;
+/**
+ * Tiempo mínimo (ms) que el spinner permanece visible ante un error
+ * antes de mostrar el mensaje al usuario.
+ */
+export const MIN_ERROR_DELAY_MS = 2000;
+
+/** Tiempo mínimo (ms) del overlay en flujos de éxito prolongados (ej. login). */
+export const MIN_SUCCESS_DELAY_MS = 2000;
+
+/** Opciones al envolver un Observable con el overlay global. */
+export interface LoadingTrackOptions {
+  /** Texto bajo el spinner (ej. "Guardando…", "Eliminando…"). */
+  message?: string;
+  /**
+   * Tiempo mínimo visible ante error. Por defecto `MIN_ERROR_DELAY_MS`.
+   * En éxito el overlay se oculta al completar la operación (salvo `minSuccessDelayMs`).
+   */
+  minErrorDelayMs?: number;
+  /**
+   * Tiempo mínimo visible ante éxito. Por defecto `0` (oculta al completar).
+   * Útil en login u otras transiciones donde se quiere mostrar carga un instante.
+   */
+  minSuccessDelayMs?: number;
+  /**
+   * Si es true (default), muestra un toast de error al finalizar la espera mínima.
+   * Desactívalo si el componente ya muestra el error por su cuenta.
+   */
+  notifyError?: boolean;
+  /** Título del toast de error. */
+  errorTitle?: string;
+  /** Mensaje de error forzado (si no se indica, se infiere del error). */
+  errorMessage?: string;
+}
+
+/**
+ * Activa el overlay en consultas de pantalla (`findAll` / `findPaginated` / `findById`).
+ * - `true` → overlay "Cargando…" con defaults.
+ * - objeto → personaliza mensaje / notificación.
+ * Omitirlo (o `false`) para búsquedas inline (entity-searcher, etc.).
+ */
+export type LoadingQueryOption = boolean | LoadingTrackOptions;

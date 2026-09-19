@@ -1,9 +1,4 @@
-@if (error()) {
-  <div class="producto-form__error" role="alert">
-    <span class="material-icons" aria-hidden="true">error_outline</span>
-    <span>{{ error() }}</span>
-  </div>
-}
+<app-error-banner [message]="error()" />
 
 <form class="producto-form" [formGroup]="form" (ngSubmit)="onSubmit()">
   <section class="producto-form__section">

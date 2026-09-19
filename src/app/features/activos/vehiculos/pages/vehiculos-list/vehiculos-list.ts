@@ -71,7 +71,7 @@ export class VehiculosListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.vehiculoService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
+    this.vehiculoService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), true).subscribe({
       next: (response) => {
         this.vehiculos.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);

@@ -61,7 +61,7 @@ export class SectoresListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.sectorService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
+    this.sectorService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), true).subscribe({
       next: (response) => {
         this.sectores.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);

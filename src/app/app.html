@@ -1,2 +1,7 @@
 <router-outlet />
 <app-notification-container />
+<app-loading-overlay
+  [loading]="loading.visible()"
+  [message]="loading.message()"
+  [fullscreen]="true"
+/>

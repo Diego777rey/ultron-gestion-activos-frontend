@@ -84,7 +84,7 @@ export class ReporteOrdenTrabajoComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.ordenService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
+    this.ordenService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), true).subscribe({
       next: (response: PageResponse<OrdenTrabajoOutput>) => {
         this.ordenes.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);

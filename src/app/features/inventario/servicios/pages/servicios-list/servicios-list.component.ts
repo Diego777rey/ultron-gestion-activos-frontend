@@ -71,7 +71,7 @@ export class ServiciosListComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.servicioService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
+    this.servicioService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), true).subscribe({
       next: (response) => {
         this.servicios.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);

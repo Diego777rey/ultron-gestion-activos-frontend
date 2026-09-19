@@ -263,7 +263,7 @@ export class PuntoDeVentaComponent {
   }
 
   private loadProductos(): void {
-    this.productoService.findAll().subscribe({
+    this.productoService.findAll(true).subscribe({
       next: (items) => this.productos.set(items),
       error: (err: Error) => this.ventaError.set(err.message || 'No se pudieron cargar productos'),
     });

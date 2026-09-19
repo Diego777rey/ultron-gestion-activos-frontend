@@ -63,7 +63,7 @@ export class CajasPageComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.cajaService.findPaginated(this.pageIndex(), this.pageSize(), this.search()).subscribe({
+    this.cajaService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), true).subscribe({
       next: (response) => {
         this.cajas.set(response.content);
         this.totalElements.set(response.pageInfo.totalElements);
