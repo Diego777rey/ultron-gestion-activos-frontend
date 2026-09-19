@@ -9,12 +9,13 @@ import {
   input,
   output,
 } from '@angular/core';
+import { NoCloseOnOutsideDirective } from '../../directives/no-close-on-outside.directive';
 
 /**
  * Modal / diálogo genérico reutilizable.
  * Renderiza un overlay con panel centrado, encabezado con título y botón de cierre,
  * un cuerpo proyectado por defecto y un pie opcional (`[modal-footer]`).
- * Se cierra con Escape o click en el backdrop.
+ * Se cierra con Escape. El click en el backdrop no cierra (directiva `appNoCloseOnOutside`).
  */
 @Component({
   selector: 'app-modal',
@@ -24,10 +25,17 @@ import {
   host: {
     '(document:keydown.escape)': 'onEscape()',
   },
+  hostDirectives: [
+    {
+      directive: NoCloseOnOutsideDirective,
+      inputs: ['appNoCloseOnOutside'],
+    },
+  ],
 })
 export class ModalComponent implements OnInit, OnDestroy {
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly document = inject(DOCUMENT);
+  private readonly noCloseOnOutside = inject(NoCloseOnOutsideDirective);
   /** Controla la visibilidad del modal. */
   readonly open = input<boolean>(false);
   /** Título mostrado en el encabezado. */
@@ -36,8 +44,8 @@ export class ModalComponent implements OnInit, OnDestroy {
   readonly subtitle = input<string>('');
   /** Ancho máximo del panel (CSS). */
   readonly maxWidth = input<string>('560px');
-  /** Permite cerrar al hacer click en el backdrop. */
-  readonly closeOnBackdrop = input<boolean>(true);
+  /** Permite cerrar al hacer click en el backdrop. Por defecto no cierra. */
+  readonly closeOnBackdrop = input<boolean>(false);
   /** Permite cerrar con la tecla Escape. */
   readonly closeOnEscape = input<boolean>(true);
   /** Elimina el padding del cuerpo del modal. */
@@ -62,7 +70,8 @@ export class ModalComponent implements OnInit, OnDestroy {
   }
 
   protected onBackdrop(): void {
-    if (this.closeOnBackdrop()) {
+    const preventClose = this.noCloseOnOutside.isEnabled() && !this.closeOnBackdrop();
+    if (!preventClose) {
       this.closed.emit();
     }
   }

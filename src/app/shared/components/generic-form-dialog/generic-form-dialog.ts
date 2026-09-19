@@ -7,7 +7,7 @@ export interface GenericDialogData {
   title: string;
   subtitle?: string;
   maxWidth?: string;
-  /** Si es false, el modal no se cierra al clickear el backdrop. Default: true. */
+  /** Si es true, el modal se cierra al clickear el backdrop. Default: false. */
   closeOnBackdrop?: boolean;
   /** Si es false, el modal no se cierra con Escape. Default: true. */
   closeOnEscape?: boolean;
@@ -24,7 +24,8 @@ export interface GenericDialogData {
       [title]="data.title"
       [subtitle]="data.subtitle || ''"
       [maxWidth]="data.maxWidth || '560px'"
-      [closeOnBackdrop]="data.closeOnBackdrop !== false"
+      [closeOnBackdrop]="!!data.closeOnBackdrop"
+      [appNoCloseOnOutside]="data.closeOnBackdrop !== true"
       [closeOnEscape]="data.closeOnEscape !== false"
       (closed)="close()"
     >

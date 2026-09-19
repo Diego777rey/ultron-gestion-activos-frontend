@@ -9,6 +9,7 @@ export class AppDialogService {
 
   /**
    * Abre un componente formulario dentro de un modal genérico.
+   * El click fuera del panel no cierra el diálogo (`appNoCloseOnOutside`).
    * El componente interno puede inyectar `DialogRef` (de @angular/cdk/dialog)
    * para cerrar el modal emitiendo un resultado, por ejemplo: `this.dialogRef.close(true)`
    */
@@ -17,7 +18,7 @@ export class AppDialogService {
     data: Omit<GenericDialogData, 'component'>
   ): Observable<R | undefined> {
     const dialogRef = this.dialog.open<R>(GenericFormDialogComponent, {
-      data: { ...data, component },
+      data: { ...data, component, closeOnBackdrop: data.closeOnBackdrop ?? false },
       hasBackdrop: false, // El <app-modal> tiene su propio backdrop (position: fixed)
       panelClass: 'app-dialog-transparent-panel',
     });
