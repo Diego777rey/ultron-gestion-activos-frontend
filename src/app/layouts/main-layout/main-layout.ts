@@ -44,14 +44,13 @@ export class MainLayoutComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   menuItems: MenuItem[] = [
-    // Oculto por ahora — aún no se usa
-    // {
-    //   label: 'Ventas',
-    //   icon: 'point_of_sale',
-    //   children: [
-    //     { label: 'Punto de Venta', icon: 'storefront', route: '/ventas/punto-de-venta' },
-    //   ]
-    // },
+    {
+      label: 'Ventas',
+      icon: 'point_of_sale',
+      children: [
+        { label: 'Punto de Venta', icon: 'storefront', route: '/ventas/punto-de-venta' },
+      ]
+    },
     {
       label: 'Taller',
       icon: 'construction',
@@ -78,15 +77,14 @@ export class MainLayoutComponent implements OnInit {
       ],
     },
     { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos' },
-    // Oculto por ahora — aún no se usa
-    // {
-    //   label: 'Financiero',
-    //   icon: 'account_balance',
-    //   children: [
-    //     { label: 'Maletines', icon: 'business_center', route: '/financiero/maletines' },
-    //     { label: 'Cajas', icon: 'account_balance_wallet', route: '/financiero/cajas' },
-    //   ]
-    // },
+    {
+      label: 'Financiero',
+      icon: 'account_balance',
+      children: [
+        { label: 'Maletines', icon: 'business_center', route: '/financiero/maletines' },
+        { label: 'Cajas', icon: 'account_balance_wallet', route: '/financiero/cajas' },
+      ]
+    },
     {
       label: 'Servicios',
       icon: 'handyman',

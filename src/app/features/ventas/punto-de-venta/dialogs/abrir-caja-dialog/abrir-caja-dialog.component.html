@@ -59,38 +59,33 @@
           </div>
 
           <div class="select-grid">
-            <label class="select-field">
-              <span>Caja</span>
-              <select
-                [value]="idCajaSeleccionada() ?? ''"
-                (change)="onCajaChange($any($event.target).value)"
-                [disabled]="cajaOpen()"
-              >
-                <option value="" disabled>Seleccionar caja</option>
-                @for (caja of cajas(); track caja.id_caja) {
-                  <option [value]="caja.id_caja">{{ caja.nombre }}</option>
-                }
-              </select>
-            </label>
+            <app-entity-searcher
+              [items]="cajasParaBuscador()"
+              [value]="idCajaSeleccionada()"
+              (itemChange)="onCajaSelected($event)"
+              [displayFn]="cajaLabelFn"
+              [keyFn]="cajaKeyFn"
+              [searchFn]="cajaSearchFn"
+              [columns]="cajaColumns"
+              [loading]="loadingCajas()"
+              [disabled]="cajaOpen()"
+              label="Caja"
+              searchPlaceholder="Buscar por nombre o id..."
+            />
 
-            <label class="select-field">
-              <span>Maletín</span>
-              <select
-                [value]="idMaletinSeleccionado() ?? ''"
-                (change)="onMaletinChange($any($event.target).value)"
-                [disabled]="cajaOpen()"
-              >
-                <option value="" disabled>Seleccionar maletín</option>
-                @for (maletin of maletines(); track maletin.id_maletin) {
-                  <option [value]="maletin.id_maletin">
-                    {{ maletin.nombre }}
-                    @if (maletin.sector?.nombre) {
-                      · {{ maletin.sector?.nombre }}
-                    }
-                  </option>
-                }
-              </select>
-            </label>
+            <app-entity-searcher
+              [items]="maletinesParaBuscador()"
+              [value]="idMaletinSeleccionado()"
+              (itemChange)="onMaletinSelected($event)"
+              [displayFn]="maletinLabelFn"
+              [keyFn]="maletinKeyFn"
+              [searchFn]="maletinSearchFn"
+              [columns]="maletinColumns"
+              [loading]="loadingMaletines()"
+              [disabled]="maletinDeshabilitado()"
+              label="Maletín"
+              searchPlaceholder="Buscar por código..."
+            />
           </div>
 
           <div class="check-grid" aria-label="Checklist de verificación">

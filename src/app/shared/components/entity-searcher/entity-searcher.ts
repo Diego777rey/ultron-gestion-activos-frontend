@@ -26,6 +26,11 @@ export class EntitySearcherComponent<T> {
   readonly items = input<T[]>([]);
   readonly value = input<any>(null);
   readonly displayFn = input<(item: T) => string>((item) => String(item));
+  /**
+   * Criterio de filtro local (cuando no hay paginación de backend).
+   * Recibe el texto ya normalizado en minúsculas. Si no se define, se usa `displayFn`.
+   */
+  readonly searchFn = input<(item: T, query: string) => boolean>();
   readonly keyFn = input<(item: T) => any>((item) => (item as any).id);
   readonly label = input<string>('Buscar...');
   readonly searchPlaceholder = input<string>('Buscar...');
@@ -71,6 +76,10 @@ export class EntitySearcherComponent<T> {
     const query = this.searchQuery().toLowerCase().trim();
     const all = this.items();
     if (!query) return all;
+    const matcher = this.searchFn();
+    if (matcher) {
+      return all.filter((i) => matcher(i, query));
+    }
     const dfn = this.displayFn();
     return all.filter((i) => dfn(i).toLowerCase().includes(query));
   });

@@ -179,6 +179,7 @@
 
 .select-grid {
   grid-template-columns: 1fr 1fr;
+  align-items: start;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
@@ -189,39 +190,6 @@
 .currency-tabs,
 .totales__grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.select-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  span {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
-
-  select {
-    width: 100%;
-    min-height: 40px;
-    padding: 0 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(0, 0, 0, 0.28);
-    color: var(--text-primary);
-    font: inherit;
-    outline: 0;
-    color-scheme: dark;
-
-    &:focus {
-      border-color: var(--primary-color);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-    }
-  }
 }
 
 .check-card {
