@@ -1,23 +1,27 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TabService } from '../../services/tab.service';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-tabs',
-  imports: [CommonModule],
   template: `
-    <div class="tabs-header">
+    <div class="tabs-header" role="tablist" aria-label="Pestañas abiertas">
       @for (tab of tabService.tabs(); track tab.id; let i = $index) {
-        <div 
-          class="tab-label" 
-          [class.active]="tab.active" 
-          (click)="tabService.setTabActive(i)"
-        >
-          <span class="tab-title">{{ tab.title }}</span>
-          <span 
-            class="material-icons close-icon" 
-            (click)="tabService.removeTab(i); $event.stopPropagation()"
-          >close</span>
+        <div class="tab-label" [class.active]="tab.active">
+          <button
+            type="button"
+            role="tab"
+            class="tab-title"
+            [attr.aria-selected]="tab.active"
+            (click)="tabService.setTabActive(i)"
+          >{{ tab.title }}</button>
+          <button
+            type="button"
+            class="tab-close"
+            [attr.aria-label]="'Cerrar ' + tab.title"
+            (click)="tabService.removeTab(i)"
+          >
+            <span class="material-icons" aria-hidden="true">close</span>
+          </button>
         </div>
       }
     </div>
@@ -43,8 +47,7 @@ import { CommonModule } from '@angular/common';
       min-width: 160px;
       max-width: 250px;
       height: 48px;
-      padding: 0 14px;
-      cursor: pointer;
+      padding: 0 8px 0 14px;
       color: rgba(255, 255, 255, 0.6);
       background: var(--content-bg);
       border-right: 1px solid #222;
@@ -62,24 +65,48 @@ import { CommonModule } from '@angular/common';
     }
     .tab-title {
       flex: 1;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
       font-size: 0.9em;
       font-weight: 500;
+      text-align: left;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      cursor: pointer;
     }
-    .close-icon {
+    .tab-title:focus-visible,
+    .tab-close:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+    .tab-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .tab-close .material-icons {
       font-size: 16px;
       opacity: 0.6;
-      border-radius: 50%;
-      padding: 2px;
-      flex-shrink: 0;
-      transition: all 0.2s ease;
     }
-    .close-icon:hover {
+    .tab-close:hover .material-icons {
       opacity: 1;
       color: #f44336;
-      background: rgba(244, 67, 54, 0.15);
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
