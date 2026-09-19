@@ -1,0 +1,19 @@
+<div class="entity-form">
+  <p class="entity-form__hint">
+    ¿Aprobar la solicitud
+    @if (numeroOrden()) {
+      de <strong>{{ numeroOrden() }}</strong>
+    }
+    ?
+    @if (origenNombre() || destinoNombre()) {
+      Se va a crear la transferencia de {{ origenNombre() || '—' }} a {{ destinoNombre() || '—' }}.
+    } @else {
+      Al aprobar se genera la transferencia correspondiente.
+    }
+  </p>
+</div>
+
+<div class="entity-form-footer">
+  <app-ui-button type="button" label="Cancelar" icon="close" variant="ghost" (clicked)="cancelar()" />
+  <app-ui-button type="button" label="Aprobar" icon="check" variant="primary" (clicked)="confirmar()" />
+</div>

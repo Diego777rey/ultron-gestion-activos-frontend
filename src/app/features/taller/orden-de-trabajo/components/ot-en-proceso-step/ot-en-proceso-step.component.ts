@@ -68,6 +68,7 @@ import { TableColumn } from '../../../../../shared/models/table-column.model';
       @if (orden().id_orden_trabajo) {
         <app-ot-solicitud-repuesto
           [idOrden]="orden().id_orden_trabajo!"
+          [sectorDestinoInicial]="orden().sector ?? null"
           [editable]="true"
           (errorChange)="errorChange.emit($event)"
           (solicitudCreada)="recargarOrden()"

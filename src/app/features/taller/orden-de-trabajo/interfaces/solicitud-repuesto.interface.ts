@@ -28,6 +28,7 @@ export interface SolicitudRepuestoDetalleInput {
 
 export interface SolicitudRepuestoInput {
   id_sector_origen: string;
+  id_sector_destino?: string | null;
   observacion?: string | null;
   detalles: SolicitudRepuestoDetalleInput[];
 }
