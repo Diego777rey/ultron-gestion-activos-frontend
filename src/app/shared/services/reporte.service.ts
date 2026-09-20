@@ -14,6 +14,7 @@ export type TipoReporteInventario =
   | 'funcionario'
   | 'usuario'
   | 'transferencia'
+  | 'transferencia_detalle'
   | 'solicitud_repuesto'
   | 'orden_trabajo'
   | 'orden_trabajo_detalle'

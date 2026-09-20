@@ -17,6 +17,11 @@ export const TRANSFERENCIA_SELECTION = `{
     nombre
     apellido
   }
+  personaRecepcion {
+    id_persona
+    nombre
+    apellido
+  }
   detalles {
     id_detalle
     cantidad

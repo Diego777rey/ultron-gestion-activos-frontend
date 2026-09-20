@@ -43,6 +43,7 @@ export interface TransferenciaOutput {
   estado?: TransferenciaEstado;
   fecha?: string | null;
   persona?: PersonaResumen | null;
+  personaRecepcion?: PersonaResumen | null;
   cantidadItems?: number;
   detalles?: TransferenciaDetalleOutput[];
 }

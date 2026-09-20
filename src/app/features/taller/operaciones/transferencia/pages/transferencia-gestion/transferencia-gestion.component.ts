@@ -19,6 +19,7 @@ import { TableColumn } from '../../../../../../shared/models/table-column.model'
 import { PageChange } from '../../../../../../shared/models/pagination.model';
 import { AppDialogService } from '../../../../../../shared/services/app-dialog.service';
 import { LoadingService } from '../../../../../../shared/services/loading.service';
+import { ReporteService } from '../../../../../../shared/services/reporte.service';
 import { resolveLoadingErrorMessage } from '../../../../../../shared/utils/loading-error.util';
 import { TransferenciaService } from '../../services/transferencia.service';
 import {
@@ -53,11 +54,13 @@ export class TransferenciaGestionComponent {
   private readonly transferenciaService = inject(TransferenciaService);
   private readonly dialogService = inject(AppDialogService);
   private readonly loadingService = inject(LoadingService);
+  private readonly reporteService = inject(ReporteService);
   private readonly cantidadInput = viewChild<ElementRef<HTMLInputElement>>('cantidadInput');
 
   protected readonly transferencia = signal<TransferenciaOutput | null>(null);
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
+  protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
 
   /** Producto elegido, pendiente de confirmar cantidad e ingresar a la transferencia. */
@@ -470,6 +473,23 @@ export class TransferenciaGestionComponent {
       });
   }
 
+  protected imprimir(): void {
+    const t = this.transferencia();
+    if (!t?.id_transferencia || this.generando()) {
+      return;
+    }
+    this.generando.set(true);
+    this.reporteService
+      .generar('transferencia_detalle', {
+        id: t.id_transferencia,
+        titulo: `Transferencia ${t.numero ?? ''}`.trim(),
+      })
+      .subscribe({
+        next: () => this.generando.set(false),
+        error: () => this.generando.set(false),
+      });
+  }
+
   protected avanzarEtapa(): void {
     const t = this.transferencia();
     if (!t || !this.puedeAvanzar() || this.saving()) {
@@ -505,7 +525,14 @@ export class TransferenciaGestionComponent {
   }
 
   protected personaLabel(t: TransferenciaOutput): string {
-    const p = t.persona;
+    return this.nombrePersona(t.persona);
+  }
+
+  protected personaRecepcionLabel(t: TransferenciaOutput): string {
+    return this.nombrePersona(t.personaRecepcion);
+  }
+
+  private nombrePersona(p?: { nombre?: string; apellido?: string } | null): string {
     if (!p) {
       return '—';
     }
