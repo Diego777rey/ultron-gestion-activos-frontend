@@ -115,7 +115,7 @@ export const routes: Routes = [
           import('./features/financiero/ultimas/pages/ultimas-page/ultimas-page.component').then(
             (m) => m.UltimasPageComponent
           ),
-        data: { tabTitle: 'Últimas' },
+        data: { tabTitle: 'Últimas cajas' },
       },
       {
         path: 'inventario/productos',

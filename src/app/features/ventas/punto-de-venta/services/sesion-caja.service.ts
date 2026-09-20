@@ -163,10 +163,30 @@ export class SesionCajaService {
     size: number,
     filter: string,
     idCaja: number,
+    extras?: {
+      estado?: string | null;
+      fechaDesde?: string | null;
+      fechaHasta?: string | null;
+    },
   ): Observable<PageResponse<SesionCajaOutput>> {
-    const hasFilter = !!filter?.trim();
-    const document = `query($page: Int!, $size: Int!, $idCaja: ID!${hasFilter ? ', $filter: String' : ''}) {
-      listarSesionesCajaPaginado(page: $page, size: $size, idCaja: $idCaja${hasFilter ? ', filter: $filter' : ''}) {
+    const document = `query(
+      $page: Int!,
+      $size: Int!,
+      $idCaja: ID!,
+      $filter: String,
+      $estado: String,
+      $fechaDesde: String,
+      $fechaHasta: String
+    ) {
+      listarSesionesCajaPaginado(
+        page: $page,
+        size: $size,
+        idCaja: $idCaja,
+        filter: $filter,
+        estado: $estado,
+        fechaDesde: $fechaDesde,
+        fechaHasta: $fechaHasta
+      ) {
         content ${SESION_SELECTION}
         pageInfo {
           pageNumber
@@ -177,12 +197,16 @@ export class SesionCajaService {
         }
       }
     }`;
-    const variables: Record<string, unknown> = { page, size, idCaja };
-    if (hasFilter) {
-      variables['filter'] = filter.trim();
-    }
     return this.gql
-      .query<{ listarSesionesCajaPaginado: PageResponse<SesionCajaOutput> }>(document, variables)
+      .query<{ listarSesionesCajaPaginado: PageResponse<SesionCajaOutput> }>(document, {
+        page,
+        size,
+        idCaja,
+        filter: filter?.trim() || null,
+        estado: extras?.estado?.trim() || null,
+        fechaDesde: extras?.fechaDesde || null,
+        fechaHasta: extras?.fechaHasta || null,
+      })
       .pipe(map((data) => data.listarSesionesCajaPaginado));
   }
 }

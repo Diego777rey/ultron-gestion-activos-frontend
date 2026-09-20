@@ -3,10 +3,12 @@ import { afterNextRender, ChangeDetectionStrategy, Component, computed, inject, 
 import { GenericListComponent } from '../../../../../shared/components/generic-list/generic-list';
 import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
 import { ActionMenuComponent, MenuAction } from '../../../../../shared/components/action-menu/action-menu';
+import { DateRangePickerComponent } from '../../../../../shared/components/date-range-picker/date-range-picker';
 import { DefaultEmptyPipe } from '../../../../../shared/pipes/default-empty.pipe';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
+import { DateRangeValue, dateRangeLastDays, toIsoDate } from '../../../../../shared/models/date-range.model';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { CajaOutput } from '../../../cajas/interfaces/caja.interface';
 import { SesionCajaOutput } from '../../../../ventas/punto-de-venta/interfaces/sesion-caja.interface';
@@ -21,6 +23,7 @@ import { SesionVentasDialogComponent } from '../../dialogs/sesion-ventas-dialog/
     GenericListComponent,
     TableCellDirective,
     ActionMenuComponent,
+    DateRangePickerComponent,
     DefaultEmptyPipe,
   ],
   templateUrl: './ultimas-page.component.html',
@@ -37,18 +40,26 @@ export class UltimasPageComponent {
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
+  protected readonly estado = signal('');
+  protected readonly dateRange = signal<DateRangeValue>(dateRangeLastDays(7));
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
   protected readonly totalElements = signal(0);
 
+  protected readonly estados = [
+    { value: '', label: 'Todos' },
+    { value: 'ABIERTA', label: 'Abierta' },
+    { value: 'CERRADA', label: 'Cerrada' },
+  ];
+
   protected readonly columns: TableColumn<SesionCajaOutput>[] = [
-    { key: 'id_sesion_caja', header: 'Id', width: '80px' },
-    { key: 'sector', header: 'Sector', width: '160px' },
-    { key: 'maletin', header: 'Maletín', width: '140px' },
-    { key: 'estado', header: 'Estado', width: '110px', align: 'center' },
-    { key: 'fechaApertura', header: 'Fecha de apertura', width: '170px' },
-    { key: 'fechaCierre', header: 'Fecha de cierre', width: '170px' },
-    { key: 'responsable', header: 'Responsable' },
+    { key: 'id_sesion_caja', header: 'Id', width: '80px', align: 'center' },
+    { key: 'sector', header: 'Sector', width: '200px' },
+    { key: 'maletin', header: 'Maletín', width: '180px' },
+    { key: 'estado', header: 'Estado', width: '120px', align: 'center' },
+    { key: 'fechaApertura', header: 'Fecha de apertura', width: '170px', align: 'center' },
+    { key: 'fechaCierre', header: 'Fecha de cierre', width: '170px', align: 'center' },
+    { key: 'responsable', header: 'Responsable', width: '240px' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
 
@@ -90,8 +101,13 @@ export class UltimasPageComponent {
 
     this.loading.set(true);
     this.error.set(null);
+    const range = this.dateRange();
     this.sesionCajaService
-      .findPaginated(this.pageIndex(), this.pageSize(), this.search(), caja.id_caja)
+      .findPaginated(this.pageIndex(), this.pageSize(), this.search(), caja.id_caja, {
+        estado: this.estado(),
+        fechaDesde: toIsoDate(range.start),
+        fechaHasta: toIsoDate(range.end),
+      })
       .subscribe({
         next: (response) => {
           this.sesiones.set(response.content ?? []);
@@ -118,13 +134,25 @@ export class UltimasPageComponent {
         this.load();
         break;
       case 'clear':
-        this.search.set('');
-        this.pageIndex.set(0);
-        this.load();
+        this.clearFilters();
         break;
       case 'caja':
         this.openSelectCaja();
         break;
+    }
+  }
+
+  protected onEstadoChange(value: string): void {
+    this.estado.set(value);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  protected onDateRangeChange(range: DateRangeValue): void {
+    this.dateRange.set(range);
+    if (range.start && range.end) {
+      this.pageIndex.set(0);
+      this.load();
     }
   }
 
@@ -139,7 +167,6 @@ export class UltimasPageComponent {
           return;
         }
         this.cajaSeleccionada.set(caja);
-        this.search.set('');
         this.pageIndex.set(0);
         this.load();
       });
@@ -180,4 +207,12 @@ export class UltimasPageComponent {
   }
 
   protected trackById = (s: SesionCajaOutput): unknown => s.id_sesion_caja;
+
+  private clearFilters(): void {
+    this.search.set('');
+    this.estado.set('');
+    this.dateRange.set(dateRangeLastDays(7));
+    this.pageIndex.set(0);
+    this.load();
+  }
 }
