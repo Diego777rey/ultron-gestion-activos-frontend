@@ -1,0 +1,76 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="sesiones()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions()"
+  [emptyMessage]="emptyMessage()"
+  [trackBy]="trackById"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()"
+>
+  <div genericListFilters class="ultimas-filters">
+    <div class="filter-field">
+      <label>Caja</label>
+      <button type="button" class="caja-chip" (click)="openSelectCaja()">
+        {{ cajaSeleccionada()?.nombre || 'Seleccionar caja' }}
+      </button>
+    </div>
+    <div class="filter-field filter-field--search">
+      <label for="ultimas-search">Buscar por maletín, responsable o estado...</label>
+      <input
+        id="ultimas-search"
+        type="text"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+        (keydown.enter)="pageIndex.set(0); load()"
+      />
+    </div>
+  </div>
+
+  <ng-template appTableCell="id_sesion_caja" [appTableCellFrom]="sesiones()" let-item>
+    {{ item.id_sesion_caja }}
+  </ng-template>
+
+  <ng-template appTableCell="sector" [appTableCellFrom]="sesiones()" let-item>
+    {{ item.caja?.sector?.nombre | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="maletin" [appTableCellFrom]="sesiones()" let-item>
+    {{ item.maletin?.nombre | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="estado" [appTableCellFrom]="sesiones()" let-item>
+    <span
+      class="estado-pill"
+      [class.estado-pill--abierta]="item.estado === 'ABIERTA'"
+      [class.estado-pill--cerrada]="item.estado === 'CERRADA'"
+    >
+      {{ estadoLabel(item.estado) | defaultEmpty }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableCell="fechaApertura" [appTableCellFrom]="sesiones()" let-item>
+    {{ item.fechaApertura | date: 'dd/MM/yyyy HH:mm' | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="fechaCierre" [appTableCellFrom]="sesiones()" let-item>
+    {{ item.fechaCierre | date: 'dd/MM/yyyy HH:mm' | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="responsable" [appTableCellFrom]="sesiones()" let-item>
+    {{ personaLabel(item) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="sesiones()" let-item>
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, item)" />
+  </ng-template>
+</app-generic-list>

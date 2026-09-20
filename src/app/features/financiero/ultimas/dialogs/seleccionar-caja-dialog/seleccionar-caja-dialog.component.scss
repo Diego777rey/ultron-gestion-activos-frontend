@@ -1,0 +1,39 @@
+:host {
+  display: block;
+}
+
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  background: rgba(255, 61, 113, 0.1);
+  border: 1px solid rgba(255, 61, 113, 0.3);
+  border-radius: 8px;
+  color: #ff8aa3;
+  font-size: 13px;
+
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+.entity-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.entity-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+app-entity-searcher {
+  display: block;
+}
