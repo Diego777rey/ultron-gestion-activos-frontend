@@ -110,6 +110,14 @@ export const routes: Routes = [
         data: { tabTitle: 'Cajas' },
       },
       {
+        path: 'financiero/ultimas',
+        loadComponent: () =>
+          import('./features/financiero/ultimas/pages/ultimas-page/ultimas-page.component').then(
+            (m) => m.UltimasPageComponent
+          ),
+        data: { tabTitle: 'Últimas' },
+      },
+      {
         path: 'inventario/productos',
         loadChildren: () =>
           import('./features/inventario/productos/productos.routes').then(

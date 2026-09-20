@@ -1,7 +1,15 @@
-import { CajaOutput } from '../../../financiero/cajas/interfaces/caja.interface';
+import { CajaOutput, PersonaResumen } from '../../../financiero/cajas/interfaces/caja.interface';
 import { MaletinOutput } from '../../../financiero/maletines/interfaces/maletin.interface';
 
 export interface ConteoDenominacionInput {
+  moneda: string;
+  valorDenominacion: number;
+  cantidad: number;
+}
+
+export interface ConteoDenominacionOutput {
+  id_conteo?: number;
+  tipo: string;
   moneda: string;
   valorDenominacion: number;
   cantidad: number;
@@ -23,6 +31,7 @@ export interface SesionCajaOutput {
   id_sesion_caja: number;
   caja?: CajaOutput | null;
   maletin?: MaletinOutput | null;
+  persona?: PersonaResumen | null;
   estado: string;
   montoInicialPyg?: number;
   montoInicialUsd?: number;
@@ -36,4 +45,5 @@ export interface SesionCajaOutput {
   totalVentasPyg?: number;
   fechaApertura?: string;
   fechaCierre?: string;
+  conteos?: ConteoDenominacionOutput[] | null;
 }

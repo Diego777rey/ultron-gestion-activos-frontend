@@ -437,9 +437,15 @@ export class AbrirCajaDialogComponent {
 
   private fetchCajas(): void {
     this.loadingCajas.set(true);
-    this.cajaService.findAll().subscribe({
+    this.cajaService.findDisponibles().subscribe({
       next: (items) => {
-        this.cajas.set(items.filter((c) => c.activa !== false));
+        const sesion = this.sesionActual();
+        const list = items.filter((c) => c.activa !== false);
+        if (sesion?.caja && !list.some((c) => c.id_caja === sesion.caja?.id_caja)) {
+          this.cajas.set([sesion.caja, ...list]);
+        } else {
+          this.cajas.set(list);
+        }
         this.loadingCajas.set(false);
       },
       error: () => {

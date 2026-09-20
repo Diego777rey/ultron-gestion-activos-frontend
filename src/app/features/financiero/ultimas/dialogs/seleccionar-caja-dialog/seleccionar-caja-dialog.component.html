@@ -1,0 +1,39 @@
+@if (error(); as errMsg) {
+  <div class="form-error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ errMsg }}</span>
+  </div>
+}
+
+<div class="entity-form">
+  <app-entity-searcher
+    [items]="cajasDisponibles()"
+    [value]="selectedCaja()?.id_caja ?? null"
+    (itemChange)="onCajaSelected($event)"
+    [displayFn]="cajaLabelFn"
+    [keyFn]="cajaKeyFn"
+    [searchFn]="cajaSearchFn"
+    [columns]="cajaColumns"
+    [backendPagination]="true"
+    [totalItems]="total()"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [loading]="loading()"
+    (searchChange)="onSearchChange($event)"
+    (pageChange)="onPageChange($event)"
+    label="Caja*"
+    searchPlaceholder="Buscar caja por nombre o id..."
+  />
+</div>
+
+<div class="entity-form-footer">
+  <app-ui-button type="button" label="Cancelar" icon="close" variant="ghost" (clicked)="cancelar()" />
+  <app-ui-button
+    type="button"
+    label="Ver historial"
+    icon="history"
+    variant="primary"
+    [disabled]="!selectedCaja()"
+    (clicked)="confirmar()"
+  />
+</div>
