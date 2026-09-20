@@ -103,9 +103,6 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
       case 3:
         this.finalizarTrabajo();
         break;
-      case 4:
-        this.marcarFacturada();
-        break;
       default:
         this.cancelar();
     }
@@ -119,8 +116,6 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
         return 'Aprobar e iniciar reparación';
       case 3:
         return 'Finalizar trabajo';
-      case 4:
-        return 'Marcar facturado';
       default:
         return 'Volver al listado';
     }
@@ -275,21 +270,4 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
     });
   }
 
-  private marcarFacturada(): void {
-    const orden = this.orden();
-    if (!orden?.id_orden_trabajo) return;
-
-    this.saving.set(true);
-    this.error.set(null);
-    this.ordenService.marcarFacturada(orden.id_orden_trabajo).subscribe({
-      next: (adv) => {
-        this.orden.set(adv);
-        this.saving.set(false);
-      },
-      error: (err) => {
-        this.error.set(err?.message ?? 'No se pudo marcar como facturada');
-        this.saving.set(false);
-      },
-    });
-  }
 }

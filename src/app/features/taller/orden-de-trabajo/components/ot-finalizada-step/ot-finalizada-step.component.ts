@@ -9,7 +9,8 @@ import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-
   imports: [CurrencyPipe, DatePipe, OtDetalleLineasComponent, OtDiagnosticoHallazgosComponent],
   template: `
     <p class="ot-hint">
-      El trabajo está finalizado. Cuando corresponda, marcá la orden como facturada.
+      El trabajo está finalizado y ya está disponible en una caja abierta.
+      La orden pasa a Facturado al cobrarla en el punto de venta.
     </p>
 
     <section class="ot-section ot-section--narrow">

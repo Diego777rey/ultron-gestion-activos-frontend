@@ -137,8 +137,7 @@
 .pos-product-list,
 .pos-cart__items {
   flex: 1;
-  min-height: 260px;
-  max-height: calc(100vh - 280px);
+  min-height: 0;
   overflow: auto;
   padding: 8px;
 }
@@ -146,8 +145,11 @@
 .pos-catalog__footer {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   padding: 12px 14px;
+  flex-shrink: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -384,6 +386,7 @@
 .pos-chip-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   min-height: 40px;
   padding: 0 14px;
@@ -394,10 +397,12 @@
   font: inherit;
   font-size: 13px;
   font-weight: 500;
+  line-height: 1;
   cursor: pointer;
 
   .material-icons {
     font-size: 18px;
+    line-height: 1;
   }
 
   &:hover {
