@@ -19,6 +19,7 @@ const VENTA_SELECTION = `{
     id_detalle_venta
     idProducto
     idOrdenTrabajo
+    idServicio
     productoNombre
     cantidad
     precioUnitario

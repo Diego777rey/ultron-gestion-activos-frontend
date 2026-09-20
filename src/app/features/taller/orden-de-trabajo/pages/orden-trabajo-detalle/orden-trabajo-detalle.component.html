@@ -94,7 +94,7 @@
         />
       }
 
-      @if (currentStep() < 5) {
+      @if (currentStep() < 4) {
         <app-ui-button
           [label]="labelAccionPrincipal()"
           icon="arrow_forward"
@@ -103,6 +103,7 @@
           (clicked)="accionPrincipal()"
         />
       } @else {
+        <app-ui-button label="Imprimir" icon="print" variant="outline" />
         <app-ui-button label="Volver al listado" icon="list" variant="primary" (clicked)="cancelar()" />
       }
     </div>

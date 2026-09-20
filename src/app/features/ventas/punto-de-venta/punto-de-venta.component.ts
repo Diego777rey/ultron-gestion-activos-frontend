@@ -12,6 +12,8 @@ import { UiButtonComponent } from '../../../shared/components/ui-button/ui-butto
 import { TabService } from '../../../shared/services/tab.service';
 import { ProductoService } from '../../inventario/productos/services/producto.service';
 import { ProductoOutput } from '../../inventario/productos/interfaces/producto.interface';
+import { ServicioService } from '../../inventario/servicios/services/servicio.service';
+import { ServicioOutput } from '../../inventario/servicios/interfaces/servicio.interface';
 import { OrdenTrabajoService } from '../../taller/orden-de-trabajo/services/orden-trabajo.service';
 import { OrdenTrabajoOutput } from '../../taller/orden-de-trabajo/interfaces/orden-trabajo.interface';
 import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja-dialog.component';
@@ -22,7 +24,7 @@ import { CartItem, DetalleVentaInput } from './interfaces/venta.interface';
 
 const POS_ROUTE = '/ventas/punto-de-venta';
 
-export type CatalogoPos = 'productos' | 'ordenes';
+export type CatalogoPos = 'productos' | 'servicios' | 'ordenes';
 
 @Component({
   selector: 'app-punto-de-venta',
@@ -38,6 +40,7 @@ export class PuntoDeVentaComponent {
   private readonly sesionCajaService = inject(SesionCajaService);
   private readonly ventaService = inject(VentaPosService);
   private readonly productoService = inject(ProductoService);
+  private readonly servicioService = inject(ServicioService);
   private readonly ordenTrabajoService = inject(OrdenTrabajoService);
 
   readonly inicioDialogOpen = signal(true);
@@ -49,13 +52,14 @@ export class PuntoDeVentaComponent {
 
   readonly catalogo = signal<CatalogoPos>('productos');
   readonly productos = signal<ProductoOutput[]>([]);
+  readonly servicios = signal<ServicioOutput[]>([]);
   readonly ordenesFinalizadas = signal<OrdenTrabajoOutput[]>([]);
+  readonly loadingServicios = signal(false);
   readonly loadingOrdenes = signal(false);
   readonly search = signal('');
   readonly cart = signal<CartItem[]>([]);
   readonly selling = signal(false);
   readonly ventaError = signal<string | null>(null);
-  readonly lastVentaNumero = signal<string | null>(null);
 
   readonly pasoInicialGestion = computed(() => {
     if (!this.maletinVerificado()) {
@@ -67,6 +71,8 @@ export class PuntoDeVentaComponent {
     return 2;
   });
 
+  readonly mostrandoProductos = computed(() => this.catalogo() === 'productos');
+  readonly mostrandoServicios = computed(() => this.catalogo() === 'servicios');
   readonly mostrandoOrdenes = computed(() => this.catalogo() === 'ordenes');
 
   readonly productosFiltrados = computed(() => {
@@ -81,6 +87,20 @@ export class PuntoDeVentaComponent {
         p.codigo.toLowerCase().includes(q) ||
         (p.codigoBarras ?? '').toLowerCase().includes(q) ||
         (p.categoriaProducto?.nombre ?? '').toLowerCase().includes(q)
+    );
+  });
+
+  readonly serviciosFiltrados = computed(() => {
+    const q = this.search().trim().toLowerCase();
+    const items = this.servicios().filter((s) => s.estado !== false);
+    if (!q) {
+      return items;
+    }
+    return items.filter(
+      (s) =>
+        s.nombre.toLowerCase().includes(q) ||
+        (s.codigo ?? '').toLowerCase().includes(q) ||
+        (s.categoriaServicio?.nombre ?? '').toLowerCase().includes(q)
     );
   });
 
@@ -125,6 +145,7 @@ export class PuntoDeVentaComponent {
     this.gestionCajaOpen.set(false);
     this.inicioDialogOpen.set(false);
     this.loadProductos();
+    this.loadServicios();
   }
 
   onCajaCerrada(): void {
@@ -134,6 +155,7 @@ export class PuntoDeVentaComponent {
     this.cart.set([]);
     this.catalogo.set('productos');
     this.ordenesFinalizadas.set([]);
+    this.servicios.set([]);
     this.gestionCajaOpen.set(false);
     this.inicioDialogOpen.set(true);
   }
@@ -154,6 +176,15 @@ export class PuntoDeVentaComponent {
     this.catalogo.set('productos');
     this.search.set('');
     this.ventaError.set(null);
+  }
+
+  protected mostrarServicios(): void {
+    this.catalogo.set('servicios');
+    this.search.set('');
+    this.ventaError.set(null);
+    if (this.servicios().length === 0) {
+      this.loadServicios();
+    }
   }
 
   protected mostrarOrdenesFinalizadas(): void {
@@ -195,6 +226,38 @@ export class PuntoDeVentaComponent {
           cantidad: 1,
           precioUnitario: Number(producto.precioVenta),
           stockDisponible: stock,
+        },
+      ];
+    });
+  }
+
+  protected addServicio(servicio: ServicioOutput): void {
+    const precio = Number(servicio.precio ?? 0);
+    if (precio < 0) {
+      this.ventaError.set(`El servicio ${servicio.nombre} no tiene un precio válido`);
+      return;
+    }
+
+    this.ventaError.set(null);
+    this.cart.update((items) => {
+      const idx = items.findIndex(
+        (i) => i.tipo === 'SERVICIO' && i.idServicio === servicio.id_servicio
+      );
+      if (idx >= 0) {
+        const current = items[idx];
+        const next = [...items];
+        next[idx] = { ...current, cantidad: current.cantidad + 1 };
+        return next;
+      }
+      return [
+        ...items,
+        {
+          tipo: 'SERVICIO',
+          idServicio: servicio.id_servicio,
+          nombre: servicio.nombre,
+          cantidad: 1,
+          precioUnitario: precio,
+          stockDisponible: Number.MAX_SAFE_INTEGER,
         },
       ];
     });
@@ -247,7 +310,7 @@ export class PuntoDeVentaComponent {
         next.splice(index, 1);
         return next;
       }
-      if (cantidad > item.stockDisponible) {
+      if (item.tipo === 'PRODUCTO' && cantidad > item.stockDisponible) {
         this.ventaError.set(`Stock insuficiente para ${item.nombre}`);
         return items;
       }
@@ -291,7 +354,6 @@ export class PuntoDeVentaComponent {
       .subscribe({
         next: (venta) => {
           this.selling.set(false);
-          this.lastVentaNumero.set(venta.numero);
           this.cart.set([]);
           this.refreshSesion();
           this.loadProductos();
@@ -352,6 +414,14 @@ export class PuntoDeVentaComponent {
         precioUnitario: item.precioUnitario,
       };
     }
+    if (item.tipo === 'SERVICIO') {
+      return {
+        idServicio: item.idServicio,
+        descripcion: item.nombre,
+        cantidad: item.cantidad,
+        precioUnitario: item.precioUnitario,
+      };
+    }
     return {
       idProducto: item.idProducto,
       cantidad: item.cantidad,
@@ -370,6 +440,7 @@ export class PuntoDeVentaComponent {
           this.maletinVerificado.set(true);
           this.inicioDialogOpen.set(false);
           this.loadProductos();
+          this.loadServicios();
         }
       },
       error: () => {
@@ -393,6 +464,20 @@ export class PuntoDeVentaComponent {
     this.productoService.findAll(true).subscribe({
       next: (items) => this.productos.set(items),
       error: (err: Error) => this.ventaError.set(err.message || 'No se pudieron cargar productos'),
+    });
+  }
+
+  private loadServicios(): void {
+    this.loadingServicios.set(true);
+    this.servicioService.findAll().subscribe({
+      next: (items) => {
+        this.servicios.set(items);
+        this.loadingServicios.set(false);
+      },
+      error: (err: Error) => {
+        this.loadingServicios.set(false);
+        this.ventaError.set(err.message || 'No se pudieron cargar los servicios');
+      },
     });
   }
 

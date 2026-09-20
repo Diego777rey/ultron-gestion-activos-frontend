@@ -6,30 +6,10 @@
     </div>
   } @else if (cajaAbierta()) {
     <div class="pos-workspace">
-      <header class="pos-toolbar">
-        <div class="pos-toolbar__info">
-          <span class="material-icons" aria-hidden="true">point_of_sale</span>
-          <div>
-            <strong>{{ sesion()?.caja?.nombre || 'Caja abierta' }}</strong>
-            <small>
-              Maletín {{ sesion()?.maletin?.nombre || '—' }} · Ventas Gs.
-              {{ (sesion()?.totalVentasPyg || 0) | number: '1.0-0' }}
-            </small>
-          </div>
-        </div>
-      </header>
-
       @if (ventaError(); as err) {
         <div class="pos-alert" role="alert">
           <span class="material-icons" aria-hidden="true">error_outline</span>
           <span>{{ err }}</span>
-        </div>
-      }
-
-      @if (lastVentaNumero(); as numero) {
-        <div class="pos-alert pos-alert--ok" role="status">
-          <span class="material-icons" aria-hidden="true">check_circle</span>
-          <span>Última venta: {{ numero }}</span>
         </div>
       }
 
@@ -42,7 +22,9 @@
               [placeholder]="
                 mostrandoOrdenes()
                   ? 'Buscar orden por número, cliente o chapa…'
-                  : 'Buscar producto por nombre o código…'
+                  : mostrandoServicios()
+                    ? 'Buscar servicio por nombre o código…'
+                    : 'Buscar producto por nombre o código…'
               "
               [value]="search()"
               (input)="onSearchInput($any($event.target).value)"
@@ -68,6 +50,29 @@
                   <div class="pos-empty">No hay órdenes finalizadas para cobrar</div>
                 }
               }
+            } @else if (mostrandoServicios()) {
+              @if (loadingServicios()) {
+                <div class="pos-empty">Cargando servicios…</div>
+              } @else {
+                @for (servicio of serviciosFiltrados(); track servicio.id_servicio) {
+                  <button type="button" class="pos-product" (click)="addServicio(servicio)">
+                    <div class="pos-product__main">
+                      <strong>{{ servicio.nombre }}</strong>
+                      <small>
+                        {{ servicio.codigo || 'Sin código' }}
+                        @if (servicio.categoriaServicio?.nombre) {
+                          · {{ servicio.categoriaServicio?.nombre }}
+                        }
+                      </small>
+                    </div>
+                    <span class="pos-product__price">
+                      Gs. {{ servicio.precio | number: '1.0-0' }}
+                    </span>
+                  </button>
+                } @empty {
+                  <div class="pos-empty">No hay servicios para mostrar</div>
+                }
+              }
             } @else {
               @for (producto of productosFiltrados(); track producto.id_producto) {
                 <button type="button" class="pos-product" (click)="addProducto(producto)">
@@ -89,11 +94,20 @@
             <button
               type="button"
               class="pos-chip-btn"
-              [class.pos-chip-btn--active]="!mostrandoOrdenes()"
+              [class.pos-chip-btn--active]="mostrandoProductos()"
               (click)="mostrarProductos()"
             >
               <span class="material-icons" aria-hidden="true">inventory_2</span>
               Productos
+            </button>
+            <button
+              type="button"
+              class="pos-chip-btn"
+              [class.pos-chip-btn--active]="mostrandoServicios()"
+              (click)="mostrarServicios()"
+            >
+              <span class="material-icons" aria-hidden="true">handyman</span>
+              Servicios
             </button>
             <button
               type="button"
@@ -124,6 +138,8 @@
                   <small>
                     @if (item.tipo === 'ORDEN') {
                       Orden de trabajo
+                    } @else if (item.tipo === 'SERVICIO') {
+                      Servicio · Gs. {{ item.precioUnitario | number: '1.0-0' }}
                     } @else {
                       Gs. {{ item.precioUnitario | number: '1.0-0' }}
                     }
