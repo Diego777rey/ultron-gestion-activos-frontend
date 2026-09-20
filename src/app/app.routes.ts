@@ -111,11 +111,10 @@ export const routes: Routes = [
       },
       {
         path: 'financiero/ultimas',
-        loadComponent: () =>
-          import('./features/financiero/ultimas/pages/ultimas-page/ultimas-page.component').then(
-            (m) => m.UltimasPageComponent
+        loadChildren: () =>
+          import('./features/financiero/ultimas/ultimas.routes').then(
+            (m) => m.ULTIMAS_ROUTES
           ),
-        data: { tabTitle: 'Últimas cajas' },
       },
       {
         path: 'inventario/productos',
