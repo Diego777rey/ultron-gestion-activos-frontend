@@ -7,7 +7,6 @@
   [pageIndex]="pageIndex()"
   [pageSize]="pageSize()"
   [pageSizeOptions]="[15, 25, 50, 100]"
-  searchLabel="Buscar por número o sector..."
   [searchValue]="search()"
   (searchValueChange)="search.set($event)"
   [toolbarActions]="toolbarActions"
@@ -18,6 +17,69 @@
   (actionClicked)="onToolbarAction($event)"
   (searchSubmit)="pageIndex.set(0); load()"
 >
+  <div genericListFilters class="trf-filters">
+    <div class="filter-field filter-field--id">
+      <label for="trf-search">Buscar por ID o número</label>
+      <input
+        id="trf-search"
+        type="text"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+        (keydown.enter)="pageIndex.set(0); load()"
+      />
+    </div>
+
+    <app-entity-searcher
+      class="filter-field--sector"
+      [items]="sectoresForSearcher()"
+      [value]="selectedOrigen()?.id_sector ?? null"
+      (itemChange)="onOrigenSelected($event)"
+      [displayFn]="sectorLabelFn"
+      [keyFn]="sectorKeyFn"
+      [columns]="sectorColumns"
+      [backendPagination]="true"
+      [totalItems]="sectoresTotal()"
+      [pageIndex]="sectoresPage()"
+      [pageSize]="sectoresPageSize()"
+      [loading]="loadingSectores()"
+      (searchChange)="onSectorSearchChange($event)"
+      (pageChange)="onSectorPageChange($event)"
+      label="Sector origen"
+      searchPlaceholder="Buscar sector origen..."
+    />
+
+    <app-entity-searcher
+      class="filter-field--sector"
+      [items]="sectoresForSearcher()"
+      [value]="selectedDestino()?.id_sector ?? null"
+      (itemChange)="onDestinoSelected($event)"
+      [displayFn]="sectorLabelFn"
+      [keyFn]="sectorKeyFn"
+      [columns]="sectorColumns"
+      [backendPagination]="true"
+      [totalItems]="sectoresTotal()"
+      [pageIndex]="sectoresPage()"
+      [pageSize]="sectoresPageSize()"
+      [loading]="loadingSectores()"
+      (searchChange)="onSectorSearchChange($event)"
+      (pageChange)="onSectorPageChange($event)"
+      label="Sector destino"
+      searchPlaceholder="Buscar sector destino..."
+    />
+
+    <app-date-range-picker
+      class="filter-field--dates"
+      label="Rango de fecha"
+      [value]="dateRange()"
+      (valueChange)="dateRange.set($event)"
+      (closed)="onDateRangeChange($event)"
+    />
+  </div>
+
+  <ng-template appTableCell="id" [appTableCellFrom]="transferencias()" let-item>
+    {{ item.id_transferencia }}
+  </ng-template>
+
   <ng-template appTableCell="numero" [appTableCellFrom]="transferencias()" let-item>
     <button type="button" class="link-btn" (click)="openGestion(item)">
       {{ item.numero | defaultEmpty }}

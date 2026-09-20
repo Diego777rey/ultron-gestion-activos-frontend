@@ -1,14 +1,19 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { GenericListComponent } from '../../../../../../shared/components/generic-list/generic-list';
 import { TableCellDirective } from '../../../../../../shared/components/data-table/table-cell.directive';
 import { ActionMenuComponent, MenuAction } from '../../../../../../shared/components/action-menu/action-menu';
+import { DateRangePickerComponent } from '../../../../../../shared/components/date-range-picker/date-range-picker';
+import { EntitySearcherComponent } from '../../../../../../shared/components/entity-searcher/entity-searcher';
 import { DefaultEmptyPipe } from '../../../../../../shared/pipes/default-empty.pipe';
 import { TableColumn } from '../../../../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../../shared/models/pagination.model';
+import { DateRangeValue, dateRangeLastDays, toIsoDate } from '../../../../../../shared/models/date-range.model';
 import { AppDialogService } from '../../../../../../shared/services/app-dialog.service';
 import { LoadingService } from '../../../../../../shared/services/loading.service';
+import { SectorOutput } from '../../../../../sectores/interfaces/sector.interface';
+import { SectorService } from '../../../../../sectores/services/sector.service';
 import { TransferenciaService } from '../../services/transferencia.service';
 import { TransferenciaOutput } from '../../interfaces/transferencia.interface';
 import { TransferenciaFormComponent } from '../../dialogs/transferencia-form/transferencia-form.component';
@@ -21,6 +26,8 @@ import { resolveLoadingErrorMessage } from '../../../../../../shared/utils/loadi
     GenericListComponent,
     TableCellDirective,
     ActionMenuComponent,
+    DateRangePickerComponent,
+    EntitySearcherComponent,
     DefaultEmptyPipe,
   ],
   templateUrl: './transferencias-list.component.html',
@@ -30,6 +37,7 @@ import { resolveLoadingErrorMessage } from '../../../../../../shared/utils/loadi
 })
 export class TransferenciasListComponent {
   private readonly transferenciaService = inject(TransferenciaService);
+  private readonly sectorService = inject(SectorService);
   private readonly dialogService = inject(AppDialogService);
   private readonly router = inject(Router);
   private readonly reporteService = inject(ReporteService);
@@ -40,11 +48,31 @@ export class TransferenciasListComponent {
   protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
+  protected readonly selectedOrigen = signal<SectorOutput | null>(null);
+  protected readonly selectedDestino = signal<SectorOutput | null>(null);
+  protected readonly dateRange = signal<DateRangeValue>(dateRangeLastDays(7));
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
   protected readonly totalElements = signal(0);
 
+  protected readonly sectores = signal<SectorOutput[]>([]);
+  protected readonly sectoresTotal = signal(0);
+  protected readonly sectoresPage = signal(0);
+  protected readonly sectoresPageSize = signal(15);
+  protected readonly sectoresFilter = signal('');
+  protected readonly loadingSectores = signal(false);
+
+  protected readonly sectoresForSearcher = computed(() => {
+    const items = this.sectores();
+    const extras = [this.selectedOrigen(), this.selectedDestino()].filter(
+      (s): s is SectorOutput => s != null,
+    );
+    const missing = extras.filter((s) => !items.some((i) => i.id_sector === s.id_sector));
+    return missing.length ? [...missing, ...items] : items;
+  });
+
   protected readonly columns: TableColumn<TransferenciaOutput>[] = [
+    { key: 'id', header: 'Id', width: '80px', align: 'center' },
     { key: 'numero', header: 'Número', width: '160px' },
     { key: 'fecha', header: 'Fecha', width: '140px' },
     { key: 'sectorOrigen', header: 'Sector origen', width: '180px' },
@@ -52,6 +80,11 @@ export class TransferenciasListComponent {
     { key: 'cantidadItems', header: 'Ítems', width: '80px', align: 'center' },
     { key: 'estado', header: 'Estado', width: '140px' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
+  ];
+
+  protected readonly sectorColumns: TableColumn<SectorOutput>[] = [
+    { key: 'id_sector', header: 'Id', width: '80px' },
+    { key: 'nombre', header: 'Nombre', value: (s) => s.nombre ?? '' },
   ];
 
   protected readonly toolbarActions: ListToolbarAction[] = [
@@ -62,14 +95,26 @@ export class TransferenciasListComponent {
   ];
 
   constructor() {
+    this.fetchSectoresPage(0, this.sectoresPageSize());
     this.load();
   }
+
+  protected readonly sectorLabelFn = (s: SectorOutput) => s.nombre ?? `Sector #${s.id_sector}`;
+  protected readonly sectorKeyFn = (s: SectorOutput) => s.id_sector;
 
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
+    const range = this.dateRange();
     this.loadingService
-      .pageLoad(this.transferenciaService.findPaginated(this.pageIndex(), this.pageSize(), this.search()))
+      .pageLoad(
+        this.transferenciaService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), {
+          idSectorOrigen: this.selectedOrigen()?.id_sector ?? null,
+          idSectorDestino: this.selectedDestino()?.id_sector ?? null,
+          fechaDesde: toIsoDate(range.start),
+          fechaHasta: toIsoDate(range.end),
+        }),
+      )
       .subscribe({
         next: (response) => {
           this.transferencias.set(response.content);
@@ -96,9 +141,7 @@ export class TransferenciasListComponent {
         this.load();
         break;
       case 'clear':
-        this.search.set('');
-        this.pageIndex.set(0);
-        this.load();
+        this.clearFilters();
         break;
       case 'add':
         this.openNewDialog();
@@ -109,12 +152,62 @@ export class TransferenciasListComponent {
     }
   }
 
+  protected onOrigenSelected(sector: SectorOutput | null): void {
+    this.selectedOrigen.set(sector);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  protected onDestinoSelected(sector: SectorOutput | null): void {
+    this.selectedDestino.set(sector);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  protected onDateRangeChange(range: DateRangeValue): void {
+    this.dateRange.set(range);
+    if ((range.start && range.end) || (!range.start && !range.end)) {
+      this.pageIndex.set(0);
+      this.load();
+    }
+  }
+
+  protected fetchSectoresPage(page: number, size: number, filter = ''): void {
+    this.loadingSectores.set(true);
+    this.sectorService.findPaginated(page, size, filter).subscribe({
+      next: (response) => {
+        this.sectores.set(response.content);
+        this.sectoresTotal.set(response.pageInfo.totalElements);
+        this.sectoresPage.set(page);
+        this.sectoresPageSize.set(size);
+        this.sectoresFilter.set(filter);
+        this.loadingSectores.set(false);
+      },
+      error: () => {
+        this.loadingSectores.set(false);
+      },
+    });
+  }
+
+  protected onSectorSearchChange(filter: string): void {
+    this.fetchSectoresPage(0, this.sectoresPageSize(), filter);
+  }
+
+  protected onSectorPageChange(event: PageChange): void {
+    this.fetchSectoresPage(event.pageIndex, event.pageSize, this.sectoresFilter());
+  }
+
   protected generarReporte(): void {
     if (this.generando()) {
       return;
     }
     this.generando.set(true);
-    this.reporteService.generarInventario('transferencia', { filtro: this.search() }).subscribe({
+    const filtro =
+      this.search().trim() ||
+      this.selectedOrigen()?.nombre ||
+      this.selectedDestino()?.nombre ||
+      '';
+    this.reporteService.generarInventario('transferencia', { filtro }).subscribe({
       next: () => this.generando.set(false),
       error: () => this.generando.set(false),
     });
@@ -189,6 +282,15 @@ export class TransferenciasListComponent {
       return 'CREACION';
     }
     return n;
+  }
+
+  private clearFilters(): void {
+    this.search.set('');
+    this.selectedOrigen.set(null);
+    this.selectedDestino.set(null);
+    this.dateRange.set(dateRangeLastDays(7));
+    this.pageIndex.set(0);
+    this.load();
   }
 
   protected trackById = (t: TransferenciaOutput): unknown => t.id_transferencia;
