@@ -19,10 +19,35 @@ export class TransferenciaService {
   private readonly gql = inject(GraphqlService);
   private readonly notifications = inject(NotificationService);
 
-  findPaginated(page: number, size: number, filter = ''): Observable<PageResponse<TransferenciaOutput>> {
-    const hasFilter = filter.trim() !== '';
-    const document = `query($page: Int!, $size: Int!${hasFilter ? ', $filter: String' : ''}) {
-      listarTransferenciasPaginado(page: $page, size: $size${hasFilter ? ', filter: $filter' : ''}) {
+  findPaginated(
+    page: number,
+    size: number,
+    filter = '',
+    extras?: {
+      idSectorOrigen?: number | null;
+      idSectorDestino?: number | null;
+      fechaDesde?: string | null;
+      fechaHasta?: string | null;
+    },
+  ): Observable<PageResponse<TransferenciaOutput>> {
+    const document = `query(
+      $page: Int!,
+      $size: Int!,
+      $filter: String,
+      $idSectorOrigen: ID,
+      $idSectorDestino: ID,
+      $fechaDesde: String,
+      $fechaHasta: String
+    ) {
+      listarTransferenciasPaginado(
+        page: $page,
+        size: $size,
+        filter: $filter,
+        idSectorOrigen: $idSectorOrigen,
+        idSectorDestino: $idSectorDestino,
+        fechaDesde: $fechaDesde,
+        fechaHasta: $fechaHasta
+      ) {
         content ${TRANSFERENCIA_SELECTION}
         pageInfo {
           pageNumber
@@ -33,12 +58,16 @@ export class TransferenciaService {
         }
       }
     }`;
-    const variables: Record<string, unknown> = { page, size };
-    if (hasFilter) {
-      variables['filter'] = filter.trim();
-    }
     return this.gql
-      .query<{ listarTransferenciasPaginado: PageResponse<TransferenciaOutput> }>(document, variables)
+      .query<{ listarTransferenciasPaginado: PageResponse<TransferenciaOutput> }>(document, {
+        page,
+        size,
+        filter: filter.trim() || null,
+        idSectorOrigen: extras?.idSectorOrigen ?? null,
+        idSectorDestino: extras?.idSectorDestino ?? null,
+        fechaDesde: extras?.fechaDesde || null,
+        fechaHasta: extras?.fechaHasta || null,
+      })
       .pipe(map((data) => data.listarTransferenciasPaginado));
   }
 
