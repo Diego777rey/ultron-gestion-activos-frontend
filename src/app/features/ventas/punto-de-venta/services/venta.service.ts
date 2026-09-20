@@ -18,6 +18,7 @@ const VENTA_SELECTION = `{
   detalles {
     id_detalle_venta
     idProducto
+    idOrdenTrabajo
     productoNombre
     cantidad
     precioUnitario

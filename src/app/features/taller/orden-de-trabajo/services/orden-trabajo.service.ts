@@ -142,4 +142,13 @@ export class OrdenTrabajoService extends BaseCrudService<OrdenTrabajoOutput, Ord
       .query<{ listarCajasConSesionAbierta: CajaOutput[] }>(document)
       .pipe(map((data) => data.listarCajasConSesionAbierta ?? []));
   }
+
+  listarPorEtapa(etapa: string): Observable<OrdenTrabajoOutput[]> {
+    const document = `query($etapa: String!) {
+      listarOrdenesTrabajoPorEtapa(etapa: $etapa) ${ORDEN_TRABAJO_SELECTION}
+    }`;
+    return this.gql
+      .query<{ listarOrdenesTrabajoPorEtapa: OrdenTrabajoOutput[] }>(document, { etapa })
+      .pipe(map((data) => data.listarOrdenesTrabajoPorEtapa ?? []));
+  }
 }
