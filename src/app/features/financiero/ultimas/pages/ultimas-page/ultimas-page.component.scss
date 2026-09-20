@@ -1,12 +1,19 @@
 .ultimas-filters {
   display: flex;
   align-items: flex-end;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
+  flex-wrap: wrap;
+}
+
+.ultimas-filters__group {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
 }
 
 .filter-field {
-  min-width: 180px;
+  min-width: 160px;
 
   label {
     display: block;
@@ -15,7 +22,8 @@
     margin-bottom: 4px;
   }
 
-  input {
+  input,
+  select {
     width: 100%;
     background: transparent;
     border: none;
@@ -25,18 +33,44 @@
     font-family: inherit;
     font-size: 14px;
     outline: none;
-    text-transform: uppercase;
 
     &:focus {
       border-bottom-color: var(--primary-color);
     }
   }
 
-  &--search {
-    flex: 1;
-    min-width: 240px;
-    max-width: 520px;
+  input {
+    text-transform: uppercase;
   }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    padding-right: 22px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23fff' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 2px center;
+  }
+
+  &--caja {
+    min-width: 160px;
+    max-width: 220px;
+  }
+
+  &--responsable {
+    min-width: 200px;
+    max-width: 260px;
+  }
+
+  &--estado {
+    min-width: 140px;
+    max-width: 180px;
+  }
+}
+
+.filter-field--dates {
+  flex: 0 0 auto;
 }
 
 .caja-chip {
@@ -83,13 +117,20 @@
 }
 
 @media (max-width: 768px) {
-  .ultimas-filters {
+  .ultimas-filters,
+  .ultimas-filters__group {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
   }
 
-  .filter-field--search {
+  .filter-field,
+  .filter-field--caja,
+  .filter-field--responsable,
+  .filter-field--estado,
+  .filter-field--dates {
+    width: 100%;
     max-width: none;
+    min-width: 0;
   }
 }

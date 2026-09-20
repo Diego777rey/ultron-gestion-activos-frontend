@@ -18,22 +18,45 @@
   (searchSubmit)="pageIndex.set(0); load()"
 >
   <div genericListFilters class="ultimas-filters">
-    <div class="filter-field">
-      <label>Caja</label>
-      <button type="button" class="caja-chip" (click)="openSelectCaja()">
-        {{ cajaSeleccionada()?.nombre || 'Seleccionar caja' }}
-      </button>
+    <div class="ultimas-filters__group">
+      <div class="filter-field filter-field--caja">
+        <label>Caja</label>
+        <button type="button" class="caja-chip" (click)="openSelectCaja()">
+          {{ cajaSeleccionada()?.nombre || 'Seleccionar caja' }}
+        </button>
+      </div>
+      <div class="filter-field filter-field--responsable">
+        <label for="ultimas-responsable">Responsable</label>
+        <input
+          id="ultimas-responsable"
+          type="text"
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+          (keydown.enter)="pageIndex.set(0); load()"
+        />
+      </div>
     </div>
-    <div class="filter-field filter-field--search">
-      <label for="ultimas-search">Buscar por maletín, responsable o estado...</label>
-      <input
-        id="ultimas-search"
-        type="text"
-        [value]="search()"
-        (input)="search.set($any($event.target).value)"
-        (keydown.enter)="pageIndex.set(0); load()"
-      />
+
+    <div class="filter-field filter-field--estado">
+      <label for="ultimas-estado">Estado</label>
+      <select
+        id="ultimas-estado"
+        [value]="estado()"
+        (change)="onEstadoChange($any($event.target).value)"
+      >
+        @for (opcion of estados; track opcion.value) {
+          <option [value]="opcion.value">{{ opcion.label }}</option>
+        }
+      </select>
     </div>
+
+    <app-date-range-picker
+      class="filter-field--dates"
+      label="Rango de fecha"
+      [value]="dateRange()"
+      (valueChange)="dateRange.set($event)"
+      (closed)="onDateRangeChange($event)"
+    />
   </div>
 
   <ng-template appTableCell="id_sesion_caja" [appTableCellFrom]="sesiones()" let-item>

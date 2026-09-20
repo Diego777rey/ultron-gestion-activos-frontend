@@ -76,10 +76,10 @@ export class SesionVentasDialogComponent {
   protected readonly totalVentas = signal(0);
 
   protected readonly columns: TableColumn<VentaOutput>[] = [
-    { key: 'id_venta', header: 'Id', width: '90px' },
-    { key: 'cliente', header: 'Cliente' },
-    { key: 'fecha', header: 'Fecha', width: '160px' },
-    { key: 'estado', header: 'Estado', width: '120px' },
+    { key: 'id_venta', header: 'Id', width: '80px', align: 'center' },
+    { key: 'cliente', header: 'Cliente', width: '240px' },
+    { key: 'fecha', header: 'Fecha', width: '170px', align: 'center' },
+    { key: 'estado', header: 'Estado', width: '120px', align: 'center' },
     { key: 'total', header: 'Total', width: '130px', align: 'right' },
   ];
 
