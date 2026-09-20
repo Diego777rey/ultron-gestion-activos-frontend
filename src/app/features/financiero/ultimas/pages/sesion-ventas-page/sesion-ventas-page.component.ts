@@ -3,11 +3,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
-  input,
   signal,
 } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DataTableComponent } from '../../../../../shared/components/data-table/data-table';
 import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
 import { PaginatorComponent } from '../../../../../shared/components/paginator/paginator';
@@ -44,7 +43,7 @@ const MONEDA_META: Record<string, { label: string; simbolo: string }> = {
 };
 
 @Component({
-  selector: 'app-sesion-ventas-dialog',
+  selector: 'app-sesion-ventas-page',
   imports: [
     DatePipe,
     DecimalPipe,
@@ -54,18 +53,19 @@ const MONEDA_META: Record<string, { label: string; simbolo: string }> = {
     UiButtonComponent,
     DefaultEmptyPipe,
   ],
-  templateUrl: './sesion-ventas-dialog.component.html',
-  styleUrl: './sesion-ventas-dialog.component.scss',
+  templateUrl: './sesion-ventas-page.component.html',
+  styleUrl: './sesion-ventas-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'app-list-view' },
 })
-export class SesionVentasDialogComponent {
+export class SesionVentasPageComponent {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly sesionCajaService = inject(SesionCajaService);
   private readonly ventaService = inject(VentaService);
 
-  readonly sesion = input<SesionCajaOutput | null>(null);
-
   protected readonly detalle = signal<SesionCajaOutput | null>(null);
-  protected readonly loadingSesion = signal(false);
+  protected readonly loadingSesion = signal(true);
   protected readonly error = signal<string | null>(null);
 
   protected readonly ventas = signal<VentaOutput[]>([]);
@@ -76,14 +76,23 @@ export class SesionVentasDialogComponent {
   protected readonly totalVentas = signal(0);
 
   protected readonly columns: TableColumn<VentaOutput>[] = [
-    { key: 'id_venta', header: 'Id', width: '80px', align: 'center' },
+    { key: 'id_venta', header: 'Nº de venta', width: '120px', align: 'center' },
     { key: 'cliente', header: 'Cliente', width: '240px' },
     { key: 'fecha', header: 'Fecha', width: '170px', align: 'center' },
     { key: 'estado', header: 'Estado', width: '120px', align: 'center' },
     { key: 'total', header: 'Total', width: '130px', align: 'right' },
   ];
 
-  protected readonly sesionVista = computed(() => this.detalle() ?? this.sesion());
+  protected readonly sesionVista = computed(() => this.detalle());
+
+  protected readonly subtitle = computed(() => {
+    const s = this.sesionVista();
+    if (!s) {
+      return '';
+    }
+    const cajaNombre = s.caja?.nombre || 'caja';
+    return `${cajaNombre} · Sesión #${s.id_sesion_caja}`;
+  });
 
   protected readonly conteosApertura = computed(() =>
     this.agruparConteos(this.sesionVista()?.conteos ?? [], 'APERTURA'),
@@ -94,17 +103,18 @@ export class SesionVentasDialogComponent {
   );
 
   constructor() {
-    effect(() => {
-      const actual = this.sesion();
-      const id = actual?.id_sesion_caja;
-      if (id == null) {
-        return;
-      }
-      this.cargarDetalle(id);
-      this.pageIndex.set(0);
-      this.search.set('');
-      this.cargarVentas(id);
-    });
+    const id = Number(this.route.snapshot.paramMap.get('idSesion'));
+    if (!Number.isFinite(id) || id <= 0) {
+      this.loadingSesion.set(false);
+      this.error.set('La sesión de caja no es válida');
+      return;
+    }
+    this.cargarDetalle(id);
+    this.cargarVentas(id);
+  }
+
+  protected volver(): void {
+    this.router.navigate(['/financiero/ultimas']);
   }
 
   protected onPageChange(event: PageChange): void {

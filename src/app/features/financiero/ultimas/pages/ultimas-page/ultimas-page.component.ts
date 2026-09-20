@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { GenericListComponent } from '../../../../../shared/components/generic-list/generic-list';
 import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
 import { ActionMenuComponent, MenuAction } from '../../../../../shared/components/action-menu/action-menu';
@@ -14,7 +15,7 @@ import { CajaOutput } from '../../../cajas/interfaces/caja.interface';
 import { SesionCajaOutput } from '../../../../ventas/punto-de-venta/interfaces/sesion-caja.interface';
 import { SesionCajaService } from '../../../../ventas/punto-de-venta/services/sesion-caja.service';
 import { SeleccionarCajaDialogComponent } from '../../dialogs/seleccionar-caja-dialog/seleccionar-caja-dialog.component';
-import { SesionVentasDialogComponent } from '../../dialogs/sesion-ventas-dialog/sesion-ventas-dialog.component';
+import { UltimasStateService } from '../../services/ultimas-state.service';
 
 @Component({
   selector: 'app-ultimas-page',
@@ -34,16 +35,18 @@ import { SesionVentasDialogComponent } from '../../dialogs/sesion-ventas-dialog/
 export class UltimasPageComponent {
   private readonly sesionCajaService = inject(SesionCajaService);
   private readonly dialogService = inject(AppDialogService);
+  private readonly router = inject(Router);
+  private readonly state = inject(UltimasStateService);
 
-  protected readonly cajaSeleccionada = signal<CajaOutput | null>(null);
+  protected readonly cajaSeleccionada = this.state.cajaSeleccionada;
   protected readonly sesiones = signal<SesionCajaOutput[]>([]);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
-  protected readonly search = signal('');
-  protected readonly estado = signal('');
-  protected readonly dateRange = signal<DateRangeValue>(dateRangeLastDays(7));
-  protected readonly pageIndex = signal(0);
-  protected readonly pageSize = signal(15);
+  protected readonly search = this.state.search;
+  protected readonly estado = this.state.estado;
+  protected readonly dateRange = this.state.dateRange;
+  protected readonly pageIndex = this.state.pageIndex;
+  protected readonly pageSize = this.state.pageSize;
   protected readonly totalElements = signal(0);
 
   protected readonly estados = [
@@ -84,7 +87,9 @@ export class UltimasPageComponent {
 
   constructor() {
     afterNextRender(() => {
-      if (!this.cajaSeleccionada()) {
+      if (this.cajaSeleccionada()) {
+        this.load();
+      } else {
         this.openSelectCaja();
       }
     });
@@ -179,13 +184,10 @@ export class UltimasPageComponent {
   }
 
   protected openVentas(sesion: SesionCajaOutput): void {
-    const cajaNombre = sesion.caja?.nombre || this.cajaSeleccionada()?.nombre || 'caja';
-    this.dialogService.openForm(SesionVentasDialogComponent, {
-      title: `Ventas de la caja`,
-      subtitle: `${cajaNombre} · Sesión #${sesion.id_sesion_caja}`,
-      maxWidth: '1180px',
-      inputs: { sesion },
-    });
+    if (sesion.id_sesion_caja == null) {
+      return;
+    }
+    this.router.navigate(['/financiero/ultimas', sesion.id_sesion_caja, 'ventas']);
   }
 
   protected personaLabel(sesion: SesionCajaOutput): string {
