@@ -17,16 +17,6 @@
             </small>
           </div>
         </div>
-        <div class="pos-toolbar__actions">
-          <button type="button" class="pos-chip-btn" (click)="onAbrirGestionCaja()">
-            <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
-            Cerrar caja
-          </button>
-          <button type="button" class="pos-chip-btn pos-chip-btn--muted" (click)="onSalirPos()">
-            <span class="material-icons" aria-hidden="true">logout</span>
-            Salir
-          </button>
-        </div>
       </header>
 
       @if (ventaError(); as err) {
@@ -49,26 +39,71 @@
             <span class="material-icons" aria-hidden="true">search</span>
             <input
               type="search"
-              placeholder="Buscar producto por nombre o código…"
+              [placeholder]="
+                mostrandoOrdenes()
+                  ? 'Buscar orden por número, cliente o chapa…'
+                  : 'Buscar producto por nombre o código…'
+              "
               [value]="search()"
               (input)="onSearchInput($any($event.target).value)"
             />
           </div>
 
           <div class="pos-product-list">
-            @for (producto of productosFiltrados(); track producto.id_producto) {
-              <button type="button" class="pos-product" (click)="addProducto(producto)">
-                <div class="pos-product__main">
-                  <strong>{{ producto.nombre }}</strong>
-                  <small>{{ producto.codigo }} · Stock {{ producto.stock | number: '1.0-0' }}</small>
-                </div>
-                <span class="pos-product__price">
-                  Gs. {{ producto.precioVenta | number: '1.0-0' }}
-                </span>
-              </button>
-            } @empty {
-              <div class="pos-empty">No hay productos para mostrar</div>
+            @if (mostrandoOrdenes()) {
+              @if (loadingOrdenes()) {
+                <div class="pos-empty">Cargando órdenes finalizadas…</div>
+              } @else {
+                @for (orden of ordenesFiltradas(); track orden.id_orden_trabajo) {
+                  <button type="button" class="pos-product" (click)="addOrden(orden)">
+                    <div class="pos-product__main">
+                      <strong>{{ etiquetaOrden(orden) }}</strong>
+                      <small>{{ detalleOrden(orden) }}</small>
+                    </div>
+                    <span class="pos-product__price">
+                      Gs. {{ totalOrden(orden) | number: '1.0-0' }}
+                    </span>
+                  </button>
+                } @empty {
+                  <div class="pos-empty">No hay órdenes finalizadas para cobrar</div>
+                }
+              }
+            } @else {
+              @for (producto of productosFiltrados(); track producto.id_producto) {
+                <button type="button" class="pos-product" (click)="addProducto(producto)">
+                  <div class="pos-product__main">
+                    <strong>{{ producto.nombre }}</strong>
+                    <small>{{ producto.codigo }} · Stock {{ producto.stock | number: '1.0-0' }}</small>
+                  </div>
+                  <span class="pos-product__price">
+                    Gs. {{ producto.precioVenta | number: '1.0-0' }}
+                  </span>
+                </button>
+              } @empty {
+                <div class="pos-empty">No hay productos para mostrar</div>
+              }
             }
+          </div>
+
+          <div class="pos-catalog__footer">
+            <button
+              type="button"
+              class="pos-chip-btn"
+              [class.pos-chip-btn--active]="!mostrandoOrdenes()"
+              (click)="mostrarProductos()"
+            >
+              <span class="material-icons" aria-hidden="true">inventory_2</span>
+              Productos
+            </button>
+            <button
+              type="button"
+              class="pos-chip-btn"
+              [class.pos-chip-btn--active]="mostrandoOrdenes()"
+              (click)="mostrarOrdenesFinalizadas()"
+            >
+              <span class="material-icons" aria-hidden="true">assignment_turned_in</span>
+              Órdenes finalizadas
+            </button>
           </div>
         </section>
 
@@ -86,16 +121,26 @@
               <div class="pos-cart-item">
                 <div class="pos-cart-item__info">
                   <strong>{{ item.nombre }}</strong>
-                  <small>Gs. {{ item.precioUnitario | number: '1.0-0' }}</small>
+                  <small>
+                    @if (item.tipo === 'ORDEN') {
+                      Orden de trabajo
+                    } @else {
+                      Gs. {{ item.precioUnitario | number: '1.0-0' }}
+                    }
+                  </small>
                 </div>
                 <div class="pos-cart-item__qty">
-                  <button type="button" (click)="ajustarCantidad(i, -1)" aria-label="Restar">
-                    <span class="material-icons">remove</span>
-                  </button>
-                  <span>{{ item.cantidad }}</span>
-                  <button type="button" (click)="ajustarCantidad(i, 1)" aria-label="Sumar">
-                    <span class="material-icons">add</span>
-                  </button>
+                  @if (item.tipo === 'ORDEN') {
+                    <span>1</span>
+                  } @else {
+                    <button type="button" (click)="ajustarCantidad(i, -1)" aria-label="Restar">
+                      <span class="material-icons">remove</span>
+                    </button>
+                    <span>{{ item.cantidad }}</span>
+                    <button type="button" (click)="ajustarCantidad(i, 1)" aria-label="Sumar">
+                      <span class="material-icons">add</span>
+                    </button>
+                  }
                 </div>
                 <div class="pos-cart-item__total">
                   Gs. {{ item.cantidad * item.precioUnitario | number: '1.0-0' }}
@@ -120,6 +165,16 @@
               <strong>Gs. {{ cartTotal() | number: '1.0-0' }}</strong>
             </div>
             <div class="pos-cart__actions">
+              <div class="pos-cart__session-actions">
+                <button type="button" class="pos-chip-btn" (click)="onAbrirGestionCaja()">
+                  <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
+                  Cerrar caja
+                </button>
+                <button type="button" class="pos-chip-btn pos-chip-btn--muted" (click)="onSalirPos()">
+                  <span class="material-icons" aria-hidden="true">logout</span>
+                  Salir
+                </button>
+              </div>
               <app-ui-button
                 label="Vaciar"
                 icon="delete"

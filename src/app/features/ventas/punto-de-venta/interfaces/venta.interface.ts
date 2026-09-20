@@ -1,5 +1,7 @@
 export interface DetalleVentaInput {
-  idProducto: number;
+  idProducto?: number | null;
+  idOrdenTrabajo?: number | null;
+  descripcion?: string | null;
   cantidad: number;
   precioUnitario?: number;
 }
@@ -14,6 +16,7 @@ export interface VentaInput {
 export interface DetalleVentaOutput {
   id_detalle_venta?: number;
   idProducto?: number;
+  idOrdenTrabajo?: number;
   productoNombre?: string;
   cantidad: number;
   precioUnitario: number;
@@ -34,8 +37,13 @@ export interface VentaOutput {
   detalles?: DetalleVentaOutput[];
 }
 
+export type CartItemTipo = 'PRODUCTO' | 'ORDEN';
+
 export interface CartItem {
-  idProducto: number;
+  tipo: CartItemTipo;
+  idProducto?: number;
+  idOrdenTrabajo?: number;
+  idCliente?: number | null;
   nombre: string;
   cantidad: number;
   precioUnitario: number;
