@@ -1,4 +1,4 @@
-<div class="pos-page" [class.pos-page--operando]="cajaAbierta()">
+<div class="pos-page" [class.pos-page--operando]="cajaAbierta()" [class.pos-page--pdv2]="isPdvAuxiliar()">
   @if (loadingSesion()) {
     <div class="pos-page__placeholder">
       <span class="material-icons">hourglass_top</span>
@@ -118,6 +118,16 @@
               <span class="material-icons" aria-hidden="true">assignment_turned_in</span>
               Órdenes finalizadas
             </button>
+            <div class="pos-catalog__session">
+              <button type="button" class="pos-chip-btn" (click)="onAbrirGestionCaja()">
+                <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
+                Cerrar caja
+              </button>
+              <button type="button" class="pos-chip-btn" (click)="onSalirPos()">
+                <span class="material-icons" aria-hidden="true">logout</span>
+                Salir
+              </button>
+            </div>
           </div>
         </section>
 
@@ -126,11 +136,15 @@
             <h2>
               <span class="material-icons" aria-hidden="true">shopping_cart</span>
               Carrito
+              <span class="pos-cart__pdv">{{ etiquetaPdvActivo() }}</span>
             </h2>
             <span class="pos-cart__badge">{{ cartCount() }}</span>
           </div>
 
           <div class="pos-cart__items">
+            @if (isPdvAuxiliar()) {
+              <div class="pos-cart__watermark" aria-hidden="true">PDV 2</div>
+            }
             @for (item of cart(); track $index; let i = $index) {
               <div class="pos-cart-item">
                 <div class="pos-cart-item__info">
@@ -171,7 +185,13 @@
                 </button>
               </div>
             } @empty {
-              <div class="pos-empty">El carrito está vacío</div>
+              <div class="pos-empty">
+                @if (isPdvAuxiliar()) {
+                  PDV 2 vacío · cargá otra venta o consultá precios
+                } @else {
+                  El carrito está vacío
+                }
+              </div>
             }
           </div>
 
@@ -181,29 +201,31 @@
               <strong>Gs. {{ cartTotal() | number: '1.0-0' }}</strong>
             </div>
             <div class="pos-cart__actions">
-              <div class="pos-cart__session-actions">
-                <button type="button" class="pos-chip-btn" (click)="onAbrirGestionCaja()">
-                  <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
-                  Cerrar caja
-                </button>
-                <button type="button" class="pos-chip-btn pos-chip-btn--muted" (click)="onSalirPos()">
-                  <span class="material-icons" aria-hidden="true">logout</span>
-                  Salir
-                </button>
-              </div>
-              <app-ui-button
-                label="Vaciar"
-                icon="delete"
-                variant="ghost"
+              <button
+                type="button"
+                class="pos-chip-btn pos-chip-btn--pdv"
+                [class.pos-chip-btn--active]="isPdvAuxiliar()"
+                (click)="cambiarPdv()"
+              >
+                <span class="material-icons" aria-hidden="true">
+                  {{ isPdvAuxiliar() ? 'filter_1' : 'filter_2' }}
+                </span>
+                {{ etiquetaPdvAlterno() }}
+              </button>
+              <button
+                type="button"
+                class="pos-chip-btn pos-chip-btn--danger"
                 [disabled]="cart().length === 0"
-                (clicked)="clearCart()"
-              />
+                (click)="clearCart()"
+              >
+                <span class="material-icons" aria-hidden="true">delete</span>
+                Vaciar
+              </button>
               <app-ui-button
                 label="Cobrar efectivo"
                 icon="payments"
                 variant="primary"
-                [loading]="selling()"
-                [disabled]="cart().length === 0"
+                [disabled]="cart().length === 0 || selling()"
                 (clicked)="cobrar()"
               />
             </div>
