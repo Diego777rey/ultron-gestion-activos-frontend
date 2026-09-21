@@ -17,6 +17,7 @@ import { ServicioOutput } from '../../inventario/servicios/interfaces/servicio.i
 import { OrdenTrabajoService } from '../../taller/orden-de-trabajo/services/orden-trabajo.service';
 import { OrdenTrabajoOutput } from '../../taller/orden-de-trabajo/interfaces/orden-trabajo.interface';
 import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja-dialog.component';
+import { LoadingService } from '../../../shared/services/loading.service';
 import { SesionCajaService } from './services/sesion-caja.service';
 import { VentaPosService } from './services/venta.service';
 import { SesionCajaOutput } from './interfaces/sesion-caja.interface';
@@ -25,20 +26,25 @@ import { CartItem, DetalleVentaInput } from './interfaces/venta.interface';
 const POS_ROUTE = '/ventas/punto-de-venta';
 
 export type CatalogoPos = 'productos' | 'servicios' | 'ordenes';
+export type PdvNumero = 1 | 2;
 
 @Component({
   selector: 'app-punto-de-venta',
   imports: [ModalComponent, AbrirCajaDialogComponent, UiButtonComponent, DecimalPipe],
   templateUrl: './punto-de-venta.component.html',
-  styleUrl: './punto-de-venta.component.scss',
+  styleUrls: ['./punto-de-venta.component.scss', './punto-de-venta-dialog.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'app-list-view' },
+  host: {
+    class: 'app-list-view',
+    '(document:keydown.f2)': 'onPdvShortcut($event)',
+  },
 })
 export class PuntoDeVentaComponent {
   private readonly tabService = inject(TabService);
   private readonly router = inject(Router);
   private readonly sesionCajaService = inject(SesionCajaService);
   private readonly ventaService = inject(VentaPosService);
+  private readonly loading = inject(LoadingService);
   private readonly productoService = inject(ProductoService);
   private readonly servicioService = inject(ServicioService);
   private readonly ordenTrabajoService = inject(OrdenTrabajoService);
@@ -57,9 +63,20 @@ export class PuntoDeVentaComponent {
   readonly loadingServicios = signal(false);
   readonly loadingOrdenes = signal(false);
   readonly search = signal('');
-  readonly cart = signal<CartItem[]>([]);
+  readonly pdvActivo = signal<PdvNumero>(1);
+  private readonly cartPdv1 = signal<CartItem[]>([]);
+  private readonly cartPdv2 = signal<CartItem[]>([]);
   readonly selling = signal(false);
   readonly ventaError = signal<string | null>(null);
+
+  readonly cart = computed(() =>
+    this.pdvActivo() === 2 ? this.cartPdv2() : this.cartPdv1()
+  );
+  readonly isPdvAuxiliar = computed(() => this.pdvActivo() === 2);
+  readonly etiquetaPdvActivo = computed(() => (this.pdvActivo() === 2 ? 'PDV 2' : 'PDV 1'));
+  readonly etiquetaPdvAlterno = computed(() =>
+    this.pdvActivo() === 2 ? 'PDV 1 (F2)' : 'PDV 2 (F2)'
+  );
 
   readonly pasoInicialGestion = computed(() => {
     if (!this.maletinVerificado()) {
@@ -152,7 +169,7 @@ export class PuntoDeVentaComponent {
     this.sesion.set(null);
     this.cajaAbierta.set(false);
     this.maletinVerificado.set(false);
-    this.cart.set([]);
+    this.resetearPdvs();
     this.catalogo.set('productos');
     this.ordenesFinalizadas.set([]);
     this.servicios.set([]);
@@ -196,25 +213,26 @@ export class PuntoDeVentaComponent {
 
   protected addProducto(producto: ProductoOutput): void {
     const stock = Number(producto.stock ?? 0);
-    if (stock <= 0) {
+    const stockDisponible = stock - this.cantidadProductoEnOtroPdv(producto.id_producto);
+    if (stockDisponible <= 0) {
       this.ventaError.set(`Sin stock: ${producto.nombre}`);
       return;
     }
 
     this.ventaError.set(null);
-    this.cart.update((items) => {
+    this.cartActivo().update((items) => {
       const idx = items.findIndex(
         (i) => i.tipo === 'PRODUCTO' && i.idProducto === producto.id_producto
       );
       if (idx >= 0) {
         const current = items[idx];
         const nuevaCantidad = current.cantidad + 1;
-        if (nuevaCantidad > stock) {
+        if (nuevaCantidad > stockDisponible) {
           this.ventaError.set(`Stock insuficiente para ${producto.nombre}`);
           return items;
         }
         const next = [...items];
-        next[idx] = { ...current, cantidad: nuevaCantidad };
+        next[idx] = { ...current, cantidad: nuevaCantidad, stockDisponible };
         return next;
       }
       return [
@@ -225,7 +243,7 @@ export class PuntoDeVentaComponent {
           nombre: producto.nombre,
           cantidad: 1,
           precioUnitario: Number(producto.precioVenta),
-          stockDisponible: stock,
+          stockDisponible,
         },
       ];
     });
@@ -239,7 +257,7 @@ export class PuntoDeVentaComponent {
     }
 
     this.ventaError.set(null);
-    this.cart.update((items) => {
+    this.cartActivo().update((items) => {
       const idx = items.findIndex(
         (i) => i.tipo === 'SERVICIO' && i.idServicio === servicio.id_servicio
       );
@@ -269,8 +287,10 @@ export class PuntoDeVentaComponent {
       this.ventaError.set('La orden no tiene identificador');
       return;
     }
-    if (this.cart().some((item) => item.tipo === 'ORDEN' && item.idOrdenTrabajo === idOrden)) {
-      this.ventaError.set(`La orden ${orden.numero_orden ?? idOrden} ya está en el carrito`);
+    if (this.ordenEnCarritos(idOrden)) {
+      this.ventaError.set(
+        `La orden ${orden.numero_orden ?? idOrden} ya está en un carrito (PDV 1 o PDV 2)`
+      );
       return;
     }
 
@@ -281,7 +301,7 @@ export class PuntoDeVentaComponent {
     }
 
     this.ventaError.set(null);
-    this.cart.update((items) => [
+    this.cartActivo().update((items) => [
       ...items,
       {
         tipo: 'ORDEN',
@@ -296,7 +316,7 @@ export class PuntoDeVentaComponent {
   }
 
   protected ajustarCantidad(index: number, delta: number): void {
-    this.cart.update((items) => {
+    this.cartActivo().update((items) => {
       const next = [...items];
       const item = next[index];
       if (!item) {
@@ -310,9 +330,14 @@ export class PuntoDeVentaComponent {
         next.splice(index, 1);
         return next;
       }
-      if (item.tipo === 'PRODUCTO' && cantidad > item.stockDisponible) {
-        this.ventaError.set(`Stock insuficiente para ${item.nombre}`);
-        return items;
+      if (item.tipo === 'PRODUCTO') {
+        const producto = this.productos().find((p) => p.id_producto === item.idProducto);
+        const stock = Number(producto?.stock ?? item.stockDisponible);
+        const disponible = stock - this.cantidadProductoEnOtroPdv(item.idProducto ?? 0);
+        if (cantidad > disponible) {
+          this.ventaError.set(`Stock insuficiente para ${item.nombre}`);
+          return items;
+        }
       }
       next[index] = { ...item, cantidad };
       return next;
@@ -320,12 +345,25 @@ export class PuntoDeVentaComponent {
   }
 
   protected removeItem(index: number): void {
-    this.cart.update((items) => items.filter((_, i) => i !== index));
+    this.cartActivo().update((items) => items.filter((_, i) => i !== index));
   }
 
   protected clearCart(): void {
-    this.cart.set([]);
+    this.cartActivo().set([]);
     this.ventaError.set(null);
+  }
+
+  protected cambiarPdv(): void {
+    if (!this.puedeCambiarPdv()) {
+      return;
+    }
+    this.pdvActivo.update((n) => (n === 1 ? 2 : 1));
+    this.ventaError.set(null);
+  }
+
+  protected onPdvShortcut(event: Event): void {
+    event.preventDefault();
+    this.cambiarPdv();
   }
 
   protected cobrar(): void {
@@ -344,17 +382,24 @@ export class PuntoDeVentaComponent {
 
     this.selling.set(true);
     this.ventaError.set(null);
-    this.ventaService
-      .registrarVenta({
-        idSesionCaja: sesion.id_sesion_caja,
-        idCliente: ordenCliente?.idCliente ?? null,
-        descuento: 0,
-        detalles: items.map((item) => this.toDetalleInput(item)),
-      })
+    this.loading
+      .track(
+        this.ventaService.registrarVenta({
+          idSesionCaja: sesion.id_sesion_caja,
+          idCliente: ordenCliente?.idCliente ?? null,
+          descuento: 0,
+          detalles: items.map((item) => this.toDetalleInput(item)),
+        }),
+        {
+          message: 'Cobrando…',
+          errorTitle: 'No se pudo registrar la venta',
+          notifyError: false,
+        },
+      )
       .subscribe({
-        next: (venta) => {
+        next: () => {
           this.selling.set(false);
-          this.cart.set([]);
+          this.cartActivo().set([]);
           this.refreshSesion();
           this.loadProductos();
           if (this.mostrandoOrdenes() || items.some((item) => item.tipo === 'ORDEN')) {
@@ -403,6 +448,33 @@ export class PuntoDeVentaComponent {
     ]
       .filter(Boolean)
       .join(' ');
+  }
+
+  private cartActivo() {
+    return this.pdvActivo() === 2 ? this.cartPdv2 : this.cartPdv1;
+  }
+
+  private puedeCambiarPdv(): boolean {
+    return this.cajaAbierta() && !this.gestionCajaOpen() && !this.selling();
+  }
+
+  private resetearPdvs(): void {
+    this.pdvActivo.set(1);
+    this.cartPdv1.set([]);
+    this.cartPdv2.set([]);
+  }
+
+  private cantidadProductoEnOtroPdv(idProducto: number): number {
+    const otro = this.pdvActivo() === 2 ? this.cartPdv1() : this.cartPdv2();
+    return otro
+      .filter((item) => item.tipo === 'PRODUCTO' && item.idProducto === idProducto)
+      .reduce((acc, item) => acc + item.cantidad, 0);
+  }
+
+  private ordenEnCarritos(idOrden: number): boolean {
+    const enCarrito = (items: CartItem[]) =>
+      items.some((item) => item.tipo === 'ORDEN' && item.idOrdenTrabajo === idOrden);
+    return enCarrito(this.cartPdv1()) || enCarrito(this.cartPdv2());
   }
 
   private toDetalleInput(item: CartItem): DetalleVentaInput {
