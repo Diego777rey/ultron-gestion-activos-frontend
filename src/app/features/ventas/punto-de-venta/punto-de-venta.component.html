@@ -228,6 +228,13 @@
                 [disabled]="cart().length === 0 || selling()"
                 (clicked)="cobrar()"
               />
+              <app-ui-button
+                label="Cobro+Ticket"
+                icon="receipt_long"
+                variant="primary"
+                [disabled]="cart().length === 0 || selling()"
+                (clicked)="cobrarConTicket()"
+              />
             </div>
           </div>
         </aside>

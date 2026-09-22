@@ -21,7 +21,10 @@ import { LoadingService } from '../../../shared/services/loading.service';
 import { SesionCajaService } from './services/sesion-caja.service';
 import { VentaPosService } from './services/venta.service';
 import { SesionCajaOutput } from './interfaces/sesion-caja.interface';
-import { CartItem, DetalleVentaInput } from './interfaces/venta.interface';
+import { CartItem, DetalleVentaInput, VentaOutput } from './interfaces/venta.interface';
+import { ImpresionService } from '../../../shared/services/impresion.service';
+import { TicketVenta } from '../../../shared/models/impresion.model';
+import { AuthService } from '../../../core/auth/auth.service';
 
 const POS_ROUTE = '/ventas/punto-de-venta';
 
@@ -44,6 +47,8 @@ export class PuntoDeVentaComponent {
   private readonly router = inject(Router);
   private readonly sesionCajaService = inject(SesionCajaService);
   private readonly ventaService = inject(VentaPosService);
+  private readonly impresion = inject(ImpresionService);
+  private readonly auth = inject(AuthService);
   private readonly loading = inject(LoadingService);
   private readonly productoService = inject(ProductoService);
   private readonly servicioService = inject(ServicioService);
@@ -367,6 +372,14 @@ export class PuntoDeVentaComponent {
   }
 
   protected cobrar(): void {
+    this.registrarVenta(false);
+  }
+
+  protected cobrarConTicket(): void {
+    this.registrarVenta(true);
+  }
+
+  private registrarVenta(imprimirTicket: boolean): void {
     const sesion = this.sesion();
     const items = this.cart();
     if (!sesion?.id_sesion_caja) {
@@ -391,13 +404,13 @@ export class PuntoDeVentaComponent {
           detalles: items.map((item) => this.toDetalleInput(item)),
         }),
         {
-          message: 'Cobrando…',
+          message: imprimirTicket ? 'Cobrando e imprimiendo…' : 'Cobrando…',
           errorTitle: 'No se pudo registrar la venta',
           notifyError: false,
         },
       )
       .subscribe({
-        next: () => {
+        next: (venta) => {
           this.selling.set(false);
           this.cartActivo().set([]);
           this.refreshSesion();
@@ -405,12 +418,50 @@ export class PuntoDeVentaComponent {
           if (this.mostrandoOrdenes() || items.some((item) => item.tipo === 'ORDEN')) {
             this.loadOrdenesFinalizadas();
           }
+          if (imprimirTicket) {
+            this.imprimirTicket(venta);
+          }
         },
         error: (err: Error) => {
           this.selling.set(false);
           this.ventaError.set(err.message || 'No se pudo registrar la venta');
         },
       });
+  }
+
+  private imprimirTicket(venta: VentaOutput): void {
+    this.impresion.imprimirTicketVenta(this.toTicketVenta(venta)).subscribe();
+  }
+
+  private toTicketVenta(venta: VentaOutput): TicketVenta {
+    return {
+      titulo: 'CH-SERVICE',
+      subtitulo: null,
+      numero: venta.numero,
+      fecha: this.formatFechaTicket(venta.fecha),
+      cajero: this.auth.currentUsername()?.trim() || null,
+      cliente: venta.clienteNombre?.trim() || 'Consumidor final',
+      lineas: (venta.detalles ?? []).map((detalle) => ({
+        descripcion: detalle.productoNombre?.trim() || 'Item',
+        cantidad: Number(detalle.cantidad ?? 1),
+        precioUnitario: Number(detalle.precioUnitario ?? 0),
+        subtotal: Number(detalle.subtotal ?? 0),
+      })),
+      descuento: Number(venta.descuento ?? 0),
+      total: Number(venta.total ?? 0),
+      pie: 'Gracias por su compra',
+    };
+  }
+
+  private formatFechaTicket(value?: string): string {
+    if (!value) {
+      return new Date().toLocaleString('es-PY');
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+    return parsed.toLocaleString('es-PY');
   }
 
   protected totalOrden(orden: OrdenTrabajoOutput): number {

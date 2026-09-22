@@ -49,8 +49,8 @@ export class ConfiguracionService {
     return this.dialogs
       .openForm<ConfiguracionSistema | undefined>(ConfiguracionSistemaFormComponent, {
         title: 'Configuración del Sistema',
-        subtitle: 'IP y puerto del servidor backend',
-        maxWidth: '480px',
+        subtitle: 'Servidor backend e impresora térmica',
+        maxWidth: '640px',
         closeOnBackdrop: false,
         closeOnEscape: false,
         inputs: {
@@ -82,6 +82,9 @@ export class ConfiguracionService {
       serverIp: (config.serverIp || DEFAULT_CONFIGURACION.serverIp).trim(),
       serverPort: (config.serverPort || DEFAULT_CONFIGURACION.serverPort).trim(),
       isConfigured: config.isConfigured === true,
+      printers: {
+        ticket: config.printers?.ticket?.trim() ?? DEFAULT_CONFIGURACION.printers.ticket,
+      },
     };
   }
 }
