@@ -7,10 +7,13 @@ export interface DetalleVentaInput {
   precioUnitario?: number;
 }
 
+export type FormaPago = 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA';
+
 export interface VentaInput {
   idSesionCaja: number;
   idCliente?: number | null;
   descuento?: number;
+  formaPago?: FormaPago;
   detalles: DetalleVentaInput[];
 }
 
@@ -36,6 +39,7 @@ export interface VentaOutput {
   descuento: number;
   total: number;
   estado: string;
+  formaPago?: FormaPago;
   detalles?: DetalleVentaOutput[];
 }
 

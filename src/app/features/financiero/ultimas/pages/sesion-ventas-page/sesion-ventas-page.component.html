@@ -194,6 +194,11 @@
               <ng-template appTableCell="fecha" [appTableCellFrom]="ventas()" let-item>
                 {{ item.fecha | date: 'dd/MM/yyyy HH:mm' | defaultEmpty }}
               </ng-template>
+              <ng-template appTableCell="formaPago" [appTableCellFrom]="ventas()" let-item>
+                <span class="forma-pago-pill" [attr.data-tipo]="item.formaPago?.toLowerCase() ?? 'efectivo'">
+                  {{ formaPagoLabel(item.formaPago) }}
+                </span>
+              </ng-template>
               <ng-template appTableCell="estado" [appTableCellFrom]="ventas()" let-item>
                 {{ estadoLabel(item.estado) }}
               </ng-template>
