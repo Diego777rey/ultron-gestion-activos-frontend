@@ -17,11 +17,12 @@ import { ServicioOutput } from '../../inventario/servicios/interfaces/servicio.i
 import { OrdenTrabajoService } from '../../taller/orden-de-trabajo/services/orden-trabajo.service';
 import { OrdenTrabajoOutput } from '../../taller/orden-de-trabajo/interfaces/orden-trabajo.interface';
 import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja-dialog.component';
+import { PagoDialogComponent } from './dialogs/pago-dialog/pago-dialog.component';
 import { LoadingService } from '../../../shared/services/loading.service';
 import { SesionCajaService } from './services/sesion-caja.service';
 import { VentaPosService } from './services/venta.service';
 import { SesionCajaOutput } from './interfaces/sesion-caja.interface';
-import { CartItem, DetalleVentaInput, VentaOutput } from './interfaces/venta.interface';
+import { CartItem, DetalleVentaInput, FormaPago, VentaOutput } from './interfaces/venta.interface';
 import { ImpresionService } from '../../../shared/services/impresion.service';
 import { TicketVenta } from '../../../shared/models/impresion.model';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -33,7 +34,7 @@ export type PdvNumero = 1 | 2;
 
 @Component({
   selector: 'app-punto-de-venta',
-  imports: [ModalComponent, AbrirCajaDialogComponent, UiButtonComponent, DecimalPipe],
+  imports: [ModalComponent, AbrirCajaDialogComponent, PagoDialogComponent, UiButtonComponent, DecimalPipe],
   templateUrl: './punto-de-venta.component.html',
   styleUrls: ['./punto-de-venta.component.scss', './punto-de-venta-dialog.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,6 +57,7 @@ export class PuntoDeVentaComponent {
 
   readonly inicioDialogOpen = signal(true);
   readonly gestionCajaOpen = signal(false);
+  readonly pagoDialogOpen = signal(false);
   readonly maletinVerificado = signal(false);
   readonly cajaAbierta = signal(false);
   readonly sesion = signal<SesionCajaOutput | null>(null);
@@ -371,15 +373,32 @@ export class PuntoDeVentaComponent {
     this.cambiarPdv();
   }
 
+  protected abrirPagoDialog(): void {
+    if (this.cart().length === 0) {
+      this.ventaError.set('Agregá ítems al carrito antes de cobrar');
+      return;
+    }
+    this.pagoDialogOpen.set(true);
+  }
+
+  protected cerrarPagoDialog(): void {
+    this.pagoDialogOpen.set(false);
+  }
+
+  protected cobrarConMetodo(formaPago: FormaPago): void {
+    this.pagoDialogOpen.set(false);
+    this.registrarVenta(false, formaPago);
+  }
+
   protected cobrar(): void {
-    this.registrarVenta(false);
+    this.registrarVenta(false, 'EFECTIVO');
   }
 
   protected cobrarConTicket(): void {
-    this.registrarVenta(true);
+    this.registrarVenta(true, 'EFECTIVO');
   }
 
-  private registrarVenta(imprimirTicket: boolean): void {
+  private registrarVenta(imprimirTicket: boolean, formaPago: FormaPago = 'EFECTIVO'): void {
     const sesion = this.sesion();
     const items = this.cart();
     if (!sesion?.id_sesion_caja) {
@@ -401,6 +420,7 @@ export class PuntoDeVentaComponent {
           idSesionCaja: sesion.id_sesion_caja,
           idCliente: ordenCliente?.idCliente ?? null,
           descuento: 0,
+          formaPago,
           detalles: items.map((item) => this.toDetalleInput(item)),
         }),
         {

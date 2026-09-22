@@ -77,10 +77,11 @@ export class SesionVentasPageComponent {
 
   protected readonly columns: TableColumn<VentaOutput>[] = [
     { key: 'id_venta', header: 'Nº de venta', width: '120px', align: 'center' },
-    { key: 'cliente', header: 'Cliente', width: '240px' },
-    { key: 'fecha', header: 'Fecha', width: '170px', align: 'center' },
-    { key: 'estado', header: 'Estado', width: '120px', align: 'center' },
-    { key: 'total', header: 'Total', width: '130px', align: 'right' },
+    { key: 'cliente', header: 'Cliente', width: '200px' },
+    { key: 'fecha', header: 'Fecha', width: '160px', align: 'center' },
+    { key: 'formaPago', header: 'Forma de pago', width: '130px', align: 'center' },
+    { key: 'estado', header: 'Estado', width: '100px', align: 'center' },
+    { key: 'total', header: 'Total', width: '120px', align: 'right' },
   ];
 
   protected readonly sesionVista = computed(() => this.detalle());
@@ -156,6 +157,19 @@ export class SesionVentasPageComponent {
         return 'Pagada';
       default:
         return estado || '—';
+    }
+  }
+
+  protected formaPagoLabel(formaPago?: string | null): string {
+    switch ((formaPago ?? '').toUpperCase()) {
+      case 'EFECTIVO':
+        return 'Efectivo';
+      case 'TARJETA':
+        return 'Tarjeta';
+      case 'TRANSFERENCIA':
+        return 'Transferencia';
+      default:
+        return formaPago || 'Efectivo';
     }
   }
 

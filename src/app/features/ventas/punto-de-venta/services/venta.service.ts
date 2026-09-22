@@ -15,6 +15,7 @@ const VENTA_SELECTION = `{
   descuento
   total
   estado
+  formaPago
   detalles {
     id_detalle_venta
     idProducto

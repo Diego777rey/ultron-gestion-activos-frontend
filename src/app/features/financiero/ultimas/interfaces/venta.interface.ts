@@ -7,6 +7,8 @@ export interface DetalleVentaOutput {
   subtotal?: number;
 }
 
+export type FormaPago = 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA';
+
 export interface VentaOutput {
   id_venta: number;
   numero?: string;
@@ -18,5 +20,6 @@ export interface VentaOutput {
   descuento?: number;
   total?: number;
   estado?: string;
+  formaPago?: FormaPago;
   detalles?: DetalleVentaOutput[] | null;
 }

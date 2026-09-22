@@ -127,6 +127,15 @@
                 <span class="material-icons" aria-hidden="true">logout</span>
                 Salir
               </button>
+              <button
+                type="button"
+                class="pos-chip-btn pos-chip-btn--accent"
+                [disabled]="cart().length === 0"
+                (click)="abrirPagoDialog()"
+              >
+                <span class="material-icons" aria-hidden="true">point_of_sale</span>
+                Pago
+              </button>
             </div>
           </div>
         </section>
@@ -303,5 +312,13 @@
     (maletinConfirmado)="onMaletinConfirmado()"
     (cajaAbiertaConfirmada)="onCajaAbierta($event)"
     (cajaCerradaConfirmada)="onCajaCerrada()"
+  />
+}
+
+@if (pagoDialogOpen()) {
+  <app-pago-dialog
+    [total]="cartTotal()"
+    (cancelar)="cerrarPagoDialog()"
+    (confirmar)="cobrarConMetodo($event)"
   />
 }
