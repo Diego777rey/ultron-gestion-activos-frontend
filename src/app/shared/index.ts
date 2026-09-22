@@ -6,6 +6,7 @@ export * from './models/pagination.model';
 export * from './models/crud-config.model';
 export * from './models/menu-item.model';
 export * from './models/configuracion-sistema.model';
+export * from './models/impresion.model';
 export * from './models/list-toolbar-action.model';
 export * from './models/reporte-sesion.model';
 export * from './models/notification.model';
@@ -17,6 +18,7 @@ export * from './services/base-crud.service';
 export * from './services/notification.service';
 export * from './services/loading.service';
 export * from './services/configuracion.service';
+export * from './services/impresion.service';
 export * from './services/reporte.service';
 export * from './services/reporte-visor.service';
 

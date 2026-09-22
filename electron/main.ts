@@ -24,6 +24,23 @@ function registerIpc(): void {
   ipcMain.on('desktop:get-config', (event) => {
     event.returnValue = DESKTOP_CONFIG;
   });
+
+  ipcMain.handle('printers:list', async () => {
+    const win = BrowserWindow.getFocusedWindow() ?? mainWindow;
+    if (!win) {
+      return [];
+    }
+    const printers = await win.webContents.getPrintersAsync();
+    return printers.map((printer) => {
+      const options = printer.options as unknown as Record<string, string | undefined>;
+      return {
+        name: printer.name,
+        displayName: printer.displayName || printer.name,
+        description: printer.description,
+        isDefault: options?.['printer-is-default'] === 'true' || options?.['is_default'] === 'true',
+      };
+    });
+  });
 }
 
 function buildMenu(): Electron.Menu {

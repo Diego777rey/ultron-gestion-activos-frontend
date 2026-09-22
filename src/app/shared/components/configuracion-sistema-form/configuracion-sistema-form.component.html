@@ -32,6 +32,73 @@
     </div>
   </div>
 
+  <section class="config-form__printer">
+    <div class="config-form__printer-head">
+      <div>
+        <h3 class="config-form__section-title">Impresora térmica</h3>
+        <p class="config-form__hint">{{ platformHint() }}</p>
+      </div>
+      <app-ui-button
+        type="button"
+        variant="ghost"
+        size="sm"
+        icon="refresh"
+        label="Recargar"
+        [disabled]="loadingPrinters()"
+        [loading]="loadingPrinters()"
+        (clicked)="loadPrinters()"
+      />
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="printerSelect">Impresoras detectadas</label>
+      <select
+        id="printerSelect"
+        class="field__input"
+        [value]="printerTicketValue()"
+        [disabled]="loadingPrinters() || printers().length === 0"
+        (change)="onPrinterSelect($event)"
+      >
+        @if (printers().length === 0) {
+          <option value="">
+            {{ loadingPrinters() ? 'Buscando impresoras…' : 'No se detectaron impresoras' }}
+          </option>
+        } @else {
+          <option value="">Seleccionar impresora…</option>
+          @for (printer of printers(); track printer.name) {
+            <option [value]="printer.name">
+              {{ printer.displayName || printer.name }}{{ printer.isDefault ? ' (predeterminada)' : '' }}
+            </option>
+          }
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="printerTicket">Nombre de la impresora de ticket</label>
+      <input
+        id="printerTicket"
+        class="field__input"
+        type="text"
+        formControlName="printerTicket"
+        placeholder="ej: TICKET58 o ticket-printer"
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="config-form__printer-actions">
+      <app-ui-button
+        type="button"
+        variant="outline"
+        icon="print"
+        label="Imprimir prueba"
+        [disabled]="!printerTicketValue().trim() || testingPrint()"
+        [loading]="testingPrint()"
+        (clicked)="onTestPrint()"
+      />
+    </div>
+  </section>
+
   <p class="config-form__hint">
     Esta configuración se guarda en el equipo y se usa hasta que la cambies manualmente.
   </p>

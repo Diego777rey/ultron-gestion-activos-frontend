@@ -1,7 +1,12 @@
+export interface ConfiguracionPrinters {
+  ticket: string;
+}
+
 export interface ConfiguracionSistema {
   serverIp: string;
   serverPort: string;
   isConfigured: boolean;
+  printers: ConfiguracionPrinters;
 }
 
 export const CONFIGURACION_STORAGE_KEY = 'ultron-configuracion-sistema';
@@ -11,6 +16,7 @@ export const DEFAULT_CONFIGURACION: ConfiguracionSistema = {
   serverIp: 'localhost',
   serverPort: '8081',
   isConfigured: false,
+  printers: { ticket: '' },
 };
 
 export function readStoredConfiguracion(): ConfiguracionSistema | null {
@@ -27,7 +33,9 @@ export function readStoredConfiguracion(): ConfiguracionSistema | null {
   }
 
   try {
-    const parsed = JSON.parse(raw) as Partial<ConfiguracionSistema>;
+    const parsed = JSON.parse(raw) as Partial<ConfiguracionSistema> & {
+      printers?: Partial<ConfiguracionPrinters>;
+    };
     const serverIp = parsed.serverIp?.trim();
     const serverPort = parsed.serverPort?.trim();
     if (!serverIp || !serverPort) {
@@ -37,6 +45,9 @@ export function readStoredConfiguracion(): ConfiguracionSistema | null {
       serverIp,
       serverPort,
       isConfigured: parsed.isConfigured === true,
+      printers: {
+        ticket: parsed.printers?.ticket?.trim() ?? '',
+      },
     };
   } catch {
     return null;
