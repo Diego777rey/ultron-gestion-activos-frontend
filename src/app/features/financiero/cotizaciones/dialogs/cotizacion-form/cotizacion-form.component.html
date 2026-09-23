@@ -1,0 +1,57 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="form-container">
+  @if (error()) {
+    <app-error-banner [message]="error()!" (retry)="submit()" />
+  }
+
+  <div class="form-grid">
+    <div class="form-field">
+      <label for="moneda">Moneda *</label>
+      <select id="moneda" formControlName="moneda" [class.invalid]="form.controls.moneda.invalid && form.controls.moneda.touched">
+        @for (moneda of monedas; track moneda.value) {
+          <option [value]="moneda.value">{{ moneda.label }}</option>
+        }
+      </select>
+      @if (form.controls.moneda.invalid && form.controls.moneda.touched) {
+        <span class="error-message">La moneda es obligatoria</span>
+      }
+    </div>
+
+    <div class="form-field">
+      <label for="valor">Valor de cotización *</label>
+      <input
+        id="valor"
+        type="number"
+        formControlName="valor"
+        step="0.01"
+        min="0"
+        placeholder="Ingresá el valor de cotización"
+        [class.invalid]="form.controls.valor.invalid && form.controls.valor.touched"
+      />
+      @if (form.controls.valor.invalid && form.controls.valor.touched) {
+        <span class="error-message">
+          @if (form.controls.valor.errors?.['required']) {
+            El valor es obligatorio
+          } @else if (form.controls.valor.errors?.['min']) {
+            El valor debe ser mayor o igual a 0
+          }
+        </span>
+      }
+    </div>
+
+    <div class="form-field form-field--checkbox">
+      <label>
+        <input type="checkbox" formControlName="activa" />
+        <span>Activa</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <ui-button type="button" variant="secondary" (click)="close(false)">
+      Cancelar
+    </ui-button>
+    <ui-button type="submit" [disabled]="submitting()">
+      {{ submitting() ? 'Guardando...' : 'Guardar' }}
+    </ui-button>
+  </div>
+</form>
