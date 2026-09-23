@@ -1,3 +1,9 @@
+/**
+ * Tamaño de página estándar para catálogos de alto tráfico (PDV, pickers, etc.).
+ * Preferir consultas paginadas + scroll infinito frente a `findAll`.
+ */
+export const CATALOG_PAGE_SIZE = 30;
+
 /** Estado de paginación usado por el paginador genérico. */
 export interface PageState {
   /** Índice de página actual (0-based). */

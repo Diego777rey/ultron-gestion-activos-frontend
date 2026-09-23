@@ -31,7 +31,7 @@
             />
           </div>
 
-          <div class="pos-product-list">
+          <div class="pos-product-list" (scroll)="onProductListScroll($event)">
             @if (mostrandoOrdenes()) {
               @if (loadingOrdenes()) {
                 <div class="pos-empty">Cargando órdenes finalizadas…</div>
@@ -74,18 +74,32 @@
                 }
               }
             } @else {
-              @for (producto of productosFiltrados(); track producto.id_producto) {
-                <button type="button" class="pos-product" (click)="addProducto(producto)">
-                  <div class="pos-product__main">
-                    <strong>{{ producto.nombre }}</strong>
-                    <small>{{ producto.codigo }} · Stock {{ producto.stock | number: '1.0-0' }}</small>
-                  </div>
-                  <span class="pos-product__price">
-                    Gs. {{ producto.precioVenta | number: '1.0-0' }}
-                  </span>
-                </button>
-              } @empty {
-                <div class="pos-empty">No hay productos para mostrar</div>
+              @if (loadingProductos() && productosVisibles().length === 0) {
+                <div class="pos-empty">Cargando productos…</div>
+              } @else {
+                @for (producto of productosVisibles(); track producto.id_producto) {
+                  <button type="button" class="pos-product" (click)="addProducto(producto)">
+                    <div class="pos-product__thumb" aria-hidden="true">
+                      @if (imagenProductoUrl(producto); as imgUrl) {
+                        <img [src]="imgUrl" [alt]="producto.nombre" loading="lazy" />
+                      } @else {
+                        <span class="material-icons">image</span>
+                      }
+                    </div>
+                    <div class="pos-product__main">
+                      <strong>{{ producto.nombre }}</strong>
+                      <small>{{ producto.codigo }} · Stock {{ producto.stock | number: '1.0-0' }}</small>
+                    </div>
+                    <span class="pos-product__price">
+                      Gs. {{ producto.precioVenta | number: '1.0-0' }}
+                    </span>
+                  </button>
+                } @empty {
+                  <div class="pos-empty">No hay productos para mostrar</div>
+                }
+                @if (loadingMoreProductos()) {
+                  <div class="pos-product-list__more">Cargando más…</div>
+                }
               }
             }
           </div>
