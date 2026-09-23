@@ -11,6 +11,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { OrdenTrabajoInput, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
 import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas.component';
 import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-diagnostico-hallazgos.component';
+import { PdfPresupuestoService } from '../../../../../shared/services/pdf-presupuesto.service';
 
 @Component({
   selector: 'app-ot-diagnostico-step',
@@ -25,6 +26,7 @@ import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-
 })
 export class OtDiagnosticoStepComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
+  private readonly pdfService = inject(PdfPresupuestoService);
 
   readonly orden = input.required<OrdenTrabajoOutput>();
   readonly formReady = output<FormGroup>();
@@ -152,5 +154,14 @@ export class OtDiagnosticoStepComponent implements OnInit {
     const b = new Date(ye, me - 1, de);
     const diff = Math.round((b.getTime() - a.getTime()) / 86_400_000) + 1;
     return Math.max(diff, 1);
+  }
+
+  generarPdfPresupuesto(): void {
+    this.pdfService.generarPdfPresupuesto(this.orden());
+  }
+
+  protected puedeGenerarPdf(): boolean {
+    const orden = this.orden();
+    return !!(orden.detalles && orden.detalles.length > 0);
   }
 }

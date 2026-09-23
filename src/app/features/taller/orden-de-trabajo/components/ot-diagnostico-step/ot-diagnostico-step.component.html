@@ -117,6 +117,16 @@
               <span class="ot-diag-approve__sub">Necesario para iniciar la reparación</span>
             </span>
           </label>
+
+          <button
+            type="button"
+            class="ot-diag-pdf-button"
+            (click)="generarPdfPresupuesto()"
+            [disabled]="!puedeGenerarPdf()"
+          >
+            <span class="material-icons">picture_as_pdf</span>
+            <span>Generar PDF del Presupuesto</span>
+          </button>
         </form>
       </div>
     </div>
