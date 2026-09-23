@@ -80,6 +80,32 @@
       </div>
     </div>
   </section>
+
+  <section class="producto-form__section">
+    <header class="producto-form__section-header">
+      <span class="material-icons" aria-hidden="true">image</span>
+      <div>
+        <h3>Imagen</h3>
+        <p>Fotografía o imagen representativa del producto</p>
+      </div>
+    </header>
+
+    <div class="producto-form__grid">
+      <div class="field field--full">
+        <app-image-uploader
+          [currentImagePath]="imagePath()"
+          [folder]="'productos'"
+          [label]="'Imagen del producto'"
+          [maxSizeMB]="5"
+          (imageChange)="onImageChange($event)"
+          (uploadError)="onImageError($event)"
+        />
+        @if (imageError()) {
+          <span class="field__error">{{ imageError() }}</span>
+        }
+      </div>
+    </div>
+  </section>
 </form>
 
 <div class="producto-form-footer">

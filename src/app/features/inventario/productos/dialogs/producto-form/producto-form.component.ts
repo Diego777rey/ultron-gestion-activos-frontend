@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { EntitySearcherComponent } from '../../../../../shared/components/entity-searcher/entity-searcher';
 import { ErrorBannerComponent } from '../../../../../shared/components/error-banner/error-banner';
+import { ImageUploaderComponent } from '../../../../../shared/components/image-uploader/image-uploader.component';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
@@ -24,6 +25,7 @@ import { resolveLoadingErrorMessage } from '../../../../../shared/utils/loading-
     UppercaseDirective,
     EntitySearcherComponent,
     ErrorBannerComponent,
+    ImageUploaderComponent,
   ],
   templateUrl: './producto-form.component.html',
   styleUrl: './producto-form.component.scss',
@@ -50,6 +52,8 @@ export class ProductoFormComponent {
   protected readonly selectedSubcategoria = signal<CategoriaProductoOutput | null>(null);
   protected readonly loadingCategorias = signal(false);
   protected readonly loadingSubcategorias = signal(false);
+  protected readonly imagePath = signal<string | null>(null);
+  protected readonly imageError = signal<string | null>(null);
 
   protected readonly categoriaColumns: TableColumn<CategoriaProductoOutput>[] = [
     { key: 'id_categoria_producto', header: 'Id', width: '80px' },
@@ -110,6 +114,7 @@ export class ProductoFormComponent {
 
         this.selectedCategoria.set(root);
         this.selectedSubcategoria.set(sub);
+        this.imagePath.set(p.imagen ?? null);
         this.form.reset({
           nombre: p.nombre,
           codigoBarras: p.codigoBarras ?? p.codigo ?? '',
@@ -129,6 +134,7 @@ export class ProductoFormComponent {
         this.selectedCategoria.set(null);
         this.selectedSubcategoria.set(null);
         this.subcategorias.set([]);
+        this.imagePath.set(null);
         this.form.reset({
           nombre: '',
           codigoBarras: '',
@@ -196,6 +202,15 @@ export class ProductoFormComponent {
     c.nombre ?? `Subcategoría #${c.id_categoria_producto}`;
   protected readonly subcategoriaKeyFn = (c: CategoriaProductoOutput) => c.id_categoria_producto;
 
+  protected onImageChange(imagePath: string | null): void {
+    this.imagePath.set(imagePath);
+    this.imageError.set(null);
+  }
+
+  protected onImageError(error: string): void {
+    this.imageError.set(error);
+  }
+
   protected generarReporte(): void {
     const id = this.producto()?.id_producto;
     if (!id || this.generando()) {
@@ -235,6 +250,7 @@ export class ProductoFormComponent {
       stockMinimo: p?.stockMinimo ?? 0,
       ubicacion: p?.ubicacion,
       estado: v.estado,
+      imagen: this.imagePath() || undefined,
       idCategoriaProducto,
     };
 

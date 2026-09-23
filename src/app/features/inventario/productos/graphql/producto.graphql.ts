@@ -14,6 +14,7 @@ export const PRODUCTO_CRUD_CONFIG: CrudConfig = {
     stockMinimo
     ubicacion
     estado
+    imagen
     categoriaProducto {
       id_categoria_producto
       nombre

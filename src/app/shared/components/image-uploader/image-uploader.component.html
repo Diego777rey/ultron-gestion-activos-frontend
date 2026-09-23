@@ -1,0 +1,48 @@
+<div class="image-uploader">
+  <label class="image-uploader__label">{{ label() }}</label>
+  
+  <div class="image-uploader__container">
+    @if (!hasImage()) {
+      <div class="image-uploader__placeholder">
+        <span class="material-icons" aria-hidden="true">add_photo_alternate</span>
+        <p>Haz clic para seleccionar una imagen</p>
+        <p class="image-uploader__hint">Máximo {{ maxSizeMB() }}MB</p>
+      </div>
+    } @else {
+      <div class="image-uploader__preview">
+        @if (previewUrl()) {
+          <img [src]="previewUrl()" [alt]="fileName() ?? 'Vista previa'" />
+        } @else if (currentImagePath()) {
+          <img [src]="getCurrentImageUrl()" alt="Imagen actual" />
+        }
+        
+        @if (uploading()) {
+          <div class="image-uploader__overlay">
+            <div class="image-uploader__spinner"></div>
+            <p>Subiendo...</p>
+          </div>
+        }
+      </div>
+    }
+    
+    <input
+      type="file"
+      class="image-uploader__input"
+      accept="image/*"
+      [disabled]="disabled() || uploading()"
+      (change)="onFileSelected($event)"
+    />
+  </div>
+  
+  @if (hasImage() && !uploading()) {
+    <button
+      type="button"
+      class="image-uploader__remove"
+      [disabled]="disabled()"
+      (click)="onRemoveImage()"
+    >
+      <span class="material-icons" aria-hidden="true">delete</span>
+      Eliminar imagen
+    </button>
+  }
+</div>

@@ -20,6 +20,7 @@ export interface ProductoOutput {
   stockMinimo: number;
   ubicacion?: string;
   estado?: boolean;
+  imagen?: string;
   categoriaProducto?: CategoriaProductoOutput;
 }
 
@@ -34,5 +35,6 @@ export interface ProductoInput {
   stockMinimo: number;
   ubicacion?: string;
   estado?: boolean;
+  imagen?: string;
   idCategoriaProducto: number;
 }
