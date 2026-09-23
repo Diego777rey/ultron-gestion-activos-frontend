@@ -168,3 +168,46 @@
   font-weight: 400;
   color: rgba(255, 255, 255, 0.58);
 }
+
+.ot-diag-pdf-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px 20px;
+  border: 1px solid rgba(255, 82, 82, 0.28);
+  border-radius: 12px;
+  background: rgba(244, 67, 54, 0.12);
+  color: #ffcdd2;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  .material-icons {
+    font-size: 20px;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba(244, 67, 54, 0.18);
+    border-color: rgba(255, 82, 82, 0.4);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(244, 67, 54, 0.5);
+    outline-offset: 2px;
+  }
+}
