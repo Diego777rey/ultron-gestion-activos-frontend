@@ -2,11 +2,15 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ModalComponent } from '../../../shared/components/modal/modal';
 import { UiButtonComponent } from '../../../shared/components/ui-button/ui-button';
 import { TabService } from '../../../shared/services/tab.service';
@@ -19,15 +23,19 @@ import { OrdenTrabajoOutput } from '../../taller/orden-de-trabajo/interfaces/ord
 import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja-dialog.component';
 import { PagoDialogComponent } from './dialogs/pago-dialog/pago-dialog.component';
 import { LoadingService } from '../../../shared/services/loading.service';
+import { FileUploadService } from '../../../shared/services/file-upload.service';
 import { SesionCajaService } from './services/sesion-caja.service';
 import { VentaPosService } from './services/venta.service';
 import { SesionCajaOutput } from './interfaces/sesion-caja.interface';
 import { CartItem, DetalleVentaInput, FormaPago, VentaOutput } from './interfaces/venta.interface';
 import { ImpresionService } from '../../../shared/services/impresion.service';
 import { TicketVenta } from '../../../shared/models/impresion.model';
+import { CATALOG_PAGE_SIZE } from '../../../shared/models/pagination.model';
 import { AuthService } from '../../../core/auth/auth.service';
 
 const POS_ROUTE = '/ventas/punto-de-venta';
+/** Umbral (px) antes del final del scroll para pedir la siguiente página. */
+const SCROLL_LOAD_THRESHOLD_PX = 120;
 
 export type CatalogoPos = 'productos' | 'servicios' | 'ordenes';
 export type PdvNumero = 1 | 2;
@@ -54,6 +62,8 @@ export class PuntoDeVentaComponent {
   private readonly productoService = inject(ProductoService);
   private readonly servicioService = inject(ServicioService);
   private readonly ordenTrabajoService = inject(OrdenTrabajoService);
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly fileUploadService = inject(FileUploadService);
 
   readonly inicioDialogOpen = signal(true);
   readonly gestionCajaOpen = signal(false);
@@ -65,6 +75,12 @@ export class PuntoDeVentaComponent {
 
   readonly catalogo = signal<CatalogoPos>('productos');
   readonly productos = signal<ProductoOutput[]>([]);
+  readonly loadingProductos = signal(false);
+  readonly loadingMoreProductos = signal(false);
+  readonly productosLastPage = signal(true);
+  private productosPage = 0;
+  private readonly productoSearch$ = new Subject<string>();
+
   readonly servicios = signal<ServicioOutput[]>([]);
   readonly ordenesFinalizadas = signal<OrdenTrabajoOutput[]>([]);
   readonly loadingServicios = signal(false);
@@ -99,20 +115,10 @@ export class PuntoDeVentaComponent {
   readonly mostrandoServicios = computed(() => this.catalogo() === 'servicios');
   readonly mostrandoOrdenes = computed(() => this.catalogo() === 'ordenes');
 
-  readonly productosFiltrados = computed(() => {
-    const q = this.search().trim().toLowerCase();
-    const items = this.productos().filter((p) => p.estado !== false);
-    if (!q) {
-      return items;
-    }
-    return items.filter(
-      (p) =>
-        p.nombre.toLowerCase().includes(q) ||
-        p.codigo.toLowerCase().includes(q) ||
-        (p.codigoBarras ?? '').toLowerCase().includes(q) ||
-        (p.categoriaProducto?.nombre ?? '').toLowerCase().includes(q)
-    );
-  });
+  /** Productos ya vienen filtrados por el backend; solo se ocultan los inactivos. */
+  readonly productosVisibles = computed(() =>
+    this.productos().filter((p) => p.estado !== false)
+  );
 
   readonly serviciosFiltrados = computed(() => {
     const q = this.search().trim().toLowerCase();
@@ -146,6 +152,9 @@ export class PuntoDeVentaComponent {
   );
 
   constructor() {
+    this.productoSearch$
+      .pipe(debounceTime(350), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadProductos(true));
     this.bootstrap();
   }
 
@@ -168,7 +177,7 @@ export class PuntoDeVentaComponent {
     this.maletinVerificado.set(true);
     this.gestionCajaOpen.set(false);
     this.inicioDialogOpen.set(false);
-    this.loadProductos();
+    this.loadProductos(true);
     this.loadServicios();
   }
 
@@ -180,6 +189,9 @@ export class PuntoDeVentaComponent {
     this.catalogo.set('productos');
     this.ordenesFinalizadas.set([]);
     this.servicios.set([]);
+    this.productos.set([]);
+    this.productosPage = 0;
+    this.productosLastPage.set(true);
     this.gestionCajaOpen.set(false);
     this.inicioDialogOpen.set(true);
   }
@@ -194,12 +206,32 @@ export class PuntoDeVentaComponent {
 
   protected onSearchInput(value: string): void {
     this.search.set(value);
+    if (this.mostrandoProductos()) {
+      this.productoSearch$.next(value);
+    }
+  }
+
+  protected onProductListScroll(event: Event): void {
+    if (!this.mostrandoProductos()) {
+      return;
+    }
+    const el = event.target as HTMLElement;
+    if (el.scrollTop + el.clientHeight < el.scrollHeight - SCROLL_LOAD_THRESHOLD_PX) {
+      return;
+    }
+    this.loadMoreProductos();
+  }
+
+  protected imagenProductoUrl(producto: ProductoOutput): string | null {
+    const path = producto.imagen?.trim();
+    return path ? this.fileUploadService.getFileUrl(path) : null;
   }
 
   protected mostrarProductos(): void {
     this.catalogo.set('productos');
     this.search.set('');
     this.ventaError.set(null);
+    this.loadProductos(true);
   }
 
   protected mostrarServicios(): void {
@@ -434,7 +466,7 @@ export class PuntoDeVentaComponent {
           this.selling.set(false);
           this.cartActivo().set([]);
           this.refreshSesion();
-          this.loadProductos();
+          this.loadProductos(true);
           if (this.mostrandoOrdenes() || items.some((item) => item.tipo === 'ORDEN')) {
             this.loadOrdenesFinalizadas();
           }
@@ -582,7 +614,7 @@ export class PuntoDeVentaComponent {
           this.cajaAbierta.set(true);
           this.maletinVerificado.set(true);
           this.inicioDialogOpen.set(false);
-          this.loadProductos();
+          this.loadProductos(true);
           this.loadServicios();
         }
       },
@@ -603,10 +635,50 @@ export class PuntoDeVentaComponent {
     });
   }
 
-  private loadProductos(): void {
-    this.productoService.findAll(true).subscribe({
-      next: (items) => this.productos.set(items),
-      error: (err: Error) => this.ventaError.set(err.message || 'No se pudieron cargar productos'),
+  private loadMoreProductos(): void {
+    if (this.productosLastPage() || this.loadingProductos() || this.loadingMoreProductos()) {
+      return;
+    }
+    this.loadProductos(false);
+  }
+
+  /**
+   * Carga productos paginados (estándar: {@link CATALOG_PAGE_SIZE}).
+   * `reset` reemplaza la lista (búsqueda / apertura); `false` concatena la siguiente página (scroll).
+   */
+  private loadProductos(reset: boolean): void {
+    if (reset) {
+      this.productosPage = 0;
+      this.productosLastPage.set(false);
+      this.loadingProductos.set(true);
+    } else {
+      if (this.productosLastPage() || this.loadingProductos() || this.loadingMoreProductos()) {
+        return;
+      }
+      this.productosPage += 1;
+      this.loadingMoreProductos.set(true);
+    }
+
+    const page = this.productosPage;
+    const filter = this.search().trim();
+
+    this.productoService.findPaginated(page, CATALOG_PAGE_SIZE, filter || undefined).subscribe({
+      next: (response) => {
+        const content = response?.content ?? [];
+        const last = response?.pageInfo?.last ?? content.length < CATALOG_PAGE_SIZE;
+        this.productos.update((current) => (reset ? content : [...current, ...content]));
+        this.productosLastPage.set(last);
+        this.loadingProductos.set(false);
+        this.loadingMoreProductos.set(false);
+      },
+      error: (err: Error) => {
+        if (!reset) {
+          this.productosPage = Math.max(0, this.productosPage - 1);
+        }
+        this.loadingProductos.set(false);
+        this.loadingMoreProductos.set(false);
+        this.ventaError.set(err.message || 'No se pudieron cargar productos');
+      },
     });
   }
 
