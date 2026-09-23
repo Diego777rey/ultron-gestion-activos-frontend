@@ -1,25 +1,21 @@
 import { CrudConfig } from '../../../../shared/models/crud-config.model';
 
-const COTIZACION_SELECTION = `{
-  id_cotizacion
-  moneda
-  valor
-  fechaActualizacion
-  activa
-}`;
-
 export const COTIZACION_CRUD_CONFIG: CrudConfig = {
-  entityName: 'cotizacion',
-  entityIdField: 'id_cotizacion',
-  selectionSet: COTIZACION_SELECTION,
-  
+  inputTypeName: 'CotizacionInput',
+  selectionSet: `{
+    id_cotizacion
+    moneda
+    valor
+    fechaActualizacion
+    activa
+  }`,
   operations: {
-    findPaginated: 'listarCotizacionesPaginado',
-    findById: 'obtenerCotizacionPorId',
+    list: 'listarCotizaciones',
+    listPaginated: 'listarCotizacionesPaginado',
+    getById: 'obtenerCotizacionPorId',
     create: 'crearCotizacion',
     update: 'actualizarCotizacion',
-    delete: 'eliminarCotizacion',
+    remove: 'eliminarCotizacion',
   },
-  
-  genderFemale: true,
+  entity: { label: 'Cotización', gender: 'f' },
 };

@@ -17,25 +17,25 @@
   (pageChange)="onPageChange($event)"
   (retry)="load()"
 >
-  <ng-container appTableCell="moneda" let-item>
-    {{ monedaLabel(item.moneda) }}
-  </ng-container>
+  <ng-template appTableCell="moneda" [appTableCellFrom]="cotizaciones()" let-item>
+    {{ monedaLabel(item.moneda) | defaultEmpty }}
+  </ng-template>
 
-  <ng-container appTableCell="valor" let-item>
-    {{ item.valor | number: '1.2-2' }}
-  </ng-container>
+  <ng-template appTableCell="valor" [appTableCellFrom]="cotizaciones()" let-item>
+    {{ item.valor | number: '1.2-2' | defaultEmpty }}
+  </ng-template>
 
-  <ng-container appTableCell="fechaActualizacion" let-item>
-    {{ item.fechaActualizacion | date: 'dd/MM/yyyy HH:mm' }}
-  </ng-container>
+  <ng-template appTableCell="fechaActualizacion" [appTableCellFrom]="cotizaciones()" let-item>
+    {{ item.fechaActualizacion | date: 'dd/MM/yyyy HH:mm' | defaultEmpty }}
+  </ng-template>
 
-  <ng-container appTableCell="activa" let-item>
+  <ng-template appTableCell="activa" [appTableCellFrom]="cotizaciones()" let-item>
     <span [class.badge-active]="item.activa" [class.badge-inactive]="!item.activa">
       {{ item.activa ? 'Sí' : 'No' }}
     </span>
-  </ng-container>
+  </ng-template>
 
-  <ng-container appTableCell="acciones" let-item>
+  <ng-template appTableCell="acciones" [appTableCellFrom]="cotizaciones()" let-item>
     <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, item)" />
-  </ng-container>
+  </ng-template>
 </app-generic-list>

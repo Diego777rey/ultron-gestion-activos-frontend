@@ -1,31 +1,28 @@
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DialogRef } from '@angular/cdk/dialog';
 import { finalize } from 'rxjs';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
-import { BaseFormDialog } from '../../../../../shared/components/modal/base-form-dialog';
-import { ErrorBannerComponent } from '../../../../../shared/components/error-banner/error-banner';
 import { CotizacionService } from '../../services/cotizacion.service';
 import { CotizacionInput, CotizacionOutput, Moneda } from '../../interfaces/cotizacion.interface';
 
 @Component({
   selector: 'app-cotizacion-form',
-  imports: [
-    ReactiveFormsModule,
-    UiButtonComponent,
-    ErrorBannerComponent,
-  ],
+  imports: [ReactiveFormsModule, UiButtonComponent],
   templateUrl: './cotizacion-form.component.html',
   styleUrl: './cotizacion-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CotizacionFormComponent extends BaseFormDialog implements OnInit {
+export class CotizacionFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly cotizacionService = inject(CotizacionService);
+  private readonly dialogRef = inject(DialogRef, { optional: true });
 
-  readonly cotizacion = input<CotizacionOutput | undefined>();
+  readonly cotizacion = input<CotizacionOutput | null>(null);
 
   protected readonly submitting = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly isEdit = computed(() => this.cotizacion()?.id_cotizacion != null);
 
   protected readonly monedas: { value: Moneda; label: string }[] = [
     { value: 'REAL', label: 'Real Brasileño' },
@@ -39,15 +36,22 @@ export class CotizacionFormComponent extends BaseFormDialog implements OnInit {
     activa: [true],
   });
 
-  ngOnInit(): void {
-    const cotizacion = this.cotizacion();
-    if (cotizacion) {
+  constructor() {
+    effect(() => {
+      const cotizacion = this.cotizacion();
+      if (!cotizacion) {
+        return;
+      }
       this.form.patchValue({
         moneda: cotizacion.moneda,
         valor: cotizacion.valor,
         activa: cotizacion.activa ?? true,
       });
-    }
+    });
+  }
+
+  protected cancel(): void {
+    this.dialogRef?.close(undefined);
   }
 
   protected submit(): void {
@@ -71,13 +75,11 @@ export class CotizacionFormComponent extends BaseFormDialog implements OnInit {
       ? this.cotizacionService.update(cotizacion.id_cotizacion, input)
       : this.cotizacionService.create(input);
 
-    operation
-      .pipe(finalize(() => this.submitting.set(false)))
-      .subscribe({
-        next: () => this.close(true),
-        error: (err: Error) => {
-          this.error.set(err.message || 'Error al guardar la cotización');
-        },
-      });
+    operation.pipe(finalize(() => this.submitting.set(false))).subscribe({
+      next: () => this.dialogRef?.close(true),
+      error: (err: Error) => {
+        this.error.set(err.message || 'No se pudo guardar la cotización');
+      },
+    });
   }
 }
