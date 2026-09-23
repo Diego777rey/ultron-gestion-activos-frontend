@@ -69,7 +69,7 @@
         </span>
         <div class="ot-diag-card__titles">
           <h3 class="ot-diag-card__title">Plazos estimados</h3>
-          <p class="ot-diag-card__hint">Indicá cuándo empieza y cuándo termina el trabajo. El tiempo se calcula solo.</p>
+          <p class="ot-diag-card__hint">Indicá cuándo empieza y cuándo termina el trabajo. El tiempo se calcula solo y se guarda al completarlo.</p>
         </div>
       </div>
       <div class="ot-diag-card__body">
@@ -118,6 +118,12 @@
             </span>
           </label>
 
+          @if (estadoGuardado() === 'guardando') {
+            <p class="ot-diag-save">Guardando…</p>
+          } @else if (estadoGuardado() === 'guardado') {
+            <p class="ot-diag-save">Guardado</p>
+          }
+
           <button
             type="button"
             class="ot-diag-pdf-button"
@@ -135,7 +141,7 @@
   <div class="ot-diag-layout__hallazgos">
     <app-ot-diagnostico-hallazgos
       [orden]="orden()"
-      [editable]="true"
+      [editable]="editable()"
       (ordenChange)="ordenChange.emit($event)"
       (errorChange)="errorChange.emit($event)"
     />
@@ -144,8 +150,8 @@
   <div class="ot-diag-layout__presupuesto">
     <app-ot-detalle-lineas
       [orden]="orden()"
-      [editable]="true"
-      [allowCreateServicio]="true"
+      [editable]="editable()"
+      [allowCreateServicio]="editable()"
       [diagnosticoLook]="true"
       (ordenChange)="ordenChange.emit($event)"
       (errorChange)="errorChange.emit($event)"

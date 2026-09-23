@@ -1,5 +1,10 @@
 <div class="stepper-page">
-  <app-ot-stepper-header [steps]="steps" [currentStep]="currentStep()" />
+  <app-ot-stepper-header
+    [steps]="steps"
+    [currentStep]="pasoMostrado()"
+    [reachedStep]="etapaStep()"
+    (stepSelect)="verPaso($event)"
+  />
 
   @if (error()) {
     <div class="form-error" role="alert">
@@ -16,21 +21,20 @@
       }
     </h2>
 
-    @if (currentStep() === 1) {
+    @if (revisando()) {
       <p class="stepper-body__hint">
-        Completá los datos y guardá la recepción para que la orden quede registrada.
-        Podés salir y retomarla después desde el listado.
+        Estás viendo los datos de esta etapa. Para seguir, volvé a {{ tituloEtapa() }}.
       </p>
-    }
-
-    @if (currentStep() === 2) {
+    } @else if (pasoMostrado() === 1) {
+      <p class="stepper-body__hint">
+        Completá la recepción. Los datos se guardan mientras los cargás, sin cambiar de etapa.
+      </p>
+    } @else if (pasoMostrado() === 2) {
       <p class="stepper-body__hint">
         El mecánico revisa el vehículo, carga fallos y defectos, arma el presupuesto
-        y estima plazos. Podés guardar el diagnóstico y retomarlo después.
+        y estima plazos. Lo que cargues se guarda en el momento, sin cambiar de etapa.
       </p>
-    }
-
-    @if (currentStep() === 3) {
+    } @else if (pasoMostrado() === 3) {
       <p class="stepper-body__hint">
         El mecánico está trabajando. El presupuesto del diagnóstico se mantiene.
         Se ajusta solo si pedís un repuesto que no estaba cargado, o un servicio por un defecto nuevo.
@@ -40,61 +44,57 @@
     @if (loading()) {
       <div class="loading-state">Cargando datos de la orden...</div>
     } @else {
-      @if (currentStep() === 1) {
-        <app-ot-recepcion-step [orden]="orden()" />
+      @if (pasoMostrado() === 1) {
+        <app-ot-recepcion-step
+          [orden]="orden()"
+          [soloLectura]="revisando()"
+          (ordenChange)="onOrdenChange($event)"
+          (errorChange)="onError($event)"
+        />
       }
 
-      @if (currentStep() === 2 && orden()) {
+      @if (pasoMostrado() === 2 && orden()) {
         <app-ot-diagnostico-step
           [orden]="orden()!"
+          [editable]="!revisando()"
           (ordenChange)="onOrdenChange($event)"
           (errorChange)="onError($event)"
         />
       }
 
-      @if (currentStep() === 3 && orden()) {
+      @if (pasoMostrado() === 3 && orden()) {
         <app-ot-en-proceso-step
           [orden]="orden()!"
+          [editable]="!revisando()"
           (ordenChange)="onOrdenChange($event)"
           (errorChange)="onError($event)"
         />
       }
 
-      @if (currentStep() === 4 && orden()) {
+      @if (pasoMostrado() === 4 && orden()) {
         <app-ot-finalizada-step [orden]="orden()!" />
       }
 
-      @if (currentStep() === 5 && orden()) {
+      @if (pasoMostrado() === 5 && orden()) {
         <app-ot-facturado-step [orden]="orden()!" />
       }
     }
   </section>
 
   <footer class="stepper-footer">
-    <app-ui-button label="Volver / Cancelar" variant="ghost" (clicked)="cancelar()" />
+    @if (pasoMostrado() > 1) {
+      <app-ui-button label="Volver" icon="arrow_back" variant="ghost" (clicked)="volverPaso()" />
+    }
 
     <div class="stepper-footer__right">
-      @if (currentStep() === 1) {
+      @if (revisando()) {
         <app-ui-button
-          label="Guardar recepción"
-          icon="save"
-          variant="outline"
-          [loading]="saving()"
-          (clicked)="guardarRecepcion()"
+          [label]="'Volver a ' + tituloEtapa()"
+          icon="arrow_forward"
+          variant="primary"
+          (clicked)="verPaso(etapaStep())"
         />
-      }
-
-      @if (currentStep() === 2) {
-        <app-ui-button
-          label="Guardar diagnóstico"
-          icon="save"
-          variant="outline"
-          [loading]="saving()"
-          (clicked)="guardarDiagnostico()"
-        />
-      }
-
-      @if (currentStep() < 4) {
+      } @else if (etapaStep() < 4) {
         <app-ui-button
           [label]="labelAccionPrincipal()"
           icon="arrow_forward"
@@ -104,7 +104,7 @@
         />
       } @else {
         <app-ui-button label="Imprimir" icon="print" variant="outline" />
-        <app-ui-button label="Volver al listado" icon="list" variant="primary" (clicked)="cancelar()" />
+        <app-ui-button label="Volver al listado" icon="list" variant="primary" (clicked)="irAlListado()" />
       }
     </div>
   </footer>

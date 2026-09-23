@@ -69,6 +69,29 @@ export class OrdenTrabajoService extends BaseCrudService<OrdenTrabajoOutput, Ord
     );
   }
 
+  /** Crea la orden sin overlay ni aviso, para ir guardando la recepción. */
+  crearSilencioso(input: OrdenTrabajoInput): Observable<OrdenTrabajoOutput> {
+    const document = `mutation($input: OrdenTrabajoInput!) {
+      crearOrdenTrabajo(input: $input) ${ORDEN_TRABAJO_SELECTION}
+    }`;
+    return this.gql
+      .mutate<{ crearOrdenTrabajo: OrdenTrabajoOutput }>(document, { input })
+      .pipe(map((data) => data.crearOrdenTrabajo));
+  }
+
+  /**
+   * Actualiza la orden sin overlay ni aviso. Sirve para ir guardando
+   * mientras se completan los campos.
+   */
+  actualizarSilencioso(id: string, input: OrdenTrabajoInput): Observable<OrdenTrabajoOutput> {
+    const document = `mutation($id: ID!, $input: OrdenTrabajoInput!) {
+      actualizarOrdenTrabajo(id: $id, input: $input) ${ORDEN_TRABAJO_SELECTION}
+    }`;
+    return this.gql
+      .mutate<{ actualizarOrdenTrabajo: OrdenTrabajoOutput }>(document, { id, input })
+      .pipe(map((data) => data.actualizarOrdenTrabajo));
+  }
+
   cambiarEtapa(id: string, etapa: string): Observable<OrdenTrabajoOutput> {
     const document = `mutation($id: ID!, $etapa: String!) {
       cambiarEtapaOrdenTrabajo(id: $id, etapa: $etapa) ${ORDEN_TRABAJO_SELECTION}

@@ -30,7 +30,7 @@ import { TableColumn } from '../../../../../shared/models/table-column.model';
   template: `
     <div class="ot-en-proceso">
 
-      @if (!orden().sector?.id_sector) {
+      @if (editable() && !orden().sector?.id_sector) {
         <div class="ot-sector-warn">
           <span class="material-icons ot-sector-warn__icon">warning_amber</span>
           <div class="ot-sector-warn__body">
@@ -69,7 +69,7 @@ import { TableColumn } from '../../../../../shared/models/table-column.model';
         <app-ot-solicitud-repuesto
           [idOrden]="orden().id_orden_trabajo!"
           [sectorDestinoInicial]="orden().sector ?? null"
-          [editable]="true"
+          [editable]="editable()"
           (errorChange)="errorChange.emit($event)"
           (solicitudCreada)="recargarOrden()"
         />
@@ -77,7 +77,7 @@ import { TableColumn } from '../../../../../shared/models/table-column.model';
 
       <app-ot-diagnostico-hallazgos
         [orden]="orden()"
-        [editable]="true"
+        [editable]="editable()"
         [modoEnProceso]="true"
         (ordenChange)="ordenChange.emit($event)"
         (errorChange)="errorChange.emit($event)"
@@ -85,8 +85,8 @@ import { TableColumn } from '../../../../../shared/models/table-column.model';
 
       <app-ot-detalle-lineas
         [orden]="orden()"
-        [editable]="true"
-        [allowCreateServicio]="true"
+        [editable]="editable()"
+        [allowCreateServicio]="editable()"
         [modoEnProceso]="true"
         (ordenChange)="ordenChange.emit($event)"
         (errorChange)="errorChange.emit($event)"
@@ -101,6 +101,7 @@ export class OtEnProcesoStepComponent implements OnInit {
   private readonly sectorService = inject(SectorService);
 
   readonly orden = input.required<OrdenTrabajoOutput>();
+  readonly editable = input(true);
   readonly ordenChange = output<OrdenTrabajoOutput>();
   readonly errorChange = output<string>();
 
@@ -117,7 +118,7 @@ export class OtEnProcesoStepComponent implements OnInit {
   protected readonly sectorKeyFn = (s: SectorOutput) => String(s.id_sector);
 
   ngOnInit(): void {
-    if (!this.orden().sector?.id_sector) {
+    if (this.editable() && !this.orden().sector?.id_sector) {
       this.fetchSectores(0, 10, '');
     }
   }

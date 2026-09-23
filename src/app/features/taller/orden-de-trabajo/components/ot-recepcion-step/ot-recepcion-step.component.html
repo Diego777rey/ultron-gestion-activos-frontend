@@ -1,9 +1,17 @@
-<div class="ot-recepcion-split" [class.ot-recepcion-split--con-historial]="historialAbierto()">
+<div class="ot-recepcion-split" [class.ot-recepcion-split--con-historial]="historialAbierto()" [class.ot-recepcion--lectura]="soloLectura()">
   <div class="ot-recepcion-layout">
     <div class="ot-recepcion-topbar">
       <p class="ot-recepcion-topbar__hint">
-        Completá los datos obligatorios. El estado del vehículo es opcional y podés dejarlo
-        colapsado.
+        @if (soloLectura()) {
+          Datos cargados en la recepción.
+        } @else {
+          Se guarda solo mientras completás. Queda registrada cuando cliente, vehículo, mecánico y la falla están cargados.
+          @if (estadoGuardado() === 'guardando') {
+            Guardando…
+          } @else if (estadoGuardado() === 'guardado') {
+            Guardado.
+          }
+        }
       </p>
       <app-ui-button
         [label]="historialLabel()"

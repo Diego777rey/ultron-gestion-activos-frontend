@@ -2,16 +2,21 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   input,
   OnInit,
   output,
+  signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { EMPTY, Subject, catchError, concatMap, debounceTime, tap } from 'rxjs';
+import { ReporteService } from '../../../../../shared/services/reporte.service';
 import { OrdenTrabajoInput, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
+import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas.component';
 import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-diagnostico-hallazgos.component';
-import { PdfPresupuestoService } from '../../../../../shared/services/pdf-presupuesto.service';
 
 @Component({
   selector: 'app-ot-diagnostico-step',
@@ -26,9 +31,14 @@ import { PdfPresupuestoService } from '../../../../../shared/services/pdf-presup
 })
 export class OtDiagnosticoStepComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly pdfService = inject(PdfPresupuestoService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly ordenService = inject(OrdenTrabajoService);
+  private readonly reporteService = inject(ReporteService);
+  private readonly persistir$ = new Subject<'auto' | 'pdf'>();
+  private ultimoGuardado = '';
 
   readonly orden = input.required<OrdenTrabajoOutput>();
+  readonly editable = input(true);
   readonly formReady = output<FormGroup>();
   readonly ordenChange = output<OrdenTrabajoOutput>();
   readonly errorChange = output<string>();
@@ -39,6 +49,8 @@ export class OtDiagnosticoStepComponent implements OnInit {
     observaciones: [''],
     presupuesto_aprobado: [false],
   });
+
+  protected readonly estadoGuardado = signal<'idle' | 'guardando' | 'guardado'>('idle');
 
   protected readonly resumenCliente = computed(() => {
     const p = this.orden().cliente?.persona;
@@ -97,26 +109,36 @@ export class OtDiagnosticoStepComponent implements OnInit {
   ngOnInit(): void {
     this.formReady.emit(this.form);
     const d = this.orden().diagnostico;
-    this.form.patchValue({
-      fecha_inicio_estimada: this.formatDate(d?.fecha_inicio_estimada),
-      fecha_fin_estimada: this.formatDate(d?.fecha_fin_estimada),
-      observaciones: d?.observaciones ?? '',
-      presupuesto_aprobado: d?.presupuesto_aprobado ?? false,
-    });
+    this.form.patchValue(
+      {
+        fecha_inicio_estimada: this.formatDate(d?.fecha_inicio_estimada),
+        fecha_fin_estimada: this.formatDate(d?.fecha_fin_estimada),
+        observaciones: d?.observaciones ?? '',
+        presupuesto_aprobado: d?.presupuesto_aprobado ?? false,
+      },
+      { emitEvent: false },
+    );
+    this.ultimoGuardado = JSON.stringify(this.buildInput());
+    if (!this.editable()) {
+      this.form.disable({ emitEvent: false });
+      return;
+    }
+    this.escucharCambios();
+    this.destroyRef.onDestroy(() => this.guardarAlSalir());
   }
 
   buildInput(): OrdenTrabajoInput {
     const val = this.form.getRawValue();
-    const inicio = val.fecha_inicio_estimada || null;
-    const fin = val.fecha_fin_estimada || null;
-    const dias = inicio && fin ? this.diffDaysInclusive(inicio, fin) : null;
+    const inicio = val.fecha_inicio_estimada || '';
+    const fin = val.fecha_fin_estimada || '';
+    const dias = inicio && fin ? this.diffDaysInclusive(inicio, fin) : 0;
     return {
       diagnostico: {
         fecha_inicio_estimada: inicio,
         fecha_fin_estimada: fin,
         duracion_estimada_dias: dias,
-        observaciones: val.observaciones?.trim() || null,
-        presupuesto_aprobado: val.presupuesto_aprobado,
+        observaciones: val.observaciones?.trim() ?? '',
+        presupuesto_aprobado: !!val.presupuesto_aprobado,
       },
     };
   }
@@ -157,7 +179,86 @@ export class OtDiagnosticoStepComponent implements OnInit {
   }
 
   generarPdfPresupuesto(): void {
-    this.pdfService.generarPdfPresupuesto(this.orden());
+    if (!this.editable()) {
+      this.abrirReporte();
+      return;
+    }
+    this.persistir$.next('pdf');
+  }
+
+  private guardarAlSalir(): void {
+    const id = this.orden().id_orden_trabajo;
+    if (!id) {
+      return;
+    }
+    const input = this.buildInput();
+    if (JSON.stringify(input) === this.ultimoGuardado) {
+      return;
+    }
+    this.ordenService.actualizarSilencioso(id, input).subscribe({ error: () => undefined });
+  }
+
+  private escucharCambios(): void {
+    this.form.valueChanges
+      .pipe(debounceTime(450), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.persistir$.next('auto'));
+
+    this.persistir$
+      .pipe(
+        concatMap((motivo) => this.guardar(motivo)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
+  }
+
+  private guardar(motivo: 'auto' | 'pdf') {
+    const id = this.orden().id_orden_trabajo;
+    if (!id) {
+      return EMPTY;
+    }
+    const input = this.buildInput();
+    const firma = JSON.stringify(input);
+    const abrirReporte = () => {
+      if (motivo === 'pdf') this.abrirReporte();
+    };
+
+    if (firma === this.ultimoGuardado) {
+      abrirReporte();
+      return EMPTY;
+    }
+
+    this.estadoGuardado.set('guardando');
+    return this.ordenService.actualizarSilencioso(id, input).pipe(
+      tap((updated) => {
+        this.ultimoGuardado = firma;
+        this.estadoGuardado.set('guardado');
+        this.ordenChange.emit({
+          ...this.orden(),
+          diagnostico: updated.diagnostico ?? this.orden().diagnostico,
+        });
+        abrirReporte();
+      }),
+      catchError((err) => {
+        this.estadoGuardado.set('idle');
+        this.errorChange.emit(err?.message ?? 'No se pudo guardar el diagnóstico');
+        return EMPTY;
+      }),
+    );
+  }
+
+  private abrirReporte(): void {
+    const id = this.orden().id_orden_trabajo;
+    const numericId = id != null ? Number(id) : NaN;
+    if (Number.isNaN(numericId)) return;
+    this.reporteService
+      .generar('orden_trabajo_detalle', {
+        id: numericId,
+        titulo: `Presupuesto OT ${this.orden().numero_orden ?? ''}`.trim(),
+      })
+      .subscribe({
+        error: (err) =>
+          this.errorChange.emit(err?.message ?? 'No se pudo generar el presupuesto'),
+      });
   }
 
   protected puedeGenerarPdf(): boolean {

@@ -6,6 +6,10 @@
   min-height: 0;
 }
 
+.ot-recepcion--lectura .ot-form {
+  pointer-events: none;
+}
+
 .ot-recepcion-topbar {
   display: flex;
   align-items: center;
