@@ -6,9 +6,11 @@ import {
   ActionMenuComponent,
   MenuAction,
 } from '../../../shared/components/action-menu/action-menu';
+import { DateRangePickerComponent } from '../../../shared/components/date-range-picker/date-range-picker';
 import { DefaultEmptyPipe } from '../../../shared/pipes/default-empty.pipe';
 import { TableColumn } from '../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../shared/models/list-toolbar-action.model';
+import { DateRangeValue, toIsoDate } from '../../../shared/models/date-range.model';
 import { PageChange, PageResponse } from '../../../shared/models/pagination.model';
 import { OrdenTrabajoService } from './services/orden-trabajo.service';
 import {
@@ -25,6 +27,7 @@ import { ReporteService } from '../../../shared/services/reporte.service';
     GenericListComponent,
     TableCellDirective,
     ActionMenuComponent,
+    DateRangePickerComponent,
     DefaultEmptyPipe,
   ],
   templateUrl: './orden-de-trabajo.component.html',
@@ -45,6 +48,7 @@ export class OrdenDeTrabajoComponent {
   protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
+  protected readonly dateRange = signal<DateRangeValue>({ start: null, end: null });
 
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
@@ -88,17 +92,31 @@ export class OrdenDeTrabajoComponent {
   protected load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.ordenService.findPaginated(this.pageIndex(), this.pageSize(), this.search(), true).subscribe({
-      next: (response: PageResponse<OrdenTrabajoOutput>) => {
-        this.ordenes.set(response.content);
-        this.totalElements.set(response.pageInfo.totalElements);
-        this.loading.set(false);
-      },
-      error: (err: Error) => {
-        this.error.set(err.message || 'No se pudo conectar con el servidor');
-        this.loading.set(false);
-      },
-    });
+    const range = this.dateRange();
+    this.ordenService
+      .listarPaginado(this.pageIndex(), this.pageSize(), this.search(), {
+        fechaDesde: toIsoDate(range.start),
+        fechaHasta: toIsoDate(range.end),
+      })
+      .subscribe({
+        next: (response: PageResponse<OrdenTrabajoOutput>) => {
+          this.ordenes.set(response.content);
+          this.totalElements.set(response.pageInfo.totalElements);
+          this.loading.set(false);
+        },
+        error: (err: Error) => {
+          this.error.set(err.message || 'No se pudo conectar con el servidor');
+          this.loading.set(false);
+        },
+      });
+  }
+
+  protected onDateRangeChange(range: DateRangeValue): void {
+    this.dateRange.set(range);
+    if ((range.start && range.end) || (!range.start && !range.end)) {
+      this.pageIndex.set(0);
+      this.load();
+    }
   }
 
   protected onPageChange(event: PageChange): void {
@@ -115,6 +133,7 @@ export class OrdenDeTrabajoComponent {
         break;
       case 'clear':
         this.search.set('');
+        this.dateRange.set({ start: null, end: null });
         this.pageIndex.set(0);
         this.load();
         break;

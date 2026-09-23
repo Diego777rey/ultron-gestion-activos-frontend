@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { BaseCrudService } from '../../../../shared/services/base-crud.service';
 import { CrudConfig } from '../../../../shared/models/crud-config.model';
+import { LoadingQueryOption } from '../../../../shared/models/loading.model';
+import { PageResponse } from '../../../../shared/models/pagination.model';
 import { ORDEN_TRABAJO_CRUD_CONFIG, ORDEN_TRABAJO_SELECTION } from '../graphql/orden-trabajo.graphql';
 import {
   OrdenTrabajoOutput,
@@ -17,6 +19,54 @@ export class OrdenTrabajoService extends BaseCrudService<OrdenTrabajoOutput, Ord
 
   protected override resolveEntityName(entity: OrdenTrabajoOutput): string | undefined {
     return entity.numero_orden ?? undefined;
+  }
+
+  listarPaginado(
+    page: number,
+    size: number,
+    filter = '',
+    fechas?: {
+      fechaDesde?: string | null;
+      fechaHasta?: string | null;
+    },
+    loading: LoadingQueryOption = true,
+  ): Observable<PageResponse<OrdenTrabajoOutput>> {
+    const document = `query(
+      $page: Int!,
+      $size: Int!,
+      $filter: String,
+      $fechaDesde: String,
+      $fechaHasta: String
+    ) {
+      listarOrdenesTrabajoPaginado(
+        page: $page,
+        size: $size,
+        filter: $filter,
+        fechaDesde: $fechaDesde,
+        fechaHasta: $fechaHasta
+      ) {
+        content ${ORDEN_TRABAJO_SELECTION}
+        pageInfo {
+          pageNumber
+          pageSize
+          totalElements
+          totalPages
+          last
+        }
+      }
+    }`;
+    return this.withPageLoading(
+      this.gql
+        .query<{ listarOrdenesTrabajoPaginado: PageResponse<OrdenTrabajoOutput> }>(document, {
+          page,
+          size,
+          filter: filter.trim() || null,
+          fechaDesde: fechas?.fechaDesde || null,
+          fechaHasta: fechas?.fechaHasta || null,
+        })
+        .pipe(map((data) => data.listarOrdenesTrabajoPaginado)),
+      loading,
+    );
   }
 
   cambiarEtapa(id: string, etapa: string): Observable<OrdenTrabajoOutput> {
