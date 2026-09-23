@@ -1,10 +1,30 @@
 <app-generic-list [columns]="columns" [data]="ordenes()" [loading]="loading()" [error]="error()"
   [total]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[15, 25, 50, 100]"
-  searchLabel="Nº orden, etapa, cliente, chapa" [searchValue]="search()" (searchValueChange)="search.set($event)"
   [toolbarActions]="toolbarActions"
   [emptyMessage]="esHistorial ? 'No hay órdenes en el historial que coincidan con la búsqueda' : 'No hay órdenes de trabajo que coincidan con la búsqueda'"
   [trackBy]="trackById" (pageChange)="onPageChange($event)" (retry)="load()"
-  (actionClicked)="onToolbarAction($event)" (searchSubmit)="pageIndex.set(0); load()">
+  (actionClicked)="onToolbarAction($event)">
+
+  <div genericListFilters class="ot-filters">
+    <div class="filter-field filter-field--search">
+      <label for="ot-search">Nº orden, etapa, cliente, chapa</label>
+      <input
+        id="ot-search"
+        type="text"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+        (keydown.enter)="pageIndex.set(0); load()"
+      />
+    </div>
+
+    <app-date-range-picker
+      class="filter-field--dates"
+      label="Rango de fecha"
+      [value]="dateRange()"
+      (valueChange)="dateRange.set($event)"
+      (closed)="onDateRangeChange($event)"
+    />
+  </div>
 
   <ng-template appTableCell="numero_orden" [appTableCellFrom]="ordenes()" let-orden>
     <span class="ot-numero">{{ orden.numero_orden | defaultEmpty }}</span>
