@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   OnInit,
   signal,
@@ -48,7 +49,9 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly orden = signal<OrdenTrabajoOutput | null>(null);
-  protected readonly isEdit = signal(false);
+  /** Paso que el usuario eligió ver. Null sigue a la etapa real de la orden. */
+  private readonly pasoManual = signal<number | null>(null);
+  private ultimaEtapa = 0;
 
   protected readonly steps: OtStepDef[] = [
     { index: 1, etapa: 'RECEPCION', label: 'Recepción', icon: 'login' },
@@ -58,42 +61,78 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
     { index: 5, etapa: 'FACTURADO', label: 'Facturado', icon: 'receipt' },
   ];
 
-  protected readonly currentStep = computed(() => {
+  protected readonly etapaStep = computed(() => {
     const o = this.orden();
     if (!o?.etapa) return 1;
     const step = this.steps.find((s) => s.etapa === (o.etapa as EtapaOrdenTrabajo));
     return step ? step.index : 1;
   });
 
+  protected readonly pasoMostrado = computed(() => {
+    const manual = this.pasoManual();
+    const etapa = this.etapaStep();
+    if (manual == null || manual > etapa || manual < 1) return etapa;
+    return manual;
+  });
+
+  protected readonly revisando = computed(() => this.pasoMostrado() < this.etapaStep());
+
   protected readonly tituloPaso = computed(() => {
-    const step = this.steps.find((s) => s.index === this.currentStep());
+    const step = this.steps.find((s) => s.index === this.pasoMostrado());
     return step?.label ?? '';
   });
+
+  protected readonly tituloEtapa = computed(() => {
+    const step = this.steps.find((s) => s.index === this.etapaStep());
+    return step?.label ?? '';
+  });
+
+  constructor() {
+    effect(() => {
+      const etapa = this.etapaStep();
+      if (etapa === this.ultimaEtapa) return;
+      this.ultimaEtapa = etapa;
+      this.pasoManual.set(null);
+    });
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.isEdit.set(true);
       this.cargarOrden(id);
-    } else {
-      this.isEdit.set(false);
     }
   }
 
-  protected cancelar(): void {
-    this.router.navigate(['/taller/orden-de-trabajo']);
+  protected verPaso(index: number): void {
+    if (index < 1 || index > this.etapaStep()) return;
+    this.error.set(null);
+    this.pasoManual.set(index === this.etapaStep() ? null : index);
+  }
+
+  protected volverPaso(): void {
+    this.verPaso(this.pasoMostrado() - 1);
   }
 
   protected onOrdenChange(orden: OrdenTrabajoOutput): void {
+    const eraNueva = !this.orden()?.id_orden_trabajo && !!orden.id_orden_trabajo;
     this.orden.set(orden);
+    if (eraNueva && orden.id_orden_trabajo) {
+      this.router.navigate(['/taller/orden-de-trabajo/detalle', orden.id_orden_trabajo], {
+        replaceUrl: true,
+      });
+    }
   }
 
   protected onError(message: string): void {
     this.error.set(message);
   }
 
+  protected irAlListado(): void {
+    this.router.navigate(['/taller/orden-de-trabajo']);
+  }
+
   protected accionPrincipal(): void {
-    switch (this.currentStep()) {
+    switch (this.etapaStep()) {
       case 1:
         this.iniciarDiagnostico();
         break;
@@ -104,12 +143,12 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
         this.finalizarTrabajo();
         break;
       default:
-        this.cancelar();
+        this.irAlListado();
     }
   }
 
   protected labelAccionPrincipal(): string {
-    switch (this.currentStep()) {
+    switch (this.etapaStep()) {
       case 1:
         return 'Iniciar diagnóstico';
       case 2:
@@ -119,16 +158,6 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
       default:
         return 'Volver al listado';
     }
-  }
-
-  /** Guarda la recepción sin avanzar de etapa (queda en RECEPCION y aparece en el listado). */
-  protected guardarRecepcion(): void {
-    this.persistirRecepcion(false);
-  }
-
-  /** Guarda la recepción y avanza a DIAGNOSTICO. */
-  private iniciarDiagnostico(): void {
-    this.persistirRecepcion(true);
   }
 
   private cargarOrden(id: string): void {
@@ -146,66 +175,39 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
     });
   }
 
-  private persistirRecepcion(avanzarADiagnostico: boolean): void {
-    const input = this.recepcionStep()?.buildInput();
-    if (!input) return;
+  private iniciarDiagnostico(): void {
+    const step = this.recepcionStep();
+    if (!step?.buildInput()) return;
 
     this.saving.set(true);
     this.error.set(null);
-    const existingId = this.orden()?.id_orden_trabajo;
-    const request$ =
-      this.isEdit() && existingId
-        ? this.ordenService.update(existingId, input)
-        : this.ordenService.create(input);
-
-    request$.subscribe({
-      next: (data) => {
-        this.orden.set(data);
-        this.isEdit.set(true);
-
-        if (!avanzarADiagnostico) {
-          this.saving.set(false);
-          if (data.id_orden_trabajo) {
-            this.router.navigate(['/taller/orden-de-trabajo/detalle', data.id_orden_trabajo], {
-              replaceUrl: true,
-            });
-          }
-          return;
-        }
-
-        if (data.etapa === 'RECEPCION' && data.id_orden_trabajo) {
-          this.ordenService.cambiarEtapa(data.id_orden_trabajo, 'DIAGNOSTICO').subscribe({
-            next: (adv) => {
-              this.orden.set(adv);
-              this.saving.set(false);
-              this.router.navigate(['/taller/orden-de-trabajo/detalle', adv.id_orden_trabajo], {
-                replaceUrl: true,
-              });
-            },
-            error: (err) => {
-              this.error.set(err?.message ?? 'Orden guardada, pero no se pudo avanzar de etapa');
-              this.saving.set(false);
-              if (data.id_orden_trabajo) {
-                this.router.navigate(['/taller/orden-de-trabajo/detalle', data.id_orden_trabajo], {
-                  replaceUrl: true,
-                });
-              }
-            },
-          });
-        } else {
-          this.saving.set(false);
-        }
-      },
-      error: (err) => {
-        this.error.set(err?.message ?? 'No se pudo guardar la orden');
+    void step.encolar().then((data) => {
+      if (!data?.id_orden_trabajo) {
         this.saving.set(false);
-      },
+        if (!this.error()) {
+          this.error.set('Completá la recepción para iniciar el diagnóstico');
+        }
+        return;
+      }
+      this.orden.set(data);
+      if (data.etapa !== 'RECEPCION') {
+        this.saving.set(false);
+        return;
+      }
+      this.ordenService.cambiarEtapa(data.id_orden_trabajo, 'DIAGNOSTICO').subscribe({
+        next: (adv) => {
+          this.orden.set(adv);
+          this.saving.set(false);
+          this.router.navigate(['/taller/orden-de-trabajo/detalle', adv.id_orden_trabajo], {
+            replaceUrl: true,
+          });
+        },
+        error: (err) => {
+          this.error.set(err?.message ?? 'Orden guardada, pero no se pudo avanzar de etapa');
+          this.saving.set(false);
+        },
+      });
     });
-  }
-
-  /** Guarda el diagnóstico sin avanzar de etapa. */
-  protected guardarDiagnostico(): void {
-    this.persistirDiagnostico(false);
   }
 
   /** Guarda el diagnóstico y avanza a EN_PROCESO. */
@@ -215,10 +217,10 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
       this.error.set(error);
       return;
     }
-    this.persistirDiagnostico(true);
+    this.persistirDiagnostico();
   }
 
-  private persistirDiagnostico(avanzarAEnProceso: boolean): void {
+  private persistirDiagnostico(): void {
     const orden = this.orden();
     const step = this.diagnosticoStep();
     if (!orden?.id_orden_trabajo || !step) return;
@@ -230,10 +232,6 @@ export class OrdenTrabajoDetalleComponent implements OnInit {
     this.ordenService.update(orden.id_orden_trabajo, input).subscribe({
       next: (res) => {
         this.orden.set(res);
-        if (!avanzarAEnProceso) {
-          this.saving.set(false);
-          return;
-        }
         this.ordenService.cambiarEtapa(res.id_orden_trabajo!, 'EN_PROCESO').subscribe({
           next: (adv) => {
             this.orden.set(adv);

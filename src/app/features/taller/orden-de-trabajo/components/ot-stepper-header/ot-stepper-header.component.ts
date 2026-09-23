@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { EtapaOrdenTrabajo } from '../../interfaces/orden-trabajo.interface';
 
 export interface OtStepDef {
@@ -13,22 +13,27 @@ export interface OtStepDef {
   template: `
     <header class="stepper-header" role="navigation" aria-label="Etapas de la orden">
       @for (step of steps(); track step.index) {
-        <div
+        <button
+          type="button"
           class="stepper-step"
           [class.active]="currentStep() === step.index"
-          [class.done]="currentStep() > step.index"
+          [class.done]="reachedStep() > step.index && currentStep() !== step.index"
+          [class.reached]="reachedStep() === step.index && currentStep() !== step.index"
+          [disabled]="step.index > reachedStep()"
+          [attr.aria-current]="currentStep() === step.index ? 'step' : null"
+          (click)="stepSelect.emit(step.index)"
         >
           <span class="stepper-step__circle" aria-hidden="true">
-            @if (currentStep() > step.index) {
+            @if (reachedStep() > step.index && currentStep() !== step.index) {
               <span class="material-icons">check</span>
             } @else {
               <span class="material-icons">{{ step.icon }}</span>
             }
           </span>
           <span class="stepper-step__label">{{ step.label }}</span>
-        </div>
+        </button>
         @if (!$last) {
-          <span class="stepper-connector" [class.done]="currentStep() > step.index" aria-hidden="true"></span>
+          <span class="stepper-connector" [class.done]="reachedStep() > step.index" aria-hidden="true"></span>
         }
       }
     </header>
@@ -50,9 +55,19 @@ export interface OtStepDef {
       align-items: center;
       gap: 10px;
       opacity: 0.55;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+    }
+    .stepper-step:disabled {
+      cursor: default;
     }
     .stepper-step.active,
-    .stepper-step.done {
+    .stepper-step.done,
+    .stepper-step.reached {
       opacity: 1;
     }
     .stepper-step__circle {
@@ -75,7 +90,8 @@ export interface OtStepDef {
       color: #fff;
       box-shadow: 0 0 0 4px rgba(67, 160, 71, 0.4);
     }
-    .stepper-step.done .stepper-step__circle {
+    .stepper-step.done .stepper-step__circle,
+    .stepper-step.reached .stepper-step__circle {
       background: #388e3c;
       border-color: #388e3c;
       color: #fff;
@@ -102,5 +118,9 @@ export interface OtStepDef {
 })
 export class OtStepperHeaderComponent {
   readonly steps = input.required<OtStepDef[]>();
+  /** Paso que se está mostrando. */
   readonly currentStep = input.required<number>();
+  /** Última etapa alcanzada por la orden. */
+  readonly reachedStep = input.required<number>();
+  readonly stepSelect = output<number>();
 }

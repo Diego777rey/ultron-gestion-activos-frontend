@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
@@ -9,9 +10,9 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { distinctUntilChanged, map, startWith } from 'rxjs';
+import { debounceTime, distinctUntilChanged, firstValueFrom, map, startWith } from 'rxjs';
 import { EntitySearcherComponent } from '../../../../../shared/components/entity-searcher/entity-searcher';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
@@ -70,17 +71,27 @@ export class OtRecepcionStepComponent implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly ordenService = inject(OrdenTrabajoService);
   private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly orden = input<OrdenTrabajoOutput | null>(null);
+  readonly soloLectura = input(false);
   readonly formReady = output<FormGroup>();
+  readonly ordenChange = output<OrdenTrabajoOutput>();
+  readonly errorChange = output<string>();
+
+  protected readonly estadoGuardado = signal<'idle' | 'guardando' | 'guardado'>('idle');
 
   protected readonly openClienteVehiculo = signal(true);
   protected readonly openDatos = signal(true);
   protected readonly openFalla = signal(true);
   protected readonly openEstado = signal(false);
 
-  /** Fuerza recomputo de badges cuando se marca touched al guardar. */
+  /** Fuerza recomputo de badges cuando se marca touched al avanzar. */
   private readonly formTick = signal(0);
+  private hidratado = false;
+  private ordenId: string | null = null;
+  private ultimoGuardado = '';
+  private saveChain: Promise<void> = Promise.resolve();
 
   protected readonly historial = signal<OrdenTrabajoOutput[]>([]);
   protected readonly historialLoading = signal(false);
@@ -298,7 +309,18 @@ export class OtRecepcionStepComponent implements OnInit {
 
   constructor() {
     effect(() => {
-      this.patchFromOrden(this.orden());
+      const data = this.orden();
+      const lectura = this.soloLectura();
+      if (!data) return;
+      if (!this.hidratado && !this.form.dirty) {
+        this.patchFromOrden(data);
+        this.ultimoGuardado = this.firmaFormulario();
+        if (lectura) {
+          this.form.disable({ emitEvent: false });
+        }
+      }
+      this.ordenId = data.id_orden_trabajo ?? this.ordenId;
+      this.hidratado = true;
     });
 
     effect(() => {
@@ -321,9 +343,28 @@ export class OtRecepcionStepComponent implements OnInit {
     this.fetchSectores(0, 10, '');
     this.fetchUsuarios(0, 10, '');
     this.precargarResponsableDeSesion();
+    if (this.soloLectura()) return;
+    this.form.valueChanges
+      .pipe(debounceTime(450), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        void this.encolar();
+      });
+    this.destroyRef.onDestroy(() => {
+      void this.encolar();
+    });
   }
 
-  /** Expone el input tipado para el padre. */
+  /** Guarda lo que haya cargado y devuelve la orden persistida. */
+  encolar(): Promise<OrdenTrabajoOutput | null> {
+    const run = this.saveChain.then(() => this.ejecutarGuardado());
+    this.saveChain = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
+
+  /** Expone el input tipado para avanzar de etapa. */
   buildInput(): OrdenTrabajoInput | null {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -331,6 +372,10 @@ export class OtRecepcionStepComponent implements OnInit {
       this.revealInvalidSections();
       return null;
     }
+    return this.armarInput();
+  }
+
+  private armarInput(): OrdenTrabajoInput {
     const v = this.form.getRawValue();
     const kmRaw = v.kilometraje;
     const kilometraje =
@@ -365,6 +410,41 @@ export class OtRecepcionStepComponent implements OnInit {
         observaciones_estado: v.observaciones_estado || null,
       },
     };
+  }
+
+  private firmaFormulario(): string {
+    if (this.form.invalid) return '';
+    return JSON.stringify(this.armarInput());
+  }
+
+  private async ejecutarGuardado(): Promise<OrdenTrabajoOutput | null> {
+    if (this.soloLectura() || this.form.invalid) return null;
+    const input = this.armarInput();
+    const firma = JSON.stringify(input);
+    if (this.ordenId && firma === this.ultimoGuardado) {
+      return this.orden();
+    }
+    this.estadoGuardado.set('guardando');
+    try {
+      const updated = await firstValueFrom(
+        this.ordenId
+          ? this.ordenService.actualizarSilencioso(this.ordenId, input)
+          : this.ordenService.crearSilencioso(input),
+      );
+      this.ordenId = updated.id_orden_trabajo ?? this.ordenId;
+      this.ultimoGuardado = firma;
+      this.estadoGuardado.set('guardado');
+      this.ordenChange.emit(updated);
+      return updated;
+    } catch (err) {
+      this.estadoGuardado.set('idle');
+      const message =
+        err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
+          ? err.message
+          : 'No se pudo guardar la recepción';
+      this.errorChange.emit(message);
+      return null;
+    }
   }
 
   protected toggleHistorial(): void {
