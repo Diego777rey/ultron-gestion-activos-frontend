@@ -84,6 +84,7 @@ export class MainLayoutComponent implements OnInit {
         { label: 'Maletines', icon: 'business_center', route: '/financiero/maletines' },
         { label: 'Cajas', icon: 'account_balance_wallet', route: '/financiero/cajas' },
         { label: 'Últimas cajas', icon: 'history', route: '/financiero/ultimas' },
+        { label: 'Cotización', icon: 'currency_exchange', route: '/financiero/cotizaciones' },
       ]
     },
     {
@@ -162,6 +163,7 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('maletines')) return 'Maletines';
     if (url.includes('ultimas') && url.includes('/ventas')) return 'Ventas de la caja';
     if (url.includes('ultimas')) return 'Últimas cajas';
+    if (url.includes('cotizaciones')) return 'Cotizaciones';
     if (url.includes('cajas')) return 'Cajas';
     if (url.includes('productos/nuevo')) return 'Nuevo Producto';
     if (url.includes('productos/categorias')) return 'Categorías de Productos';

@@ -117,6 +117,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'financiero/cotizaciones',
+        loadComponent: () =>
+          import('./features/financiero/cotizaciones/pages/cotizaciones-page/cotizaciones-page.component').then(
+            (m) => m.CotizacionesPageComponent
+          ),
+        data: { tabTitle: 'Cotizaciones' },
+      },
+      {
         path: 'inventario/productos',
         loadChildren: () =>
           import('./features/inventario/productos/productos.routes').then(

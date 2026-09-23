@@ -1,0 +1,59 @@
+@if (error()) {
+  <div class="form-error" role="alert">
+    <span class="material-icons" aria-hidden="true">error_outline</span>
+    <span>{{ error() }}</span>
+  </div>
+}
+
+<form class="entity-form" [formGroup]="form" (ngSubmit)="submit()">
+  <div class="entity-form__grid">
+    <div class="field field--full">
+      <label class="field__label" for="moneda">Moneda*</label>
+      <select id="moneda" class="field__input" formControlName="moneda">
+        @for (moneda of monedas; track moneda.value) {
+          <option [value]="moneda.value">{{ moneda.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field field--full">
+      <label class="field__label" for="valor">Valor*</label>
+      <input
+        id="valor"
+        class="field__input"
+        type="number"
+        formControlName="valor"
+        step="0.01"
+        min="0"
+        placeholder=" "
+      />
+      @if (form.controls.valor.touched && form.controls.valor.invalid) {
+        <span class="field__error">
+          @if (form.controls.valor.errors?.['required']) {
+            El valor es obligatorio
+          } @else if (form.controls.valor.errors?.['min']) {
+            El valor debe ser mayor o igual a 0
+          }
+        </span>
+      }
+    </div>
+
+    <div class="field field--checkbox field--full">
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="activa" />
+        Activa
+      </label>
+    </div>
+  </div>
+</form>
+
+<div class="entity-form-footer">
+  <app-ui-button label="Cancelar" icon="close" variant="ghost" (clicked)="cancel()" />
+  <app-ui-button
+    [label]="isEdit() ? 'Guardar cambios' : 'Registrar cotización'"
+    icon="save"
+    variant="primary"
+    [loading]="submitting()"
+    (clicked)="submit()"
+  />
+</div>
