@@ -14,6 +14,7 @@ import { AppDialogService } from '../../../../../shared/services/app-dialog.serv
 import { ProductoFormComponent } from '../../dialogs/producto-form/producto-form.component';
 import { StockSectoresDialogComponent } from '../../dialogs/stock-sectores-dialog/stock-sectores-dialog.component';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { FileUploadService } from '../../../../../shared/services/file-upload.service';
 
 @Component({
   selector: 'app-productos-list',
@@ -25,6 +26,7 @@ import { ReporteService } from '../../../../../shared/services/reporte.service';
     DefaultEmptyPipe,
   ],
   templateUrl: './productos-list.component.html',
+  styleUrl: './productos-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'app-list-view' },
 })
@@ -33,6 +35,7 @@ export class ProductosListComponent {
   private readonly dialogService = inject(AppDialogService);
   private readonly router = inject(Router);
   private readonly reporteService = inject(ReporteService);
+  protected readonly fileUploadService = inject(FileUploadService);
 
   protected readonly productos = signal<ProductoOutput[]>([]);
   protected readonly loading = signal(false);
@@ -45,6 +48,7 @@ export class ProductosListComponent {
   protected readonly totalElements = signal(0);
 
   protected readonly columns: TableColumn<ProductoOutput>[] = [
+    { key: 'imagen', header: 'Img', width: '80px', align: 'center' },
     { key: 'codigoBarras', header: 'Cód. barras', width: '160px' },
     { key: 'nombre', header: 'Nombre', width: '300px' },
     { key: 'precioVenta', header: 'Precio', width: '150px' },

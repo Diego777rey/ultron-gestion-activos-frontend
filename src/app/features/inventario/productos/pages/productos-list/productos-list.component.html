@@ -18,6 +18,20 @@
   (actionClicked)="onToolbarAction($event)"
   (searchSubmit)="pageIndex.set(0); load()"
 >
+  <ng-template appTableCell="imagen" [appTableCellFrom]="productos()" let-producto>
+    <div class="producto-imagen">
+      @if (producto.imagen) {
+        <img 
+          [src]="fileUploadService.getFileUrl(producto.imagen)" 
+          [alt]="producto.nombre"
+          class="producto-imagen__img"
+        />
+      } @else {
+        <span class="material-icons producto-imagen__placeholder" aria-hidden="true">image</span>
+      }
+    </div>
+  </ng-template>
+
   <ng-template appTableCell="codigoBarras" [appTableCellFrom]="productos()" let-producto>
     {{ (producto.codigoBarras || producto.codigo) | defaultEmpty }}
   </ng-template>
