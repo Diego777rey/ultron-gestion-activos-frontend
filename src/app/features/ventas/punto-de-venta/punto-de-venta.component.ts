@@ -15,7 +15,10 @@ import { ModalComponent } from '../../../shared/components/modal/modal';
 import { UiButtonComponent } from '../../../shared/components/ui-button/ui-button';
 import { TabService } from '../../../shared/services/tab.service';
 import { ProductoService } from '../../inventario/productos/services/producto.service';
-import { ProductoOutput } from '../../inventario/productos/interfaces/producto.interface';
+import {
+  PresentacionProductoOutput,
+  ProductoOutput,
+} from '../../inventario/productos/interfaces/producto.interface';
 import { ServicioService } from '../../inventario/servicios/services/servicio.service';
 import { ServicioOutput } from '../../inventario/servicios/interfaces/servicio.interface';
 import { OrdenTrabajoService } from '../../taller/orden-de-trabajo/services/orden-trabajo.service';
@@ -86,6 +89,8 @@ export class PuntoDeVentaComponent {
   readonly loadingServicios = signal(false);
   readonly loadingOrdenes = signal(false);
   readonly search = signal('');
+  readonly productoExpandido = signal<number | null>(null);
+  private readonly cantidadPorPresentacion = signal<Record<number, string>>({});
   readonly pdvActivo = signal<PdvNumero>(1);
   private readonly cartPdv1 = signal<CartItem[]>([]);
   private readonly cartPdv2 = signal<CartItem[]>([]);
@@ -250,28 +255,81 @@ export class PuntoDeVentaComponent {
     this.loadOrdenesFinalizadas();
   }
 
-  protected addProducto(producto: ProductoOutput): void {
-    const stock = Number(producto.stock ?? 0);
-    const stockDisponible = stock - this.cantidadProductoEnOtroPdv(producto.id_producto);
-    if (stockDisponible <= 0) {
-      this.ventaError.set(`Sin stock: ${producto.nombre}`);
+  protected presentacionesDe(producto: ProductoOutput): PresentacionProductoOutput[] {
+    return producto.presentaciones ?? [];
+  }
+
+  protected estaExpandido(producto: ProductoOutput): boolean {
+    return this.productoExpandido() === producto.id_producto;
+  }
+
+  protected cantidadVenta(presentacion: PresentacionProductoOutput): string {
+    const id = presentacion.id_presentacion_producto;
+    if (id == null) {
+      return '1';
+    }
+    return this.cantidadPorPresentacion()[id] ?? '1';
+  }
+
+  protected stockProducto(producto: ProductoOutput): number {
+    return Number(producto.stock ?? 0) - this.unidadesComprometidas(producto.id_producto);
+  }
+
+  /** Cuántas presentaciones se pueden vender con el stock disponible. */
+  protected stockPresentacion(producto: ProductoOutput, presentacion: PresentacionProductoOutput): number {
+    const unidades = this.unidadesDePresentacion(presentacion);
+    return Math.trunc(this.stockProducto(producto) / unidades);
+  }
+
+  protected cambiarCantidad(presentacion: PresentacionProductoOutput, value: string): void {
+    const id = presentacion.id_presentacion_producto;
+    if (id == null) {
       return;
     }
+    this.cantidadPorPresentacion.update((actual) => ({ ...actual, [id]: value }));
+  }
+
+  protected venderPresentacion(producto: ProductoOutput, presentacion: PresentacionProductoOutput): void {
+    this.agregarPresentacion(producto, presentacion, this.cantidadNumerica(presentacion));
+  }
+
+  protected onProductoClick(producto: ProductoOutput): void {
+    if (this.presentacionesDe(producto).length > 0) {
+      this.toggleProducto(producto);
+      return;
+    }
+    this.agregarPresentacion(producto, null, 1);
+  }
+
+  protected toggleProducto(producto: ProductoOutput): void {
+    this.productoExpandido.update((actual) =>
+      actual === producto.id_producto ? null : producto.id_producto
+    );
+  }
+
+  private agregarPresentacion(
+    producto: ProductoOutput,
+    presentacion: PresentacionProductoOutput | null,
+    cantidad: number
+  ): void {
+    const aVender = cantidad > 0 ? cantidad : 1;
+    const unidades = this.unidadesDePresentacion(presentacion);
+    const stock = Number(producto.stock ?? 0);
 
     this.ventaError.set(null);
+    const idPresentacion = presentacion?.id_presentacion_producto;
+    const precio = presentacion ? Number(presentacion.precio ?? 0) : Number(producto.precioVenta ?? 0);
     this.cartActivo().update((items) => {
       const idx = items.findIndex(
-        (i) => i.tipo === 'PRODUCTO' && i.idProducto === producto.id_producto
+        (item) =>
+          item.tipo === 'PRODUCTO' &&
+          item.idProducto === producto.id_producto &&
+          (item.idPresentacion ?? null) === (idPresentacion ?? null)
       );
       if (idx >= 0) {
         const current = items[idx];
-        const nuevaCantidad = current.cantidad + 1;
-        if (nuevaCantidad > stockDisponible) {
-          this.ventaError.set(`Stock insuficiente para ${producto.nombre}`);
-          return items;
-        }
         const next = [...items];
-        next[idx] = { ...current, cantidad: nuevaCantidad, stockDisponible };
+        next[idx] = { ...current, cantidad: current.cantidad + aVender, stockDisponible: stock };
         return next;
       }
       return [
@@ -279,13 +337,24 @@ export class PuntoDeVentaComponent {
         {
           tipo: 'PRODUCTO',
           idProducto: producto.id_producto,
+          idPresentacion: idPresentacion ?? undefined,
+          presentacion: presentacion?.descripcion,
+          unidadesPorPresentacion: unidades,
           nombre: producto.nombre,
-          cantidad: 1,
-          precioUnitario: Number(producto.precioVenta),
-          stockDisponible,
+          cantidad: aVender,
+          precioUnitario: precio,
+          stockDisponible: stock,
         },
       ];
     });
+    if (idPresentacion != null) {
+      this.cantidadPorPresentacion.update((actual) => ({ ...actual, [idPresentacion]: '1' }));
+    }
+  }
+
+  private cantidadNumerica(presentacion: PresentacionProductoOutput): number {
+    const cantidad = Math.floor(Number(this.cantidadVenta(presentacion)));
+    return Number.isFinite(cantidad) && cantidad > 0 ? cantidad : 1;
   }
 
   protected addServicio(servicio: ServicioOutput): void {
@@ -368,15 +437,6 @@ export class PuntoDeVentaComponent {
       if (cantidad <= 0) {
         next.splice(index, 1);
         return next;
-      }
-      if (item.tipo === 'PRODUCTO') {
-        const producto = this.productos().find((p) => p.id_producto === item.idProducto);
-        const stock = Number(producto?.stock ?? item.stockDisponible);
-        const disponible = stock - this.cantidadProductoEnOtroPdv(item.idProducto ?? 0);
-        if (cantidad > disponible) {
-          this.ventaError.set(`Stock insuficiente para ${item.nombre}`);
-          return items;
-        }
       }
       next[index] = { ...item, cantidad };
       return next;
@@ -567,13 +627,6 @@ export class PuntoDeVentaComponent {
     this.cartPdv2.set([]);
   }
 
-  private cantidadProductoEnOtroPdv(idProducto: number): number {
-    const otro = this.pdvActivo() === 2 ? this.cartPdv1() : this.cartPdv2();
-    return otro
-      .filter((item) => item.tipo === 'PRODUCTO' && item.idProducto === idProducto)
-      .reduce((acc, item) => acc + item.cantidad, 0);
-  }
-
   private ordenEnCarritos(idOrden: number): boolean {
     const enCarrito = (items: CartItem[]) =>
       items.some((item) => item.tipo === 'ORDEN' && item.idOrdenTrabajo === idOrden);
@@ -599,9 +652,27 @@ export class PuntoDeVentaComponent {
     }
     return {
       idProducto: item.idProducto,
+      idPresentacion: item.idPresentacion ?? null,
+      descripcion: item.presentacion ?? null,
       cantidad: item.cantidad,
       precioUnitario: item.precioUnitario,
     };
+  }
+
+  private unidadesDePresentacion(presentacion: PresentacionProductoOutput | null): number {
+    const cantidad = Number(presentacion?.cantidad ?? 1);
+    return cantidad > 0 ? cantidad : 1;
+  }
+
+  private unidadesComprometidas(idProducto: number): number {
+    const otro = this.pdvActivo() === 2 ? this.cartPdv1() : this.cartPdv2();
+    return this.unidadesEn(this.cartActivo()(), idProducto) + this.unidadesEn(otro, idProducto);
+  }
+
+  private unidadesEn(items: CartItem[], idProducto: number): number {
+    return items
+      .filter((item) => item.tipo === 'PRODUCTO' && item.idProducto === idProducto)
+      .reduce((acc, item) => acc + item.cantidad * (item.unidadesPorPresentacion || 1), 0);
   }
 
   private bootstrap(): void {

@@ -145,25 +145,85 @@
   margin-left: 4px;
 }
 
+.pos-product-block {
+  margin-bottom: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+
+  &:hover,
+  &--open {
+    border-color: rgba(25, 118, 210, 0.55);
+  }
+
+  &--open {
+    background: rgba(25, 118, 210, 0.08);
+  }
+}
+
 .pos-product {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   width: 100%;
-  margin-bottom: 6px;
+  margin: 0;
   padding: 8px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
 
-  &:hover {
-    border-color: rgba(25, 118, 210, 0.55);
+  &:hover,
+  &--open {
     background: rgba(25, 118, 210, 0.12);
+  }
+
+  &__hit {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__stock-badge {
+    flex-shrink: 0;
+    color: #9fd0ff;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  &__chevron {
+    flex-shrink: 0;
+    font-size: 22px;
+    color: var(--text-secondary);
+  }
+
+  &__add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(25, 118, 210, 0.55);
+    border-radius: 8px;
+    background: rgba(25, 118, 210, 0.28);
+    color: #fff;
+    cursor: pointer;
+
+    .material-icons {
+      font-size: 18px;
+    }
+
+    &:hover {
+      background: rgba(25, 118, 210, 0.45);
+    }
   }
 
   &__thumb {
@@ -213,6 +273,124 @@
     color: #9fd0ff;
     font-weight: 600;
     font-size: 13px;
+    white-space: nowrap;
+  }
+}
+
+.pos-presentaciones {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 6px 10px 10px;
+
+  &__head,
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) 70px minmax(90px, 0.7fr) 70px 80px 40px;
+    gap: 8px;
+    align-items: center;
+  }
+
+  &__head {
+    padding: 4px 6px 8px;
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  &__row {
+    margin-bottom: 4px;
+    padding: 8px 6px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.03);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__cell {
+    min-width: 0;
+
+    &--name {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      strong {
+        color: var(--text-primary);
+        font-size: 13px;
+      }
+
+      small {
+        color: var(--text-secondary);
+        font-size: 11px;
+      }
+    }
+
+    &--units {
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    &--price {
+      color: #9fd0ff;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    &--stock {
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    &--qty {
+      input {
+        width: 100%;
+        height: 32px;
+        padding: 0 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(0, 0, 0, 0.35);
+        color: var(--text-primary);
+        color-scheme: dark;
+        font: inherit;
+        font-size: 13px;
+        text-align: center;
+      }
+    }
+
+    &--action {
+      display: flex;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 720px) {
+    &__head {
+      display: none;
+    }
+
+    &__row {
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 10px;
+    }
+
+    &__cell--name {
+      grid-column: 1 / -1;
+    }
+
+    &__cell--action {
+      justify-content: flex-end;
+    }
   }
 }
 
@@ -315,6 +493,19 @@
       display: block;
       font-size: 13px;
       color: var(--text-primary);
+
+      em {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: rgba(25, 118, 210, 0.28);
+        color: #9fd0ff;
+        font-style: normal;
+        font-size: 11px;
+        font-weight: 700;
+        vertical-align: 1px;
+      }
     }
 
     small {

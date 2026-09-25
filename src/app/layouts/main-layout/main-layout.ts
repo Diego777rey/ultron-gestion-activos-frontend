@@ -166,6 +166,7 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('cotizaciones')) return 'Cotizaciones';
     if (url.includes('cajas')) return 'Cajas';
     if (url.includes('productos/nuevo')) return 'Nuevo Producto';
+    if (url.includes('productos/') && url.includes('/editar')) return 'Editar Producto';
     if (url.includes('productos/categorias')) return 'Categorías de Productos';
     if (url.includes('productos')) return 'Productos';
     if (url.includes('servicios/nuevo')) return 'Nuevo Servicio';

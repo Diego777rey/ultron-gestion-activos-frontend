@@ -8,6 +8,12 @@ export const PRODUCTOS_ROUTES: Routes = [
     data: { tabTitle: 'Nuevo Producto', noReuse: true },
   },
   {
+    path: ':id/editar',
+    loadComponent: () =>
+      import('./pages/producto-stepper/producto-stepper.component').then((m) => m.ProductoStepperComponent),
+    data: { tabTitle: 'Editar Producto', noReuse: true },
+  },
+  {
     path: 'categorias/nueva',
     loadComponent: () =>
       import('./pages/categoria-producto-stepper/categoria-producto-stepper.component').then((m) => m.CategoriaProductoStepperComponent),

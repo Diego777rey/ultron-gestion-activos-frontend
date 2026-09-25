@@ -5,17 +5,20 @@ import {
   computed,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
+import { ImageUploaderComponent } from '../../../../../shared/components/image-uploader/image-uploader.component';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { CategoriaProductoService } from '../../services/categoria-producto.service';
 import { ProductoService } from '../../services/producto.service';
-import { CategoriaProductoOutput, ProductoInput } from '../../interfaces/producto.interface';
+import { CategoriaProductoOutput, PresentacionProductoOutput, ProductoInput, ProductoOutput } from '../../interfaces/producto.interface';
+import { PresentacionesEditorComponent } from '../../components/presentaciones-editor/presentaciones-editor.component';
 import { CategoriaRapidaFormComponent } from '../../dialogs/categoria-rapida-form/categoria-rapida-form.component';
 import { SubcategoriaFormComponent } from '../../dialogs/subcategoria-form/subcategoria-form.component';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
@@ -28,7 +31,15 @@ interface StepDef {
 
 @Component({
   selector: 'app-producto-stepper',
-  imports: [CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    UiButtonComponent,
+    AutofocusDirective,
+    UppercaseDirective,
+    PresentacionesEditorComponent,
+    ImageUploaderComponent,
+  ],
   templateUrl: './producto-stepper.component.html',
   styleUrl: './producto-stepper.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,10 +48,20 @@ interface StepDef {
 export class ProductoStepperComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly dialogService = inject(AppDialogService);
   private readonly categoriaService = inject(CategoriaProductoService);
   private readonly productoService = inject(ProductoService);
   private readonly reporteService = inject(ReporteService);
+  private readonly presentacionesEditor = viewChild(PresentacionesEditorComponent);
+
+  protected readonly presentacionesIniciales = signal<PresentacionProductoOutput[]>([]);
+  protected readonly productoId = signal<number | null>(null);
+  protected readonly productoActual = signal<ProductoOutput | null>(null);
+  protected readonly loadingProducto = signal(false);
+  protected readonly imagePath = signal<string | null>(null);
+  protected readonly imageError = signal<string | null>(null);
+  protected readonly editando = computed(() => this.productoId() != null);
 
   protected readonly steps: StepDef[] = [
     { index: 1, label: 'Categoría', icon: 'category' },
@@ -69,8 +90,6 @@ export class ProductoStepperComponent implements OnInit {
 
   protected readonly datosForm = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.maxLength(100)]],
-    codigoBarras: ['', [Validators.required, Validators.maxLength(100)]],
-    precioVenta: [0, [Validators.required, Validators.min(0)]],
     descripcion: [''],
   });
 
@@ -121,7 +140,48 @@ export class ProductoStepperComponent implements OnInit {
   );
 
   ngOnInit(): void {
+    const idParam = this.route.snapshot.paramMap.get('id');
     this.loadCategorias();
+    if (idParam) {
+      const id = Number(idParam);
+      this.productoId.set(id);
+      this.cargarProducto(id);
+    }
+  }
+
+  private cargarProducto(id: number): void {
+    this.loadingProducto.set(true);
+    this.error.set(null);
+    this.productoService.findById(id, true).subscribe({
+      next: (producto) => {
+        this.loadingProducto.set(false);
+        if (!producto) {
+          this.error.set('No se encontró el producto');
+          return;
+        }
+        this.productoActual.set(producto);
+        this.datosForm.reset({
+          nombre: producto.nombre ?? '',
+          descripcion: producto.descripcion ?? '',
+        });
+        this.imagePath.set(producto.imagen ?? null);
+        this.presentacionesIniciales.set(producto.presentaciones ?? []);
+        const cat = producto.categoriaProducto;
+        if (cat?.categoriaPadre?.id_categoria_producto) {
+          this.selectedCategoria.set(cat.categoriaPadre);
+          this.selectedSubcategoria.set(cat);
+          this.loadSubcategorias(cat.categoriaPadre.id_categoria_producto);
+        } else if (cat?.id_categoria_producto) {
+          this.selectedCategoria.set(cat);
+          this.selectedSubcategoria.set(null);
+        }
+        this.currentStep.set(3);
+      },
+      error: (err: Error) => {
+        this.loadingProducto.set(false);
+        this.error.set(err.message || 'No se pudo cargar el producto');
+      },
+    });
   }
 
   protected loadCategorias(): void {
@@ -266,7 +326,35 @@ export class ProductoStepperComponent implements OnInit {
       this.cancelar();
       return;
     }
+    if (step === 3) {
+      this.conservarPresentaciones();
+    }
     this.currentStep.set(step - 1);
+  }
+
+  private conservarPresentaciones(): void {
+    const editor = this.presentacionesEditor();
+    if (!editor) {
+      return;
+    }
+    this.presentacionesIniciales.set(
+      editor.toInput().map((fila) => ({
+        id_presentacion_producto: fila.id_presentacion_producto ?? undefined,
+        descripcion: fila.descripcion,
+        cantidad: fila.cantidad,
+        precio: fila.precio,
+        codigoBarras: fila.codigoBarras,
+      }))
+    );
+  }
+
+  protected onImageChange(path: string | null): void {
+    this.imagePath.set(path);
+    this.imageError.set(null);
+  }
+
+  protected onImageError(message: string): void {
+    this.imageError.set(message);
   }
 
   protected cancelar(): void {
@@ -276,7 +364,7 @@ export class ProductoStepperComponent implements OnInit {
   private guardarProducto(): void {
     if (this.datosForm.invalid) {
       this.datosForm.markAllAsTouched();
-      this.error.set('Completá nombre, código de barras y precio');
+      this.error.set('Completá el nombre del producto');
       return;
     }
     const categoria = this.selectedCategoria();
@@ -287,31 +375,47 @@ export class ProductoStepperComponent implements OnInit {
       return;
     }
 
+    const editor = this.presentacionesEditor();
+    if (!editor || editor.invalid() || editor.toInput().length === 0) {
+      editor?.marcarErrores();
+      this.error.set('Agregá al menos una presentación con descripción, código de barras, cantidad y precio.');
+      return;
+    }
+
     const v = this.datosForm.getRawValue();
-    const codigoBarras = v.codigoBarras.trim();
+    const presentaciones = editor.toInput();
+    const principal = presentaciones[0];
+    const existente = this.productoActual();
     const payload: ProductoInput = {
-      codigo: codigoBarras,
+      codigo: existente?.codigo?.trim() || principal.codigoBarras.trim(),
       nombre: v.nombre.trim(),
       descripcion: v.descripcion?.trim() || undefined,
-      codigoBarras,
-      precioCompra: 0,
-      precioVenta: v.precioVenta,
-      stock: 0,
-      stockMinimo: 0,
-      estado: true,
+      codigoBarras: principal.codigoBarras.trim(),
+      precioCompra: existente?.precioCompra ?? 0,
+      precioVenta: principal.precio,
+      stock: existente?.stock ?? 0,
+      stockMinimo: existente?.stockMinimo ?? 0,
+      ubicacion: existente?.ubicacion,
+      estado: existente?.estado ?? true,
+      imagen: this.imagePath() || undefined,
       idCategoriaProducto,
+      presentaciones,
     };
 
     this.saving.set(true);
     this.error.set(null);
-    this.productoService.create(payload).subscribe({
+    const id = this.productoId();
+    const request = id
+      ? this.productoService.update(id, payload)
+      : this.productoService.create(payload);
+    request.subscribe({
       next: () => {
         this.saving.set(false);
         this.router.navigate(['/inventario/productos']);
       },
       error: (err: Error) => {
         this.saving.set(false);
-        this.error.set(err.message || 'No se pudo registrar el producto');
+        this.error.set(err.message || 'No se pudo guardar el producto');
       },
     });
   }
@@ -321,7 +425,7 @@ export class ProductoStepperComponent implements OnInit {
       return;
     }
     this.generando.set(true);
-    this.reporteService.generarInventario('producto').subscribe({
+    this.reporteService.generarInventario('producto', this.productoId() ? { id: this.productoId()! } : {}).subscribe({
       next: () => this.generando.set(false),
       error: () => this.generando.set(false),
     });

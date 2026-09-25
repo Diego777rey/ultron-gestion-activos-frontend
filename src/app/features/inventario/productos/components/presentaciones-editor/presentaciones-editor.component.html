@@ -1,0 +1,78 @@
+<section class="presentaciones">
+  <header class="presentaciones__header">
+    <div>
+      <h3>Presentaciones</h3>
+      <p>Unidad, pack o caja. Cargá la descripción, el código de barras, la cantidad y el precio.</p>
+    </div>
+    <button type="button" class="presentaciones__add" (click)="agregar()">
+      <span class="material-icons" aria-hidden="true">add</span>
+      Agregar
+    </button>
+  </header>
+
+  @if (filas().length === 0) {
+    <p class="presentaciones__empty">Sin presentaciones. Por ejemplo: Unidad, Pack de 6 o Caja de 12 unidades.</p>
+  } @else {
+    <div class="presentaciones__table" role="table">
+      <div class="presentaciones__head" role="row">
+        <span>Descripción</span>
+        <span>Código de barras</span>
+        <span>Cantidad</span>
+        <span>Precio</span>
+        <span></span>
+      </div>
+      @for (fila of filas(); track $index) {
+        <div class="presentaciones__row" role="row">
+          <label class="presentaciones__field presentaciones__field--wide">
+            <span class="sr-only">Descripción</span>
+            <input
+              type="text"
+              [value]="fila.descripcion"
+              placeholder="Ej. Caja de 12 unidades"
+              maxlength="150"
+              (input)="onDescripcion($index, $any($event.target).value)"
+            />
+          </label>
+          <label class="presentaciones__field presentaciones__field--wide">
+            <span class="sr-only">Código de barras</span>
+            <input
+              type="text"
+              [value]="fila.codigoBarras"
+              placeholder="Código de barras"
+              maxlength="100"
+              (input)="onCodigoBarras($index, $any($event.target).value)"
+            />
+          </label>
+          <label class="presentaciones__field">
+            <span class="sr-only">Cantidad</span>
+            <input
+              type="number"
+              [value]="fila.cantidad ?? ''"
+              min="0.01"
+              step="1"
+              placeholder="12"
+              (input)="onCantidad($index, $any($event.target).value)"
+            />
+          </label>
+          <label class="presentaciones__field">
+            <span class="sr-only">Precio</span>
+            <input
+              type="number"
+              [value]="fila.precio ?? ''"
+              min="0"
+              step="1"
+              placeholder="0"
+              (input)="onPrecio($index, $any($event.target).value)"
+            />
+          </label>
+          <button type="button" class="presentaciones__remove" (click)="quitar($index)" aria-label="Quitar presentación">
+            <span class="material-icons" aria-hidden="true">delete</span>
+          </button>
+          @if (mostrarError($index)) {
+            <span class="presentaciones__error">{{ mensajeError($index) }}</span>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>

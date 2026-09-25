@@ -296,6 +296,19 @@
   max-width: 720px;
 }
 
+app-presentaciones-editor {
+  display: block;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  max-width: 960px;
+}
+
+.datos-imagen {
+  margin-top: 18px;
+  max-width: 420px;
+}
+
 .datos-field {
   display: flex;
   flex-direction: column;

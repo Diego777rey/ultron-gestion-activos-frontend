@@ -1,5 +1,6 @@
 export interface DetalleVentaInput {
   idProducto?: number | null;
+  idPresentacion?: number | null;
   idOrdenTrabajo?: number | null;
   idServicio?: number | null;
   descripcion?: string | null;
@@ -20,6 +21,8 @@ export interface VentaInput {
 export interface DetalleVentaOutput {
   id_detalle_venta?: number;
   idProducto?: number;
+  idPresentacion?: number;
+  presentacionDescripcion?: string;
   idOrdenTrabajo?: number;
   idServicio?: number;
   productoNombre?: string;
@@ -48,6 +51,10 @@ export type CartItemTipo = 'PRODUCTO' | 'SERVICIO' | 'ORDEN';
 export interface CartItem {
   tipo: CartItemTipo;
   idProducto?: number;
+  idPresentacion?: number;
+  presentacion?: string;
+  /** Unidades de stock que consume cada unidad vendida de esta presentación. */
+  unidadesPorPresentacion?: number;
   idOrdenTrabajo?: number;
   idServicio?: number;
   idCliente?: number | null;

@@ -23,6 +23,13 @@ export const PRODUCTO_CRUD_CONFIG: CrudConfig = {
         nombre
       }
     }
+    presentaciones {
+      id_presentacion_producto
+      descripcion
+      codigoBarras
+      cantidad
+      precio
+    }
   }`,
   operations: {
     list: 'listarProductos',

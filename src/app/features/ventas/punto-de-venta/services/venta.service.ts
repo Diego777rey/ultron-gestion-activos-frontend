@@ -19,6 +19,8 @@ const VENTA_SELECTION = `{
   detalles {
     id_detalle_venta
     idProducto
+    idPresentacion
+    presentacionDescripcion
     idOrdenTrabajo
     idServicio
     productoNombre
