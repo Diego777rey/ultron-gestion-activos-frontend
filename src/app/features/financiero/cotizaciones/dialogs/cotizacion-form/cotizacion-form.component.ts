@@ -4,7 +4,7 @@ import { DialogRef } from '@angular/cdk/dialog';
 import { finalize } from 'rxjs';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { CotizacionService } from '../../services/cotizacion.service';
-import { CotizacionInput, CotizacionOutput, Moneda } from '../../interfaces/cotizacion.interface';
+import { CotizacionInput, CotizacionOutput } from '../../interfaces/cotizacion.interface';
 
 @Component({
   selector: 'app-cotizacion-form',
@@ -24,14 +24,8 @@ export class CotizacionFormComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly isEdit = computed(() => this.cotizacion()?.id_cotizacion != null);
 
-  protected readonly monedas: { value: Moneda; label: string }[] = [
-    { value: 'REAL', label: 'Real Brasileño' },
-    { value: 'GUARANI', label: 'Guaraní' },
-    { value: 'DOLAR', label: 'Dólar' },
-  ];
-
   protected readonly form = this.fb.nonNullable.group({
-    moneda: ['GUARANI' as Moneda, [Validators.required]],
+    moneda: ['', [Validators.required, Validators.maxLength(80)]],
     valor: [0, [Validators.required, Validators.min(0)]],
     activa: [true],
   });
@@ -55,6 +49,11 @@ export class CotizacionFormComponent {
   }
 
   protected submit(): void {
+    const moneda = this.form.controls.moneda.value.trim();
+    if (!moneda) {
+      this.form.controls.moneda.setErrors({ required: true });
+    }
+
     if (this.form.invalid || this.submitting()) {
       this.form.markAllAsTouched();
       return;
@@ -65,7 +64,7 @@ export class CotizacionFormComponent {
 
     const value = this.form.getRawValue();
     const input: CotizacionInput = {
-      moneda: value.moneda,
+      moneda,
       valor: value.valor,
       activa: value.activa,
     };

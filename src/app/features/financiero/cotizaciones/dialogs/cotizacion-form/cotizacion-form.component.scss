@@ -67,6 +67,11 @@
   color: #ff6b8b;
 }
 
+.field__hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .field--checkbox {
   flex-direction: row;
   align-items: center;

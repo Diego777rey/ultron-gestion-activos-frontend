@@ -22,7 +22,7 @@
   </ng-template>
 
   <ng-template appTableCell="valor" [appTableCellFrom]="cotizaciones()" let-item>
-    {{ item.valor | number: '1.2-2' | defaultEmpty }}
+    {{ item.valor | number: '1.0-2' | defaultEmpty }} Gs.
   </ng-template>
 
   <ng-template appTableCell="fechaActualizacion" [appTableCellFrom]="cotizaciones()" let-item>

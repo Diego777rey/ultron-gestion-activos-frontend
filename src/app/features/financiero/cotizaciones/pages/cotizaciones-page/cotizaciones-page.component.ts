@@ -41,7 +41,7 @@ export class CotizacionesPageComponent {
 
   protected readonly columns: TableColumn<CotizacionOutput>[] = [
     { key: 'moneda', header: 'Moneda', width: '220px' },
-    { key: 'valor', header: 'Valor', width: '200px', align: 'right' },
+    { key: 'valor', header: 'Valor en Gs.', width: '200px', align: 'right' },
     { key: 'fechaActualizacion', header: 'Última actualización', width: '200px', align: 'center' },
     { key: 'activa', header: 'Activa', width: '100px', align: 'center' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
@@ -55,6 +55,7 @@ export class CotizacionesPageComponent {
 
   protected readonly rowActions: MenuAction[] = [
     { id: 'edit', label: 'Editar', icon: 'edit' },
+    { id: 'delete', label: 'Eliminar', icon: 'delete', danger: true },
   ];
 
   constructor() {
@@ -104,7 +105,7 @@ export class CotizacionesPageComponent {
     this.dialogService
       .openForm(CotizacionFormComponent, {
         title: 'Nueva Cotización',
-        subtitle: 'Registrá el valor de cotización de una moneda',
+        subtitle: 'Registrá cuántos guaraníes equivale 1 unidad de la moneda',
         maxWidth: '560px',
       })
       .subscribe((saved) => {
@@ -118,7 +119,7 @@ export class CotizacionesPageComponent {
     this.dialogService
       .openForm(CotizacionFormComponent, {
         title: 'Editar Cotización',
-        subtitle: 'Modificá el valor de cotización de la moneda',
+        subtitle: 'Modificá cuántos guaraníes equivale 1 unidad de la moneda',
         maxWidth: '560px',
         inputs: { cotizacion },
       })
@@ -132,6 +133,13 @@ export class CotizacionesPageComponent {
   protected onRowAction(actionId: string, cotizacion: CotizacionOutput): void {
     if (actionId === 'edit') {
       this.openEditDialog(cotizacion);
+      return;
+    }
+    if (actionId === 'delete' && cotizacion.id_cotizacion != null) {
+      this.cotizacionService.remove(cotizacion.id_cotizacion).subscribe({
+        next: () => this.load(),
+        error: (err: Error) => this.error.set(err.message || 'No se pudo eliminar la cotización'),
+      });
     }
   }
 
@@ -139,8 +147,6 @@ export class CotizacionesPageComponent {
     switch (moneda) {
       case 'REAL':
         return 'Real Brasileño';
-      case 'GUARANI':
-        return 'Guaraní';
       case 'DOLAR':
         return 'Dólar';
       default:
