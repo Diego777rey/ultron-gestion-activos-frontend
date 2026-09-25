@@ -47,7 +47,11 @@ export type PdvNumero = 1 | 2;
   selector: 'app-punto-de-venta',
   imports: [ModalComponent, AbrirCajaDialogComponent, PagoDialogComponent, UiButtonComponent, DecimalPipe],
   templateUrl: './punto-de-venta.component.html',
-  styleUrls: ['./punto-de-venta.component.scss', './punto-de-venta-dialog.scss'],
+  styleUrls: [
+    './punto-de-venta.component.scss',
+    './punto-de-venta-catalog.scss',
+    './punto-de-venta-dialog.scss',
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'app-list-view',
