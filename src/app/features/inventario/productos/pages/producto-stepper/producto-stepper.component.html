@@ -30,8 +30,9 @@
 
   <div class="wizard">
     <section class="wizard__main">
-      <!-- Paso 1: Categoría -->
-      @if (currentStep() === 1) {
+      @if (loadingProducto()) {
+        <p class="step-hint">Cargando producto...</p>
+      } @else if (currentStep() === 1) {
         <div class="table-panel">
           <div class="table-toolbar">
             <div class="table-search">
@@ -198,30 +199,14 @@
       @if (currentStep() === 3) {
         <section class="datos-panel">
           <h2 class="datos-panel__title">Datos generales</h2>
-          <p class="step-hint">Completá la identificación comercial del producto.</p>
+          <p class="step-hint">Nombre, descripción, imagen y presentaciones. El precio y el código de barras se cargan en cada presentación.</p>
 
           <form class="datos-form" [formGroup]="datosForm">
-            <div class="datos-field">
+            <div class="datos-field datos-field--full">
               <label for="prod-nombre">Nombre*</label>
               <input id="prod-nombre" type="text" formControlName="nombre" appAutofocus appUppercase placeholder="Nombre del producto" />
               @if (datosForm.controls.nombre.touched && datosForm.controls.nombre.invalid) {
                 <span class="field-error">El nombre es obligatorio</span>
-              }
-            </div>
-
-            <div class="datos-field">
-              <label for="prod-barcode">Código de barras*</label>
-              <input id="prod-barcode" type="text" formControlName="codigoBarras" placeholder="Escaneá o ingresá el código" />
-              @if (datosForm.controls.codigoBarras.touched && datosForm.controls.codigoBarras.invalid) {
-                <span class="field-error">El código de barras es obligatorio</span>
-              }
-            </div>
-
-            <div class="datos-field">
-              <label for="prod-precio">Precio de venta*</label>
-              <input id="prod-precio" type="number" formControlName="precioVenta" min="0" step="1" placeholder="0" />
-              @if (datosForm.controls.precioVenta.touched && datosForm.controls.precioVenta.invalid) {
-                <span class="field-error">Precio válido requerido</span>
               }
             </div>
 
@@ -230,6 +215,22 @@
               <textarea id="prod-desc" formControlName="descripcion" appUppercase rows="3" placeholder="Notas del producto"></textarea>
             </div>
           </form>
+
+          <div class="datos-imagen">
+            <app-image-uploader
+              [currentImagePath]="imagePath()"
+              folder="productos"
+              label="Imagen del producto"
+              [maxSizeMB]="5"
+              (imageChange)="onImageChange($event)"
+              (uploadError)="onImageError($event)"
+            />
+            @if (imageError()) {
+              <span class="field-error">{{ imageError() }}</span>
+            }
+          </div>
+
+          <app-presentaciones-editor [items]="presentacionesIniciales()" />
         </section>
       }
     </section>
@@ -250,7 +251,7 @@
         (clicked)="generarReporte()"
       />
       <app-ui-button
-        [label]="currentStep() === 3 ? 'Registrar producto' : 'Siguiente'"
+        [label]="currentStep() === 3 ? (editando() ? 'Guardar cambios' : 'Registrar producto') : 'Siguiente'"
         [icon]="currentStep() === 3 ? 'save' : 'arrow_forward'"
         variant="primary"
         [loading]="saving()"

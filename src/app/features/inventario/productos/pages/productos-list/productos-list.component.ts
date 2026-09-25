@@ -11,7 +11,6 @@ import { PageChange } from '../../../../../shared/models/pagination.model';
 import { ProductoService } from '../../services/producto.service';
 import { ProductoOutput } from '../../interfaces/producto.interface';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
-import { ProductoFormComponent } from '../../dialogs/producto-form/producto-form.component';
 import { StockSectoresDialogComponent } from '../../dialogs/stock-sectores-dialog/stock-sectores-dialog.component';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
 import { FileUploadService } from '../../../../../shared/services/file-upload.service';
@@ -49,10 +48,9 @@ export class ProductosListComponent {
 
   protected readonly columns: TableColumn<ProductoOutput>[] = [
     { key: 'imagen', header: 'Img', width: '80px', align: 'center' },
-    { key: 'codigoBarras', header: 'Cód. barras', width: '160px' },
-    { key: 'nombre', header: 'Nombre', width: '300px' },
-    { key: 'precioVenta', header: 'Precio', width: '150px' },
-    { key: 'categoria', header: 'Categoría', width: '200px' },
+    { key: 'nombre', header: 'Nombre', width: '280px' },
+    { key: 'presentaciones', header: 'Presentaciones', width: '360px' },
+    { key: 'categoria', header: 'Categoría', width: '180px' },
     { key: 'subcategoria', header: 'Subcategoría', width: '200px' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
@@ -143,22 +141,16 @@ export class ProductosListComponent {
     });
   }
 
-  protected openEditDialog(producto: ProductoOutput): void {
-    this.dialogService.openForm(ProductoFormComponent, {
-      title: 'Editar Producto',
-      subtitle: 'Actualizá los datos comerciales del producto',
-      maxWidth: '820px',
-      inputs: { producto },
-    }).subscribe((saved) => {
-      if (saved) {
-        this.load();
-      }
-    });
+  protected editarProducto(producto: ProductoOutput): void {
+    if (!producto.id_producto) {
+      return;
+    }
+    this.router.navigate(['/inventario/productos', producto.id_producto, 'editar']);
   }
 
   protected onRowAction(actionId: string, producto: ProductoOutput): void {
     if (actionId === 'edit') {
-      this.openEditDialog(producto);
+      this.editarProducto(producto);
     } else if (actionId === 'stock') {
       this.openStockDialog(producto);
     } else if (actionId === 'generar') {

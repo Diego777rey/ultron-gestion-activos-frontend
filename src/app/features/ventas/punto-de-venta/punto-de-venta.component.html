@@ -78,22 +78,105 @@
                 <div class="pos-empty">Cargando productos…</div>
               } @else {
                 @for (producto of productosVisibles(); track producto.id_producto) {
-                  <button type="button" class="pos-product" (click)="addProducto(producto)">
-                    <div class="pos-product__thumb" aria-hidden="true">
-                      @if (imagenProductoUrl(producto); as imgUrl) {
-                        <img [src]="imgUrl" [alt]="producto.nombre" loading="lazy" />
+                  <div
+                    class="pos-product-block"
+                    [class.pos-product-block--open]="estaExpandido(producto)"
+                  >
+                    <button
+                      type="button"
+                      class="pos-product"
+                      [class.pos-product--open]="estaExpandido(producto)"
+                      (click)="onProductoClick(producto)"
+                    >
+                      <div class="pos-product__hit">
+                        <div class="pos-product__thumb" aria-hidden="true">
+                          @if (imagenProductoUrl(producto); as imgUrl) {
+                            <img [src]="imgUrl" [alt]="producto.nombre" loading="lazy" />
+                          } @else {
+                            <span class="material-icons">image</span>
+                          }
+                        </div>
+                        <div class="pos-product__main">
+                          <strong>{{ producto.nombre }}</strong>
+                          <small>
+                            {{ producto.codigo }}
+                            @if (presentacionesDe(producto).length > 0) {
+                              · {{ presentacionesDe(producto).length }}
+                              {{ presentacionesDe(producto).length === 1 ? 'presentación' : 'presentaciones' }}
+                            } @else {
+                              · Stock {{ producto.stock | number: '1.0-0' }}
+                            }
+                          </small>
+                        </div>
+                      </div>
+                      @if (presentacionesDe(producto).length > 0) {
+                        <span class="pos-product__stock-badge">
+                          Stock {{ stockProducto(producto) | number: '1.0-0' }}
+                        </span>
+                        <span class="pos-product__chevron material-icons" aria-hidden="true">
+                          {{ estaExpandido(producto) ? 'expand_less' : 'expand_more' }}
+                        </span>
                       } @else {
-                        <span class="material-icons">image</span>
+                        <span class="pos-product__price">
+                          Gs. {{ producto.precioVenta | number: '1.0-0' }}
+                        </span>
                       }
-                    </div>
-                    <div class="pos-product__main">
-                      <strong>{{ producto.nombre }}</strong>
-                      <small>{{ producto.codigo }} · Stock {{ producto.stock | number: '1.0-0' }}</small>
-                    </div>
-                    <span class="pos-product__price">
-                      Gs. {{ producto.precioVenta | number: '1.0-0' }}
-                    </span>
-                  </button>
+                    </button>
+
+                    @if (estaExpandido(producto) && presentacionesDe(producto).length > 0) {
+                      <div class="pos-presentaciones" role="table" aria-label="Presentaciones">
+                        <div class="pos-presentaciones__head" role="row">
+                          <span role="columnheader">Presentación</span>
+                          <span role="columnheader">Unidades</span>
+                          <span role="columnheader">Precio</span>
+                          <span role="columnheader">Stock</span>
+                          <span role="columnheader">Cantidad</span>
+                          <span role="columnheader"></span>
+                        </div>
+                        @for (presentacion of presentacionesDe(producto); track presentacion.id_presentacion_producto) {
+                          <div class="pos-presentaciones__row" role="row">
+                            <div class="pos-presentaciones__cell pos-presentaciones__cell--name" role="cell">
+                              <strong>{{ presentacion.descripcion }}</strong>
+                              @if (presentacion.codigoBarras) {
+                                <small>{{ presentacion.codigoBarras }}</small>
+                              }
+                            </div>
+                            <div class="pos-presentaciones__cell pos-presentaciones__cell--units" role="cell">
+                              x{{ presentacion.cantidad | number: '1.0-2' }}
+                            </div>
+                            <div class="pos-presentaciones__cell pos-presentaciones__cell--price" role="cell">
+                              Gs. {{ presentacion.precio | number: '1.0-0' }}
+                            </div>
+                            <div class="pos-presentaciones__cell pos-presentaciones__cell--stock" role="cell">
+                              {{ stockPresentacion(producto, presentacion) | number: '1.0-0' }}
+                            </div>
+                            <div class="pos-presentaciones__cell pos-presentaciones__cell--qty" role="cell">
+                              <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                inputmode="numeric"
+                                [value]="cantidadVenta(presentacion)"
+                                (input)="cambiarCantidad(presentacion, $any($event.target).value)"
+                                (keydown.enter)="venderPresentacion(producto, presentacion); $event.preventDefault()"
+                                [attr.aria-label]="'Cantidad de ' + presentacion.descripcion"
+                              />
+                            </div>
+                            <div class="pos-presentaciones__cell pos-presentaciones__cell--action" role="cell">
+                              <button
+                                type="button"
+                                class="pos-product__add"
+                                (click)="venderPresentacion(producto, presentacion)"
+                                [attr.aria-label]="'Agregar ' + presentacion.descripcion"
+                              >
+                                <span class="material-icons" aria-hidden="true">add</span>
+                              </button>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
                 } @empty {
                   <div class="pos-empty">No hay productos para mostrar</div>
                 }
@@ -171,13 +254,21 @@
             @for (item of cart(); track $index; let i = $index) {
               <div class="pos-cart-item">
                 <div class="pos-cart-item__info">
-                  <strong>{{ item.nombre }}</strong>
+                  <strong>
+                    {{ item.nombre }}
+                    @if (item.presentacion) {
+                      <em>{{ item.presentacion }}</em>
+                    }
+                  </strong>
                   <small>
                     @if (item.tipo === 'ORDEN') {
                       Orden de trabajo
                     } @else if (item.tipo === 'SERVICIO') {
                       Servicio · Gs. {{ item.precioUnitario | number: '1.0-0' }}
                     } @else {
+                      @if ((item.unidadesPorPresentacion ?? 1) !== 1) {
+                        x{{ item.unidadesPorPresentacion | number: '1.0-2' }} ·
+                      }
                       Gs. {{ item.precioUnitario | number: '1.0-0' }}
                     }
                   </small>

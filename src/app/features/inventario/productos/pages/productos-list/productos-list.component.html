@@ -32,16 +32,25 @@
     </div>
   </ng-template>
 
-  <ng-template appTableCell="codigoBarras" [appTableCellFrom]="productos()" let-producto>
-    {{ (producto.codigoBarras || producto.codigo) | defaultEmpty }}
-  </ng-template>
-
   <ng-template appTableCell="nombre" [appTableCellFrom]="productos()" let-producto>
     {{ producto.nombre | defaultEmpty }}
   </ng-template>
 
-  <ng-template appTableCell="precioVenta" [appTableCellFrom]="productos()" let-producto>
-    {{ producto.precioVenta | number:'1.0-0' | defaultEmpty }}
+  <ng-template appTableCell="presentaciones" [appTableCellFrom]="productos()" let-producto>
+    @if (producto.presentaciones?.length) {
+      <ul class="presentaciones-resumen">
+        @for (presentacion of producto.presentaciones; track presentacion.id_presentacion_producto ?? $index) {
+          <li>
+            <span>{{ presentacion.descripcion }}</span>
+            <span>{{ presentacion.codigoBarras }}</span>
+            <span>x{{ presentacion.cantidad }}</span>
+            <span>{{ presentacion.precio | number:'1.0-0' }}</span>
+          </li>
+        }
+      </ul>
+    } @else {
+      {{ '' | defaultEmpty }}
+    }
   </ng-template>
 
   <ng-template appTableCell="categoria" [appTableCellFrom]="productos()" let-producto>

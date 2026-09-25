@@ -8,6 +8,22 @@ export interface CategoriaProductoOutput {
   subcategorias?: CategoriaProductoOutput[];
 }
 
+export interface PresentacionProductoOutput {
+  id_presentacion_producto?: number;
+  descripcion: string;
+  codigoBarras?: string;
+  cantidad: number;
+  precio: number;
+}
+
+export interface PresentacionProductoInput {
+  id_presentacion_producto?: number | null;
+  descripcion: string;
+  codigoBarras: string;
+  cantidad: number;
+  precio: number;
+}
+
 export interface ProductoOutput {
   id_producto: number;
   codigo: string;
@@ -22,6 +38,7 @@ export interface ProductoOutput {
   estado?: boolean;
   imagen?: string;
   categoriaProducto?: CategoriaProductoOutput;
+  presentaciones?: PresentacionProductoOutput[];
 }
 
 export interface ProductoInput {
@@ -37,4 +54,5 @@ export interface ProductoInput {
   estado?: boolean;
   imagen?: string;
   idCategoriaProducto: number;
+  presentaciones?: PresentacionProductoInput[];
 }
