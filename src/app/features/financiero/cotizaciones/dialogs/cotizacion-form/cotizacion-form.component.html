@@ -9,15 +9,28 @@
   <div class="entity-form__grid">
     <div class="field field--full">
       <label class="field__label" for="moneda">Moneda*</label>
-      <select id="moneda" class="field__input" formControlName="moneda">
-        @for (moneda of monedas; track moneda.value) {
-          <option [value]="moneda.value">{{ moneda.label }}</option>
-        }
-      </select>
+      <input
+        id="moneda"
+        class="field__input"
+        type="text"
+        formControlName="moneda"
+        maxlength="80"
+        placeholder=" "
+        autocomplete="off"
+      />
+      @if (form.controls.moneda.touched && form.controls.moneda.invalid) {
+        <span class="field__error">
+          @if (form.controls.moneda.errors?.['required']) {
+            La moneda es obligatoria
+          } @else if (form.controls.moneda.errors?.['maxlength']) {
+            La moneda no puede superar 80 caracteres
+          }
+        </span>
+      }
     </div>
 
     <div class="field field--full">
-      <label class="field__label" for="valor">Valor*</label>
+      <label class="field__label" for="valor">Valor en guaraníes*</label>
       <input
         id="valor"
         class="field__input"
@@ -27,6 +40,7 @@
         min="0"
         placeholder=" "
       />
+      <span class="field__hint">Guaraníes equivalentes a 1 unidad de la moneda</span>
       @if (form.controls.valor.touched && form.controls.valor.invalid) {
         <span class="field__error">
           @if (form.controls.valor.errors?.['required']) {

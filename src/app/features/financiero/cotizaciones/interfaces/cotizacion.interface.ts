@@ -1,15 +1,13 @@
-export type Moneda = 'REAL' | 'GUARANI' | 'DOLAR';
-
 export interface CotizacionOutput {
   id_cotizacion: number;
-  moneda: Moneda;
+  moneda: string;
   valor: number;
   fechaActualizacion: string;
   activa: boolean;
 }
 
 export interface CotizacionInput {
-  moneda: Moneda;
+  moneda: string;
   valor: number;
   activa?: boolean;
 }
