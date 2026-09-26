@@ -15,6 +15,8 @@ export interface VentaInput {
   idCliente?: number | null;
   descuento?: number;
   formaPago?: FormaPago;
+  moneda?: string;
+  montoMonedaOriginal?: number;
   detalles: DetalleVentaInput[];
 }
 
@@ -43,6 +45,8 @@ export interface VentaOutput {
   total: number;
   estado: string;
   formaPago?: FormaPago;
+  moneda?: string;
+  montoMonedaOriginal?: number;
   detalles?: DetalleVentaOutput[];
 }
 
