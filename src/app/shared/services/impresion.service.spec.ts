@@ -97,6 +97,49 @@ describe('ImpresionService', () => {
     expect(gql.mutate).not.toHaveBeenCalled();
   });
 
+  it('guarda el nombre del formulario y el ticket de venta usa esa impresora', async () => {
+    const state = {
+      serverIp: 'localhost',
+      serverPort: '8081',
+      isConfigured: true,
+      printers: { ticket: '' },
+    };
+    const printRaw = vi.fn().mockResolvedValue({ success: true, message: 'ok' });
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        ImpresionService,
+        { provide: GraphqlService, useValue: gql },
+        { provide: NotificationService, useValue: notifications },
+        {
+          provide: ConfiguracionService,
+          useValue: {
+            getConfig: () => state,
+            saveConfig: (config: typeof state) => {
+              state.printers = { ticket: config.printers.ticket };
+            },
+          },
+        },
+      ],
+    });
+    const configurable = TestBed.inject(ImpresionService);
+    window.ultronDesktop = { apiBaseUrl: 'https://api.example/', printRaw };
+
+    configurable.rememberPrinter('ultron');
+    expect(configurable.getConfiguredPrinterName()).toBe('ultron');
+
+    let result: { success: boolean } | undefined;
+    configurable.imprimirTicketVenta({
+      lineas: [{ descripcion: 'Item', cantidad: 1, precioUnitario: 1000, subtotal: 1000 }],
+      total: 1000,
+    }).subscribe((value) => {
+      result = value;
+    });
+
+    await vi.waitFor(() => expect(result?.success).toBe(true));
+    expect(printRaw.mock.calls[0][0]).toBe('ultron');
+  });
+
   it('imprime el ticket en la impresora de esta computadora', async () => {
     const printRaw = vi.fn().mockResolvedValue({
       success: true,
