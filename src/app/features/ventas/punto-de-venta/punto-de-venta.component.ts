@@ -24,7 +24,7 @@ import { ServicioOutput } from '../../inventario/servicios/interfaces/servicio.i
 import { OrdenTrabajoService } from '../../taller/orden-de-trabajo/services/orden-trabajo.service';
 import { OrdenTrabajoOutput } from '../../taller/orden-de-trabajo/interfaces/orden-trabajo.interface';
 import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja-dialog.component';
-import { PagoDialogComponent } from './dialogs/pago-dialog/pago-dialog.component';
+import { PagoDialogComponent, PagoConfirmado } from './dialogs/pago-dialog/pago-dialog.component';
 import { LoadingService } from '../../../shared/services/loading.service';
 import { FileUploadService } from '../../../shared/services/file-upload.service';
 import { SesionCajaService } from './services/sesion-caja.service';
@@ -35,6 +35,8 @@ import { ImpresionService } from '../../../shared/services/impresion.service';
 import { TicketVenta } from '../../../shared/models/impresion.model';
 import { CATALOG_PAGE_SIZE } from '../../../shared/models/pagination.model';
 import { AuthService } from '../../../core/auth/auth.service';
+import { CotizacionService } from '../../financiero/cotizaciones/services/cotizacion.service';
+import { CotizacionOutput } from '../../financiero/cotizaciones/interfaces/cotizacion.interface';
 
 const POS_ROUTE = '/ventas/punto-de-venta';
 /** Umbral (px) antes del final del scroll para pedir la siguiente página. */
@@ -69,6 +71,7 @@ export class PuntoDeVentaComponent {
   private readonly productoService = inject(ProductoService);
   private readonly servicioService = inject(ServicioService);
   private readonly ordenTrabajoService = inject(OrdenTrabajoService);
+  private readonly cotizacionService = inject(CotizacionService);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly fileUploadService = inject(FileUploadService);
 
@@ -79,6 +82,7 @@ export class PuntoDeVentaComponent {
   readonly cajaAbierta = signal(false);
   readonly sesion = signal<SesionCajaOutput | null>(null);
   readonly loadingSesion = signal(true);
+  readonly cotizaciones = signal<CotizacionOutput[]>([]);
 
   readonly catalogo = signal<CatalogoPos>('productos');
   readonly productos = signal<ProductoOutput[]>([]);
@@ -481,20 +485,25 @@ export class PuntoDeVentaComponent {
     this.pagoDialogOpen.set(false);
   }
 
-  protected cobrarConMetodo(formaPago: FormaPago): void {
+  protected cobrarConMetodo(pago: PagoConfirmado): void {
     this.pagoDialogOpen.set(false);
-    this.registrarVenta(false, formaPago);
+    this.registrarVenta(false, pago.formaPago, pago.moneda, pago.montoMonedaOriginal);
   }
 
   protected cobrar(): void {
-    this.registrarVenta(false, 'EFECTIVO');
+    this.registrarVenta(false, 'EFECTIVO', 'PYG', this.cartTotal());
   }
 
   protected cobrarConTicket(): void {
-    this.registrarVenta(true, 'EFECTIVO');
+    this.registrarVenta(true, 'EFECTIVO', 'PYG', this.cartTotal());
   }
 
-  private registrarVenta(imprimirTicket: boolean, formaPago: FormaPago = 'EFECTIVO'): void {
+  private registrarVenta(
+    imprimirTicket: boolean,
+    formaPago: FormaPago = 'EFECTIVO',
+    moneda: string = 'PYG',
+    montoMonedaOriginal?: number
+  ): void {
     const sesion = this.sesion();
     const items = this.cart();
     if (!sesion?.id_sesion_caja) {
@@ -517,6 +526,8 @@ export class PuntoDeVentaComponent {
           idCliente: ordenCliente?.idCliente ?? null,
           descuento: 0,
           formaPago,
+          moneda: moneda !== 'PYG' ? moneda : undefined,
+          montoMonedaOriginal: moneda !== 'PYG' ? montoMonedaOriginal : undefined,
           detalles: items.map((item) => this.toDetalleInput(item)),
         }),
         {
@@ -681,6 +692,7 @@ export class PuntoDeVentaComponent {
 
   private bootstrap(): void {
     this.loadingSesion.set(true);
+    this.loadCotizaciones();
     this.sesionCajaService.sesionAbierta().subscribe({
       next: (sesion) => {
         this.loadingSesion.set(false);
@@ -695,6 +707,18 @@ export class PuntoDeVentaComponent {
       },
       error: () => {
         this.loadingSesion.set(false);
+      },
+    });
+  }
+  
+  private loadCotizaciones(): void {
+    this.cotizacionService.listarCotizacionesActivas().subscribe({
+      next: (cotizaciones) => {
+        this.cotizaciones.set(cotizaciones);
+      },
+      error: (err) => {
+        console.error('Error al cargar cotizaciones:', err);
+        this.cotizaciones.set([]);
       },
     });
   }

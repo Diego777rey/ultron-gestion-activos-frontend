@@ -19,3 +19,15 @@ export const COTIZACION_CRUD_CONFIG: CrudConfig = {
   },
   entity: { label: 'Cotización', gender: 'f' },
 };
+
+export const LISTAR_COTIZACIONES_ACTIVAS = `
+  query ListarCotizacionesActivas {
+    listarCotizacionesActivas {
+      id_cotizacion
+      moneda
+      valor
+      fechaActualizacion
+      activa
+    }
+  }
+`;
