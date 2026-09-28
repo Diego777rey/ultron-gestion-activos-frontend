@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, input, output, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
@@ -110,7 +110,7 @@ import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-
   styleUrl: '../../styles/ot-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OtFinalizadaStepComponent {
+export class OtFinalizadaStepComponent implements OnInit {
   readonly orden = input.required<OrdenTrabajoOutput>();
   readonly editable = input<boolean>(false);
   
@@ -120,7 +120,7 @@ export class OtFinalizadaStepComponent {
   protected montoPago = signal<number | null>(null);
   protected observaciones = signal<string | null>(null);
 
-  constructor() {
+  ngOnInit(): void {
     const orden = this.orden();
     this.montoPago.set(orden.monto_pago ?? null);
     this.observaciones.set(orden.observaciones_finalizacion ?? null);
