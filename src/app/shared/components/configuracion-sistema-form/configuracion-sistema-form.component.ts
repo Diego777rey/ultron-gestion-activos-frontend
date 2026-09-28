@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, input, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, effect, inject, input, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DialogRef } from '@angular/cdk/dialog';
-import { startWith } from 'rxjs';
+import { debounceTime, startWith } from 'rxjs';
 import { UiButtonComponent } from '../ui-button/ui-button';
 import {
   ConfiguracionSistema,
@@ -21,6 +21,7 @@ import { ImpresionService } from '../../services/impresion.service';
 export class ConfiguracionSistemaFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly impresion = inject(ImpresionService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly dialogRef = inject(DialogRef<ConfiguracionSistema | undefined>, { optional: true });
 
   readonly initial = input<ConfiguracionSistema | null>(null);
@@ -62,6 +63,9 @@ export class ConfiguracionSistemaFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPrinters();
+    this.form.controls.printerTicket.valueChanges
+      .pipe(debounceTime(250), takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => this.impresion.rememberPrinter(value));
   }
 
   protected loadPrinters(): void {
@@ -90,6 +94,7 @@ export class ConfiguracionSistemaFormComponent implements OnInit {
 
   protected onSelectPrinter(name: string): void {
     this.form.controls.printerTicket.setValue(name);
+    this.impresion.rememberPrinter(name);
   }
 
   protected onTestPrint(): void {
@@ -97,6 +102,7 @@ export class ConfiguracionSistemaFormComponent implements OnInit {
     if (!printerName || this.testingPrint()) {
       return;
     }
+    this.impresion.rememberPrinter(printerName);
     this.testingPrint.set(true);
     this.impresion.imprimirPrueba(printerName).subscribe({
       next: () => this.testingPrint.set(false),
@@ -111,6 +117,7 @@ export class ConfiguracionSistemaFormComponent implements OnInit {
     }
 
     const raw = this.form.getRawValue();
+    this.impresion.rememberPrinter(raw.printerTicket);
     this.dialogRef?.close({
       serverIp: raw.serverIp.trim(),
       serverPort: raw.serverPort.trim(),

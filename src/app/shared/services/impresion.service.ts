@@ -35,6 +35,19 @@ export class ImpresionService {
     return this.getConfiguredPrinterName().length > 0;
   }
 
+  /** El nombre del formulario es la impresora de todo el sistema, también del punto de venta. */
+  rememberPrinter(name: string): void {
+    const ticket = name.trim();
+    const current = this.configuracion.getConfig();
+    if ((current.printers?.ticket ?? '') === ticket) {
+      return;
+    }
+    this.configuracion.saveConfig({
+      ...current,
+      printers: { ticket },
+    });
+  }
+
   listarImpresoras(): Observable<PrinterInfo[]> {
     if (this.canPrintLocal()) {
       return this.listarImpresorasElectron().pipe(
