@@ -1,68 +1,49 @@
 import { Injectable } from '@angular/core';
-
-export interface WhatsAppShareOptions {
-  telefono: string;
-  mensaje?: string;
-  archivo?: Blob;
-  nombreArchivo?: string;
-}
+import { from, Observable } from 'rxjs';
 
 /**
- * Servicio para compartir contenido por WhatsApp Web.
+ * Abre WhatsApp en el navegador y envía el PDF al chat que se elija.
  */
 @Injectable({ providedIn: 'root' })
 export class WhatsAppService {
-  /**
-   * Abre WhatsApp Web con un mensaje predefinido para un número específico.
-   * Si se proporciona un archivo, lo descarga automáticamente para que el usuario pueda adjuntarlo manualmente.
-   */
-  compartir(options: WhatsAppShareOptions): void {
-    const { telefono, mensaje, archivo, nombreArchivo } = options;
+  compartirArchivo(blob: Blob, nombreArchivo: string): Observable<void> {
+    return from(this.abrirConArchivo(blob, nombreArchivo));
+  }
 
-    let textoCompleto = mensaje || '';
-
-    if (archivo) {
-      this.descargarArchivo(archivo, nombreArchivo || 'documento.pdf');
-      
-      if (textoCompleto) {
-        textoCompleto += '\n\n';
+  private async abrirConArchivo(blob: Blob, nombreArchivo: string): Promise<void> {
+    const share = window.ultronDesktop?.shareWhatsAppFile;
+    if (share) {
+      const pdfBase64 = await blobToBase64(blob);
+      const result = await share(pdfBase64, nombreArchivo);
+      if (!result.success) {
+        throw new Error(result.message || 'No se pudo abrir WhatsApp');
       }
-      textoCompleto += '📎 He descargado el archivo. Por favor, adjuntalo manualmente desde tu dispositivo.';
+      return;
     }
 
-    const mensajeCodificado = encodeURIComponent(textoCompleto);
-    const url = `https://web.whatsapp.com/send?phone=${telefono}&text=${mensajeCodificado}`;
+    const file = new File([blob], nombreArchivo, { type: 'application/pdf' });
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file] });
+      return;
+    }
 
-    window.open(url, '_blank', 'noopener,noreferrer');
+    throw new Error('Abrí la aplicación de escritorio para compartir el PDF por WhatsApp');
   }
+}
 
-  /**
-   * Descarga un archivo automáticamente en el navegador.
-   */
-  private descargarArchivo(blob: Blob, nombreArchivo: string): void {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = nombreArchivo;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    setTimeout(() => URL.revokeObjectURL(url), 100);
-  }
-
-  /**
-   * Valida si un número de teléfono es válido.
-   */
-  validarTelefono(telefono: string): boolean {
-    const telefonoLimpio = telefono.replace(/[^\d]/g, '');
-    return telefonoLimpio.length >= 10;
-  }
-
-  /**
-   * Limpia un número de teléfono dejando solo dígitos.
-   */
-  limpiarTelefono(telefono: string): string {
-    return telefono.replace(/[^\d]/g, '');
-  }
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      const base64 = dataUrl.split(',')[1] ?? '';
+      if (!base64) {
+        reject(new Error('No se pudo leer el PDF'));
+        return;
+      }
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error('No se pudo leer el PDF'));
+    reader.readAsDataURL(blob);
+  });
 }

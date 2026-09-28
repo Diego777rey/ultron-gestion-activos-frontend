@@ -139,11 +139,11 @@
               type="button"
               class="ot-diag-whatsapp-button"
               (click)="compartirPorWhatsapp()"
-              [disabled]="!puedeGenerarPdf()"
-              title="Compartir presupuesto por WhatsApp"
+              [disabled]="!puedeGenerarPdf() || compartiendo()"
+              title="Abrir WhatsApp con el PDF del presupuesto"
             >
               <span class="material-icons">share</span>
-              <span>Compartir por WhatsApp</span>
+              <span>{{ compartiendo() ? 'Abriendo WhatsApp…' : 'Compartir por WhatsApp' }}</span>
             </button>
           </div>
         </form>
