@@ -17,7 +17,7 @@ import { PermissionService } from '../../core/auth/permission.service';
     
     <div class="layout-body">
       <app-sidebar 
-        [items]="menuItems" 
+        [items]="menuItems()" 
         [isExpanded]="sidebarOpen()"
         (isExpandedChange)="sidebarOpen.set($event)"
       ></app-sidebar>
