@@ -67,6 +67,17 @@ export class ReporteService {
     this.visor.abrir(opciones);
   }
 
+  /**
+   * Obtiene el blob del PDF sin abrirlo en el visor.
+   * Útil para compartir o descargar el PDF.
+   */
+  obtenerPdfBlob(
+    tipo: TipoReporteInventario,
+    opciones?: ReporteOpciones,
+  ): Observable<{ blob: Blob; filename: string; titulo: string | null }> {
+    return this.obtenerPdf(tipo, opciones);
+  }
+
   private obtenerPdf(
     tipo: TipoReporteInventario,
     opciones?: ReporteOpciones,
