@@ -1,0 +1,15 @@
+---
+description: El ticket térmico se arma e imprime solo desde el frontend. No cambiar el layout en el backend.
+alwaysApply: true
+---
+
+# Impresión del ticket
+
+El ticket de venta y la prueba de impresora se arman en este frontend y se envían en crudo a la impresora de esta computadora. El punto de venta no imprime a través del backend.
+
+- Layout y logo: `src/app/shared/printing/escpos-ticket-builder.ts` (logo en `chservice-logo.ts`).
+- Envío: `ImpresionService.imprimirTicketVenta` usa `window.ultronDesktop.printRaw` (`electron/raw-printer.ts`).
+
+Para cambiar lo que sale impreso (encabezado, logo, líneas, totales, corte), editá el builder del frontend y su spec.
+
+`EscPosTicketBuilder` y `imprimirTicketVenta` del backend no son el camino de impresión. No los uses para cambiar el ticket. El listado de impresoras del sistema puede seguir consultándose al backend.

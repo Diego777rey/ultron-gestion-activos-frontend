@@ -1,7 +1,17 @@
 import { TicketVenta } from '../models/impresion.model';
+import {
+  CHSERVICE_LOGO_HEIGHT,
+  CHSERVICE_LOGO_WIDTH,
+  chserviceLogoRaster,
+} from './chservice-logo';
 
-/** Ticket térmico de 58 mm: 32 caracteres por línea, bytes ESC/POS. */
+/**
+ * Ticket térmico de 58 mm: 32 caracteres por línea, bytes ESC/POS.
+ * Este builder es el que imprime el punto de venta. No dupliques el layout en el backend.
+ */
 const WIDTH_58MM = 32;
+/** Ancho imprimible de una térmica de 58 mm a 203 dpi. */
+const DOTS_58MM = 384;
 
 export function buildPrueba(printerName: string): Uint8Array {
   return new EscPosTicketBuilder()
@@ -26,9 +36,9 @@ export function buildPrueba(printerName: string): Uint8Array {
 }
 
 export function buildTicketVenta(ticket: TicketVenta): Uint8Array {
-  const builder = new EscPosTicketBuilder().init().align(1).bold(true);
-  builder.line(blankTo(ticket.titulo, 'CH-SERVICE'));
-  builder.bold(false);
+  const builder = new EscPosTicketBuilder().init().align(1);
+  builder.logo();
+  builder.feed(1);
   if (notBlank(ticket.subtitulo)) {
     builder.line(ticket.subtitulo!.trim());
   }
@@ -120,6 +130,11 @@ class EscPosTicketBuilder {
     return this;
   }
 
+  /** Imprime el logo de CH Service centrado en el ancho de 58 mm. */
+  logo(): this {
+    return this.rasterCentered(CHSERVICE_LOGO_WIDTH, CHSERVICE_LOGO_HEIGHT, chserviceLogoRaster());
+  }
+
   separator(): this {
     return this.line('-'.repeat(WIDTH_58MM));
   }
@@ -149,6 +164,29 @@ class EscPosTicketBuilder {
 
   toBytes(): Uint8Array {
     return Uint8Array.from(this.bytes);
+  }
+
+  private rasterCentered(widthDots: number, heightDots: number, rows: Uint8Array): this {
+    const srcBytes = Math.ceil(widthDots / 8);
+    const paperBytes = DOTS_58MM / 8;
+    const left = Math.max(0, Math.floor((paperBytes - srcBytes) / 2));
+    const outBytes = Math.max(paperBytes, srcBytes);
+    this.write([
+      0x1d, 0x76, 0x30, 0x00,
+      outBytes & 0xff,
+      (outBytes >> 8) & 0xff,
+      heightDots & 0xff,
+      (heightDots >> 8) & 0xff,
+    ]);
+    for (let y = 0; y < heightDots; y++) {
+      const row = new Array<number>(outBytes).fill(0);
+      const offset = y * srcBytes;
+      for (let x = 0; x < srcBytes; x++) {
+        row[left + x] = rows[offset + x];
+      }
+      this.write(row);
+    }
+    return this;
   }
 
   private writeText(text: string): void {
