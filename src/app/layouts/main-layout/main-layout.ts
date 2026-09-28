@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit, DestroyRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit, DestroyRef, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, NavigationEnd, ActivatedRoute, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
@@ -7,6 +7,7 @@ import { SidebarComponent } from '../../shared/components/sidebar/sidebar';
 import { TabsComponent } from '../../shared/components/tabs/tabs.component';
 import { MenuItem } from '../../shared/models/menu-item.model';
 import { TabService } from '../../shared/services/tab.service';
+import { PermissionService } from '../../core/auth/permission.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -16,7 +17,7 @@ import { TabService } from '../../shared/services/tab.service';
     
     <div class="layout-body">
       <app-sidebar 
-        [items]="menuItems" 
+        [items]="menuItems()" 
         [isExpanded]="sidebarOpen()"
         (isExpandedChange)="sidebarOpen.set($event)"
       ></app-sidebar>
@@ -42,96 +43,109 @@ export class MainLayoutComponent implements OnInit {
   private activatedRoute = inject(ActivatedRoute);
   private tabService = inject(TabService);
   private destroyRef = inject(DestroyRef);
+  private permissionService = inject(PermissionService);
 
-  menuItems: MenuItem[] = [
+  private allMenuItems: MenuItem[] = [
     {
       label: 'Ventas',
       icon: 'point_of_sale',
+      requiredPermissions: ['VENTAS'],
       children: [
-        { label: 'Punto de Venta', icon: 'storefront', route: '/ventas/punto-de-venta' },
+        { label: 'Punto de Venta', icon: 'storefront', route: '/ventas/punto-de-venta', requiredPermissions: ['VENTAS'] },
       ]
     },
     {
       label: 'Taller',
       icon: 'construction',
+      requiredPermissions: ['TALLER', 'ORDEN_TRABAJO'],
       children: [
-        { label: 'Orden de Trabajo', icon: 'assignment', route: '/taller/orden-de-trabajo' },
-        // { label: 'Historial', icon: 'history', route: '/taller/historial' },
-        // { label: 'Calendario', icon: 'calendar_month', route: '/taller/calendario' },
+        { label: 'Orden de Trabajo', icon: 'assignment', route: '/taller/orden-de-trabajo', requiredPermissions: ['ORDEN_TRABAJO'] },
       ]
     },
     {
       label: 'Operaciones',
       icon: 'sync_alt',
+      requiredPermissions: ['OPERACIONES', 'TRANSFERENCIAS', 'SOLICITUDES_REPUESTO'],
       children: [
         {
           label: 'Transferencias',
           icon: 'history',
           route: '/taller/operaciones/transferencia',
+          requiredPermissions: ['TRANSFERENCIAS'],
         },
         {
           label: 'Solicitudes de repuesto',
           icon: 'request_quote',
           route: '/taller/operaciones/transferencia/solicitudes',
+          requiredPermissions: ['SOLICITUDES_REPUESTO'],
         },
       ],
     },
-    { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos' },
+    { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos', requiredPermissions: ['VEHICULOS'] },
     {
       label: 'Financiero',
       icon: 'account_balance',
+      requiredPermissions: ['FINANCIERO', 'MALETINES', 'CAJAS', 'COTIZACIONES'],
       children: [
-        { label: 'Maletines', icon: 'business_center', route: '/financiero/maletines' },
-        { label: 'Cajas', icon: 'account_balance_wallet', route: '/financiero/cajas' },
-        { label: 'Últimas cajas', icon: 'history', route: '/financiero/ultimas' },
-        { label: 'Cotización', icon: 'currency_exchange', route: '/financiero/cotizaciones' },
+        { label: 'Maletines', icon: 'business_center', route: '/financiero/maletines', requiredPermissions: ['MALETINES'] },
+        { label: 'Cajas', icon: 'account_balance_wallet', route: '/financiero/cajas', requiredPermissions: ['CAJAS'] },
+        { label: 'Últimas cajas', icon: 'history', route: '/financiero/ultimas', requiredPermissions: ['CAJAS'] },
+        { label: 'Cotización', icon: 'currency_exchange', route: '/financiero/cotizaciones', requiredPermissions: ['COTIZACIONES'] },
       ]
     },
     {
       label: 'Servicios',
       icon: 'handyman',
       route: '/inventario/servicios',
+      requiredPermissions: ['SERVICIOS'],
     },
     {
       label: 'Productos',
       icon: 'inventory_2',
       route: '/inventario/productos',
+      requiredPermissions: ['PRODUCTOS'],
     },
     {
       label: 'R.R.H.H.',
       icon: 'people',
+      requiredPermissions: ['RRHH', 'CLIENTES', 'FUNCIONARIOS', 'USUARIOS', 'ROLES'],
       children: [
-        { label: 'Clientes', icon: 'groups', route: '/personas/clientes' },
-        { label: 'Funcionarios', icon: 'recent_actors', route: '/personas/funcionarios' },
-        { label: 'Usuarios', icon: 'account_circle', route: '/personas/usuarios' },
-        { label: 'Roles', icon: 'shield', route: '/personas/roles' },
+        { label: 'Clientes', icon: 'groups', route: '/personas/clientes', requiredPermissions: ['CLIENTES'] },
+        { label: 'Funcionarios', icon: 'recent_actors', route: '/personas/funcionarios', requiredPermissions: ['FUNCIONARIOS'] },
+        { label: 'Usuarios', icon: 'account_circle', route: '/personas/usuarios', requiredPermissions: ['USUARIOS'] },
+        { label: 'Roles', icon: 'shield', route: '/personas/roles', requiredPermissions: ['ROLES'] },
       ]
     },
     {
       label: 'Sectores',
       icon: 'map',
+      requiredPermissions: ['SECTORES'],
       children: [
-        { label: 'Sectores', icon: 'grid_view', route: '/sectores' },
-        // { label: 'Zonas', icon: 'place', route: '/sectores/zonas' },
+        { label: 'Sectores', icon: 'grid_view', route: '/sectores', requiredPermissions: ['SECTORES'] },
       ]
     },
     {
       label: 'Reporte',
       icon: 'summarize',
+      requiredPermissions: ['REPORTES'],
       children: [
         {
           label: 'Visor de reportes',
           icon: 'picture_as_pdf',
           route: '/reportes/visor',
+          requiredPermissions: ['REPORTES'],
         },
         {
           label: 'Detalle de orden de trabajo',
           icon: 'assignment',
           route: '/reportes/orden-de-trabajo',
+          requiredPermissions: ['REPORTES'],
         },
       ],
     },
   ];
+
+  menuItems = computed(() => this.filterMenuItems(this.allMenuItems));
 
   ngOnInit(): void {
     // Escuchar cambios de ruta para agregar/activar tabs automáticamente
@@ -186,5 +200,27 @@ export class MainLayoutComponent implements OnInit {
 
   toggleSidebar() {
     this.sidebarOpen.update((open) => !open);
+  }
+
+  private filterMenuItems(items: MenuItem[]): MenuItem[] {
+    return items
+      .filter(item => this.hasPermissionForItem(item))
+      .map(item => {
+        if (item.children) {
+          const filteredChildren = this.filterMenuItems(item.children);
+          return filteredChildren.length > 0
+            ? { ...item, children: filteredChildren }
+            : null;
+        }
+        return item;
+      })
+      .filter((item): item is MenuItem => item !== null);
+  }
+
+  private hasPermissionForItem(item: MenuItem): boolean {
+    if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
+      return true;
+    }
+    return this.permissionService.canAccessAnyModule(item.requiredPermissions);
   }
 }

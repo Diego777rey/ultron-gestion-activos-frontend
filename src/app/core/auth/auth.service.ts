@@ -1,4 +1,4 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { Router, RouteReuseStrategy } from '@angular/router';
@@ -6,7 +6,7 @@ import { TabService } from '../../shared/services/tab.service';
 import { ReporteVisorService } from '../../shared/services/reporte-visor.service';
 import { AppRouteReuseStrategy } from '../../shared/strategies/route-reuse.strategy';
 import { API_CONFIG } from '../../config/api.config';
-import { LoginRequest, LoginResponse, normalizeLoginCredentials } from './auth.models';
+import { LoginRequest, LoginResponse, normalizeLoginCredentials, Role, Permiso } from './auth.models';
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +14,7 @@ import { LoginRequest, LoginResponse, normalizeLoginCredentials } from './auth.m
 export class AuthService {
   private static readonly TOKEN_KEY = 'token';
   private static readonly USERNAME_KEY = 'username';
+  private static readonly ROLES_KEY = 'roles';
 
   private http = inject(HttpClient);
   private router = inject(Router);
@@ -23,6 +24,20 @@ export class AuthService {
 
   isAuthenticated = signal<boolean>(this.hasToken());
   readonly currentUsername = signal<string>(this.readStoredUsername());
+  private readonly userRoles = signal<Role[]>(this.readStoredRoles());
+  
+  readonly userPermissions = computed(() => {
+    const roles = this.userRoles();
+    const allPermisos: Permiso[] = [];
+    roles.forEach(role => {
+      role.permisos.forEach(permiso => {
+        if (!allPermisos.some(p => p.id === permiso.id)) {
+          allPermisos.push(permiso);
+        }
+      });
+    });
+    return allPermisos;
+  });
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
     const payload = normalizeLoginCredentials(credentials);
@@ -32,6 +47,7 @@ export class AuthService {
         if (response?.token) {
           localStorage.setItem(AuthService.TOKEN_KEY, response.token);
           this.persistUsername(response.username || this.usernameFromToken(response.token));
+          this.persistRoles(response.roles || []);
           this.isAuthenticated.set(true);
         }
       })
@@ -54,7 +70,9 @@ export class AuthService {
   clearSession(): void {
     localStorage.removeItem(AuthService.TOKEN_KEY);
     localStorage.removeItem(AuthService.USERNAME_KEY);
+    localStorage.removeItem(AuthService.ROLES_KEY);
     this.currentUsername.set('');
+    this.userRoles.set([]);
     this.isAuthenticated.set(false);
   }
 
@@ -103,5 +121,28 @@ export class AuthService {
     } catch {
       return '';
     }
+  }
+
+  private persistRoles(roles: Role[]): void {
+    localStorage.setItem(AuthService.ROLES_KEY, JSON.stringify(roles));
+    this.userRoles.set(roles);
+  }
+
+  private readStoredRoles(): Role[] {
+    try {
+      const stored = localStorage.getItem(AuthService.ROLES_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  hasPermission(modulo: string, accion: string = 'VER'): boolean {
+    const permisos = this.userPermissions();
+    return permisos.some(p => p.modulo === modulo && p.accion === accion);
+  }
+
+  hasAnyPermission(modulos: string[], accion: string = 'VER'): boolean {
+    return modulos.some(modulo => this.hasPermission(modulo, accion));
   }
 }
