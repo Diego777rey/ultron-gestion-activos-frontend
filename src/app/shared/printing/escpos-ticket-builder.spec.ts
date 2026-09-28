@@ -14,6 +14,22 @@ function containsCut(bytes: Uint8Array): boolean {
   return false;
 }
 
+function containsLogo(bytes: Uint8Array): boolean {
+  for (let i = 0; i < bytes.length - 7; i++) {
+    if (
+      bytes[i] === 0x1d
+      && bytes[i + 1] === 0x76
+      && bytes[i + 2] === 0x30
+      && bytes[i + 4] === 48
+      && bytes[i + 6] === (275 & 0xff)
+      && bytes[i + 7] === 1
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 describe('escpos-ticket-builder', () => {
   it('arma la prueba con encabezado y corte', () => {
     const bytes = buildPrueba('TICKET58');
@@ -52,15 +68,16 @@ describe('escpos-ticket-builder', () => {
       pie: 'Gracias por su compra',
     };
 
-    const text = asText(buildTicketVenta(ticket));
+    const bytes = buildTicketVenta(ticket);
+    const text = asText(bytes);
 
+    expect(containsLogo(bytes)).toBe(true);
     expect(text).toContain('TICKET DE VENTA');
     expect(text).toContain('VEN-20260921-1-0001');
     expect(text).toContain('LIQUIDO DE FRENOS DOT 4');
     expect(text).toContain('BATERIA 12V');
     expect(text).toContain('1.162.000');
     expect(text).toContain('Gracias por su compra');
-    expect(text).not.toContain('á');
   });
 
   it('quita acentos del texto', () => {
