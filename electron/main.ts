@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
 import * as path from 'node:path';
 import { loadDesktopConfig } from './config';
+import { printRaw } from './raw-printer';
 import { startStaticServer, type StaticServer } from './static-server';
 
 const DESKTOP_CONFIG = {
@@ -41,6 +42,37 @@ function registerIpc(): void {
       };
     });
   });
+
+  ipcMain.handle('printers:print-raw', async (_event, printerName: unknown, data: unknown) => {
+    try {
+      if (typeof printerName !== 'string' || !printerName.trim()) {
+        return { success: false, message: 'Indicá el nombre de la impresora térmica' };
+      }
+      const buffer = toPrintBuffer(data);
+      if (!buffer || buffer.length === 0) {
+        return { success: false, message: 'El ticket está vacío' };
+      }
+      const name = printerName.trim();
+      await printRaw(name, buffer);
+      return { success: true, message: `Ticket enviado a la impresora (${name})` };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo imprimir';
+      return { success: false, message };
+    }
+  });
+}
+
+function toPrintBuffer(data: unknown): Buffer | null {
+  if (Buffer.isBuffer(data)) {
+    return data;
+  }
+  if (data instanceof Uint8Array) {
+    return Buffer.from(data);
+  }
+  if (Array.isArray(data) && data.every((value) => typeof value === 'number')) {
+    return Buffer.from(data);
+  }
+  return null;
 }
 
 function buildMenu(): Electron.Menu {

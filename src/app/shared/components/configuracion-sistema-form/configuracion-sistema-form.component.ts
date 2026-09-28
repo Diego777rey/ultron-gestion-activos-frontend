@@ -128,11 +128,11 @@ export class ConfiguracionSistemaFormComponent implements OnInit {
   private resolvePlatformHint(): string {
     const platform = typeof window !== 'undefined' ? window.ultronDesktop?.platform : undefined;
     if (platform === 'win32') {
-      return 'Windows usa la cola de impresión del sistema. Instalá la térmica como Generic / Text Only.';
+      return 'La impresora tiene que estar instalada en esta computadora. En Windows usá el controlador Generic / Text Only.';
     }
     if (platform === 'linux' || platform === 'darwin') {
-      return 'Linux/macOS usa CUPS. Revisá las colas con lpstat -p. La térmica debe estar como raw o Generic.';
+      return 'La impresora tiene que estar instalada en esta computadora. En Linux la cola de CUPS tiene que aceptar datos raw.';
     }
-    return 'En Linux la impresora se publica por CUPS; en Windows, por la cola del sistema.';
+    return 'Abrí la aplicación de escritorio en la computadora que tiene la impresora. El servidor en la nube no imprime.';
   }
 }

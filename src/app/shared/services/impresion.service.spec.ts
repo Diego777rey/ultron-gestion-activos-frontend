@@ -96,4 +96,48 @@ describe('ImpresionService', () => {
     expect(notifications.warning).toHaveBeenCalled();
     expect(gql.mutate).not.toHaveBeenCalled();
   });
+
+  it('imprime el ticket en la impresora de esta computadora', async () => {
+    const printRaw = vi.fn().mockResolvedValue({
+      success: true,
+      message: 'Ticket enviado a la impresora (TICKET58)',
+    });
+    window.ultronDesktop = {
+      apiBaseUrl: 'https://api.example/',
+      printRaw,
+    };
+
+    let result: { success: boolean } | undefined;
+    service.imprimirTicketVenta({
+      lineas: [{ descripcion: 'Item', cantidad: 1, precioUnitario: 1000, subtotal: 1000 }],
+      total: 1000,
+    }).subscribe((value) => {
+      result = value;
+    });
+
+    await vi.waitFor(() => expect(result?.success).toBe(true));
+    expect(printRaw).toHaveBeenCalledOnce();
+    expect(printRaw.mock.calls[0][0]).toBe('TICKET58');
+    expect(printRaw.mock.calls[0][1]).toBeInstanceOf(Uint8Array);
+    expect(gql.mutate).not.toHaveBeenCalled();
+    expect(notifications.success).toHaveBeenCalled();
+  });
+
+  it('lista las impresoras del equipo cuando hay aplicación de escritorio', async () => {
+    window.ultronDesktop = {
+      apiBaseUrl: 'https://api.example/',
+      printRaw: vi.fn(),
+      getPrinters: () => Promise.resolve([
+        { name: 'POS58', displayName: 'POS58', isDefault: true },
+      ]),
+    };
+
+    let printers: { name: string }[] | undefined;
+    service.listarImpresoras().subscribe((value) => {
+      printers = value;
+    });
+
+    await vi.waitFor(() => expect(printers?.[0]?.name).toBe('POS58'));
+    expect(gql.query).not.toHaveBeenCalled();
+  });
 });
