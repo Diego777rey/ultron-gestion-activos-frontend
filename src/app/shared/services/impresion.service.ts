@@ -8,6 +8,7 @@ import {
   PrinterInfo,
   TicketVenta,
 } from '../models/impresion.model';
+import { buildPrueba, buildTicketVenta } from '../printing/escpos-ticket-builder';
 
 const IMPRESORA_SELECTION = `{
   name
@@ -35,15 +36,13 @@ export class ImpresionService {
   }
 
   listarImpresoras(): Observable<PrinterInfo[]> {
-    return this.listarImpresorasBackend().pipe(
-      switchMap((backendPrinters) => {
-        if (backendPrinters.length > 0) {
-          return of(backendPrinters);
-        }
-        return this.listarImpresorasElectron();
-      }),
-      catchError(() => this.listarImpresorasElectron()),
-    );
+    if (this.canPrintLocal()) {
+      return this.listarImpresorasElectron().pipe(
+        switchMap((printers) => (printers.length > 0 ? of(printers) : this.listarImpresorasBackend())),
+        catchError(() => this.listarImpresorasBackend()),
+      );
+    }
+    return this.listarImpresorasBackend().pipe(catchError(() => of([])));
   }
 
   imprimirPrueba(printerName?: string): Observable<ImpresionResultado> {
@@ -52,6 +51,10 @@ export class ImpresionService {
       const result = { success: false, message: 'Seleccioná una impresora térmica' };
       this.notifications.warning(result.message, { title: 'Impresora' });
       return of(result);
+    }
+
+    if (this.canPrintLocal()) {
+      return this.imprimirLocal(name, buildPrueba(name), 'Prueba enviada a la impresora');
     }
 
     const document = `mutation($printerName: String!) {
@@ -79,6 +82,10 @@ export class ImpresionService {
       return of(result);
     }
 
+    if (this.canPrintLocal()) {
+      return this.imprimirLocal(name, buildTicketVenta(ticket), 'Ticket enviado a la impresora');
+    }
+
     const document = `mutation($printerName: String!, $ticket: TicketVentaInput!) {
       imprimirTicketVenta(printerName: $printerName, ticket: $ticket) ${RESULTADO_SELECTION}
     }`;
@@ -94,6 +101,31 @@ export class ImpresionService {
           message: err.message || 'No se pudo imprimir el ticket',
         }, 'Ticket enviado a la impresora'))),
       );
+  }
+
+  private canPrintLocal(): boolean {
+    return typeof window !== 'undefined' && typeof window.ultronDesktop?.printRaw === 'function';
+  }
+
+  private imprimirLocal(
+    printerName: string,
+    data: Uint8Array,
+    successFallback: string,
+  ): Observable<ImpresionResultado> {
+    const printRaw = window.ultronDesktop?.printRaw;
+    if (!printRaw) {
+      return of(this.notifyResult({
+        success: false,
+        message: 'Abrí la aplicación de escritorio en la computadora que tiene la impresora',
+      }, successFallback));
+    }
+    return from(printRaw(printerName, data)).pipe(
+      map((result) => this.notifyResult(result, successFallback)),
+      catchError((err: Error) => of(this.notifyResult({
+        success: false,
+        message: err.message || 'No se pudo imprimir',
+      }, successFallback))),
+    );
   }
 
   private listarImpresorasElectron(): Observable<PrinterInfo[]> {
