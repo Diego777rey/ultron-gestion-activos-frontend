@@ -1,0 +1,76 @@
+<div class="whatsapp-content">
+  @if (contactoSugerido()) {
+    <div class="whatsapp-contact-card">
+      <div class="whatsapp-contact-card__icon">
+        <span class="material-icons" aria-hidden="true">person</span>
+      </div>
+      <div class="whatsapp-contact-card__info">
+        <p class="whatsapp-contact-card__name">{{ contactoSugerido()?.nombre }}</p>
+        <p class="whatsapp-contact-card__phone">{{ contactoSugerido()?.telefono }}</p>
+      </div>
+      <button
+        type="button"
+        class="whatsapp-contact-card__button"
+        (click)="usarContactoSugerido()"
+      >
+        Usar este número
+      </button>
+    </div>
+  }
+
+  <div class="whatsapp-divider">
+    <span>o ingresá otro número</span>
+  </div>
+
+  <div class="whatsapp-field">
+    <label class="whatsapp-label" for="telefono-input">
+      Número de teléfono
+    </label>
+    <input
+      id="telefono-input"
+      type="tel"
+      class="whatsapp-input"
+      [(ngModel)]="telefonoManual"
+      placeholder="Ej: 595981234567"
+      [class.whatsapp-input--error]="error()"
+    />
+    <p class="whatsapp-hint">
+      Ingresá el código de país sin el signo +. Ejemplo: 595981234567 para Paraguay
+    </p>
+    @if (error()) {
+      <p class="whatsapp-error">{{ error() }}</p>
+    }
+  </div>
+
+  <div class="whatsapp-field">
+    <label class="whatsapp-label" for="mensaje-input">
+      Mensaje opcional
+    </label>
+    <textarea
+      id="mensaje-input"
+      class="whatsapp-textarea"
+      [(ngModel)]="mensaje"
+      placeholder="Agregá un mensaje para acompañar el presupuesto..."
+      rows="3"
+    ></textarea>
+  </div>
+
+  <div class="whatsapp-footer">
+    <button
+      type="button"
+      class="whatsapp-button whatsapp-button--secondary"
+      (click)="cerrar()"
+    >
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="whatsapp-button whatsapp-button--primary"
+      (click)="compartir()"
+      [disabled]="!telefonoManual?.trim()"
+    >
+      <span class="material-icons" aria-hidden="true">send</span>
+      Compartir
+    </button>
+  </div>
+</div>

@@ -11,12 +11,19 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { EMPTY, Subject, catchError, concatMap, debounceTime, tap } from 'rxjs';
+import { EMPTY, Subject, catchError, concatMap, debounceTime, switchMap, tap } from 'rxjs';
+import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { WhatsAppService } from '../../../../../shared/services/whatsapp.service';
 import { OrdenTrabajoInput, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas.component';
 import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-diagnostico-hallazgos.component';
+import {
+  WhatsappShareDialogComponent,
+  WhatsAppContact,
+  WhatsAppShareResult,
+} from '../whatsapp-share-dialog/whatsapp-share-dialog.component';
 
 @Component({
   selector: 'app-ot-diagnostico-step',
@@ -34,6 +41,8 @@ export class OtDiagnosticoStepComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly ordenService = inject(OrdenTrabajoService);
   private readonly reporteService = inject(ReporteService);
+  private readonly whatsappService = inject(WhatsAppService);
+  private readonly dialogService = inject(AppDialogService);
   private readonly persistir$ = new Subject<'auto' | 'pdf'>();
   private ultimoGuardado = '';
 
@@ -264,5 +273,99 @@ export class OtDiagnosticoStepComponent implements OnInit {
   protected puedeGenerarPdf(): boolean {
     const orden = this.orden();
     return !!(orden.detalles && orden.detalles.length > 0);
+  }
+
+  compartirPorWhatsapp(): void {
+    const orden = this.orden();
+    const cliente = orden.cliente;
+    
+    let contactoSugerido: WhatsAppContact | null = null;
+    
+    if (cliente?.persona?.telefono) {
+      const nombreCompleto = `${cliente.persona.nombre || ''} ${cliente.persona.apellido || ''}`.trim();
+      contactoSugerido = {
+        nombre: nombreCompleto || 'Cliente',
+        telefono: cliente.persona.telefono,
+      };
+    }
+
+    this.dialogService
+      .openForm<WhatsAppShareResult>(WhatsappShareDialogComponent, {
+        title: 'Compartir por WhatsApp',
+        maxWidth: '500px',
+        closeOnBackdrop: false,
+        closeOnEscape: true,
+        inputs: {
+          contactoSugerido,
+        },
+      })
+      .subscribe((result) => {
+        if (result) {
+          this.enviarPorWhatsapp(result);
+        }
+      });
+  }
+
+  private enviarPorWhatsapp(result: WhatsAppShareResult): void {
+    const id = this.orden().id_orden_trabajo;
+    const numericId = id != null ? Number(id) : NaN;
+    if (Number.isNaN(numericId)) {
+      this.errorChange.emit('No se pudo compartir: orden inválida');
+      return;
+    }
+
+    const ordenNumero = this.orden().numero_orden || '';
+    const tituloReporte = `Presupuesto OT ${ordenNumero}`.trim();
+    
+    const input = this.buildInput();
+    const firma = JSON.stringify(input);
+    const debeGuardar = firma !== this.ultimoGuardado && this.editable();
+
+    const obtenerPdf$ = this.reporteService.obtenerPdfBlob('orden_trabajo_detalle', {
+      id: numericId,
+      titulo: tituloReporte,
+    });
+
+    const stream$ = debeGuardar
+      ? this.ordenService.actualizarSilencioso(id!, input).pipe(
+          tap((updated) => {
+            this.ultimoGuardado = firma;
+            this.ordenChange.emit({
+              ...this.orden(),
+              diagnostico: updated.diagnostico ?? this.orden().diagnostico,
+            });
+          }),
+          switchMap(() => obtenerPdf$),
+        )
+      : obtenerPdf$;
+
+    this.estadoGuardado.set('guardando');
+
+    stream$
+      .pipe(
+        tap((pdfData) => {
+          this.estadoGuardado.set('guardado');
+          
+          let mensaje = result.mensaje || '';
+          if (!mensaje) {
+            mensaje = `Hola, te envío el presupuesto de la Orden de Trabajo ${ordenNumero}.`;
+          }
+
+          this.whatsappService.compartir({
+            telefono: result.telefono,
+            mensaje,
+            archivo: pdfData.blob,
+            nombreArchivo: pdfData.filename,
+          });
+        }),
+        catchError((err) => {
+          this.estadoGuardado.set('idle');
+          this.errorChange.emit(
+            err?.message ?? 'No se pudo compartir el presupuesto por WhatsApp',
+          );
+          return EMPTY;
+        }),
+      )
+      .subscribe();
   }
 }

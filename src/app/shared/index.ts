@@ -21,6 +21,7 @@ export * from './services/configuracion.service';
 export * from './services/impresion.service';
 export * from './services/reporte.service';
 export * from './services/reporte-visor.service';
+export * from './services/whatsapp.service';
 
 // Pipes
 export * from './pipes/search-filter.pipe';

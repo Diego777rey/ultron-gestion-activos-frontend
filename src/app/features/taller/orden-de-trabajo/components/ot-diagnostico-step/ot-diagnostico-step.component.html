@@ -124,15 +124,28 @@
             <p class="ot-diag-save">Guardado</p>
           }
 
-          <button
-            type="button"
-            class="ot-diag-pdf-button"
-            (click)="generarPdfPresupuesto()"
-            [disabled]="!puedeGenerarPdf()"
-          >
-            <span class="material-icons">picture_as_pdf</span>
-            <span>Generar PDF del Presupuesto</span>
-          </button>
+          <div class="ot-diag-buttons">
+            <button
+              type="button"
+              class="ot-diag-pdf-button"
+              (click)="generarPdfPresupuesto()"
+              [disabled]="!puedeGenerarPdf()"
+            >
+              <span class="material-icons">picture_as_pdf</span>
+              <span>Ver PDF</span>
+            </button>
+            
+            <button
+              type="button"
+              class="ot-diag-whatsapp-button"
+              (click)="compartirPorWhatsapp()"
+              [disabled]="!puedeGenerarPdf()"
+              title="Compartir presupuesto por WhatsApp"
+            >
+              <span class="material-icons">share</span>
+              <span>Compartir por WhatsApp</span>
+            </button>
+          </div>
         </form>
       </div>
     </div>
