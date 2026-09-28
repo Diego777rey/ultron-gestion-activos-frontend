@@ -53,6 +53,8 @@ export interface OrdenTrabajoOutput {
   responsable?: UsuarioResumen | null;
   fecha_creacion?: string | null;
   fecha_finalizacion?: string | null;
+  monto_pago?: number | null;
+  observaciones_finalizacion?: string | null;
   caja?: CajaOutput | null;
   recepcion?: OrdenRecepcionOutput | null;
   estado_vehiculo?: OrdenEstadoVehiculoOutput | null;
@@ -120,6 +122,8 @@ export interface OrdenTrabajoInput {
   id_mecanico?: string | null;
   ids_mecanicos?: string[] | null;
   id_caja?: string | null;
+  monto_pago?: number | null;
+  observaciones_finalizacion?: string | null;
   recepcion?: OrdenRecepcionInput | null;
   estado_vehiculo?: OrdenEstadoVehiculoInput | null;
   diagnostico?: OrdenDiagnosticoInput | null;

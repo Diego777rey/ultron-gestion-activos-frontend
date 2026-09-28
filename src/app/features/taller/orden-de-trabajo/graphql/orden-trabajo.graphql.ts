@@ -44,6 +44,8 @@ export const ORDEN_TRABAJO_SELECTION = `{
   }
   fecha_creacion
   fecha_finalizacion
+  monto_pago
+  observaciones_finalizacion
   caja {
     id_caja
     nombre
