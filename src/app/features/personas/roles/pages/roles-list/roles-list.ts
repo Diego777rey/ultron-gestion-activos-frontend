@@ -11,7 +11,7 @@ import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
 import { RoleService } from '../../services/role.service';
-import { RoleOutput } from '../../interfaces/role.interface';
+import { etiquetaEstadoRol, RoleOutput } from '../../interfaces/role.interface';
 import { RoleFormComponent } from '../../dialogs/role-form/role-form';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 
@@ -134,4 +134,6 @@ export class RolesListComponent {
   }
 
   protected trackById = (r: RoleOutput): unknown => r.id;
+
+  protected readonly etiquetaEstado = etiquetaEstadoRol;
 }

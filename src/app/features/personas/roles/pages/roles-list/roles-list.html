@@ -27,7 +27,7 @@
   </ng-template>
 
   <ng-template appTableCell="activo" [appTableCellFrom]="roles()" let-role>
-    {{ role.activo | defaultEmpty }}
+    {{ etiquetaEstado(role.activo) }}
   </ng-template>
 
   <ng-template appTableCell="acciones" [appTableCellFrom]="roles()" let-role>
