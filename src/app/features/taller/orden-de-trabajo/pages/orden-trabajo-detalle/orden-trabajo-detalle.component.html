@@ -72,12 +72,7 @@
       }
 
       @if (pasoMostrado() === 4 && orden()) {
-        <app-ot-finalizada-step
-          [orden]="orden()!"
-          [editable]="!revisando() && etapaStep() === 4"
-          (montoPagoChange)="onMontoPagoChange($event)"
-          (observacionesChange)="onObservacionesChange($event)"
-        />
+        <app-ot-finalizada-step [orden]="orden()!" />
       }
 
       @if (pasoMostrado() === 5 && orden()) {
@@ -92,6 +87,9 @@
     }
 
     <div class="stepper-footer__right">
+      @if (orden()?.id_orden_trabajo) {
+        <app-ui-button label="Imprimir" icon="print" variant="outline" (clicked)="abrirTicket()" />
+      }
       @if (revisando()) {
         <app-ui-button
           [label]="'Volver a ' + tituloEtapa()"
@@ -108,22 +106,12 @@
           (clicked)="accionPrincipal()"
         />
       } @else {
-        <app-ui-button
-          label="Guardar datos de pago"
-          icon="save"
-          variant="outline"
-          [loading]="saving()"
-          (clicked)="guardarDatosPago()"
-        />
-        <app-ui-button
-          label="Imprimir"
-          icon="print"
-          variant="outline"
-          [disabled]="!puedeImprimir()"
-          (clicked)="imprimirRecibo()"
-        />
         <app-ui-button label="Volver al listado" icon="list" variant="primary" (clicked)="irAlListado()" />
       }
     </div>
   </footer>
+
+  @if (orden(); as o) {
+    <app-ot-ticket-dialog [open]="ticketAbierto()" [orden]="o" (closed)="ticketAbierto.set(false)" />
+  }
 </div>

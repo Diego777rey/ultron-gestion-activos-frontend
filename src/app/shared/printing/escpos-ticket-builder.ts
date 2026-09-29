@@ -1,4 +1,9 @@
-import { TicketVenta } from '../models/impresion.model';
+import {
+  TicketOrdenTrabajo,
+  TicketRenglon,
+  TicketSegmento,
+  TicketVenta,
+} from '../models/impresion.model';
 import {
   CHSERVICE_LOGO_HEIGHT,
   CHSERVICE_LOGO_WIDTH,
@@ -10,6 +15,10 @@ import {
  * Este builder es el que imprime el punto de venta. No dupliques el layout en el backend.
  */
 const WIDTH_58MM = 32;
+/** Columnas de la fuente chica (Font B, 9 puntos de ancho) en 58 mm. */
+export const WIDTH_58MM_FONT_B = 42;
+/** Interlineado en puntos para Font B: legible y ahorra papel. */
+const LINE_SPACING_FONT_B = 22;
 /** Ancho imprimible de una térmica de 58 mm a 203 dpi. */
 const DOTS_58MM = 384;
 
@@ -83,6 +92,180 @@ export function buildTicketVenta(ticket: TicketVenta): Uint8Array {
   return builder.toBytes();
 }
 
+export function buildTicketOrdenTrabajo(ticket: TicketOrdenTrabajo): Uint8Array {
+  const builder = new EscPosTicketBuilder().init().smallFont(LINE_SPACING_FONT_B);
+  for (const renglon of layoutTicketOrdenTrabajo(ticket)) {
+    if ('logo' in renglon) {
+      builder.align(1).logo();
+      continue;
+    }
+    builder.align(renglon.centrado ? 1 : 0).segments(renglon.segmentos);
+  }
+  builder.feed(3);
+  builder.cut();
+  return builder.toBytes();
+}
+
+export function layoutTicketOrdenTrabajo(ticket: TicketOrdenTrabajo): TicketRenglon[] {
+  const renglones: TicketRenglon[] = [{ logo: true }];
+  const agregar = (centrado: boolean, segmentos: TicketSegmento[]) => {
+    for (const linea of envolver(segmentos, WIDTH_58MM_FONT_B)) {
+      renglones.push({ centrado, segmentos: linea });
+    }
+  };
+  const vacio = () => renglones.push({ centrado: false, segmentos: [] });
+  const titulo = (texto: string) => agregar(true, [{ texto, negrita: true }]);
+  const campo = (etiqueta: string, valor: string | null | undefined) => {
+    const v = (valor ?? '').trim();
+    agregar(false, [
+      { texto: `${etiqueta.trim().toUpperCase()}:`, negrita: true },
+      ...(v ? [{ texto: ` ${v.toUpperCase()}` }] : []),
+    ]);
+  };
+
+  vacio();
+  titulo(blankTo(ticket.empresa, 'CH SERVICE').toUpperCase());
+  if (notBlank(ticket.direccion)) agregar(true, [{ texto: ticket.direccion.toUpperCase() }]);
+  if (notBlank(ticket.telefono)) agregar(true, [{ texto: `CEL. ${ticket.telefono.trim()}` }]);
+  renglones.push({ centrado: false, segmentos: [{ texto: '-'.repeat(WIDTH_58MM_FONT_B) }] });
+  titulo('ORDEN DE TRABAJO');
+  if (notBlank(ticket.numero)) agregar(true, [{ texto: ticket.numero!.trim() }]);
+  vacio();
+  campo('Fecha', ticket.fecha);
+  campo('Hora', ticket.hora);
+  vacio();
+  campo('Cliente', ticket.cliente);
+  campo('Cel', ticket.celular);
+  campo('RUC', ticket.ruc);
+  campo('Cod. unidad', ticket.codigoUnidad);
+  campo('Vehiculo', ticket.vehiculo);
+  campo('VIN', ticket.vin);
+  vacio();
+  for (const c of ticket.componentes ?? []) campo(c.etiqueta, c.valor);
+  vacio();
+  titulo('SERVICIOS');
+  for (const s of ticket.servicios ?? []) campo(s.etiqueta, s.valor);
+  vacio();
+  titulo('DESCRIPCION DEL PROBLEMA');
+  agregar(true, [{ texto: (ticket.descripcionProblema ?? '').toUpperCase() }]);
+  renglones.push({ centrado: false, segmentos: [{ texto: '-'.repeat(WIDTH_58MM_FONT_B) }] });
+  for (const parrafo of condicionesOrdenTrabajo(ticket)) {
+    agregar(false, parrafo.map((s) => ({ ...s, texto: s.texto.toUpperCase() })));
+  }
+  vacio();
+  vacio();
+  vacio();
+  agregar(true, [{ texto: '_'.repeat(26) }]);
+  titulo('FIRMA DEL CLIENTE');
+  return renglones;
+}
+
+function condicionesOrdenTrabajo(ticket: TicketOrdenTrabajo): TicketSegmento[][] {
+  const b = (texto: string): TicketSegmento => ({ texto, negrita: true });
+  const t = (texto: string): TicketSegmento => ({ texto });
+  const pago = ticket.pagoRevision != null && ticket.pagoRevision > 0
+    ? `${formatGs(ticket.pagoRevision)} Gs.`
+    : '__________ Gs.';
+  const recargo = ticket.recargoUrgente ?? 0;
+  return [
+    [
+      t('En caso de que el cliente '), b('no aceptara'),
+      t(' la reparación del equipo por cualquier causa o el reclamo de garantía no fuera procedente,'
+        + ' el cliente se compromete al '),
+      b(`pago de revisión ${pago}`),
+    ],
+    [
+      t('Todo trabajo urgente se realizará con un '), b(`costo extra de ${recargo}%`),
+      t(' del costo normal a pagar.'),
+    ],
+    [
+      t('El equipo amparado por la presente se recibe únicamente con lo especificado en accesorios. '),
+      b('Para recoger'), t(' el equipo es necesario liquidar el '), b('costo del servicio'),
+      t(' así como la '), b('presentación'), t(' de la '), b('orden de trabajo'),
+      t(' de este documento. En caso de pérdida presentar cédula o tarjeta tributaria.'),
+    ],
+    [
+      t('Todo equipo '), b('no reclamado a los 45 días'),
+      t(' de reparado o recepcionado causará '), b('abandono'),
+      t(' y no nos hacemos responsables por su equipo. Pasados los 60 días pasará a ser propiedad de la'
+        + ' empresa, excepto que abone el costo por guardar el equipo de '),
+      b('100.000 Gs. mensual'), t('.'),
+    ],
+    [
+      t('La '), b('garantía'), t(' del servicio realizado es de '), b('5 días'),
+      t(' en concepto de '), b('mano de obra'), t('. '), b('No brindamos garantías'),
+      t(' por daño ocasionado por falla eléctrica, siniestros, mala práctica, humedad, entre otros'
+        + ' producidos dentro del vehículo o externos.'),
+    ],
+    [
+      t('El tiempo promedio de resultados es de '), b('24 a 48 hs'),
+      t(' desde la recepción de la unidad, contando solo días hábiles '), b('lunes a viernes'),
+      t('. No incluye feriados ni fines de semana.'),
+    ],
+  ];
+}
+
+/** Parte los segmentos en renglones de `ancho` columnas sin cortar palabras. */
+export function envolver(segmentos: TicketSegmento[], ancho = WIDTH_58MM): TicketSegmento[][] {
+  const palabras: TicketSegmento[][] = [];
+  let palabra: TicketSegmento[] = [];
+  for (const segmento of segmentos) {
+    for (const parte of sanitize(segmento.texto).split(/(\s+)/)) {
+      if (!parte) continue;
+      if (/^\s+$/.test(parte)) {
+        if (palabra.length) palabras.push(palabra);
+        palabra = [];
+        continue;
+      }
+      palabra.push({ texto: parte, negrita: !!segmento.negrita });
+    }
+  }
+  if (palabra.length) palabras.push(palabra);
+
+  const renglones: TicketSegmento[][] = [];
+  let linea: TicketSegmento[] = [];
+  let largo = 0;
+  const cerrar = () => {
+    renglones.push(unirSegmentos(linea));
+    linea = [];
+    largo = 0;
+  };
+  for (const p of palabras) {
+    let piezas = p;
+    let len = piezas.reduce((n, s) => n + s.texto.length, 0);
+    if (largo > 0 && largo + 1 + len > ancho) cerrar();
+    while (len > ancho) {
+      const texto = piezas.map((s) => s.texto).join('');
+      const negrita = piezas[0].negrita;
+      renglones.push([{ texto: texto.slice(0, ancho), negrita }]);
+      piezas = [{ texto: texto.slice(ancho), negrita }];
+      len -= ancho;
+    }
+    if (largo > 0) {
+      const negrita = !!linea[linea.length - 1].negrita && !!piezas[0].negrita;
+      linea.push({ texto: ' ', negrita });
+      largo++;
+    }
+    linea.push(...piezas);
+    largo += len;
+  }
+  if (linea.length) cerrar();
+  return renglones;
+}
+
+function unirSegmentos(segmentos: TicketSegmento[]): TicketSegmento[] {
+  const unidos: TicketSegmento[] = [];
+  for (const s of segmentos) {
+    const ultimo = unidos[unidos.length - 1];
+    if (ultimo && !!ultimo.negrita === !!s.negrita) {
+      ultimo.texto += s.texto;
+    } else {
+      unidos.push({ texto: s.texto, negrita: !!s.negrita });
+    }
+  }
+  return unidos;
+}
+
 export function formatGs(value: number | null | undefined): string {
   if (value == null || !Number.isFinite(value)) {
     return '0';
@@ -126,6 +309,22 @@ class EscPosTicketBuilder {
 
   line(text: string): this {
     this.writeText(sanitize(text));
+    this.write([0x0a]);
+    return this;
+  }
+
+  smallFont(lineSpacingDots: number): this {
+    this.write([0x1b, 0x4d, 0x01]);
+    this.write([0x1b, 0x33, lineSpacingDots]);
+    return this;
+  }
+
+  segments(segmentos: TicketSegmento[]): this {
+    for (const s of segmentos) {
+      this.bold(!!s.negrita);
+      this.writeText(sanitize(s.texto));
+    }
+    this.bold(false);
     this.write([0x0a]);
     return this;
   }
