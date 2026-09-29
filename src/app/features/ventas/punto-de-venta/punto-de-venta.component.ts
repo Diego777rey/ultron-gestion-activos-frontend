@@ -25,6 +25,7 @@ import { OrdenTrabajoService } from '../../taller/orden-de-trabajo/services/orde
 import { OrdenTrabajoOutput } from '../../taller/orden-de-trabajo/interfaces/orden-trabajo.interface';
 import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja-dialog.component';
 import { PagoDialogComponent, PagoConfirmado } from './dialogs/pago-dialog/pago-dialog.component';
+import { ReimprimirTicketDialogComponent } from './dialogs/reimprimir-ticket-dialog/reimprimir-ticket-dialog.component';
 import { LoadingService } from '../../../shared/services/loading.service';
 import { FileUploadService } from '../../../shared/services/file-upload.service';
 import { SesionCajaService } from './services/sesion-caja.service';
@@ -47,7 +48,7 @@ export type PdvNumero = 1 | 2;
 
 @Component({
   selector: 'app-punto-de-venta',
-  imports: [ModalComponent, AbrirCajaDialogComponent, PagoDialogComponent, UiButtonComponent, DecimalPipe],
+  imports: [ModalComponent, AbrirCajaDialogComponent, PagoDialogComponent, ReimprimirTicketDialogComponent, UiButtonComponent, DecimalPipe],
   templateUrl: './punto-de-venta.component.html',
   styleUrls: [
     './punto-de-venta.component.scss',
@@ -78,6 +79,7 @@ export class PuntoDeVentaComponent {
   readonly inicioDialogOpen = signal(true);
   readonly gestionCajaOpen = signal(false);
   readonly pagoDialogOpen = signal(false);
+  readonly reimprimirDialogOpen = signal(false);
   readonly maletinVerificado = signal(false);
   readonly cajaAbierta = signal(false);
   readonly sesion = signal<SesionCajaOutput | null>(null);
@@ -488,6 +490,24 @@ export class PuntoDeVentaComponent {
   protected cobrarConMetodo(pago: PagoConfirmado): void {
     this.pagoDialogOpen.set(false);
     this.registrarVenta(false, pago.formaPago, pago.moneda, pago.montoMonedaOriginal);
+  }
+
+  protected abrirReimprimirDialog(): void {
+    const sesion = this.sesion();
+    if (!sesion?.id_sesion_caja) {
+      this.ventaError.set('No hay sesión de caja abierta');
+      return;
+    }
+    this.reimprimirDialogOpen.set(true);
+  }
+
+  protected cerrarReimprimirDialog(): void {
+    this.reimprimirDialogOpen.set(false);
+  }
+
+  protected reimprimirTicket(venta: VentaOutput): void {
+    this.reimprimirDialogOpen.set(false);
+    this.imprimirTicket(venta);
   }
 
   protected cobrar(): void {

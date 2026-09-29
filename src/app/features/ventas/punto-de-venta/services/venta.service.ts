@@ -47,4 +47,13 @@ export class VentaPosService {
       })
     );
   }
+
+  listarVentasPorSesion(idSesionCaja: number): Observable<VentaOutput[]> {
+    const document = `query($idSesionCaja: Int!) {
+      listarVentasPorSesion(idSesionCaja: $idSesionCaja) ${VENTA_SELECTION}
+    }`;
+    return this.gql
+      .query<{ listarVentasPorSesion: VentaOutput[] }>(document, { idSesionCaja })
+      .pipe(map((data) => data.listarVentasPorSesion ?? []));
+  }
 }
