@@ -59,4 +59,11 @@ export const API_CONFIG = {
   get reportesEndpoint(): string {
     return `${resolveApiBaseUrl()}/api/reportes`;
   },
+  get filesEndpoint(): string {
+    return `${resolveApiBaseUrl()}/api/files`;
+  },
+  /** Carpeta pública del servidor donde quedan las imágenes subidas. */
+  get uploadsBaseUrl(): string {
+    return `${resolveApiBaseUrl()}/uploads`;
+  },
 };

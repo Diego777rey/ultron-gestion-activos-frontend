@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_CONFIG } from '../../config/api.config';
 import { FileUploadResponse } from '../models/file-upload.model';
 
 @Injectable({
@@ -8,24 +9,26 @@ import { FileUploadResponse } from '../models/file-upload.model';
 })
 export class FileUploadService {
   private readonly http = inject(HttpClient);
-  private readonly API_URL = 'http://localhost:8081/api/files';
 
   uploadFile(file: File, folder: string = 'general'): Observable<FileUploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('folder', folder);
 
-    return this.http.post<FileUploadResponse>(`${this.API_URL}/upload`, formData);
+    return this.http.post<FileUploadResponse>(`${API_CONFIG.filesEndpoint}/upload`, formData);
   }
 
   deleteFile(filePath: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/delete`, {
+    return this.http.delete<void>(`${API_CONFIG.filesEndpoint}/delete`, {
       params: { filePath }
     });
   }
 
-  getFileUrl(filePath: string): string {
-    if (!filePath) return '';
-    return `${this.API_URL}/download?filePath=${encodeURIComponent(filePath)}`;
+  /** Arma la URL pública de una ruta guardada en la base (p. ej. `productos/<uuid>.jpg`). */
+  getFileUrl(filePath: string | null | undefined): string {
+    const path = filePath?.trim().replace(/^\/+/, '');
+    if (!path) return '';
+    const encoded = path.split('/').map(encodeURIComponent).join('/');
+    return `${API_CONFIG.uploadsBaseUrl}/${encoded}`;
   }
 }

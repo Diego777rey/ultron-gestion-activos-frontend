@@ -91,7 +91,7 @@
                       <div class="pos-product__hit">
                         <div class="pos-product__thumb" aria-hidden="true">
                           @if (imagenProductoUrl(producto); as imgUrl) {
-                            <img [src]="imgUrl" [alt]="producto.nombre" loading="lazy" />
+                            <img [src]="imgUrl" [alt]="producto.nombre" loading="lazy" (error)="onImagenError(producto)" />
                           } @else {
                             <span class="material-icons">image</span>
                           }

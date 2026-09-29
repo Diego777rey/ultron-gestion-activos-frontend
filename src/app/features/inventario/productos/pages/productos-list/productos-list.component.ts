@@ -41,6 +41,7 @@ export class ProductosListComponent {
   protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
+  protected readonly imagenesFallidas = signal<ReadonlySet<string>>(new Set());
 
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
@@ -70,6 +71,10 @@ export class ProductosListComponent {
 
   constructor() {
     this.load();
+  }
+
+  protected onImagenError(path: string): void {
+    this.imagenesFallidas.update((fallidas) => new Set(fallidas).add(path));
   }
 
   protected load(): void {
