@@ -83,7 +83,9 @@ BUMP_TYPE=""
 
 if [[ "${BRANCH}" =~ ^release/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
   NEW_VERSION="${BASH_REMATCH[1]}"
-elif [[ "${BRANCH}" =~ ^feat/ ]]; then
+elif [[ "${BRANCH}" == "develop" ]]; then
+  BUMP_TYPE="minor"
+elif [[ "${BRANCH}" =~ ^(feat|cursor)/ ]]; then
   BUMP_TYPE="minor"
 elif [[ "${BRANCH}" =~ ^fix/ ]]; then
   BUMP_TYPE="patch"
