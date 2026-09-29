@@ -15,7 +15,7 @@
 
 ## Checklist
 
-- [ ] La rama fue creada desde `main` actualizada
+- [ ] La rama fue creada desde `develop` (o `main` para release de develop)
 - [ ] El nombre de la rama usa un prefijo valido
 - [ ] El CI pasa en verde
 - [ ] Revise los cambios antes de mergear
