@@ -21,6 +21,7 @@ import {
   chserviceLogoRaster,
 } from '../../../../../shared/printing/chservice-logo';
 import { OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
+import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
 
 const CONDICIONES_KEY = 'ot-ticket-condiciones';
 
@@ -102,7 +103,7 @@ function ticketDesdeOrden(orden: OrdenTrabajoOutput): TicketOrdenTrabajo {
     numero: orden.numero_orden ?? '',
     fecha: `${pad(fecha.getDate())}/${pad(fecha.getMonth() + 1)}/${fecha.getFullYear()}`,
     hora: `${pad(fecha.getHours())}:${pad(fecha.getMinutes())}`,
-    cliente: [persona?.nombre, persona?.apellido].filter(Boolean).join(' '),
+    cliente: nombreCompletoPersona(persona),
     celular: persona?.telefono ?? '',
     ruc: orden.cliente?.ruc || persona?.documento || '',
     codigoUnidad: vehiculo?.chapa ?? '',

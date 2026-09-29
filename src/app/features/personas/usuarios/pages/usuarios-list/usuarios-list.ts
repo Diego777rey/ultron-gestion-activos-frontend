@@ -17,6 +17,7 @@ import { UsuarioFormComponent } from '../../dialogs/usuario-form/usuario-form';
 import { UsuarioRolesPanelComponent } from '../../components/usuario-roles-panel/usuario-roles-panel';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { nombreCompletoPersona } from '../../../shared/nombre-persona';
 
 @Component({
   selector: 'app-usuarios-list',
@@ -177,7 +178,7 @@ export class UsuariosListComponent {
 
   protected funcionarioNombre(u: UsuarioOutput): string {
     const p = u.funcionario?.persona;
-    return `${p?.nombre ?? ''} ${p?.apellido ?? ''}`.trim() || 'Sin funcionario';
+    return nombreCompletoPersona(p) || 'Sin funcionario';
   }
 
   protected activoLabel(u: UsuarioOutput): string {

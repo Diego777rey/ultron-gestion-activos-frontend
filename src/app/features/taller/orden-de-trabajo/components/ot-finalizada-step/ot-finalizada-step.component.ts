@@ -3,6 +3,7 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
 import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas.component';
 import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-diagnostico-hallazgos.component';
+import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
 
 @Component({
   selector: 'app-ot-finalizada-step',
@@ -25,7 +26,7 @@ import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-
         <li class="ot-panel__item">
           <span>Cliente</span>
           <span>
-            {{ orden().cliente?.persona?.nombre }} {{ orden().cliente?.persona?.apellido }}
+            {{ nombreCliente() }}
           </span>
         </li>
         <li class="ot-panel__item">
@@ -55,6 +56,10 @@ import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-
 })
 export class OtFinalizadaStepComponent {
   readonly orden = input.required<OrdenTrabajoOutput>();
+
+  protected nombreCliente(): string {
+    return nombreCompletoPersona(this.orden().cliente?.persona) || '—';
+  }
 
   protected resumenPlazo(): string {
     const d = this.orden().diagnostico;

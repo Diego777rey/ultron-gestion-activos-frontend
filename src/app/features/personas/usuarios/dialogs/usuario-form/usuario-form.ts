@@ -26,6 +26,7 @@ import { RoleOutput } from '../../../roles/interfaces/role.interface';
 import { RoleService } from '../../../roles/services/role.service';
 import { UsuarioInput, UsuarioOutput } from '../../interfaces/usuario.interface';
 import { UsuarioService } from '../../services/usuario.service';
+import { nombreCompletoPersona } from '../../../shared/nombre-persona';
 
 @Component({
   selector: 'app-usuario-form',
@@ -200,7 +201,7 @@ export class UsuarioFormComponent implements OnInit {
   }
 
   protected funcionarioLabel(f: FuncionarioOutput): string {
-    const nombre = `${f.persona?.nombre ?? ''} ${f.persona?.apellido ?? ''}`.trim();
+    const nombre = nombreCompletoPersona(f.persona);
     const doc = f.persona?.documento ?? '';
     return [nombre, doc].filter(Boolean).join(' — ') || `Funcionario #${f.id_funcionario}`;
   }

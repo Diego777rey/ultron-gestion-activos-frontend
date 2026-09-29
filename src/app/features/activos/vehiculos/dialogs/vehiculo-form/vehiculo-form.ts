@@ -16,6 +16,7 @@ import { VehiculoService } from '../../services/vehiculo.service';
 import { ClienteService } from '../../../../personas/clientes/services/cliente.service';
 import { ClienteOutput } from '../../../../personas/clientes/interfaces/cliente.interface';
 import { ClienteFormComponent } from '../../../../personas/clientes/dialogs/cliente-form/cliente-form';
+import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
 
 @Component({
   selector: 'app-vehiculo-form',
@@ -190,7 +191,7 @@ export class VehiculoFormComponent implements OnInit {
   }
 
   protected clienteLabel(c: ClienteOutput): string {
-    const nombre = `${c.persona?.nombre ?? ''} ${c.persona?.apellido ?? ''}`.trim();
+    const nombre = nombreCompletoPersona(c.persona);
     const doc = c.persona?.documento ?? '';
     return [nombre, doc].filter(Boolean).join(' — ') || `Cliente #${c.id_cliente}`;
   }
