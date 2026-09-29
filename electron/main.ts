@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { loadDesktopConfig } from './config';
 import { printRaw } from './raw-printer';
 import { startStaticServer, type StaticServer } from './static-server';
+import { sharePdfOnWhatsApp } from './whatsapp-share';
 
 const DESKTOP_CONFIG = {
   apiBaseUrl: 'http://localhost:8081',
@@ -57,6 +58,24 @@ function registerIpc(): void {
       return { success: true, message: `Ticket enviado a la impresora (${name})` };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo imprimir';
+      return { success: false, message };
+    }
+  });
+
+  ipcMain.handle('whatsapp:share-file', async (_event, pdfBase64: unknown, filename: unknown) => {
+    try {
+      if (typeof pdfBase64 !== 'string' || !pdfBase64) {
+        return { success: false, message: 'El PDF está vacío' };
+      }
+      const buffer = Buffer.from(pdfBase64, 'base64');
+      if (!buffer.length) {
+        return { success: false, message: 'El PDF está vacío' };
+      }
+      const name = typeof filename === 'string' && filename.trim() ? filename.trim() : 'presupuesto.pdf';
+      await sharePdfOnWhatsApp(buffer, name);
+      return { success: true, message: 'WhatsApp abierto con el presupuesto' };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo abrir WhatsApp';
       return { success: false, message };
     }
   });
