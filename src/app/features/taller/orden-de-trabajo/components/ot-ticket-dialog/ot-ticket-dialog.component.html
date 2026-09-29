@@ -1,0 +1,140 @@
+<app-modal
+  [open]="open()"
+  title="Imprimir orden de trabajo"
+  subtitle="Revisá y editá el ticket térmico antes de imprimir"
+  maxWidth="1080px"
+  (closed)="closed.emit()"
+>
+  <div class="ticket-dialog">
+    <form class="ticket-dialog__form" (submit)="$event.preventDefault()">
+      <fieldset>
+        <legend>Encabezado</legend>
+        <label>Empresa
+          <input [ngModel]="ticket().empresa" (ngModelChange)="set('empresa', $event)" name="empresa" />
+        </label>
+        <label>Dirección
+          <input [ngModel]="ticket().direccion" (ngModelChange)="set('direccion', $event)" name="direccion" />
+        </label>
+        <label>Celular
+          <input [ngModel]="ticket().telefono" (ngModelChange)="set('telefono', $event)" name="telefono" />
+        </label>
+      </fieldset>
+
+      <fieldset class="ticket-dialog__grid">
+        <legend>Orden y cliente</legend>
+        <label>Número
+          <input [ngModel]="ticket().numero" (ngModelChange)="set('numero', $event)" name="numero" />
+        </label>
+        <label>Fecha
+          <input [ngModel]="ticket().fecha" (ngModelChange)="set('fecha', $event)" name="fecha" />
+        </label>
+        <label>Hora
+          <input [ngModel]="ticket().hora" (ngModelChange)="set('hora', $event)" name="hora" />
+        </label>
+        <label>Cliente
+          <input [ngModel]="ticket().cliente" (ngModelChange)="set('cliente', $event)" name="cliente" />
+        </label>
+        <label>Celular
+          <input [ngModel]="ticket().celular" (ngModelChange)="set('celular', $event)" name="celular" />
+        </label>
+        <label>RUC
+          <input [ngModel]="ticket().ruc" (ngModelChange)="set('ruc', $event)" name="ruc" />
+        </label>
+        <label>Cód. unidad
+          <input [ngModel]="ticket().codigoUnidad" (ngModelChange)="set('codigoUnidad', $event)" name="codigoUnidad" />
+        </label>
+        <label>Vehículo
+          <input [ngModel]="ticket().vehiculo" (ngModelChange)="set('vehiculo', $event)" name="vehiculo" />
+        </label>
+        <label>VIN
+          <input [ngModel]="ticket().vin" (ngModelChange)="set('vin', $event)" name="vin" />
+        </label>
+      </fieldset>
+
+      <fieldset class="ticket-dialog__grid">
+        <legend>Componentes</legend>
+        @for (c of ticket().componentes; track c.etiqueta; let i = $index) {
+          <label>{{ c.etiqueta }}
+            <input
+              [ngModel]="c.valor"
+              (ngModelChange)="setItem('componentes', i, $event)"
+              [name]="'componente-' + i"
+              placeholder="SI / NO"
+            />
+          </label>
+        }
+      </fieldset>
+
+      <fieldset class="ticket-dialog__grid">
+        <legend>Servicios</legend>
+        @for (s of ticket().servicios; track s.etiqueta; let i = $index) {
+          <label>{{ s.etiqueta }}
+            <input
+              [ngModel]="s.valor"
+              (ngModelChange)="setItem('servicios', i, $event)"
+              [name]="'servicio-' + i"
+              placeholder="SI / NO"
+            />
+          </label>
+        }
+      </fieldset>
+
+      <fieldset>
+        <legend>Descripción del problema</legend>
+        <textarea
+          rows="3"
+          [ngModel]="ticket().descripcionProblema"
+          (ngModelChange)="set('descripcionProblema', $event)"
+          name="descripcionProblema"
+        ></textarea>
+      </fieldset>
+
+      <fieldset class="ticket-dialog__grid">
+        <legend>Condiciones</legend>
+        <label>Pago de revisión (Gs.)
+          <input
+            type="number"
+            min="0"
+            step="1000"
+            [ngModel]="ticket().pagoRevision"
+            (ngModelChange)="setNumero('pagoRevision', $event)"
+            name="pagoRevision"
+            placeholder="250000"
+          />
+        </label>
+        <label>Recargo trabajo urgente (%)
+          <input
+            type="number"
+            min="0"
+            [ngModel]="ticket().recargoUrgente"
+            (ngModelChange)="setNumero('recargoUrgente', $event)"
+            name="recargoUrgente"
+          />
+        </label>
+      </fieldset>
+    </form>
+
+    <div class="ticket-dialog__preview-wrap">
+      <div class="ticket-dialog__paper" aria-label="Vista previa del ticket">
+        @for (r of renglones(); track $index) {
+          @if ('logo' in r) {
+            <img class="ticket-dialog__logo" [src]="logoUrl" alt="CH Service" />
+          } @else {
+            <div class="ticket-dialog__line" [class.ticket-dialog__line--center]="r.centrado">@for (s of r.segmentos; track $index) {<span [class.ticket-dialog__bold]="s.negrita">{{ s.texto }}</span>}</div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+
+  <div modal-footer class="ticket-dialog__footer">
+    <app-ui-button label="Cancelar" variant="ghost" (clicked)="closed.emit()" />
+    <app-ui-button
+      label="Imprimir"
+      icon="print"
+      variant="primary"
+      [loading]="imprimiendo()"
+      (clicked)="imprimir()"
+    />
+  </div>
+</app-modal>

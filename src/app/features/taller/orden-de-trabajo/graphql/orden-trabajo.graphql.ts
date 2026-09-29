@@ -6,10 +6,12 @@ export const ORDEN_TRABAJO_SELECTION = `{
   etapa
   cliente {
     id_cliente
+    ruc
     persona {
       nombre
       apellido
       documento
+      telefono
     }
   }
   vehiculo {

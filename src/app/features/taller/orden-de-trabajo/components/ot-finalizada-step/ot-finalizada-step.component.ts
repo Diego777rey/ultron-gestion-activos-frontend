@@ -1,16 +1,15 @@
-import { ChangeDetectionStrategy, Component, OnInit, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
 import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas.component';
 import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-diagnostico-hallazgos.component';
 
 @Component({
   selector: 'app-ot-finalizada-step',
-  imports: [CurrencyPipe, DatePipe, FormsModule, OtDetalleLineasComponent, OtDiagnosticoHallazgosComponent],
+  imports: [CurrencyPipe, DatePipe, OtDetalleLineasComponent, OtDiagnosticoHallazgosComponent],
   template: `
     <p class="ot-hint">
-      El trabajo está finalizado. Completá el monto cobrado y las observaciones para poder imprimir el recibo.
+      El trabajo está finalizado. Podés imprimir el ticket de la orden de trabajo.
       La orden pasa a Facturado al cobrarla en el punto de venta.
     </p>
 
@@ -48,83 +47,14 @@ import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-
       </ul>
     </section>
 
-    @if (editable()) {
-      <section class="ot-section ot-section--narrow">
-        <h3 class="ot-panel__title">
-          <span class="material-icons" aria-hidden="true">payments</span>
-          Información de pago
-        </h3>
-        
-        <div class="ot-form-field">
-          <label for="monto-pago">Monto cobrado</label>
-          <input
-            type="number"
-            id="monto-pago"
-            [(ngModel)]="montoPago"
-            (ngModelChange)="onMontoChange($event)"
-            placeholder="Ingresá el monto cobrado"
-            min="0"
-            step="1000"
-          />
-        </div>
-
-        <div class="ot-form-field">
-          <label for="observaciones">Observaciones de finalización</label>
-          <textarea
-            id="observaciones"
-            [(ngModel)]="observaciones"
-            (ngModelChange)="onObservacionesChange($event)"
-            placeholder="Ingresá observaciones adicionales"
-            rows="4"
-          ></textarea>
-        </div>
-      </section>
-    } @else {
-      @if (orden().monto_pago || orden().observaciones_finalizacion) {
-        <section class="ot-section ot-section--narrow">
-          <h3 class="ot-panel__title">
-            <span class="material-icons" aria-hidden="true">payments</span>
-            Información de pago
-          </h3>
-          <ul class="ot-panel__list">
-            @if (orden().monto_pago) {
-              <li class="ot-panel__item">
-                <span>Monto cobrado</span>
-                <span class="ot-total">{{ orden().monto_pago | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</span>
-              </li>
-            }
-            @if (orden().observaciones_finalizacion) {
-              <li class="ot-panel__item ot-panel__item--vertical">
-                <span>Observaciones</span>
-                <span>{{ orden().observaciones_finalizacion }}</span>
-              </li>
-            }
-          </ul>
-        </section>
-      }
-    }
-
     <app-ot-diagnostico-hallazgos [orden]="orden()" [editable]="false" />
     <app-ot-detalle-lineas [orden]="orden()" [editable]="false" />
   `,
   styleUrl: '../../styles/ot-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OtFinalizadaStepComponent implements OnInit {
+export class OtFinalizadaStepComponent {
   readonly orden = input.required<OrdenTrabajoOutput>();
-  readonly editable = input<boolean>(false);
-  
-  readonly montoPagoChange = output<number | null>();
-  readonly observacionesChange = output<string | null>();
-
-  protected montoPago = signal<number | null>(null);
-  protected observaciones = signal<string | null>(null);
-
-  ngOnInit(): void {
-    const orden = this.orden();
-    this.montoPago.set(orden.monto_pago ?? null);
-    this.observaciones.set(orden.observaciones_finalizacion ?? null);
-  }
 
   protected resumenPlazo(): string {
     const d = this.orden().diagnostico;
@@ -141,17 +71,5 @@ export class OtFinalizadaStepComponent implements OnInit {
       partes.push(`${n} ${n === 1 ? 'día' : 'días'}`);
     }
     return partes.length ? partes.join(' · ') : '—';
-  }
-
-  protected onMontoChange(monto: number | null): void {
-    this.montoPagoChange.emit(monto);
-  }
-
-  protected onObservacionesChange(obs: string | null): void {
-    this.observacionesChange.emit(obs);
-  }
-
-  canPrint(): boolean {
-    return !!this.orden().monto_pago;
   }
 }

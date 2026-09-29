@@ -1,5 +1,11 @@
-import { buildPrueba, buildTicketVenta, sanitize } from './escpos-ticket-builder';
-import { TicketVenta } from '../models/impresion.model';
+import {
+  buildPrueba,
+  buildTicketOrdenTrabajo,
+  buildTicketVenta,
+  envolver,
+  sanitize,
+} from './escpos-ticket-builder';
+import { TicketOrdenTrabajo, TicketVenta } from '../models/impresion.model';
 
 function asText(bytes: Uint8Array): string {
   return new TextDecoder('latin1').decode(bytes);
@@ -78,6 +84,53 @@ describe('escpos-ticket-builder', () => {
     expect(text).toContain('BATERIA 12V');
     expect(text).toContain('1.162.000');
     expect(text).toContain('Gracias por su compra');
+  });
+
+  it('arma la orden de trabajo con logo, pago de revisión y recargo urgente', () => {
+    const ticket: TicketOrdenTrabajo = {
+      empresa: 'CH SERVICE',
+      direccion: 'Ñemby - PY',
+      telefono: '0992 752 201',
+      numero: 'OT-0001',
+      fecha: '09/03/2026',
+      hora: '10:15',
+      cliente: 'Angel Armoa',
+      celular: '0972 539 093',
+      ruc: '3339179',
+      codigoUnidad: 'XT',
+      vehiculo: 'Nissan',
+      vin: '',
+      componentes: [{ etiqueta: 'ECU', valor: 'SI' }],
+      servicios: [{ etiqueta: 'Diagnostico', valor: 'SI' }],
+      descripcionProblema: 'Arranca pero no comunica',
+      pagoRevision: 250000,
+      recargoUrgente: 36,
+    };
+
+    const bytes = buildTicketOrdenTrabajo(ticket);
+    const text = asText(bytes);
+
+    expect(containsLogo(bytes)).toBe(true);
+    expect(containsCut(bytes)).toBe(true);
+    expect(text).toContain('\x1bM\x01');
+    expect(text).toContain('ORDEN DE TRABAJO');
+    expect(text).toContain('ANGEL ARMOA');
+    expect(text).toContain('250.000 GS.');
+    expect(text).toContain('36%');
+    expect(text).toContain('FIRMA DEL CLIENTE');
+  });
+
+  it('envuelve el texto a 32 columnas sin cortar palabras', () => {
+    const renglones = envolver([
+      { texto: 'El cliente se compromete al ' },
+      { texto: 'pago de revision', negrita: true },
+      { texto: '.' },
+    ]);
+    const lineas = renglones.map((r) => r.map((s) => s.texto).join(''));
+
+    expect(lineas.every((l) => l.length <= 32)).toBe(true);
+    expect(lineas.join(' ')).toBe('El cliente se compromete al pago de revision.');
+    expect(renglones.flat().some((s) => s.negrita && s.texto.includes('revision'))).toBe(true);
   });
 
   it('quita acentos del texto', () => {
