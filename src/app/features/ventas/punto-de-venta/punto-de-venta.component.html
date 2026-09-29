@@ -216,6 +216,10 @@
               Órdenes finalizadas
             </button>
             <div class="pos-catalog__session">
+              <button type="button" class="pos-chip-btn" (click)="abrirReimprimirDialog()">
+                <span class="material-icons" aria-hidden="true">print</span>
+                Reimprimir
+              </button>
               <button type="button" class="pos-chip-btn" (click)="onAbrirGestionCaja()">
                 <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
                 Cerrar caja
@@ -426,5 +430,13 @@
     [cotizaciones]="cotizaciones()"
     (cancelar)="cerrarPagoDialog()"
     (confirmar)="cobrarConMetodo($event)"
+  />
+}
+
+@if (reimprimirDialogOpen() && sesion()?.id_sesion_caja) {
+  <app-reimprimir-ticket-dialog
+    [idSesionCaja]="sesion()!.id_sesion_caja"
+    (cerrar)="cerrarReimprimirDialog()"
+    (reimprimir)="reimprimirTicket($event)"
   />
 }
