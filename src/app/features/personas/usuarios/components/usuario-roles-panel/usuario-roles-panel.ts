@@ -8,7 +8,7 @@ import {
   OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RoleOutput } from '../../../roles/interfaces/role.interface';
+import { etiquetaEstadoRol, RoleOutput } from '../../../roles/interfaces/role.interface';
 import { RoleService } from '../../../roles/services/role.service';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioOutput } from '../../interfaces/usuario.interface';
@@ -50,6 +50,10 @@ export class UsuarioRolesPanelComponent implements OnInit {
 
   protected readonly loadingAvailable = signal(false);
   protected readonly loadingCurrent = signal(false);
+  protected readonly errorAvailable = signal<string | null>(null);
+  protected readonly errorCurrent = signal<string | null>(null);
+
+  protected readonly etiquetaEstado = etiquetaEstadoRol;
 
   /** Filtros de búsqueda para roles disponibles y actuales */
   protected readonly searchFilter = signal('');
@@ -68,6 +72,9 @@ export class UsuarioRolesPanelComponent implements OnInit {
       this.currentRoles.set([]);
     }
     this.loadingCurrent.set(true);
+    if (page === 0) {
+      this.errorCurrent.set(null);
+    }
     this.usuarioService.rolesUsuarioPaginado(String(this.usuario().id), page, 25, filter).subscribe({
       next: (res) => {
         const current = page === 0 ? [] : this.currentRoles();
@@ -76,7 +83,10 @@ export class UsuarioRolesPanelComponent implements OnInit {
         this.hasMoreCurrent.set(res.pageInfo.totalPages > page + 1);
         this.loadingCurrent.set(false);
       },
-      error: () => this.loadingCurrent.set(false),
+      error: () => {
+        this.loadingCurrent.set(false);
+        this.errorCurrent.set('No se pudieron cargar los roles del usuario');
+      },
     });
   }
 
@@ -85,6 +95,9 @@ export class UsuarioRolesPanelComponent implements OnInit {
       this.availableRoles.set([]);
     }
     this.loadingAvailable.set(true);
+    if (page === 0) {
+      this.errorAvailable.set(null);
+    }
     this.usuarioService.rolesDisponiblesUsuarioPaginado(String(this.usuario().id), page, 25, filter).subscribe({
       next: (res) => {
         const current = page === 0 ? [] : this.availableRoles();
@@ -93,7 +106,10 @@ export class UsuarioRolesPanelComponent implements OnInit {
         this.hasMoreAvailable.set(res.pageInfo.totalPages > page + 1);
         this.loadingAvailable.set(false);
       },
-      error: () => this.loadingAvailable.set(false),
+      error: () => {
+        this.loadingAvailable.set(false);
+        this.errorAvailable.set('No se pudieron cargar los roles disponibles');
+      },
     });
   }
 

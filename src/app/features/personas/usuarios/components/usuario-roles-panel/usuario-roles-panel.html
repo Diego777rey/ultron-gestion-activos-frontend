@@ -28,6 +28,12 @@
               Cargando...
             </td>
           </tr>
+          } @else if (errorAvailable()) {
+          <tr>
+            <td colspan="4" class="roles-panel__empty">
+              {{ errorAvailable() }}
+            </td>
+          </tr>
           } @else if (availableRoles().length === 0) {
           <tr>
             <td colspan="4" class="roles-panel__empty">
@@ -39,7 +45,7 @@
           <tr>
             <td>{{ role.id }}</td>
             <td>{{ role.descripcion }}</td>
-            <td>{{ role.activo === 'true' || role.activo === 'Si' ? 'Sí' : role.activo }}</td>
+            <td>{{ etiquetaEstado(role.activo) }}</td>
             <td>
               <button class="roles-panel__btn roles-panel__btn--add" [disabled]="isProcessing(role.id)"
                 (click)="agregarRol(role)" title="Agregar rol">
@@ -103,6 +109,12 @@
               Cargando...
             </td>
           </tr>
+          } @else if (errorCurrent()) {
+          <tr>
+            <td colspan="4" class="roles-panel__empty">
+              {{ errorCurrent() }}
+            </td>
+          </tr>
           } @else if (currentRoles().length === 0) {
           <tr>
             <td colspan="4" class="roles-panel__empty">
@@ -114,7 +126,7 @@
           <tr>
             <td>{{ role.id }}</td>
             <td>{{ role.descripcion }}</td>
-            <td>{{ role.activo === 'true' || role.activo === 'Si' ? 'Sí' : role.activo }}</td>
+            <td>{{ etiquetaEstado(role.activo) }}</td>
             <td>
               <button class="roles-panel__btn roles-panel__btn--remove" [disabled]="isProcessing(role.id)"
                 (click)="quitarRol(role)" title="Quitar rol">

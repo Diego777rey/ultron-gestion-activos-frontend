@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
-import { RoleInput, RoleOutput } from '../../interfaces/role.interface';
+import { etiquetaEstadoRol, RoleInput, RoleOutput } from '../../interfaces/role.interface';
 import { RoleService } from '../../services/role.service';
 
 @Component({
@@ -37,9 +37,10 @@ export class RoleFormComponent {
       const r = this.role();
       if (r) {
         this.isEdit = !!r.id;
+        const estado = etiquetaEstadoRol(r.activo);
         this.form.reset({
           descripcion: r.descripcion ?? '',
-          activo: r.activo ?? 'ACTIVO',
+          activo: estado === '—' ? 'ACTIVO' : estado,
         });
       } else {
         this.isEdit = false;
