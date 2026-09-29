@@ -20,11 +20,13 @@
 >
   <ng-template appTableCell="imagen" [appTableCellFrom]="productos()" let-producto>
     <div class="producto-imagen">
-      @if (producto.imagen) {
-        <img 
-          [src]="fileUploadService.getFileUrl(producto.imagen)" 
+      @if (producto.imagen && !imagenesFallidas().has(producto.imagen)) {
+        <img
+          [src]="fileUploadService.getFileUrl(producto.imagen)"
           [alt]="producto.nombre"
           class="producto-imagen__img"
+          loading="lazy"
+          (error)="onImagenError(producto.imagen)"
         />
       } @else {
         <span class="material-icons producto-imagen__placeholder" aria-hidden="true">image</span>

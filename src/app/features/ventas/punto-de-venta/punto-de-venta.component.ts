@@ -87,6 +87,7 @@ export class PuntoDeVentaComponent {
   readonly cotizaciones = signal<CotizacionOutput[]>([]);
 
   readonly catalogo = signal<CatalogoPos>('productos');
+  private readonly imagenesFallidas = signal<ReadonlySet<string>>(new Set());
   readonly productos = signal<ProductoOutput[]>([]);
   readonly loadingProductos = signal(false);
   readonly loadingMoreProductos = signal(false);
@@ -239,7 +240,14 @@ export class PuntoDeVentaComponent {
 
   protected imagenProductoUrl(producto: ProductoOutput): string | null {
     const path = producto.imagen?.trim();
-    return path ? this.fileUploadService.getFileUrl(path) : null;
+    return path && !this.imagenesFallidas().has(path) ? this.fileUploadService.getFileUrl(path) : null;
+  }
+
+  protected onImagenError(producto: ProductoOutput): void {
+    const path = producto.imagen?.trim();
+    if (path) {
+      this.imagenesFallidas.update((fallidas) => new Set(fallidas).add(path));
+    }
   }
 
   protected mostrarProductos(): void {
