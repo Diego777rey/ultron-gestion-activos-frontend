@@ -26,6 +26,7 @@ import {
   OrdenTrabajoOutput,
 } from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
+import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
 
 @Component({
   selector: 'app-ot-detalle-lineas',
@@ -250,7 +251,7 @@ export class OtDetalleLineasComponent implements OnInit {
 
   protected nombreMecanico(mecanico: FuncionarioResumen | null | undefined): string {
     if (!mecanico?.persona) return '—';
-    return `${mecanico.persona.nombre ?? ''} ${mecanico.persona.apellido ?? ''}`.trim() || '—';
+    return nombreCompletoPersona(mecanico.persona) || '—';
   }
 
   protected esServicio(): boolean {

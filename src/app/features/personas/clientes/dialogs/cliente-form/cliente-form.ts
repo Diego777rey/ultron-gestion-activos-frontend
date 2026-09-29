@@ -10,6 +10,7 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
 import { of } from 'rxjs';
 import { ClienteService } from '../../services/cliente.service';
 import { PersonaService } from '../../../shared/services/persona.service';
+import { nombreCompletoPersona } from '../../../shared/nombre-persona';
 @Component({
   selector: 'app-cliente-form',
   imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
@@ -31,8 +32,7 @@ export class ClienteFormComponent {
   protected readonly tiposCliente = ['Persona Física', 'Empresa', 'Gobierno'];
 
   protected readonly form = this.fb.nonNullable.group({
-    nombre: ['', [Validators.required, Validators.maxLength(80)]],
-    apellido: ['', [Validators.required, Validators.maxLength(80)]],
+    nombre: ['', [Validators.required, Validators.maxLength(255)]],
     documento: ['', [Validators.required, Validators.maxLength(30)]],
     email: ['', [Validators.email]],
     telefono: [''],
@@ -51,8 +51,7 @@ export class ClienteFormComponent {
       if (c) {
         this.isEdit = !!c.id_cliente;
         this.form.reset({
-          nombre: c.persona?.nombre ?? '',
-          apellido: c.persona?.apellido ?? '',
+          nombre: nombreCompletoPersona(c.persona),
           documento: c.persona?.documento ?? '',
           email: c.persona?.email ?? '',
           telefono: c.persona?.telefono ?? '',
@@ -66,7 +65,6 @@ export class ClienteFormComponent {
         this.isEdit = false;
         this.form.reset({
           nombre: '',
-          apellido: '',
           documento: '',
           email: '',
           telefono: '',
@@ -93,8 +91,7 @@ export class ClienteFormComponent {
       const persona = data?.buscarPersonaPorDocumento;
       if (persona && !this.isEdit) {
         this.form.patchValue({
-          nombre: persona.nombre || '',
-          apellido: persona.apellido || '',
+          nombre: nombreCompletoPersona(persona),
           email: persona.email || '',
           telefono: persona.telefono || '',
           direccion: persona.direccion || ''
@@ -116,7 +113,7 @@ export class ClienteFormComponent {
     const payload: ClienteInput = {
       persona: {
         nombre: v.nombre.trim(),
-        apellido: v.apellido.trim(),
+        apellido: '',
         documento: v.documento.trim(),
         email: v.email?.trim() || null,
         telefono: v.telefono?.trim() || null,

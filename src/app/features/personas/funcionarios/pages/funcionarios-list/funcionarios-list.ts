@@ -15,6 +15,7 @@ import { FuncionarioOutput } from '../../interfaces/funcionario.interface';
 import { FuncionarioFormComponent } from '../../dialogs/funcionario-form/funcionario-form';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { nombreCompletoPersona } from '../../../shared/nombre-persona';
 
 @Component({
   selector: 'app-funcionarios-list',
@@ -45,7 +46,7 @@ export class FuncionariosListComponent {
 
   protected readonly columns: TableColumn<FuncionarioOutput>[] = [
     { key: 'id', header: 'Id', width: '80px', align: 'center' },
-    { key: 'nombre', header: 'Nombre', width: '220px' },
+    { key: 'nombre', header: 'Nombre completo', width: '260px' },
     { key: 'sector', header: 'Sector', width: '160px' },
     { key: 'sueldo', header: 'Sueldo', width: '120px', align: 'right' },
     { key: 'telefono', header: 'Teléfono', width: '140px' },
@@ -155,7 +156,7 @@ export class FuncionariosListComponent {
   }
 
   protected fullName(f: FuncionarioOutput): string {
-    return `${f.persona?.nombre ?? ''} ${f.persona?.apellido ?? ''}`.trim() || 'Sin nombre';
+    return nombreCompletoPersona(f.persona) || 'Sin nombre';
   }
 
   protected formatSueldo(f: FuncionarioOutput): string {

@@ -18,7 +18,7 @@ export interface PersonaOutput {
 /** Datos de entrada de una persona (mutations). */
 export interface PersonaInput {
   nombre: string;
-  apellido: string;
+  apellido?: string | null;
   documento: string;
   email?: string | null;
   telefono?: string | null;
