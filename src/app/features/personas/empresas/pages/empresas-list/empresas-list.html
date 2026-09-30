@@ -64,6 +64,6 @@
   </ng-template>
 
   <ng-template appTableCell="acciones" let-empresa>
-    <app-action-menu [actions]="rowActions" (actionClick)="onRowAction($event, empresa)" />
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, empresa)" />
   </ng-template>
 </app-generic-list>

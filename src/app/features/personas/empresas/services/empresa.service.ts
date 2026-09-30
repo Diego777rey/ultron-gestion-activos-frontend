@@ -32,6 +32,6 @@ export class EmpresaService extends BaseCrudService<EmpresaOutput, EmpresaInput>
   }
 
   eliminarEmpresa(id: number): Observable<boolean> {
-    return this.delete(id.toString());
+    return this.remove(id.toString());
   }
 }

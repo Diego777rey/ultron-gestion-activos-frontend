@@ -106,11 +106,11 @@ export class EmpresasListComponent {
   }
 
   private openNewDialog(): void {
-    const dialogRef = this.dialogService.open(EmpresaFormComponent, {
-      data: null,
-    });
-
-    dialogRef.closed.subscribe((saved) => {
+    this.dialogService.openForm(EmpresaFormComponent, {
+      title: 'Nueva Empresa',
+      subtitle: 'Completa los datos para registrar una empresa',
+      maxWidth: '760px',
+    }).subscribe((saved: boolean) => {
       if (saved) {
         this.load();
       }
@@ -118,11 +118,12 @@ export class EmpresasListComponent {
   }
 
   private openEditDialog(empresa: EmpresaOutput): void {
-    const dialogRef = this.dialogService.open(EmpresaFormComponent, {
-      data: empresa,
-    });
-
-    dialogRef.closed.subscribe((saved) => {
+    this.dialogService.openForm(EmpresaFormComponent, {
+      title: 'Editar Empresa',
+      subtitle: 'Modifica los datos de la empresa',
+      maxWidth: '760px',
+      inputs: { empresa },
+    }).subscribe((saved: boolean) => {
       if (saved) {
         this.load();
       }

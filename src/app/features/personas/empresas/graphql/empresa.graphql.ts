@@ -14,14 +14,19 @@ const EMPRESA_FIELDS = `
 `;
 
 export const EMPRESA_CRUD_CONFIG: CrudConfig = {
+  inputTypeName: 'EmpresaInput',
   operations: {
     list: 'empresas',
-    findById: 'empresa',
+    getById: 'empresa',
     create: 'registrarEmpresa',
     update: 'actualizarEmpresa',
-    delete: 'eliminarEmpresa',
+    remove: 'eliminarEmpresa',
   },
   selectionSet: `{
     ${EMPRESA_FIELDS}
   }`,
+  entity: {
+    label: 'Empresa',
+    gender: 'f',
+  },
 };
