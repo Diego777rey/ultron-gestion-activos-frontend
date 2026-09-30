@@ -110,7 +110,7 @@ export class EmpresasListComponent {
       title: 'Nueva Empresa',
       subtitle: 'Completa los datos para registrar una empresa',
       maxWidth: '760px',
-    }).subscribe((saved: boolean) => {
+    }).subscribe((saved: boolean | undefined) => {
       if (saved) {
         this.load();
       }
@@ -123,7 +123,7 @@ export class EmpresasListComponent {
       subtitle: 'Modifica los datos de la empresa',
       maxWidth: '760px',
       inputs: { empresa },
-    }).subscribe((saved: boolean) => {
+    }).subscribe((saved: boolean | undefined) => {
       if (saved) {
         this.load();
       }

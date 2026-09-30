@@ -10,7 +10,7 @@
   (toolbarAction)="onToolbarAction($event)"
   (rowAction)="onRowAction($event.actionId, $event.row)"
 >
-  <ng-template appTableCell="logo" let-empresa>
+  <ng-template appTableCell="logo" [appTableCellFrom]="empresas()" let-empresa>
     <div class="empresa-logo">
       @if (empresa.logo) {
         <img
@@ -26,7 +26,7 @@
     </div>
   </ng-template>
 
-  <ng-template appTableCell="razon_social" let-empresa>
+  <ng-template appTableCell="razon_social" [appTableCellFrom]="empresas()" let-empresa>
     <div class="empresa-info">
       <strong>{{ empresa.razon_social }}</strong>
       @if (empresa.actividad_economica) {
@@ -37,23 +37,23 @@
     </div>
   </ng-template>
 
-  <ng-template appTableCell="ruc" let-empresa>
+  <ng-template appTableCell="ruc" [appTableCellFrom]="empresas()" let-empresa>
     {{ empresa.ruc | defaultEmpty }}
   </ng-template>
 
-  <ng-template appTableCell="telefono" let-empresa>
+  <ng-template appTableCell="telefono" [appTableCellFrom]="empresas()" let-empresa>
     {{ empresa.telefono | defaultEmpty }}
   </ng-template>
 
-  <ng-template appTableCell="email" let-empresa>
+  <ng-template appTableCell="email" [appTableCellFrom]="empresas()" let-empresa>
     {{ empresa.email | defaultEmpty }}
   </ng-template>
 
-  <ng-template appTableCell="direccion" let-empresa>
+  <ng-template appTableCell="direccion" [appTableCellFrom]="empresas()" let-empresa>
     {{ empresa.direccion | defaultEmpty }}
   </ng-template>
 
-  <ng-template appTableCell="estado" let-empresa>
+  <ng-template appTableCell="estado" [appTableCellFrom]="empresas()" let-empresa>
     <span
       class="badge"
       [class.badge--success]="empresa.activa"
@@ -63,7 +63,7 @@
     </span>
   </ng-template>
 
-  <ng-template appTableCell="acciones" let-empresa>
+  <ng-template appTableCell="acciones" [appTableCellFrom]="empresas()" let-empresa>
     <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, empresa)" />
   </ng-template>
 </app-generic-list>
