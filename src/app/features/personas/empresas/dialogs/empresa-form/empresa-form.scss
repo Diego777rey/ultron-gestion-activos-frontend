@@ -1,84 +1,32 @@
-@use '../../../../../styles/mixins' as *;
+:host {
+  display: block;
+}
 
-.form {
-  @include form-container;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
+.empresa-form__error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  background: rgba(255, 61, 113, 0.1);
+  border: 1px solid rgba(255, 61, 113, 0.3);
+  border-radius: 8px;
+  color: #ff8aa3;
+  font-size: 13px;
 
-  &__header {
-    @include form-header;
+  .material-icons {
+    font-size: 18px;
   }
+}
 
-  &__title {
-    @include form-title;
-  }
+.empresa-form__logo-section {
+  margin-bottom: 24px;
 
-  &__error {
-    @include form-error;
-  }
-
-  &__section {
-    @include form-section;
-  }
-
-  &__section-header {
-    @include form-section-header;
-  }
-
-  &__grid {
-    @include form-grid;
-  }
-
-  &__field {
-    @include form-field;
-
-    &--full {
-      grid-column: 1 / -1;
-    }
-  }
-
-  &__label {
-    @include form-label;
-  }
-
-  &__required {
-    @include form-required;
-  }
-
-  &__input {
-    @include form-input;
-  }
-
-  &__textarea {
-    @include form-textarea;
-  }
-
-  &__checkbox {
-    @include form-checkbox;
-  }
-
-  &__checkbox-input {
-    @include form-checkbox-input;
-  }
-
-  &__checkbox-label {
-    @include form-checkbox-label;
-  }
-
-  &__error-text {
-    @include form-error-text;
-  }
-
-  &__actions {
-    @include form-actions;
-  }
-
-  &__button {
-    @include form-button;
-
-    &--secondary {
-      @include form-button-secondary;
-    }
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--color-on-surface);
   }
 }
