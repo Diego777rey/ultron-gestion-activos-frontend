@@ -108,12 +108,13 @@ export class MainLayoutComponent implements OnInit {
     {
       label: 'R.R.H.H.',
       icon: 'people',
-      requiredPermissions: ['RRHH', 'CLIENTES', 'FUNCIONARIOS', 'USUARIOS', 'ROLES'],
+      requiredPermissions: ['RRHH', 'CLIENTES', 'FUNCIONARIOS', 'USUARIOS', 'ROLES', 'EMPRESAS'],
       children: [
         { label: 'Clientes', icon: 'groups', route: '/personas/clientes', requiredPermissions: ['CLIENTES'] },
         { label: 'Funcionarios', icon: 'recent_actors', route: '/personas/funcionarios', requiredPermissions: ['FUNCIONARIOS'] },
         { label: 'Usuarios', icon: 'account_circle', route: '/personas/usuarios', requiredPermissions: ['USUARIOS'] },
         { label: 'Roles', icon: 'shield', route: '/personas/roles', requiredPermissions: ['ROLES'] },
+        { label: 'Empresas', icon: 'business', route: '/personas/empresas', requiredPermissions: ['EMPRESAS'] },
       ]
     },
     {
@@ -174,6 +175,7 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('funcionarios')) return 'Lista de funcionarios';
     if (url.includes('usuarios')) return 'Lista de usuarios';
     if (url.includes('roles')) return 'Lista de roles';
+    if (url.includes('empresas')) return 'Empresas';
     if (url.includes('maletines')) return 'Maletines';
     if (url.includes('ultimas') && url.includes('/ventas')) return 'Ventas de la caja';
     if (url.includes('ultimas')) return 'Últimas cajas';

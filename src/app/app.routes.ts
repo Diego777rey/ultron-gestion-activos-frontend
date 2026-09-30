@@ -56,6 +56,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'personas/empresas',
+        loadChildren: () =>
+          import('./features/personas/empresas/empresas.routes').then(
+            (m) => m.EMPRESAS_ROUTES
+          ),
+      },
+      {
         path: 'ventas/punto-de-venta',
         loadComponent: () =>
           import('./features/ventas/punto-de-venta/punto-de-venta.component').then(

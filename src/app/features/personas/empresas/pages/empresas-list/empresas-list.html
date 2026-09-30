@@ -1,0 +1,68 @@
+<app-generic-list
+  title="Empresas"
+  subtitle="Gestión de empresas del sistema"
+  [columns]="columns"
+  [data]="empresas()"
+  [loading]="loading()"
+  [error]="error()"
+  [toolbarActions]="toolbarActions"
+  (actionClicked)="onToolbarAction($event)"
+  [total]="empresas().length"
+>
+  <ng-template appTableCell="logo" [appTableCellFrom]="empresas()" let-empresa>
+    <div class="empresa-logo">
+      @if (empresa.logo) {
+        <img
+          [src]="fileUploadService.getFileUrl(empresa.logo)"
+          [alt]="empresa.razon_social"
+          class="empresa-logo__image"
+        />
+      } @else {
+        <span class="material-icons empresa-logo__icon" aria-hidden="true">
+          business
+        </span>
+      }
+    </div>
+  </ng-template>
+
+  <ng-template appTableCell="razon_social" [appTableCellFrom]="empresas()" let-empresa>
+    <div class="empresa-info">
+      <strong>{{ empresa.razon_social }}</strong>
+      @if (empresa.actividad_economica) {
+        <small class="empresa-info__subtitle">
+          {{ empresa.actividad_economica }}
+        </small>
+      }
+    </div>
+  </ng-template>
+
+  <ng-template appTableCell="ruc" [appTableCellFrom]="empresas()" let-empresa>
+    {{ empresa.ruc | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="telefono" [appTableCellFrom]="empresas()" let-empresa>
+    {{ empresa.telefono | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="email" [appTableCellFrom]="empresas()" let-empresa>
+    {{ empresa.email | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="direccion" [appTableCellFrom]="empresas()" let-empresa>
+    {{ empresa.direccion | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="estado" [appTableCellFrom]="empresas()" let-empresa>
+    <span
+      class="badge"
+      [class.badge--success]="empresa.activa"
+      [class.badge--error]="!empresa.activa"
+    >
+      {{ empresa.activa ? 'Activa' : 'Inactiva' }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="empresas()" let-empresa>
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, empresa)" />
+  </ng-template>
+</app-generic-list>
