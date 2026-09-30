@@ -1,0 +1,69 @@
+<app-generic-list
+  title="Empresas"
+  subtitle="Gestión de empresas del sistema"
+  [columns]="columns"
+  [data]="empresas()"
+  [loading]="loading()"
+  [error]="error()"
+  [toolbarActions]="toolbarActions"
+  [rowActions]="rowActions"
+  (toolbarAction)="onToolbarAction($event)"
+  (rowAction)="onRowAction($event.actionId, $event.row)"
+>
+  <ng-template appTableCell="logo" let-empresa>
+    <div class="empresa-logo">
+      @if (empresa.logo) {
+        <img
+          [src]="fileUploadService.getFileUrl(empresa.logo)"
+          [alt]="empresa.razon_social"
+          class="empresa-logo__image"
+        />
+      } @else {
+        <span class="material-icons empresa-logo__icon" aria-hidden="true">
+          business
+        </span>
+      }
+    </div>
+  </ng-template>
+
+  <ng-template appTableCell="razon_social" let-empresa>
+    <div class="empresa-info">
+      <strong>{{ empresa.razon_social }}</strong>
+      @if (empresa.actividad_economica) {
+        <small class="empresa-info__subtitle">
+          {{ empresa.actividad_economica }}
+        </small>
+      }
+    </div>
+  </ng-template>
+
+  <ng-template appTableCell="ruc" let-empresa>
+    {{ empresa.ruc | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="telefono" let-empresa>
+    {{ empresa.telefono | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="email" let-empresa>
+    {{ empresa.email | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="direccion" let-empresa>
+    {{ empresa.direccion | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="estado" let-empresa>
+    <span
+      class="badge"
+      [class.badge--success]="empresa.activa"
+      [class.badge--error]="!empresa.activa"
+    >
+      {{ empresa.activa ? 'Activa' : 'Inactiva' }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableCell="acciones" let-empresa>
+    <app-action-menu [actions]="rowActions" (actionClick)="onRowAction($event, empresa)" />
+  </ng-template>
+</app-generic-list>

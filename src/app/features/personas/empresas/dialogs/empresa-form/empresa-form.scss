@@ -1,0 +1,84 @@
+@use '../../../../../styles/mixins' as *;
+
+.form {
+  @include form-container;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  &__header {
+    @include form-header;
+  }
+
+  &__title {
+    @include form-title;
+  }
+
+  &__error {
+    @include form-error;
+  }
+
+  &__section {
+    @include form-section;
+  }
+
+  &__section-header {
+    @include form-section-header;
+  }
+
+  &__grid {
+    @include form-grid;
+  }
+
+  &__field {
+    @include form-field;
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__label {
+    @include form-label;
+  }
+
+  &__required {
+    @include form-required;
+  }
+
+  &__input {
+    @include form-input;
+  }
+
+  &__textarea {
+    @include form-textarea;
+  }
+
+  &__checkbox {
+    @include form-checkbox;
+  }
+
+  &__checkbox-input {
+    @include form-checkbox-input;
+  }
+
+  &__checkbox-label {
+    @include form-checkbox-label;
+  }
+
+  &__error-text {
+    @include form-error-text;
+  }
+
+  &__actions {
+    @include form-actions;
+  }
+
+  &__button {
+    @include form-button;
+
+    &--secondary {
+      @include form-button-secondary;
+    }
+  }
+}
