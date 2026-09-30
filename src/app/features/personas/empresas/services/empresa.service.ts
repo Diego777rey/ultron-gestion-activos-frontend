@@ -1,65 +1,37 @@
-import { Injectable, inject } from '@angular/core';
-import { Apollo } from 'apollo-angular';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import {
-  GET_EMPRESAS,
-  GET_EMPRESA,
-  REGISTRAR_EMPRESA,
-  ACTUALIZAR_EMPRESA,
-  ELIMINAR_EMPRESA,
-} from '../graphql/empresa.graphql';
+import { BaseCrudService } from '../../../../shared/services/base-crud.service';
+import { CrudConfig } from '../../../../shared/models/crud-config.model';
+import { EMPRESA_CRUD_CONFIG } from '../graphql/empresa.graphql';
 import { EmpresaInput, EmpresaOutput } from '../interfaces/empresa.interface';
 
 @Injectable({
   providedIn: 'root',
 })
-export class EmpresaService {
-  private readonly apollo = inject(Apollo);
+export class EmpresaService extends BaseCrudService<EmpresaOutput, EmpresaInput> {
+  protected readonly config: CrudConfig = EMPRESA_CRUD_CONFIG;
 
-  getEmpresas(): Observable<EmpresaOutput[]> {
-    return this.apollo
-      .query<{ empresas: EmpresaOutput[] }>({
-        query: GET_EMPRESAS,
-        fetchPolicy: 'network-only',
-      })
-      .pipe(map((result) => result.data.empresas));
+  protected override resolveEntityName(entity: EmpresaOutput): string | undefined {
+    return entity.razon_social?.trim() || undefined;
   }
 
-  getEmpresa(id: number): Observable<EmpresaOutput> {
-    return this.apollo
-      .query<{ empresa: EmpresaOutput }>({
-        query: GET_EMPRESA,
-        variables: { id: id.toString() },
-        fetchPolicy: 'network-only',
-      })
-      .pipe(map((result) => result.data.empresa));
+  getEmpresas(): Observable<EmpresaOutput[]> {
+    return this.findAll();
+  }
+
+  getEmpresa(id: number): Observable<EmpresaOutput | null> {
+    return this.findById(id.toString());
   }
 
   registrarEmpresa(input: EmpresaInput): Observable<EmpresaOutput> {
-    return this.apollo
-      .mutate<{ registrarEmpresa: EmpresaOutput }>({
-        mutation: REGISTRAR_EMPRESA,
-        variables: { input },
-      })
-      .pipe(map((result) => result.data!.registrarEmpresa));
+    return this.create(input);
   }
 
   actualizarEmpresa(id: number, input: EmpresaInput): Observable<EmpresaOutput> {
-    return this.apollo
-      .mutate<{ actualizarEmpresa: EmpresaOutput }>({
-        mutation: ACTUALIZAR_EMPRESA,
-        variables: { id: id.toString(), input },
-      })
-      .pipe(map((result) => result.data!.actualizarEmpresa));
+    return this.update(id.toString(), input);
   }
 
   eliminarEmpresa(id: number): Observable<boolean> {
-    return this.apollo
-      .mutate<{ eliminarEmpresa: boolean }>({
-        mutation: ELIMINAR_EMPRESA,
-        variables: { id: id.toString() },
-      })
-      .pipe(map((result) => result.data!.eliminarEmpresa));
+    return this.delete(id.toString());
   }
 }
