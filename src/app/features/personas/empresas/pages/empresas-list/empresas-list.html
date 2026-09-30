@@ -6,9 +6,8 @@
   [loading]="loading()"
   [error]="error()"
   [toolbarActions]="toolbarActions"
-  [rowActions]="rowActions"
-  (toolbarAction)="onToolbarAction($event)"
-  (rowAction)="onRowAction($event.actionId, $event.row)"
+  (actionClicked)="onToolbarAction($event)"
+  [total]="empresas().length"
 >
   <ng-template appTableCell="logo" [appTableCellFrom]="empresas()" let-empresa>
     <div class="empresa-logo">
