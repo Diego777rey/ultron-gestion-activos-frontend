@@ -22,7 +22,7 @@ import { LoadingService } from '../../../../../shared/services/loading.service';
     <app-modal
       [open]="true"
       title="Reimprimir ticket"
-      subtitle="Seleccioná la venta para reimprimir el ticket"
+      subtitle="Reimprimí el ticket de una venta de esta sesión"
       maxWidth="720px"
       headerVariant="primary"
       [closeOnBackdrop]="true"
@@ -48,12 +48,7 @@ import { LoadingService } from '../../../../../shared/services/loading.service';
             </div>
           } @else {
             @for (venta of ventasFiltradas(); track venta.id_venta) {
-              <button
-                type="button"
-                class="venta-item"
-                [class.venta-item--selected]="ventaSeleccionada()?.id_venta === venta.id_venta"
-                (click)="seleccionarVenta(venta)"
-              >
+              <article class="venta-item">
                 <div class="venta-item__header">
                   <strong class="venta-item__numero">{{ venta.numero }}</strong>
                   <span class="venta-item__fecha">{{ formatearFecha(venta.fecha) }}</span>
@@ -74,13 +69,15 @@ import { LoadingService } from '../../../../../shared/services/loading.service';
                   <strong class="venta-item__total">
                     Gs. {{ venta.total | number: '1.0-0' }}
                   </strong>
+                  <app-ui-button
+                    label="Reimprimir"
+                    icon="print"
+                    variant="primary"
+                    size="sm"
+                    (clicked)="onReimprimir(venta)"
+                  />
                 </div>
-                @if (ventaSeleccionada()?.id_venta === venta.id_venta) {
-                  <span class="venta-item__check">
-                    <span class="material-icons" aria-hidden="true">check_circle</span>
-                  </span>
-                }
-              </button>
+              </article>
             } @empty {
               <div class="reimprimir-dialog__vacio">
                 <span class="material-icons">receipt_long</span>
@@ -96,13 +93,6 @@ import { LoadingService } from '../../../../../shared/services/loading.service';
             icon="close"
             variant="ghost"
             (clicked)="onCerrar()"
-          />
-          <app-ui-button
-            label="Reimprimir ticket"
-            icon="print"
-            variant="primary"
-            [disabled]="!ventaSeleccionada()"
-            (clicked)="onReimprimir()"
           />
         </footer>
       </div>
@@ -123,13 +113,13 @@ import { LoadingService } from '../../../../../shared/services/loading.service';
       align-items: center;
       gap: 0.75rem;
       padding: 0.75rem 1rem;
-      background: var(--surface-subtle, #f8f9fa);
-      border: 1px solid var(--border-default, #dee2e6);
+      background: #2a2a2a;
+      border: 1px solid var(--border-color);
       border-radius: 8px;
     }
 
     .reimprimir-dialog__buscar .material-icons {
-      color: var(--text-muted, #6c757d);
+      color: var(--text-muted);
       font-size: 20px;
     }
 
@@ -138,12 +128,12 @@ import { LoadingService } from '../../../../../shared/services/loading.service';
       border: none;
       background: transparent;
       font-size: 0.9375rem;
-      color: var(--text-primary, #212529);
+      color: var(--text-primary);
       outline: none;
     }
 
     .reimprimir-dialog__buscar input::placeholder {
-      color: var(--text-muted, #6c757d);
+      color: var(--text-muted);
     }
 
     .reimprimir-dialog__lista {
@@ -162,7 +152,7 @@ import { LoadingService } from '../../../../../shared/services/loading.service';
       justify-content: center;
       gap: 0.75rem;
       padding: 3rem 1rem;
-      color: var(--text-muted, #6c757d);
+      color: var(--text-muted);
       text-align: center;
     }
 
@@ -172,32 +162,14 @@ import { LoadingService } from '../../../../../shared/services/loading.service';
     }
 
     .venta-item {
-      position: relative;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
       padding: 1rem 1.25rem;
-      background: var(--surface-card, #fff);
-      border: 2px solid var(--border-default, #dee2e6);
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
       border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.15s ease;
       text-align: left;
-    }
-
-    .venta-item:hover {
-      border-color: var(--border-hover, #adb5bd);
-      background: var(--surface-hover, #f8f9fa);
-    }
-
-    .venta-item--selected {
-      border-color: var(--primary, #0d6efd);
-      background: var(--primary-subtle, #e7f1ff);
-    }
-
-    .venta-item--selected:hover {
-      border-color: var(--primary, #0d6efd);
-      background: var(--primary-subtle, #e7f1ff);
     }
 
     .venta-item__header {
@@ -209,12 +181,12 @@ import { LoadingService } from '../../../../../shared/services/loading.service';
     .venta-item__numero {
       font-size: 1.125rem;
       font-weight: 700;
-      color: var(--text-primary, #212529);
+      color: var(--text-primary);
     }
 
     .venta-item__fecha {
       font-size: 0.8125rem;
-      color: var(--text-muted, #6c757d);
+      color: var(--text-muted);
     }
 
     .venta-item__info {
@@ -222,7 +194,7 @@ import { LoadingService } from '../../../../../shared/services/loading.service';
       align-items: center;
       gap: 1rem;
       font-size: 0.875rem;
-      color: var(--text-secondary, #495057);
+      color: var(--text-secondary);
     }
 
     .venta-item__cliente {
@@ -237,46 +209,43 @@ import { LoadingService } from '../../../../../shared/services/loading.service';
     }
 
     .venta-item__items {
-      color: var(--text-muted, #6c757d);
+      color: var(--text-muted);
     }
 
     .venta-item__footer {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding-top: 0.5rem;
-      border-top: 1px solid var(--border-subtle, #e9ecef);
+      gap: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #3a3a3a;
     }
 
     .venta-item__forma-pago {
       font-size: 0.8125rem;
-      color: var(--text-muted, #6c757d);
+      color: var(--text-muted);
       text-transform: capitalize;
     }
 
     .venta-item__total {
+      margin-left: auto;
       font-size: 1.125rem;
       font-weight: 700;
-      color: var(--primary, #0d6efd);
+      color: var(--primary-color);
     }
 
-    .venta-item__check {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      color: var(--primary, #0d6efd);
+    .venta-item__footer app-ui-button {
+      flex: 0 0 auto;
     }
 
-    .venta-item__check .material-icons {
-      font-size: 24px;
+    .venta-item__footer ::ng-deep .ui-btn {
+      min-width: 0;
     }
 
     .reimprimir-dialog__footer {
       display: flex;
       justify-content: flex-end;
-      gap: 0.75rem;
       padding-top: 0.5rem;
-      border-top: 1px solid var(--border-default, #dee2e6);
+      border-top: 1px solid var(--border-color);
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -293,7 +262,6 @@ export class ReimprimirTicketDialogComponent implements OnInit {
   protected readonly ventas = signal<VentaOutput[]>([]);
   protected readonly cargando = signal(false);
   protected readonly busqueda = signal('');
-  protected readonly ventaSeleccionada = signal<VentaOutput | null>(null);
 
   protected readonly ventasFiltradas = computed(() => {
     const buscar = this.busqueda().trim().toLowerCase();
@@ -318,19 +286,12 @@ export class ReimprimirTicketDialogComponent implements OnInit {
     this.busqueda.set(value);
   }
 
-  protected seleccionarVenta(venta: VentaOutput): void {
-    this.ventaSeleccionada.set(venta);
-  }
-
   protected onCerrar(): void {
     this.cerrar.emit();
   }
 
-  protected onReimprimir(): void {
-    const venta = this.ventaSeleccionada();
-    if (venta) {
-      this.reimprimir.emit(venta);
-    }
+  protected onReimprimir(venta: VentaOutput): void {
+    this.reimprimir.emit(venta);
   }
 
   protected formatearFecha(fecha?: string): string {
