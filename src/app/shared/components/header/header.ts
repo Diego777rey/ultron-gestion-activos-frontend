@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, output } from '@angular/core';
+import { APP_VERSION } from '../../../config/app-version';
 
 @Component({
   selector: 'app-header',
@@ -12,6 +13,7 @@ import { Component, ChangeDetectionStrategy, output } from '@angular/core';
 })
 export class HeaderComponent {
   toggleSidebar = output<void>();
+  protected readonly version = APP_VERSION;
 
   onMenuClick() {
     this.toggleSidebar.emit();
