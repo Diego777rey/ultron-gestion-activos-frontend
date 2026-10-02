@@ -11,3 +11,9 @@ export interface CotizacionInput {
   valor: number;
   activa?: boolean;
 }
+
+export interface MontoCotizado {
+  moneda: string;
+  valorCotizacion?: number | string | null;
+  monto: number | string;
+}

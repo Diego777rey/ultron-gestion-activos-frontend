@@ -36,8 +36,6 @@ import { ImpresionService } from '../../../shared/services/impresion.service';
 import { TicketVenta } from '../../../shared/models/impresion.model';
 import { CATALOG_PAGE_SIZE } from '../../../shared/models/pagination.model';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CotizacionService } from '../../financiero/cotizaciones/services/cotizacion.service';
-import { CotizacionOutput } from '../../financiero/cotizaciones/interfaces/cotizacion.interface';
 
 const POS_ROUTE = '/ventas/punto-de-venta';
 /** Umbral (px) antes del final del scroll para pedir la siguiente página. */
@@ -72,7 +70,6 @@ export class PuntoDeVentaComponent {
   private readonly productoService = inject(ProductoService);
   private readonly servicioService = inject(ServicioService);
   private readonly ordenTrabajoService = inject(OrdenTrabajoService);
-  private readonly cotizacionService = inject(CotizacionService);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly fileUploadService = inject(FileUploadService);
 
@@ -84,7 +81,6 @@ export class PuntoDeVentaComponent {
   readonly cajaAbierta = signal(false);
   readonly sesion = signal<SesionCajaOutput | null>(null);
   readonly loadingSesion = signal(true);
-  readonly cotizaciones = signal<CotizacionOutput[]>([]);
 
   readonly catalogo = signal<CatalogoPos>('productos');
   private readonly imagenesFallidas = signal<ReadonlySet<string>>(new Set());
@@ -497,7 +493,7 @@ export class PuntoDeVentaComponent {
 
   protected cobrarConMetodo(pago: PagoConfirmado): void {
     this.pagoDialogOpen.set(false);
-    this.registrarVenta(false, pago.formaPago, pago.moneda, pago.montoMonedaOriginal);
+    this.registrarVenta(false, pago.formaPago, pago.moneda);
   }
 
   protected abrirReimprimirDialog(): void {
@@ -519,18 +515,17 @@ export class PuntoDeVentaComponent {
   }
 
   protected cobrar(): void {
-    this.registrarVenta(false, 'EFECTIVO', 'PYG', this.cartTotal());
+    this.registrarVenta(false, 'EFECTIVO', 'PYG');
   }
 
   protected cobrarConTicket(): void {
-    this.registrarVenta(true, 'EFECTIVO', 'PYG', this.cartTotal());
+    this.registrarVenta(true, 'EFECTIVO', 'PYG');
   }
 
   private registrarVenta(
     imprimirTicket: boolean,
     formaPago: FormaPago = 'EFECTIVO',
     moneda: string = 'PYG',
-    montoMonedaOriginal?: number
   ): void {
     const sesion = this.sesion();
     const items = this.cart();
@@ -555,7 +550,6 @@ export class PuntoDeVentaComponent {
           descuento: 0,
           formaPago,
           moneda: moneda !== 'PYG' ? moneda : undefined,
-          montoMonedaOriginal: moneda !== 'PYG' ? montoMonedaOriginal : undefined,
           detalles: items.map((item) => this.toDetalleInput(item)),
         }),
         {
@@ -720,7 +714,6 @@ export class PuntoDeVentaComponent {
 
   private bootstrap(): void {
     this.loadingSesion.set(true);
-    this.loadCotizaciones();
     this.sesionCajaService.sesionAbierta().subscribe({
       next: (sesion) => {
         this.loadingSesion.set(false);
@@ -739,18 +732,6 @@ export class PuntoDeVentaComponent {
     });
   }
   
-  private loadCotizaciones(): void {
-    this.cotizacionService.listarCotizacionesActivas().subscribe({
-      next: (cotizaciones) => {
-        this.cotizaciones.set(cotizaciones);
-      },
-      error: (err) => {
-        console.error('Error al cargar cotizaciones:', err);
-        this.cotizaciones.set([]);
-      },
-    });
-  }
-
   private refreshSesion(): void {
     const idCaja = this.sesion()?.caja?.id_caja;
     this.sesionCajaService.sesionAbierta(idCaja).subscribe({

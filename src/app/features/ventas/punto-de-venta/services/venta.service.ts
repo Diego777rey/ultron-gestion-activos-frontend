@@ -49,7 +49,7 @@ export class VentaPosService {
   }
 
   listarVentasPorSesion(idSesionCaja: number): Observable<VentaOutput[]> {
-    const document = `query($idSesionCaja: Int!) {
+    const document = `query($idSesionCaja: ID!) {
       listarVentasPorSesion(idSesionCaja: $idSesionCaja) ${VENTA_SELECTION}
     }`;
     return this.gql
