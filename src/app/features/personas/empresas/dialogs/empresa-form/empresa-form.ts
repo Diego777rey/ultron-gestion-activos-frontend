@@ -45,6 +45,7 @@ export class EmpresaFormComponent {
 
   protected readonly form = this.fb.nonNullable.group({
     razon_social: ['', [Validators.required, Validators.maxLength(255)]],
+    nombre_fantasia: ['', [Validators.maxLength(255)]],
     ruc: ['', [Validators.required, Validators.maxLength(20)]],
     direccion: ['', [Validators.required, Validators.maxLength(500)]],
     telefono: ['', [Validators.maxLength(50)]],
@@ -60,6 +61,7 @@ export class EmpresaFormComponent {
         this.isEdit = !!e.id_empresa;
         this.form.reset({
           razon_social: e.razon_social ?? '',
+          nombre_fantasia: e.nombre_fantasia ?? '',
           ruc: e.ruc ?? '',
           direccion: e.direccion ?? '',
           telefono: e.telefono ?? '',
@@ -72,6 +74,7 @@ export class EmpresaFormComponent {
         this.isEdit = false;
         this.form.reset({
           razon_social: '',
+          nombre_fantasia: '',
           ruc: '',
           direccion: '',
           telefono: '',
@@ -103,11 +106,12 @@ export class EmpresaFormComponent {
 
     const payload: EmpresaInput = {
       razon_social: v.razon_social.trim(),
+      nombre_fantasia: v.nombre_fantasia.trim(),
       ruc: v.ruc.trim(),
       direccion: v.direccion.trim(),
       telefono: v.telefono?.trim() || undefined,
       email: v.email?.trim() || undefined,
-      actividad_economica: v.actividad_economica?.trim() || undefined,
+      actividadEconomica: v.actividad_economica?.trim() || undefined,
       logo: this.logoPath() || undefined,
       activa: v.activa,
     };

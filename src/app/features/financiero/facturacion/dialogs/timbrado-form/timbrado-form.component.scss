@@ -2,7 +2,7 @@
   display: block;
 }
 
-.cliente-form__error {
+.form-error {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -19,26 +19,28 @@
   }
 }
 
-.cliente-form-footer {
+.form-hint {
+  margin: 16px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.entity-form-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--border-color);
 }
 
-.cliente-form {
-  display: flex;
-  flex-direction: column;
-}
-
-.cliente-form__grid {
+.entity-form__grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
 
-  @media (max-width: 520px) {
+  @media (max-width: 560px) {
     grid-template-columns: 1fr;
   }
 }
@@ -48,10 +50,6 @@
   display: flex;
   flex-direction: column;
   padding-top: 16px;
-
-  &--full {
-    grid-column: 1 / -1;
-  }
 }
 
 .field__label {
@@ -62,6 +60,11 @@
   color: var(--text-secondary);
   pointer-events: none;
   transition: 0.2s ease all;
+
+  &--date {
+    top: 0;
+    font-size: 12px;
+  }
 }
 
 .field__input {
@@ -76,14 +79,18 @@
   font-family: inherit;
   font-size: 14px;
   outline: none;
-  transition: border-color 0.2s ease;
   color-scheme: dark;
 
   &:focus {
     border-bottom: 2px solid var(--primary-color);
   }
 
-  &:not(:placeholder-shown) ~ .field__label {
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(50%) sepia(100%) saturate(3000%) hue-rotate(190deg) brightness(100%) contrast(100%);
+    cursor: pointer;
+  }
+
+  &:not(:placeholder-shown) ~ .field__label:not(.field__label--date) {
     opacity: 0;
     visibility: hidden;
   }
@@ -97,8 +104,24 @@
 
 .field--checkbox {
   flex-direction: row;
-  align-items: center;
+  align-items: flex-end;
   padding-top: 8px;
+}
+
+.field--preview {
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+.preview__label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.preview__value {
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
 }
 
 .checkbox-label {

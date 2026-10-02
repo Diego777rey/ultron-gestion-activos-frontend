@@ -1,6 +1,7 @@
 export interface EmpresaOutput {
   id_empresa: number;
   razon_social: string;
+  nombre_fantasia?: string;
   ruc: string;
   direccion: string;
   fecha_creacion: string;
@@ -13,12 +14,13 @@ export interface EmpresaOutput {
 
 export interface EmpresaInput {
   razon_social: string;
+  nombre_fantasia?: string;
   ruc: string;
   direccion: string;
-  fecha_creacion?: string;
+  fechaCreacion?: string;
   telefono?: string;
   email?: string;
-  actividad_economica?: string;
+  actividadEconomica?: string;
   logo?: string;
   activa?: boolean;
 }
