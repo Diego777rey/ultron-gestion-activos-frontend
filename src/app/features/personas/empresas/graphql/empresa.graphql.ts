@@ -3,6 +3,7 @@ import { CrudConfig } from '../../../../shared/models/crud-config.model';
 const EMPRESA_FIELDS = `
   id_empresa
   razon_social
+  nombre_fantasia
   ruc
   direccion
   fecha_creacion

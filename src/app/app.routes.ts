@@ -132,6 +132,14 @@ export const routes: Routes = [
         data: { tabTitle: 'Cotizaciones' },
       },
       {
+        path: 'financiero/facturacion',
+        loadComponent: () =>
+          import('./features/financiero/facturacion/pages/datos-facturacion-page/datos-facturacion-page.component').then(
+            (m) => m.DatosFacturacionPageComponent
+          ),
+        data: { tabTitle: 'Datos de facturación' },
+      },
+      {
         path: 'inventario/productos',
         loadChildren: () =>
           import('./features/inventario/productos/productos.routes').then(
