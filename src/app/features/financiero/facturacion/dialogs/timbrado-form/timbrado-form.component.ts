@@ -27,9 +27,9 @@ export class TimbradoFormComponent {
 
   protected readonly form = this.fb.nonNullable.group({
     numeroTimbrado: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
-    establecimiento: ['001', [Validators.required, Validators.pattern(/^\d{1,3}$/)]],
-    puntoExpedicion: ['001', [Validators.required, Validators.pattern(/^\d{1,3}$/)]],
-    numeroInicial: [1, [Validators.required, Validators.min(1), Validators.max(9_999_999)]],
+    establecimiento: ['', [Validators.required, Validators.pattern(/^\d{1,3}$/)]],
+    puntoExpedicion: ['', [Validators.required, Validators.pattern(/^\d{1,3}$/)]],
+    numeroInicial: [null as number | null, [Validators.required, Validators.min(1), Validators.max(9_999_999)]],
     numeroFinal: [null as number | null, [Validators.required, Validators.min(1), Validators.max(9_999_999)]],
     numeroActual: [null as number | null],
     fechaInicioVigencia: ['', Validators.required],
@@ -44,8 +44,8 @@ export class TimbradoFormComponent {
         this.isEdit = true;
         this.form.reset({
           numeroTimbrado: timbrado.numero_timbrado ?? '',
-          establecimiento: timbrado.establecimiento ?? '001',
-          puntoExpedicion: timbrado.punto_expedicion ?? '001',
+          establecimiento: timbrado.establecimiento ?? '',
+          puntoExpedicion: timbrado.punto_expedicion ?? '',
           numeroInicial: timbrado.numero_inicial,
           numeroFinal: timbrado.numero_final,
           numeroActual: timbrado.numero_actual,
@@ -57,17 +57,6 @@ export class TimbradoFormComponent {
         this.isEdit = false;
       }
     });
-  }
-
-  protected previewNumero(): string {
-    const v = this.form.getRawValue();
-    const est = pad3(v.establecimiento);
-    const punto = pad3(v.puntoExpedicion);
-    const numero = v.numeroActual ?? v.numeroInicial ?? 1;
-    if (!est || !punto || numero == null) {
-      return '001-001-0000001';
-    }
-    return `${est}-${punto}-${String(numero).padStart(7, '0')}`;
   }
 
   protected onSubmit(): void {
