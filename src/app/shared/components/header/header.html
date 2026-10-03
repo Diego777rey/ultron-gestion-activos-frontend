@@ -3,6 +3,20 @@
     <span class="material-icons">menu</span>
   </button>
   <span class="app-version" title="Versión instalada">v{{ version }}</span>
+  <button
+    type="button"
+    class="conexion-indicador"
+    [class.conexion-en-linea]="estadoConexion() === 'en-linea'"
+    [class.conexion-sin-red]="estadoConexion() === 'sin-red'"
+    [class.conexion-sin-servidor]="estadoConexion() === 'sin-servidor'"
+    [class.conexion-comprobando]="estadoConexion() === 'comprobando'"
+    [attr.title]="detalleConexion()"
+    [attr.aria-label]="detalleConexion()"
+    (click)="comprobarConexion()"
+  >
+    <span class="conexion-dot" aria-hidden="true"></span>
+    <span class="conexion-label" aria-live="polite">{{ etiquetaConexion() }}</span>
+  </button>
 </div>
 
 <div class="header-spacer"></div>
