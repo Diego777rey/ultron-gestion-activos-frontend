@@ -487,6 +487,13 @@ export class PuntoDeVentaComponent {
     this.pagoDialogOpen.set(true);
   }
 
+  protected abrirFactura(): void {
+    if (this.cart().length === 0) {
+      this.ventaError.set('Agregá ítems al carrito antes de facturar');
+      return;
+    }
+  }
+
   protected cerrarPagoDialog(): void {
     this.pagoDialogOpen.set(false);
   }
