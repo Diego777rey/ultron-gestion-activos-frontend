@@ -140,6 +140,14 @@ export const routes: Routes = [
         data: { tabTitle: 'Datos de facturación' },
       },
       {
+        path: 'financiero/facturacion/timbrados',
+        loadComponent: () =>
+          import('./features/financiero/facturacion/pages/timbrados-page/timbrados-page.component').then(
+            (m) => m.TimbradosPageComponent
+          ),
+        data: { tabTitle: 'Timbrados' },
+      },
+      {
         path: 'inventario/productos',
         loadChildren: () =>
           import('./features/inventario/productos/productos.routes').then(
