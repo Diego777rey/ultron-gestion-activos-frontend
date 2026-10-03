@@ -33,6 +33,7 @@ describe('API_CONFIG', () => {
     expect(resolveApiBaseUrl()).toBe('http://localhost:8081');
     expect(API_CONFIG.graphqlEndpoint).toBe('http://localhost:8081/graphql');
     expect(API_CONFIG.authLoginEndpoint).toBe('http://localhost:8081/api/auth/login');
+    expect(API_CONFIG.healthEndpoint).toBe('http://localhost:8081/api/health');
   });
 
   it('prioriza la configuración persistida sobre Electron', () => {
