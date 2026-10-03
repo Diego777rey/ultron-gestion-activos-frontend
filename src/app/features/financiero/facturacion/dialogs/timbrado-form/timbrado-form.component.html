@@ -15,11 +15,6 @@
       }
     </div>
 
-    <div class="field field--preview">
-      <span class="preview__label">Próxima factura</span>
-      <strong class="preview__value">{{ previewNumero() }}</strong>
-    </div>
-
     <div class="field">
       <input id="establecimiento" class="field__input" type="text" inputmode="numeric" maxlength="3" formControlName="establecimiento" placeholder=" " />
       <label class="field__label" for="establecimiento">Establecimiento*</label>
@@ -54,13 +49,6 @@
       <label class="field__label" for="numeroActual">Próximo número</label>
     </div>
 
-    <div class="field field--checkbox">
-      <label class="checkbox-label">
-        <input type="checkbox" formControlName="activo" />
-        Timbrado activo
-      </label>
-    </div>
-
     <div class="field">
       <input id="fechaInicioVigencia" class="field__input field__input--date" type="date" formControlName="fechaInicioVigencia" placeholder=" " />
       <label class="field__label field__label--date" for="fechaInicioVigencia">Vigente desde*</label>
@@ -69,6 +57,13 @@
     <div class="field">
       <input id="fechaFinVigencia" class="field__input field__input--date" type="date" formControlName="fechaFinVigencia" placeholder=" " />
       <label class="field__label field__label--date" for="fechaFinVigencia">Vigente hasta*</label>
+    </div>
+
+    <div class="field field--checkbox">
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="activo" />
+        Timbrado activo
+      </label>
     </div>
   </div>
 </form>
