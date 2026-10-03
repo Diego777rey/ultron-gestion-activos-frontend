@@ -92,6 +92,7 @@ export class MainLayoutComponent implements OnInit {
         { label: 'Últimas cajas', icon: 'history', route: '/financiero/ultimas', requiredPermissions: ['CAJAS'] },
         { label: 'Cotización', icon: 'currency_exchange', route: '/financiero/cotizaciones', requiredPermissions: ['COTIZACIONES'] },
         { label: 'Datos de facturación', icon: 'receipt_long', route: '/financiero/facturacion', requiredPermissions: ['FINANCIERO'] },
+        { label: 'Timbrados', icon: 'confirmation_number', route: '/financiero/facturacion/timbrados', requiredPermissions: ['FINANCIERO'] },
       ]
     },
     {
@@ -180,6 +181,8 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('maletines')) return 'Maletines';
     if (url.includes('ultimas') && url.includes('/ventas')) return 'Ventas de la caja';
     if (url.includes('ultimas')) return 'Últimas cajas';
+    if (url.includes('facturacion/timbrados')) return 'Timbrados';
+    if (url.includes('facturacion')) return 'Datos de facturación';
     if (url.includes('cotizaciones')) return 'Cotizaciones';
     if (url.includes('cajas')) return 'Cajas';
     if (url.includes('productos/nuevo')) return 'Nuevo Producto';

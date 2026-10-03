@@ -13,8 +13,6 @@
   [toolbarActions]="toolbarActions"
   emptyMessage="No hay empresas para facturar"
   [trackBy]="trackById"
-  [expandTemplate]="detalleTpl"
-  (rowClick)="onEmpresaRowClick($event)"
   (pageChange)="onPageChange($event)"
   (retry)="load()"
   (actionClicked)="onToolbarAction($event)"
@@ -52,83 +50,3 @@
     <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, empresa)" />
   </ng-template>
 </app-generic-list>
-
-<ng-template #detalleTpl let-empresa>
-  @let estado = timbradosFor(empresa);
-  <section class="empresa-detalle">
-    <header class="empresa-detalle__header">
-      <span class="material-icons" aria-hidden="true">receipt_long</span>
-      <h4 class="empresa-detalle__title">Datos para la factura</h4>
-    </header>
-
-    <dl class="empresa-detalle__datos">
-      <div>
-        <dt>Email</dt>
-        <dd>{{ empresa.email | defaultEmpty }}</dd>
-      </div>
-      <div>
-        <dt>Actividad económica</dt>
-        <dd>{{ empresa.actividad_economica | defaultEmpty }}</dd>
-      </div>
-    </dl>
-
-    <header class="empresa-detalle__header">
-      <span class="material-icons" aria-hidden="true">confirmation_number</span>
-      <h4 class="empresa-detalle__title">Timbrados</h4>
-      <app-ui-button
-        label="Agregar"
-        icon="add"
-        variant="outline"
-        size="sm"
-        (clicked)="abrirTimbrado(empresa)"
-      />
-    </header>
-
-    @if (estado?.loading) {
-      <p class="empresa-detalle__status">
-        <span class="material-icons empresa-detalle__spinner" aria-hidden="true">progress_activity</span>
-        Cargando timbrados…
-      </p>
-    } @else if (estado?.error) {
-      <p class="empresa-detalle__status empresa-detalle__status--error">
-        <span class="material-icons" aria-hidden="true">error_outline</span>
-        {{ estado?.error }}
-      </p>
-    } @else if (estado?.items?.length) {
-      <table class="empresa-detalle__table">
-        <thead>
-          <tr>
-            <th>Timbrado</th>
-            <th>Punto</th>
-            <th>Vigencia</th>
-            <th>Próxima factura</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (timbrado of estado?.items ?? []; track trackTimbrado(timbrado)) {
-            <tr>
-              <td>{{ timbrado.numero_timbrado }}</td>
-              <td>{{ timbrado.establecimiento }}-{{ timbrado.punto_expedicion }}</td>
-              <td>{{ timbrado.fecha_inicio_vigencia }} al {{ timbrado.fecha_fin_vigencia }}</td>
-              <td>{{ proximoNumero(timbrado) }}</td>
-              <td>{{ estadoTimbrado(timbrado) }}</td>
-              <td>
-                <app-action-menu
-                  [actions]="accionesTimbrado(timbrado)"
-                  (actionSelected)="onTimbradoAction($event, empresa, timbrado)"
-                />
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    } @else {
-      <p class="empresa-detalle__status empresa-detalle__status--empty">
-        <span class="material-icons" aria-hidden="true">inbox</span>
-        Esta empresa no tiene timbrados cargados.
-      </p>
-    }
-  </section>
-</ng-template>

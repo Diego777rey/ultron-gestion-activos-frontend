@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { GenericListComponent } from '../../../../../shared/components/generic-list/generic-list';
 import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
 import { ActionMenuComponent, MenuAction } from '../../../../../shared/components/action-menu/action-menu';
 import { DefaultEmptyPipe } from '../../../../../shared/pipes/default-empty.pipe';
-import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-action.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
@@ -11,34 +11,18 @@ import { AppDialogService } from '../../../../../shared/services/app-dialog.serv
 import { EmpresaOutput } from '../../../../personas/empresas/interfaces/empresa.interface';
 import { EmpresaService } from '../../../../personas/empresas/services/empresa.service';
 import { EmpresaFormComponent } from '../../../../personas/empresas/dialogs/empresa-form/empresa-form';
-import { TimbradoOutput } from '../../interfaces/timbrado.interface';
-import { TimbradoService } from '../../services/timbrado.service';
-import { TimbradoFormComponent } from '../../dialogs/timbrado-form/timbrado-form.component';
-
-interface TimbradosEmpresaState {
-  loading: boolean;
-  error: string | null;
-  items: TimbradoOutput[];
-}
 
 @Component({
   selector: 'app-datos-facturacion-page',
-  imports: [
-    GenericListComponent,
-    TableCellDirective,
-    ActionMenuComponent,
-    DefaultEmptyPipe,
-    UiButtonComponent,
-  ],
+  imports: [GenericListComponent, TableCellDirective, ActionMenuComponent, DefaultEmptyPipe],
   templateUrl: './datos-facturacion-page.component.html',
-  styleUrl: './datos-facturacion-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'app-list-view' },
 })
 export class DatosFacturacionPageComponent {
   private readonly empresaService = inject(EmpresaService);
-  private readonly timbradoService = inject(TimbradoService);
   private readonly dialogService = inject(AppDialogService);
+  private readonly router = inject(Router);
 
   private readonly todas = signal<EmpresaOutput[]>([]);
 
@@ -47,7 +31,6 @@ export class DatosFacturacionPageComponent {
   protected readonly search = signal('');
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
-  protected readonly timbradosState = signal<Record<string, TimbradosEmpresaState>>({});
 
   protected readonly filtradas = computed(() => {
     const q = this.search().trim().toLowerCase();
@@ -101,7 +84,6 @@ export class DatosFacturacionPageComponent {
       next: (list) => {
         this.todas.set(list);
         this.loading.set(false);
-        this.timbradosState.set({});
       },
       error: (err: Error) => {
         this.error.set(err.message || 'No se pudo conectar con el servidor');
@@ -170,110 +152,11 @@ export class DatosFacturacionPageComponent {
       return;
     }
     if (actionId === 'timbrado') {
-      this.abrirTimbrado(empresa);
-    }
-  }
-
-  protected onEmpresaRowClick(empresa: EmpresaOutput): void {
-    const id = empresa.id_empresa;
-    if (id == null) {
-      return;
-    }
-    const key = String(id);
-    const current = this.timbradosState()[key];
-    if (current?.loading || (current && current.error === null)) {
-      return;
-    }
-    this.cargarTimbrados(id);
-  }
-
-  protected timbradosFor(empresa: EmpresaOutput): TimbradosEmpresaState | undefined {
-    return empresa.id_empresa == null ? undefined : this.timbradosState()[String(empresa.id_empresa)];
-  }
-
-  protected abrirTimbrado(empresa: EmpresaOutput, timbrado?: TimbradoOutput): void {
-    this.dialogService
-      .openForm(TimbradoFormComponent, {
-        title: timbrado ? 'Editar timbrado' : 'Nuevo timbrado',
-        subtitle: 'Autorización de la SET para facturas en papel',
-        maxWidth: '720px',
-        inputs: { timbrado: timbrado ?? null, idEmpresa: empresa.id_empresa },
-      })
-      .subscribe((saved) => {
-        if (saved) {
-          this.cargarTimbrados(empresa.id_empresa);
-        }
+      void this.router.navigate(['/financiero/facturacion/timbrados'], {
+        queryParams: { idEmpresa: empresa.id_empresa },
       });
-  }
-
-  protected accionesTimbrado(timbrado: TimbradoOutput): MenuAction[] {
-    return [
-      { id: 'edit', label: 'Editar', icon: 'edit' },
-      timbrado.activo
-        ? { id: 'deactivate', label: 'Desactivar', icon: 'block', danger: true }
-        : { id: 'activate', label: 'Activar', icon: 'check_circle' },
-    ];
-  }
-
-  protected onTimbradoAction(actionId: string, empresa: EmpresaOutput, timbrado: TimbradoOutput): void {
-    if (actionId === 'edit') {
-      this.abrirTimbrado(empresa, timbrado);
-      return;
     }
-    this.timbradoService.cambiarActivo(timbrado.id_timbrado, actionId === 'activate').subscribe({
-      next: () => this.cargarTimbrados(empresa.id_empresa),
-      error: (err: Error) => {
-        this.setTimbradosState(String(empresa.id_empresa), {
-          loading: false,
-          error: err.message || 'No se pudo actualizar el timbrado',
-          items: this.timbradosFor(empresa)?.items ?? [],
-        });
-      },
-    });
-  }
-
-  protected estadoTimbrado(timbrado: TimbradoOutput): string {
-    if (!timbrado.activo) {
-      return 'Inactivo';
-    }
-    if (timbrado.esta_vigente === false) {
-      return 'Vencido';
-    }
-    if ((timbrado.numeros_disponibles ?? 0) <= 0) {
-      return 'Sin números';
-    }
-    return 'Vigente';
-  }
-
-  protected proximoNumero(timbrado: TimbradoOutput): string {
-    const numero = String(timbrado.numero_actual ?? 0).padStart(7, '0');
-    return `${timbrado.establecimiento}-${timbrado.punto_expedicion}-${numero}`;
   }
 
   protected trackById = (empresa: EmpresaOutput): unknown => empresa.id_empresa;
-
-  protected trackTimbrado = (timbrado: TimbradoOutput): unknown => timbrado.id_timbrado;
-
-  private cargarTimbrados(idEmpresa: number): void {
-    const key = String(idEmpresa);
-    this.setTimbradosState(key, { loading: true, error: null, items: [] });
-    this.timbradoService.listarPorEmpresa(idEmpresa).subscribe({
-      next: (items) =>
-        this.setTimbradosState(key, {
-          loading: false,
-          error: null,
-          items: items.filter((item) => (item.tipo_factura ?? 'PAPEL') === 'PAPEL'),
-        }),
-      error: (err: Error) =>
-        this.setTimbradosState(key, {
-          loading: false,
-          error: err.message || 'No se pudieron cargar los timbrados',
-          items: [],
-        }),
-    });
-  }
-
-  private setTimbradosState(key: string, state: TimbradosEmpresaState): void {
-    this.timbradosState.update((map) => ({ ...map, [key]: state }));
-  }
 }
