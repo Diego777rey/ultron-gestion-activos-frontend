@@ -10,7 +10,7 @@
   <div class="factura-dialog">
     @if (error(); as err) {
       <div class="factura-dialog__error" role="alert">
-        <span class="material-icons">error_outline</span>
+        <span class="material-icons" aria-hidden="true">error_outline</span>
         <span>{{ err }}</span>
       </div>
     }
@@ -19,7 +19,7 @@
       <!-- Sección de productos -->
       <section class="factura-dialog__section">
         <h3 class="factura-dialog__section-title">
-          <span class="material-icons">shopping_cart</span>
+          <span class="material-icons" aria-hidden="true">shopping_cart</span>
           Productos a facturar
         </h3>
         <div class="factura-productos">
@@ -63,7 +63,7 @@
         @if (!mostrarFormularioCliente()) {
           <div class="factura-dialog__section-header">
             <h3 class="factura-dialog__section-title">
-              <span class="material-icons">person</span>
+              <span class="material-icons" aria-hidden="true">person</span>
               Cliente
             </h3>
             <button
@@ -71,23 +71,24 @@
               class="factura-dialog__btn-nuevo"
               (click)="abrirFormularioCliente()"
             >
-              <span class="material-icons">add</span>
+              <span class="material-icons" aria-hidden="true">add</span>
               Nuevo cliente
             </button>
           </div>
 
           <div class="factura-clientes">
             <div class="factura-clientes__search">
-              <span class="material-icons">search</span>
+              <span class="material-icons" aria-hidden="true">search</span>
               <input
                 type="search"
+                aria-label="Buscar cliente por nombre, documento o RUC"
                 placeholder="Buscar por nombre, documento o RUC..."
                 [value]="busqueda()"
                 (input)="onBusquedaChange($any($event.target).value)"
               />
             </div>
 
-            <div class="factura-clientes__lista">
+            <div class="factura-clientes__lista" role="radiogroup" aria-label="Clientes">
               @if (loadingClientes()) {
                 <div class="factura-clientes__empty">Cargando clientes...</div>
               } @else {
@@ -95,11 +96,13 @@
                   <button
                     type="button"
                     class="factura-cliente"
+                    role="radio"
                     [class.factura-cliente--seleccionado]="clienteSeleccionado()?.id_cliente === cliente.id_cliente"
+                    [attr.aria-checked]="clienteSeleccionado()?.id_cliente === cliente.id_cliente"
                     (click)="seleccionarCliente(cliente)"
                   >
                     <div class="factura-cliente__icono">
-                      <span class="material-icons">account_circle</span>
+                      <span class="material-icons" aria-hidden="true">account_circle</span>
                     </div>
                     <div class="factura-cliente__info">
                       <strong>{{ nombreCliente(cliente) }}</strong>
@@ -116,7 +119,7 @@
                     </div>
                     @if (clienteSeleccionado()?.id_cliente === cliente.id_cliente) {
                       <span class="factura-cliente__check">
-                        <span class="material-icons">check_circle</span>
+                        <span class="material-icons" aria-hidden="true">check_circle</span>
                       </span>
                     }
                   </button>
@@ -131,7 +134,7 @@
         } @else {
           <div class="factura-dialog__section-header">
             <h3 class="factura-dialog__section-title">
-              <span class="material-icons">person_add</span>
+              <span class="material-icons" aria-hidden="true">person_add</span>
               Registrar nuevo cliente
             </h3>
             <button
@@ -139,7 +142,7 @@
               class="factura-dialog__btn-cancelar"
               (click)="cerrarFormularioCliente()"
             >
-              <span class="material-icons">close</span>
+              <span class="material-icons" aria-hidden="true">close</span>
               Cancelar
             </button>
           </div>
@@ -155,7 +158,7 @@
       <!-- Sección de forma de pago -->
       <section class="factura-dialog__section">
         <h3 class="factura-dialog__section-title">
-          <span class="material-icons">payment</span>
+          <span class="material-icons" aria-hidden="true">payment</span>
           Forma de pago
         </h3>
 
@@ -167,12 +170,14 @@
             } @else if (errorMontos()) {
               <small class="factura-pago__cotizacion">{{ errorMontos() }}</small>
             }
-            <div class="factura-pago__moneda-selector">
+            <div class="factura-pago__moneda-selector" role="radiogroup" aria-label="Moneda">
               @for (moneda of monedasDisponibles(); track moneda.codigo) {
                 <button
                   type="button"
                   class="moneda-btn"
+                  role="radio"
                   [class.moneda-btn--selected]="monedaSeleccionada() === moneda.codigo"
+                  [attr.aria-checked]="monedaSeleccionada() === moneda.codigo"
                   (click)="seleccionarMoneda(moneda.codigo)"
                 >
                   <span class="moneda-btn__simbolo">{{ moneda.simbolo }}</span>
@@ -192,21 +197,23 @@
             }
           </div>
 
-          <div class="factura-pago__metodos">
+          <div class="factura-pago__metodos" role="radiogroup" aria-label="Forma de pago">
             @for (metodo of metodosPago; track metodo.codigo) {
               <button
                 type="button"
                 class="factura-pago-metodo"
+                role="radio"
                 [class.factura-pago-metodo--seleccionado]="seleccionado() === metodo.codigo"
+                [attr.aria-checked]="seleccionado() === metodo.codigo"
                 (click)="seleccionar(metodo.codigo)"
               >
                 <span class="factura-pago-metodo__icono">
-                  <span class="material-icons">{{ metodo.icon }}</span>
+                  <span class="material-icons" aria-hidden="true">{{ metodo.icon }}</span>
                 </span>
                 <span>{{ metodo.label }}</span>
                 @if (seleccionado() === metodo.codigo) {
                   <span class="factura-pago-metodo__check">
-                    <span class="material-icons">check_circle</span>
+                    <span class="material-icons" aria-hidden="true">check_circle</span>
                   </span>
                 }
               </button>

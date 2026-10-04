@@ -17,6 +17,7 @@ import { CartItem, FormaPago } from '../../interfaces/venta.interface';
 import { ClienteService } from '../../../../personas/clientes/services/cliente.service';
 import { ClienteOutput } from '../../../../personas/clientes/interfaces/cliente.interface';
 import { ClienteFormComponent } from '../../../../personas/clientes/dialogs/cliente-form/cliente-form';
+import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
 import { LoadingService } from '../../../../../shared/services/loading.service';
 import { CotizacionService } from '../../../../financiero/cotizaciones/services/cotizacion.service';
 import { MontoCotizado } from '../../../../financiero/cotizaciones/interfaces/cotizacion.interface';
@@ -143,7 +144,7 @@ export class FacturaDialogComponent implements OnInit {
   }
 
   protected nombreCliente(cliente: ClienteOutput): string {
-    return `${cliente.persona?.nombre ?? ''} ${cliente.persona?.apellido ?? ''}`.trim();
+    return nombreCompletoPersona(cliente.persona) || 'Sin nombre';
   }
 
   protected seleccionarCliente(cliente: ClienteOutput): void {

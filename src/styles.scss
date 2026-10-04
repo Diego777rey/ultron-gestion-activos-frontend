@@ -24,7 +24,8 @@ html {
   --border-color: #2d2d2d;
   --text-primary: #ffffff;
   --text-secondary: #c5c5c5;
-  --text-muted: #757575;
+  // #9e9e9e mantiene contraste AA (≥4.5:1) sobre --surface-color y --surface-raised.
+  --text-muted: #9e9e9e;
   --primary-color: #1976d2;
   --primary-color-dark: #1565c0;
   --primary-glow: rgba(25, 118, 210, 0.35);
@@ -36,6 +37,40 @@ html {
   --scrollbar-track: #121212;
   --scrollbar-thumb: #3a3a3a;
   --scrollbar-thumb-hover: #4a4a4a;
+
+  // Tarjetas, opciones y campos dentro de un modal o panel (--surface-color).
+  --surface-raised: #2a2a2a;
+  --surface-raised-hover: #333333;
+  --border-strong: #3a3a3a;
+  --border-strong-hover: #4a4a4a;
+  --danger-color: #ef5350;
+  --danger-bg: rgba(239, 83, 80, 0.12);
+  --danger-border: rgba(239, 83, 80, 0.4);
+  --success-color: #66bb6a;
+  --success-bg: rgba(102, 187, 106, 0.14);
+  --radius-md: 8px;
+
+  // Alias: nombres de tokens de otros sistemas de diseño. Sin ellos, un
+  // var(--x, #fff) cae en el fallback claro y el texto blanco queda ilegible.
+  --primary: var(--primary-color);
+  --primary-dark: var(--primary-color-dark);
+  --primary-subtle: var(--active-bg);
+  --surface-card: var(--surface-raised);
+  --surface-subtle: var(--surface-color);
+  --surface-hover: var(--surface-raised-hover);
+  --surface-elevated: var(--surface-raised);
+  --bg-secondary: var(--surface-raised);
+  --border-default: var(--border-strong);
+  --border-hover: var(--border-strong-hover);
+  --border-radius: var(--radius-md);
+  --danger: var(--danger-color);
+  --danger-subtle: var(--danger-bg);
+  --color-surface-variant: var(--surface-raised);
+  --color-on-surface-variant: var(--text-secondary);
+  --color-success-container: var(--success-bg);
+  --color-on-success-container: var(--success-color);
+  --color-error-container: var(--danger-bg);
+  --color-on-error-container: var(--danger-color);
 }
 
 html, body {
