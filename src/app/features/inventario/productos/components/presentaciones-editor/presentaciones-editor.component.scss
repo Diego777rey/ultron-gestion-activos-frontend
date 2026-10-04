@@ -1,135 +1,152 @@
 :host {
-  display: block;
-}
-
-.presentaciones__header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-
-  h3 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary, #f2f2f2);
-  }
-
-  p {
-    margin: 2px 0 0;
-    font-size: 12px;
-    color: var(--text-secondary, rgba(255, 255, 255, 0.62));
-  }
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
-.presentaciones__add,
-.presentaciones__remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  border: 1px solid color-mix(in srgb, var(--primary-color, #1976d2) 55%, transparent);
-  background: transparent;
-  color: var(--text-primary, #f2f2f2);
-  cursor: pointer;
-  font: inherit;
-
-  .material-icons {
-    font-size: 18px;
-  }
-}
-
-.presentaciones__add {
-  height: 32px;
-  padding: 0 10px;
-  border-radius: 8px;
-  font-size: 13px;
-  white-space: nowrap;
+.presentaciones {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .presentaciones__empty {
-  margin: 0;
+  margin: 8px 16px 16px;
   font-size: 13px;
-  color: var(--text-secondary, rgba(255, 255, 255, 0.55));
+  color: rgba(255, 255, 255, 0.55);
 }
 
-.presentaciones__head,
-.presentaciones__row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(140px, 1fr) 96px 110px 40px;
-  gap: 10px;
-  align-items: center;
+.presentaciones__wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
 }
 
-.presentaciones__head {
-  margin-bottom: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--text-secondary, rgba(255, 255, 255, 0.55));
-}
-
-.presentaciones__row {
-  margin-bottom: 8px;
-}
-
-.presentaciones__field input {
+.presentaciones__table {
   width: 100%;
-  height: 36px;
-  box-sizing: border-box;
-  padding: 6px 8px;
-  border: 1px solid color-mix(in srgb, var(--border-color, rgba(148, 163, 184, 0.35)) 80%, transparent);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-primary, #f5f5f5);
-  font: inherit;
+  border-collapse: collapse;
   font-size: 13px;
-  outline: none;
-  color-scheme: dark;
 
-  &:focus {
-    border-color: var(--primary-color, #1976d2);
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+    background: #2c2c2c;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  td {
+    padding: 4px 12px;
+    color: rgba(255, 255, 255, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: #262626;
+    vertical-align: middle;
+  }
+
+  tbody tr:hover td {
+    background: rgba(25, 118, 210, 0.12);
+  }
+
+  input {
+    width: 100%;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+    color-scheme: dark;
+
+    &:focus {
+      color: #fff;
+    }
   }
 }
 
-.presentaciones__remove {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border-radius: 8px;
-  border-color: transparent;
-  color: #ff8aa3;
+.col-id {
+  width: 72px;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.presentaciones__error {
-  grid-column: 1 / -1;
-  font-size: 11px;
-  color: #ff6b8b;
+.col-num {
+  width: 110px;
 }
 
-.sr-only {
+.col-accion {
+  position: relative;
+  width: 44px;
+  text-align: center;
+
+  > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #90caf9;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(25, 118, 210, 0.2);
+    }
+
+    .material-icons {
+      font-size: 20px;
+    }
+  }
+}
+
+.presentaciones__menu {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
+  top: 36px;
+  right: 8px;
+  z-index: 2;
+  min-width: 120px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: #1c2430;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+
+  button {
+    width: 100%;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #e8e8e8;
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    padding: 0 10px;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(25, 118, 210, 0.22);
+      color: #fff;
+    }
+  }
 }
 
-@media (max-width: 640px) {
-  .presentaciones__head {
-    display: none;
-  }
-
-  .presentaciones__row {
-    grid-template-columns: 1fr 1fr 36px;
-  }
-
-  .presentaciones__field--wide {
-    grid-column: 1 / -1;
-  }
+.presentaciones__error-row td {
+  padding: 0 12px 8px;
+  font-size: 11px;
+  color: #ff8aa3;
+  background: #262626;
 }

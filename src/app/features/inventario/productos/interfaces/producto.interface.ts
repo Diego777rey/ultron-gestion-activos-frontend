@@ -37,6 +37,8 @@ export interface ProductoOutput {
   ubicacion?: string;
   estado?: boolean;
   imagen?: string;
+  /** 10, 5 o EXENTA. */
+  tipoIva?: string;
   categoriaProducto?: CategoriaProductoOutput;
   presentaciones?: PresentacionProductoOutput[];
 }
@@ -53,6 +55,8 @@ export interface ProductoInput {
   ubicacion?: string;
   estado?: boolean;
   imagen?: string;
+  /** 10, 5 o EXENTA. */
+  tipoIva?: string;
   idCategoriaProducto: number;
   presentaciones?: PresentacionProductoInput[];
 }

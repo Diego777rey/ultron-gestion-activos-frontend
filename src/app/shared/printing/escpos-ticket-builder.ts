@@ -1,4 +1,5 @@
 import {
+  TicketFactura,
   TicketOrdenTrabajo,
   TicketRenglon,
   TicketSegmento,
@@ -89,6 +90,78 @@ export function buildTicketVenta(ticket: TicketVenta): Uint8Array {
   builder.line(blankTo(ticket.pie, 'Gracias por su compra'));
   builder.feed(3);
   builder.cut();
+  return builder.toBytes();
+}
+
+/**
+ * Factura autoimpresa (papel) para térmica de 58 mm.
+ * Lleva los datos que exige la SET: emisor, timbrado, número, comprador,
+ * discriminación de IVA y liquidación.
+ */
+export function buildTicketFactura(ticket: TicketFactura): Uint8Array {
+  const ancho = WIDTH_58MM_FONT_B;
+  const builder = new EscPosTicketBuilder().init().align(1).logo().feed(1).smallFont(LINE_SPACING_FONT_B);
+  const centrado = (texto: string) => escribir(builder, texto, ancho, true, false);
+  const campo = (texto: string, conservarEspacios = false) =>
+    escribir(builder, texto, ancho, false, conservarEspacios);
+  const regla = () => builder.align(0).line('-'.repeat(ancho));
+
+  centrado(blankTo(ticket.razonSocial, 'SIN RAZON SOCIAL'));
+  if (notBlank(ticket.nombreFantasia)) {
+    centrado(ticket.nombreFantasia!.trim());
+  }
+  campo(`RUC: ${blankTo(ticket.ruc, '-')}`);
+  campo(`DIRECCION: ${blankTo(ticket.direccion, '-')}`);
+  campo(`TEL: ${blankTo(ticket.telefono, '-')}`);
+  campo(`ACTIVIDAD: ${blankTo(ticket.actividadEconomica, '-')}`);
+  regla();
+  campo(`TIMBRADO NRO: ${blankTo(ticket.timbrado, '-')}`);
+  campo(`INICIO VIGENCIA: ${blankTo(ticket.vigenciaInicio, '-')}`);
+  campo(`FIN VIGENCIA: ${blankTo(ticket.vigenciaFin, '-')}`);
+  builder.align(1).bold(true).line('FACTURA');
+  builder.bold(false);
+  centrado(blankTo(ticket.numeroFactura, '-'));
+  campo(`FECHA: ${blankTo(ticket.fecha, formatNow())}`);
+  campo(`CONDICION: ${blankTo(ticket.condicion, 'CONTADO')}`);
+  if (notBlank(ticket.formaPago)) {
+    campo(`FORMA DE PAGO: ${ticket.formaPago!.trim()}`);
+  }
+  regla();
+  campo(`CLIENTE: ${blankTo(ticket.clienteNombre, 'SIN NOMBRE')}`);
+  campo(`RUC/CI: ${blankTo(ticket.clienteDocumento, '-')}`);
+  campo(`DIRECCION: ${blankTo(ticket.clienteDireccion, '-')}`);
+  regla();
+  campo('CANT  DESCRIPCION   P.UNIT');
+  campo(encabezadoIva(ancho), true);
+  regla();
+
+  for (const linea of ticket.lineas ?? []) {
+    const cantidad = formatCantidad(linea.cantidad);
+    const precio = formatGs(linea.precioUnitario);
+    campo(`${cantidad} x ${precio}`);
+    campo(blankTo(linea.descripcion, 'ITEM'));
+    campo(
+      columnasIva(ancho, montoEnColumna(linea, 'EXENTA'), montoEnColumna(linea, '5'), montoEnColumna(linea, '10')),
+      true,
+    );
+  }
+
+  regla();
+  campo(filaTotal(ancho, 'TOTAL EXENTAS', ticket.totalExenta), true);
+  campo(filaTotal(ancho, 'TOTAL GRAV. 5%', ticket.totalGravada5), true);
+  campo(filaTotal(ancho, 'TOTAL GRAV. 10%', ticket.totalGravada10), true);
+  builder.bold(true);
+  campo(filaTotal(ancho, 'TOTAL A PAGAR Gs.', ticket.total), true);
+  builder.bold(false);
+  regla();
+  centrado('LIQUIDACION DEL IVA');
+  campo(filaTotal(ancho, 'IVA 5%', ticket.totalIva5), true);
+  campo(filaTotal(ancho, 'IVA 10%', ticket.totalIva10), true);
+  campo(filaTotal(ancho, 'TOTAL IVA', (ticket.totalIva5 ?? 0) + (ticket.totalIva10 ?? 0)), true);
+  regla();
+  centrado('ORIGINAL: CLIENTE');
+  centrado('IVA INCLUIDO');
+  builder.feed(3).cut();
   return builder.toBytes();
 }
 
@@ -397,6 +470,49 @@ class EscPosTicketBuilder {
   private write(bytes: number[]): void {
     this.bytes.push(...bytes);
   }
+}
+
+function escribir(
+  builder: EscPosTicketBuilder,
+  texto: string,
+  ancho: number,
+  centrado: boolean,
+  conservarEspacios: boolean,
+): void {
+  const base = sanitize(texto);
+  const limpio = conservarEspacios ? base : base.trim();
+  const contenido = limpio.length > 0 ? limpio : '-';
+  builder.align(centrado ? 1 : 0);
+  for (let i = 0; i < contenido.length; i += ancho) {
+    builder.line(contenido.slice(i, i + ancho));
+  }
+}
+
+function encabezadoIva(ancho: number): string {
+  return alinearMontos(ancho, 'EXENTAS', '5%', '10%');
+}
+
+function columnasIva(ancho: number, exenta: number, iva5: number, iva10: number): string {
+  return alinearMontos(ancho, formatGs(exenta), formatGs(iva5), formatGs(iva10));
+}
+
+function alinearMontos(ancho: number, exenta: string, iva5: string, iva10: string): string {
+  const columna = 12;
+  const texto = exenta.padStart(columna) + iva5.padStart(columna) + iva10.padStart(columna);
+  return texto.length >= ancho ? texto.slice(texto.length - ancho) : texto.padStart(ancho);
+}
+
+function montoEnColumna(linea: { subtotal: number; tipoIva: string }, tipo: string): number {
+  return (linea.tipoIva ?? '10').toUpperCase() === tipo ? linea.subtotal : 0;
+}
+
+function filaTotal(ancho: number, etiqueta: string, monto: number): string {
+  const valor = formatGs(monto);
+  const limpio = sanitize(etiqueta);
+  if (limpio.length + 1 + valor.length > ancho) {
+    return `${limpio.slice(0, Math.max(0, ancho - valor.length - 1))} ${valor}`.slice(0, ancho);
+  }
+  return limpio + ' '.repeat(ancho - limpio.length - valor.length) + valor;
 }
 
 function formatNow(): string {

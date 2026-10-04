@@ -17,6 +17,7 @@ export class ImageUploaderComponent {
   readonly label = input<string>('Imagen');
   readonly maxSizeMB = input<number>(5);
   readonly disabled = input<boolean>(false);
+  readonly appearance = input<'box' | 'circle'>('box');
 
   readonly imageChange = output<string | null>();
   readonly uploadError = output<string>();
