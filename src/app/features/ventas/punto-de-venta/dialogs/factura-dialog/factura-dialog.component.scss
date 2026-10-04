@@ -272,6 +272,31 @@
   padding-right: 0.25rem;
 }
 
+.factura-clientes__mas {
+  padding: 0.5rem;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--hover-color);
+    color: var(--text-primary);
+  }
+
+  &:disabled {
+    cursor: progress;
+  }
+}
+
+.factura-clientes__conteo {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 .factura-clientes__empty {
   display: flex;
   flex-direction: column;
