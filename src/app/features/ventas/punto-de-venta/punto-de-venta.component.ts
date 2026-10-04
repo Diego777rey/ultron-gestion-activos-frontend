@@ -477,7 +477,11 @@ export class PuntoDeVentaComponent {
   }
 
   protected abrirFactura(): void {
-    this.cobrarConTicket();
+    if (this.cart().length === 0) {
+      this.ventaError.set('Agregá ítems al carrito antes de facturar');
+      return;
+    }
+    this.facturaDialogOpen.set(true);
   }
 
   protected cerrarPagoDialog(): void {
@@ -521,11 +525,7 @@ export class PuntoDeVentaComponent {
   }
 
   protected cobrarConTicket(): void {
-    if (this.cart().length === 0) {
-      this.ventaError.set('Agregá ítems al carrito antes de facturar');
-      return;
-    }
-    this.facturaDialogOpen.set(true);
+    this.registrarVenta(true, 'EFECTIVO', 'PYG');
   }
 
   protected cerrarFacturaDialog(): void {
