@@ -1,0 +1,60 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="timbrados()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  [searchValue]="search()"
+  (searchValueChange)="onSearchChange($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="Esta empresa no tiene timbrados cargados"
+  [trackBy]="trackTimbrado"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0)"
+>
+  <div genericListFilters class="timbrados-filters">
+    <div class="filter-field filter-field--empresa">
+      <label for="timbrados-empresa">Empresa</label>
+      <input id="timbrados-empresa" type="text" [value]="empresaLabel()" readonly />
+    </div>
+    <div class="filter-field filter-field--buscar">
+      <label for="timbrados-buscar">Número de timbrado o punto</label>
+      <input
+        id="timbrados-buscar"
+        type="text"
+        [value]="search()"
+        (input)="onSearchChange($any($event.target).value)"
+        (keydown.enter)="pageIndex.set(0)"
+      />
+    </div>
+  </div>
+
+  <ng-template appTableCell="numero_timbrado" [appTableCellFrom]="timbrados()" let-timbrado>
+    {{ timbrado.numero_timbrado | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="punto" [appTableCellFrom]="timbrados()" let-timbrado>
+    {{ timbrado.establecimiento }}-{{ timbrado.punto_expedicion }}
+  </ng-template>
+
+  <ng-template appTableCell="vigencia" [appTableCellFrom]="timbrados()" let-timbrado>
+    {{ vigencia(timbrado) }}
+  </ng-template>
+
+  <ng-template appTableCell="proxima" [appTableCellFrom]="timbrados()" let-timbrado>
+    {{ proximoNumero(timbrado) }}
+  </ng-template>
+
+  <ng-template appTableCell="estado" [appTableCellFrom]="timbrados()" let-timbrado>
+    {{ estadoTimbrado(timbrado) }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="timbrados()" let-timbrado>
+    <app-action-menu [actions]="accionesTimbrado(timbrado)" (actionSelected)="onTimbradoAction($event, timbrado)" />
+  </ng-template>
+</app-generic-list>

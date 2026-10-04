@@ -53,10 +53,21 @@ export const API_CONFIG = {
   get authLoginEndpoint(): string {
     return `${resolveApiBaseUrl()}/api/auth/login`;
   },
+  /** Prueba de vida, sin token. Sirve para saber si este proceso llega al servidor. */
+  get healthEndpoint(): string {
+    return `${resolveApiBaseUrl()}/api/health`;
+  },
   get graphqlEndpoint(): string {
     return `${resolveApiBaseUrl()}/graphql`;
   },
   get reportesEndpoint(): string {
     return `${resolveApiBaseUrl()}/api/reportes`;
+  },
+  get filesEndpoint(): string {
+    return `${resolveApiBaseUrl()}/api/files`;
+  },
+  /** Carpeta pública del servidor donde quedan las imágenes subidas. */
+  get uploadsBaseUrl(): string {
+    return `${resolveApiBaseUrl()}/uploads`;
   },
 };

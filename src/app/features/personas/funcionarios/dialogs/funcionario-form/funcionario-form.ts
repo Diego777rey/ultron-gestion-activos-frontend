@@ -10,6 +10,7 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
 import { of } from 'rxjs';
 import { FuncionarioService } from '../../services/funcionario.service';
 import { PersonaService } from '../../../shared/services/persona.service';
+import { nombreCompletoPersona } from '../../../shared/nombre-persona';
 @Component({
   selector: 'app-funcionario-form',
   imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
@@ -29,8 +30,7 @@ export class FuncionarioFormComponent {
   protected isEdit = false;
 
   protected readonly form = this.fb.nonNullable.group({
-    nombre: ['', [Validators.required, Validators.maxLength(80)]],
-    apellido: ['', [Validators.required, Validators.maxLength(80)]],
+    nombre: ['', [Validators.required, Validators.maxLength(255)]],
     documento: ['', [Validators.required, Validators.maxLength(30)]],
     email: ['', [Validators.email]],
     telefono: [''],
@@ -50,8 +50,7 @@ export class FuncionarioFormComponent {
       if (f) {
         this.isEdit = !!f.id_funcionario;
         this.form.reset({
-          nombre: f.persona?.nombre ?? '',
-          apellido: f.persona?.apellido ?? '',
+          nombre: nombreCompletoPersona(f.persona),
           documento: f.persona?.documento ?? '',
           email: f.persona?.email ?? '',
           telefono: f.persona?.telefono ?? '',
@@ -66,7 +65,6 @@ export class FuncionarioFormComponent {
         this.isEdit = false;
         this.form.reset({
           nombre: '',
-          apellido: '',
           documento: '',
           email: '',
           telefono: '',
@@ -94,8 +92,7 @@ export class FuncionarioFormComponent {
       const persona = data?.buscarPersonaPorDocumento;
       if (persona && !this.isEdit) {
         this.form.patchValue({
-          nombre: persona.nombre || '',
-          apellido: persona.apellido || '',
+          nombre: nombreCompletoPersona(persona),
           email: persona.email || '',
           telefono: persona.telefono || '',
           direccion: persona.direccion || ''
@@ -117,7 +114,7 @@ export class FuncionarioFormComponent {
     const payload: FuncionarioInput = {
       persona: {
         nombre: v.nombre.trim(),
-        apellido: v.apellido.trim(),
+        apellido: '',
         documento: v.documento.trim(),
         email: v.email?.trim() || null,
         telefono: v.telefono?.trim() || null,

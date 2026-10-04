@@ -2,6 +2,8 @@
 
 ## Acerca del proyecto
 
+La app de escritorio se distribuye como **CH-SERVICE** (nombre de ventana, instalador y AppImage).
+
 **Ultron** es un sistema de gestión pensado **principalmente para talleres** (mecánicos, de servicios u otros), orientado a administrar órdenes de trabajo, vehículos, servicios, clientes y el personal del negocio.
 
 ---

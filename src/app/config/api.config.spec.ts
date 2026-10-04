@@ -33,6 +33,7 @@ describe('API_CONFIG', () => {
     expect(resolveApiBaseUrl()).toBe('http://localhost:8081');
     expect(API_CONFIG.graphqlEndpoint).toBe('http://localhost:8081/graphql');
     expect(API_CONFIG.authLoginEndpoint).toBe('http://localhost:8081/api/auth/login');
+    expect(API_CONFIG.healthEndpoint).toBe('http://localhost:8081/api/health');
   });
 
   it('prioriza la configuración persistida sobre Electron', () => {
@@ -48,6 +49,8 @@ describe('API_CONFIG', () => {
 
     expect(API_CONFIG.baseUrl).toBe('http://167.99.15.121:8081');
     expect(API_CONFIG.graphqlEndpoint).toBe('http://167.99.15.121:8081/graphql');
+    expect(API_CONFIG.filesEndpoint).toBe('http://167.99.15.121:8081/api/files');
+    expect(API_CONFIG.uploadsBaseUrl).toBe('http://167.99.15.121:8081/uploads');
   });
 
   it('prioriza la URL inyectada por Electron si no hay config persistida', () => {

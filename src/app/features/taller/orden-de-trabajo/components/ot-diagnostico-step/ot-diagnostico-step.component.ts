@@ -18,6 +18,7 @@ import { OrdenTrabajoInput, OrdenTrabajoOutput } from '../../interfaces/orden-tr
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas.component';
 import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-diagnostico-hallazgos.component';
+import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
 
 @Component({
   selector: 'app-ot-diagnostico-step',
@@ -58,7 +59,7 @@ export class OtDiagnosticoStepComponent implements OnInit {
   protected readonly resumenCliente = computed(() => {
     const p = this.orden().cliente?.persona;
     if (!p) return '—';
-    return `${p.nombre ?? ''} ${p.apellido ?? ''}`.trim() || '—';
+    return nombreCompletoPersona(p) || '—';
   });
 
   protected readonly resumenVehiculo = computed(() => {
@@ -76,7 +77,7 @@ export class OtDiagnosticoStepComponent implements OnInit {
         : [];
     const names = (list ?? [])
       .filter((m): m is NonNullable<typeof m> => !!m)
-      .map((m) => `${m.persona?.nombre ?? ''} ${m.persona?.apellido ?? ''}`.trim())
+      .map((m) => nombreCompletoPersona(m.persona))
       .filter(Boolean);
     return names.length ? names.join(', ') : '—';
   });

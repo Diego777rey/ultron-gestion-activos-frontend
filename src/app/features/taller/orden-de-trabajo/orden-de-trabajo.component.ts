@@ -19,6 +19,7 @@ import {
 } from './interfaces/orden-trabajo.interface';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReporteService } from '../../../shared/services/reporte.service';
+import { nombreCompletoPersona } from '../../personas/shared/nombre-persona';
 
 @Component({
   selector: 'app-orden-de-trabajo',
@@ -185,7 +186,7 @@ export class OrdenDeTrabajoComponent {
 
   protected formatCliente(o: OrdenTrabajoOutput): string {
     const p = o.cliente?.persona;
-    return p ? `${p.nombre ?? ''} ${p.apellido ?? ''}`.trim() : '—';
+    return p ? nombreCompletoPersona(p) || '—' : '—';
   }
 
   protected formatVehiculo(o: OrdenTrabajoOutput): string {
@@ -198,7 +199,7 @@ export class OrdenDeTrabajoComponent {
   protected formatMecanico(o: OrdenTrabajoOutput): string {
     const list = o.mecanicos?.length ? o.mecanicos : o.mecanico ? [o.mecanico] : [];
     const names = list
-      .map((m) => `${m.persona?.nombre ?? ''} ${m.persona?.apellido ?? ''}`.trim())
+      .map((m) => nombreCompletoPersona(m.persona))
       .filter(Boolean);
     return names.length ? names.join(', ') : '—';
   }

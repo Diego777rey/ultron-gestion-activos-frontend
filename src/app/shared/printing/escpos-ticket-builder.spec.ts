@@ -1,11 +1,12 @@
 import {
   buildPrueba,
+  buildTicketFactura,
   buildTicketOrdenTrabajo,
   buildTicketVenta,
   envolver,
   sanitize,
 } from './escpos-ticket-builder';
-import { TicketOrdenTrabajo, TicketVenta } from '../models/impresion.model';
+import { TicketFactura, TicketOrdenTrabajo, TicketVenta } from '../models/impresion.model';
 
 function asText(bytes: Uint8Array): string {
   return new TextDecoder('latin1').decode(bytes);
@@ -84,6 +85,65 @@ describe('escpos-ticket-builder', () => {
     expect(text).toContain('BATERIA 12V');
     expect(text).toContain('1.162.000');
     expect(text).toContain('Gracias por su compra');
+  });
+
+  it('arma la factura en papel con timbrado, número y liquidación de IVA', () => {
+    const factura: TicketFactura = {
+      razonSocial: 'DIEGO SA',
+      nombreFantasia: 'TALLER DE DIEGO',
+      ruc: '679878-1',
+      direccion: 'DASDASD',
+      telefono: '6579788',
+      actividadEconomica: 'Reparacion de vehiculos',
+      timbrado: '65446845',
+      vigenciaInicio: '03/10/2026',
+      vigenciaFin: '03/10/2036',
+      numeroFactura: '001-001-0000001',
+      fecha: '03/10/2026 20:52',
+      condicion: 'CONTADO',
+      formaPago: 'EFECTIVO',
+      clienteNombre: 'SIN NOMBRE',
+      clienteDocumento: null,
+      clienteDireccion: null,
+      lineas: [
+        {
+          descripcion: 'LIQUIDO DE FRENOS DOT 4',
+          cantidad: 1,
+          precioUnitario: 110000,
+          subtotal: 110000,
+          tipoIva: '10',
+        },
+      ],
+      totalExenta: 0,
+      totalGravada5: 0,
+      totalGravada10: 110000,
+      totalIva5: 0,
+      totalIva10: 10000,
+      total: 110000,
+    };
+
+    const bytes = buildTicketFactura(factura);
+    const text = asText(bytes);
+
+    expect(containsLogo(bytes)).toBe(true);
+    expect(containsCut(bytes)).toBe(true);
+    expect(text).toContain('DIEGO SA');
+    expect(text).toContain('RUC: 679878-1');
+    expect(text).toContain('TIMBRADO NRO: 65446845');
+    expect(text).toContain('INICIO VIGENCIA: 03/10/2026');
+    expect(text).toContain('FIN VIGENCIA: 03/10/2036');
+    expect(text).toContain('FACTURA');
+    expect(text).not.toContain('TICKET DE VENTA');
+    expect(text).toContain('001-001-0000001');
+    expect(text).toContain('CONDICION: CONTADO');
+    expect(text).toContain('CLIENTE: SIN NOMBRE');
+    expect(text).toContain('LIQUIDO DE FRENOS DOT 4');
+    expect(text).toContain('TOTAL A PAGAR Gs.');
+    expect(text).toContain('LIQUIDACION DEL IVA');
+    expect(text).toContain('IVA 10%');
+    expect(text).toContain('10.000');
+    expect(text).toContain('ORIGINAL: CLIENTE');
+    expect(text).toContain('IVA INCLUIDO');
   });
 
   it('arma la orden de trabajo con logo, pago de revisión y recargo urgente', () => {

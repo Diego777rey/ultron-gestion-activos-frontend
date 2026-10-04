@@ -19,20 +19,60 @@ String storeFile(MultipartFile file, String folder)
 // Eliminar un archivo por su ruta
 void deleteFile(String filePath)
 
-// Obtener la ruta física de un archivo
-Path loadFile(String filePath)
-
-// Verificar si un archivo existe
-boolean fileExists(String filePath)
+// Carpeta absoluta del servidor donde se guardan los archivos
+Path getStorageLocation()
 ```
 
 #### FileUploadController
-Controlador REST para operaciones de archivos.
+Controlador REST para operaciones de archivos. Requiere token (JWT).
 
 **Endpoints:**
-- `POST /api/files/upload?folder={carpeta}` - Subir archivo
-- `GET /api/files/download?filePath={ruta}` - Descargar/visualizar archivo
+- `POST /api/files/upload?folder={carpeta}` - Subir imagen (JPG, PNG, WEBP o GIF)
 - `DELETE /api/files/delete?filePath={ruta}` - Eliminar archivo
+
+#### UploadsResourceConfig
+Publica la carpeta del servidor en `GET /uploads/**` (sin token). Los archivos se sirven
+como recursos estáticos con `Cache-Control: max-age=31536000, public, immutable`, así que
+cada cliente descarga cada imagen una sola vez.
+
+### Dónde quedan las imágenes
+
+**Regla:** las imágenes se guardan siempre en la PC donde corre el backend al que apunta la app,
+en una carpeta de datos propia. Nunca dentro del repo del frontend, del repo del backend ni de la
+carpeta de instalación del backend (`/opt/ultron`). El backend se niega a arrancar si la carpeta
+configurada queda dentro de la carpeta desde la que se ejecuta.
+
+| Entorno | Backend al que apunta la app | Carpeta de imágenes | Cómo se configura |
+|---|---|---|---|
+| Desarrollo | Tu PC (`localhost:8081`) | `~/ultron-uploads` (p. ej. `/home/ultron/ultron-uploads`) | Valor por defecto, no hace falta nada |
+| Producción | Servidor `167.99.15.121:8081` | `/var/lib/ultron/uploads` | `ULTRON_UPLOAD_DIR=/var/lib/ultron/uploads` en `/opt/ultron/ultron.env` |
+| Otro servidor | El que se configure | La que se elija, fuera de la instalación | `ULTRON_UPLOAD_DIR=<ruta absoluta>` |
+
+**Cómo decide la app a qué servidor subir y de dónde leer:** usa la IP y el puerto del engranaje
+"Configuración del Sistema" (o, si no hay nada guardado, la URL que inyecta Electron y, en último
+caso, `localhost:8081`). Subida, borrado y lectura de imágenes usan esa misma dirección que GraphQL,
+así que la imagen termina en la PC del backend configurado:
+
+- Configurado `localhost` / `127.0.0.1` → se guarda en tu PC (`~/ultron-uploads`).
+- Configurado `167.99.15.121` → se guarda en el servidor (`/var/lib/ultron/uploads`).
+
+**Qué se guarda en la base:** solo la ruta relativa (`productos/<uuid>.jpg`) en `inventario.producto.imagen`.
+El frontend arma la URL con la IP/puerto configurados:
+`http://<servidor>:<puerto>/uploads/productos/<uuid>.jpg`. Así la base no depende de la IP
+(pública o Tailscale) con la que cada PC llega al servidor, ni hay que migrar datos si cambia.
+
+Las imágenes de un entorno no existen en el otro: una ruta cargada en la base local no se ve contra
+el servidor y viceversa.
+
+**Preparar un servidor nuevo:**
+
+```bash
+install -d -o ultron-server -g ultron-server -m 755 /var/lib/ultron/uploads
+echo "ULTRON_UPLOAD_DIR=/var/lib/ultron/uploads" >> /opt/ultron/ultron.env
+systemctl restart ultron
+```
+
+**Backup:** respaldar `/var/lib/ultron/uploads` junto con la base; redeployar el jar no la toca.
 
 ### Frontend (Angular)
 
@@ -49,7 +89,7 @@ uploadFile(file: File, folder: string): Observable<FileUploadResponse>
 // Eliminar archivo
 deleteFile(filePath: string): Observable<void>
 
-// Obtener URL de descarga
+// Obtener la URL pública (http://<servidor>/uploads/<ruta>)
 getFileUrl(filePath: string): string
 ```
 
@@ -228,7 +268,7 @@ export class MiEntidadListComponent {
 El sistema organiza archivos por carpetas según el tipo de entidad:
 
 ```
-uploads/
+<ULTRON_UPLOAD_DIR>/          (dev: ~/ultron-uploads, servidor: /var/lib/ultron/uploads)
 ├── productos/
 │   ├── abc123-def456.jpg
 │   └── xyz789-uvw012.png
@@ -245,8 +285,8 @@ uploads/
 ### Backend - application.properties
 
 ```properties
-# Directorio de almacenamiento
-file.storage.upload-dir=uploads
+# Directorio de almacenamiento (dev: ~/ultron-uploads, servidor: /var/lib/ultron/uploads)
+file.storage.upload-dir=${ULTRON_UPLOAD_DIR:${user.home}/ultron-uploads}
 
 # Tamaño máximo de archivo (en bytes, 5MB)
 file.storage.max-file-size=5242880
@@ -259,9 +299,8 @@ spring.servlet.multipart.max-request-size=5MB
 
 ### Frontend - FileUploadService
 
-```typescript
-private readonly API_URL = 'http://localhost:8081/api/files';
-```
+Usa la misma IP/puerto del servidor que el resto de la app (`API_CONFIG.filesEndpoint` y
+`API_CONFIG.uploadsBaseUrl`, en `src/app/config/api.config.ts`). No hay URLs fijas a `localhost`.
 
 ## 🔒 Seguridad
 
@@ -271,7 +310,8 @@ El sistema incluye:
 - ✅ Protección contra path traversal
 - ✅ Limpieza de nombres de archivo
 - ✅ Generación de nombres únicos (UUID)
-- ✅ Validación de tipos de archivo (en frontend)
+- ✅ Solo imágenes JPG, PNG, WEBP o GIF (validado en frontend y backend)
+- ✅ Subir y eliminar requieren token; solo la lectura de `/uploads/**` es pública
 
 ## 📝 Ejemplos de Uso
 
@@ -314,14 +354,15 @@ El sistema incluye:
 
 ```bash
 curl -X POST http://localhost:8081/api/files/upload \
+  -H "Authorization: Bearer <token>" \
   -F "file=@imagen.jpg" \
   -F "folder=test"
 ```
 
-### Probar descarga
+### Probar lectura
 
 ```bash
-curl http://localhost:8081/api/files/download?filePath=test/uuid.jpg
+curl -I http://localhost:8081/uploads/test/uuid.jpg
 ```
 
 ## 🎨 Personalización
@@ -366,13 +407,18 @@ El componente usa clases CSS con BEM, fáciles de sobrescribir:
 
 ## 🐛 Troubleshooting
 
+### "La carpeta de imágenes ... no puede estar dentro de la carpeta de la aplicación"
+- El backend no arranca porque la carpeta quedó dentro del proyecto o de `/opt/ultron`
+  (por ejemplo, falta `ULTRON_UPLOAD_DIR` en el servidor, donde el home de `ultron-server` es `/opt/ultron`).
+- Configurá `ULTRON_UPLOAD_DIR` con una ruta absoluta fuera de esas carpetas.
+
 ### "File size exceeds maximum"
 - Verifica configuración en `application.properties`
 - Aumenta `spring.servlet.multipart.max-file-size`
 
 ### "Cannot access file"
-- Verifica permisos del directorio `uploads/`
-- Asegúrate de que SecurityConfig permite `/api/files/**`
+- Verifica que el usuario `ultron-server` pueda escribir en `/var/lib/ultron/uploads/`
+- Asegúrate de que SecurityConfig permite `GET /uploads/**`
 
 ### Imagen no se muestra
 - Verifica que el campo `imagen` viene en el GraphQL query

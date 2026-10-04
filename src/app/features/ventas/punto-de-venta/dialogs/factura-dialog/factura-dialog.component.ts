@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   input,
+  OnInit,
   output,
   signal,
   effect,
@@ -17,13 +18,13 @@ import { ClienteService } from '../../../../personas/clientes/services/cliente.s
 import { ClienteOutput } from '../../../../personas/clientes/interfaces/cliente.interface';
 import { ClienteFormComponent } from '../../../../personas/clientes/dialogs/cliente-form/cliente-form';
 import { LoadingService } from '../../../../../shared/services/loading.service';
-import { CotizacionOutput } from '../../../../financiero/cotizaciones/interfaces/cotizacion.interface';
+import { CotizacionService } from '../../../../financiero/cotizaciones/services/cotizacion.service';
+import { MontoCotizado } from '../../../../financiero/cotizaciones/interfaces/cotizacion.interface';
 
 export interface FacturaConfirmada {
-  clienteId: string;
+  idCliente: number;
   formaPago: FormaPago;
   moneda: string;
-  montoMonedaOriginal: number;
 }
 
 @Component({
@@ -39,13 +40,13 @@ export interface FacturaConfirmada {
   styleUrl: './factura-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FacturaDialogComponent {
+export class FacturaDialogComponent implements OnInit {
   private readonly clienteService = inject(ClienteService);
+  private readonly cotizacionService = inject(CotizacionService);
   private readonly loading = inject(LoadingService);
 
   readonly cart = input.required<CartItem[]>();
   readonly total = input.required<number>();
-  readonly cotizaciones = input<CotizacionOutput[]>([]);
 
   readonly cancelar = output<void>();
   readonly confirmar = output<FacturaConfirmada>();
@@ -57,6 +58,9 @@ export class FacturaDialogComponent {
   protected readonly mostrarFormularioCliente = signal(false);
   protected readonly seleccionado = signal<FormaPago>('EFECTIVO');
   protected readonly monedaSeleccionada = signal<string>('PYG');
+  protected readonly montos = signal<MontoCotizado[]>([]);
+  protected readonly cargandoMontos = signal(true);
+  protected readonly errorMontos = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
 
   protected readonly clientesFiltrados = computed(() => {
@@ -76,27 +80,16 @@ export class FacturaDialogComponent {
   protected readonly cotizacionActual = computed(() => {
     const moneda = this.monedaSeleccionada();
     if (moneda === 'PYG') return null;
-    return this.cotizaciones().find((c) => c.moneda === moneda) || null;
+    return this.montos().find((item) => item.moneda === moneda) ?? null;
   });
 
-  protected readonly totalEnMonedaSeleccionada = computed(() => {
-    const totalPyg = this.total();
-    const cotizacion = this.cotizacionActual();
-    if (!cotizacion || cotizacion.valor === 0) return totalPyg;
-    return totalPyg / cotizacion.valor;
-  });
-
-  protected readonly monedasDisponibles = computed(() => {
-    const monedas = [{ codigo: 'PYG', simbolo: 'Gs.', label: 'Guaraníes' }];
-    this.cotizaciones().forEach((cot) => {
-      monedas.push({
-        codigo: cot.moneda,
-        simbolo: this.simboloMoneda(cot.moneda),
-        label: cot.moneda,
-      });
-    });
-    return monedas;
-  });
+  protected readonly monedasDisponibles = computed(() =>
+    this.montos().map((monto) => ({
+      codigo: monto.moneda,
+      simbolo: monto.moneda === 'PYG' ? 'Gs.' : this.simboloMoneda(monto.moneda),
+      label: monto.moneda === 'PYG' ? 'Guaraníes' : monto.moneda,
+    })),
+  );
 
   protected readonly metodosPago = [
     {
@@ -116,13 +109,9 @@ export class FacturaDialogComponent {
     },
   ];
 
-  protected readonly botonLabel = computed(() => {
-    if (!this.clienteSeleccionado()) {
-      return 'Seleccioná un cliente';
-    }
-    const metodo = this.metodosPago.find((m) => m.codigo === this.seleccionado());
-    return `Cobrar e imprimir factura`;
-  });
+  protected readonly botonLabel = computed(() =>
+    this.clienteSeleccionado() ? 'Cobrar e imprimir factura' : 'Seleccioná un cliente',
+  );
 
   protected readonly puedeConfirmar = computed(() => {
     return !!this.clienteSeleccionado() && !!this.seleccionado();
@@ -134,6 +123,23 @@ export class FacturaDialogComponent {
         this.cargarClientes();
       }
     });
+  }
+
+  ngOnInit(): void {
+    this.cotizacionService.cotizarTotal(Number(this.total())).subscribe({
+      next: (montos) => {
+        this.montos.set(montos);
+        this.cargandoMontos.set(false);
+      },
+      error: (err: Error) => {
+        this.errorMontos.set(err.message || 'No se pudieron calcular los montos');
+        this.cargandoMontos.set(false);
+      },
+    });
+  }
+
+  protected montoDe(codigo: string): number | string | null {
+    return this.montos().find((item) => item.moneda === codigo)?.monto ?? null;
   }
 
   protected nombreCliente(cliente: ClienteOutput): string {
@@ -190,10 +196,9 @@ export class FacturaDialogComponent {
     }
 
     this.confirmar.emit({
-      clienteId: cliente.id_cliente,
+      idCliente: Number(cliente.id_cliente),
       formaPago: metodo,
       moneda: this.monedaSeleccionada(),
-      montoMonedaOriginal: this.totalEnMonedaSeleccionada(),
     });
   }
 

@@ -26,6 +26,7 @@ import { OrdenTrabajoOutput } from '../../taller/orden-de-trabajo/interfaces/ord
 import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja-dialog.component';
 import { PagoDialogComponent, PagoConfirmado } from './dialogs/pago-dialog/pago-dialog.component';
 import { FacturaDialogComponent, FacturaConfirmada } from './dialogs/factura-dialog/factura-dialog.component';
+import { ReimprimirTicketDialogComponent } from './dialogs/reimprimir-ticket-dialog/reimprimir-ticket-dialog.component';
 import { LoadingService } from '../../../shared/services/loading.service';
 import { FileUploadService } from '../../../shared/services/file-upload.service';
 import { SesionCajaService } from './services/sesion-caja.service';
@@ -33,11 +34,11 @@ import { VentaPosService } from './services/venta.service';
 import { SesionCajaOutput } from './interfaces/sesion-caja.interface';
 import { CartItem, DetalleVentaInput, FormaPago, VentaOutput } from './interfaces/venta.interface';
 import { ImpresionService } from '../../../shared/services/impresion.service';
-import { TicketVenta } from '../../../shared/models/impresion.model';
+import { TicketFactura, TicketVenta } from '../../../shared/models/impresion.model';
+import { FacturaService } from '../../financiero/facturacion/services/factura.service';
+import { FacturaOutput } from '../../financiero/facturacion/interfaces/factura.interface';
 import { CATALOG_PAGE_SIZE } from '../../../shared/models/pagination.model';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CotizacionService } from '../../financiero/cotizaciones/services/cotizacion.service';
-import { CotizacionOutput } from '../../financiero/cotizaciones/interfaces/cotizacion.interface';
 
 const POS_ROUTE = '/ventas/punto-de-venta';
 /** Umbral (px) antes del final del scroll para pedir la siguiente página. */
@@ -53,6 +54,7 @@ export type PdvNumero = 1 | 2;
     AbrirCajaDialogComponent,
     PagoDialogComponent,
     FacturaDialogComponent,
+    ReimprimirTicketDialogComponent,
     UiButtonComponent,
     DecimalPipe,
   ],
@@ -74,12 +76,12 @@ export class PuntoDeVentaComponent {
   private readonly sesionCajaService = inject(SesionCajaService);
   private readonly ventaService = inject(VentaPosService);
   private readonly impresion = inject(ImpresionService);
+  private readonly facturaService = inject(FacturaService);
   private readonly auth = inject(AuthService);
   private readonly loading = inject(LoadingService);
   private readonly productoService = inject(ProductoService);
   private readonly servicioService = inject(ServicioService);
   private readonly ordenTrabajoService = inject(OrdenTrabajoService);
-  private readonly cotizacionService = inject(CotizacionService);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly fileUploadService = inject(FileUploadService);
 
@@ -87,13 +89,14 @@ export class PuntoDeVentaComponent {
   readonly gestionCajaOpen = signal(false);
   readonly pagoDialogOpen = signal(false);
   readonly facturaDialogOpen = signal(false);
+  readonly reimprimirDialogOpen = signal(false);
   readonly maletinVerificado = signal(false);
   readonly cajaAbierta = signal(false);
   readonly sesion = signal<SesionCajaOutput | null>(null);
   readonly loadingSesion = signal(true);
-  readonly cotizaciones = signal<CotizacionOutput[]>([]);
 
   readonly catalogo = signal<CatalogoPos>('productos');
+  private readonly imagenesFallidas = signal<ReadonlySet<string>>(new Set());
   readonly productos = signal<ProductoOutput[]>([]);
   readonly loadingProductos = signal(false);
   readonly loadingMoreProductos = signal(false);
@@ -246,7 +249,14 @@ export class PuntoDeVentaComponent {
 
   protected imagenProductoUrl(producto: ProductoOutput): string | null {
     const path = producto.imagen?.trim();
-    return path ? this.fileUploadService.getFileUrl(path) : null;
+    return path && !this.imagenesFallidas().has(path) ? this.fileUploadService.getFileUrl(path) : null;
+  }
+
+  protected onImagenError(producto: ProductoOutput): void {
+    const path = producto.imagen?.trim();
+    if (path) {
+      this.imagenesFallidas.update((fallidas) => new Set(fallidas).add(path));
+    }
   }
 
   protected mostrarProductos(): void {
@@ -490,17 +500,48 @@ export class PuntoDeVentaComponent {
     this.pagoDialogOpen.set(true);
   }
 
+  protected abrirFactura(): void {
+    this.cobrarConTicket();
+  }
+
   protected cerrarPagoDialog(): void {
     this.pagoDialogOpen.set(false);
   }
 
   protected cobrarConMetodo(pago: PagoConfirmado): void {
     this.pagoDialogOpen.set(false);
-    this.registrarVenta(false, pago.formaPago, pago.moneda, pago.montoMonedaOriginal);
+    this.registrarVenta(false, pago.formaPago, pago.moneda);
+  }
+
+  protected abrirReimprimirDialog(): void {
+    const sesion = this.sesion();
+    if (!sesion?.id_sesion_caja) {
+      this.ventaError.set('No hay sesión de caja abierta');
+      return;
+    }
+    this.reimprimirDialogOpen.set(true);
+  }
+
+  protected cerrarReimprimirDialog(): void {
+    this.reimprimirDialogOpen.set(false);
+  }
+
+  protected reimprimirTicket(venta: VentaOutput): void {
+    this.reimprimirDialogOpen.set(false);
+    this.facturaService.porVenta(venta.id_venta).subscribe({
+      next: (factura) => {
+        if (factura) {
+          this.impresion.imprimirFactura(this.toTicketFactura(factura)).subscribe();
+          return;
+        }
+        this.imprimirTicket(venta);
+      },
+      error: () => this.imprimirTicket(venta),
+    });
   }
 
   protected cobrar(): void {
-    this.registrarVenta(false, 'EFECTIVO', 'PYG', this.cartTotal());
+    this.registrarVenta(false, 'EFECTIVO', 'PYG');
   }
 
   protected cobrarConTicket(): void {
@@ -517,21 +558,14 @@ export class PuntoDeVentaComponent {
 
   protected facturarConCliente(factura: FacturaConfirmada): void {
     this.facturaDialogOpen.set(false);
-    this.registrarVenta(
-      true,
-      factura.formaPago,
-      factura.moneda,
-      factura.montoMonedaOriginal,
-      factura.clienteId
-    );
+    this.registrarVenta(true, factura.formaPago, factura.moneda, factura.idCliente);
   }
 
   private registrarVenta(
     imprimirTicket: boolean,
     formaPago: FormaPago = 'EFECTIVO',
     moneda: string = 'PYG',
-    montoMonedaOriginal?: number,
-    clienteId?: string
+    idCliente?: number,
   ): void {
     const sesion = this.sesion();
     const items = this.cart();
@@ -545,44 +579,57 @@ export class PuntoDeVentaComponent {
     }
 
     const ordenCliente = items.find((item) => item.tipo === 'ORDEN' && item.idCliente != null);
-    const idClienteFinal = clienteId != null ? Number(clienteId) : ordenCliente?.idCliente ?? null;
 
+    const input = {
+      idSesionCaja: sesion.id_sesion_caja,
+      idCliente: idCliente ?? ordenCliente?.idCliente ?? null,
+      descuento: 0,
+      formaPago,
+      moneda: moneda !== 'PYG' ? moneda : undefined,
+      detalles: items.map((item) => this.toDetalleInput(item)),
+    };
     this.selling.set(true);
     this.ventaError.set(null);
-    this.loading
-      .track(
-        this.ventaService.registrarVenta({
-          idSesionCaja: sesion.id_sesion_caja,
-          idCliente: idClienteFinal,
-          descuento: 0,
-          formaPago,
-          moneda: moneda !== 'PYG' ? moneda : undefined,
-          montoMonedaOriginal: moneda !== 'PYG' ? montoMonedaOriginal : undefined,
-          detalles: items.map((item) => this.toDetalleInput(item)),
-        }),
-        {
-          message: imprimirTicket ? 'Cobrando e imprimiendo…' : 'Cobrando…',
-          errorTitle: 'No se pudo registrar la venta',
+    const alCobrar = () => {
+      this.selling.set(false);
+      this.cartActivo().set([]);
+      this.refreshSesion();
+      this.loadProductos(true);
+      if (this.mostrandoOrdenes() || items.some((item) => item.tipo === 'ORDEN')) {
+        this.loadOrdenesFinalizadas();
+      }
+    };
+    const alFallar = (err: Error, fallback: string) => {
+      this.selling.set(false);
+      this.ventaError.set(err.message || fallback);
+    };
+
+    if (imprimirTicket) {
+      this.loading
+        .track(this.ventaService.registrarVentaConFactura(input), {
+          message: 'Cobrando y emitiendo la factura…',
+          errorTitle: 'No se pudo emitir la factura',
           notifyError: false,
-        },
-      )
+        })
+        .subscribe({
+          next: ({ factura }) => {
+            alCobrar();
+            this.impresion.imprimirFactura(this.toTicketFactura(factura)).subscribe();
+          },
+          error: (err: Error) => alFallar(err, 'No se pudo emitir la factura'),
+        });
+      return;
+    }
+
+    this.loading
+      .track(this.ventaService.registrarVenta(input), {
+        message: 'Cobrando…',
+        errorTitle: 'No se pudo registrar la venta',
+        notifyError: false,
+      })
       .subscribe({
-        next: (venta) => {
-          this.selling.set(false);
-          this.cartActivo().set([]);
-          this.refreshSesion();
-          this.loadProductos(true);
-          if (this.mostrandoOrdenes() || items.some((item) => item.tipo === 'ORDEN')) {
-            this.loadOrdenesFinalizadas();
-          }
-          if (imprimirTicket) {
-            this.imprimirTicket(venta);
-          }
-        },
-        error: (err: Error) => {
-          this.selling.set(false);
-          this.ventaError.set(err.message || 'No se pudo registrar la venta');
-        },
+        next: () => alCobrar(),
+        error: (err: Error) => alFallar(err, 'No se pudo registrar la venta'),
       });
   }
 
@@ -607,6 +654,54 @@ export class PuntoDeVentaComponent {
       descuento: Number(venta.descuento ?? 0),
       total: Number(venta.total ?? 0),
       pie: 'Gracias por su compra',
+    };
+  }
+
+  private toTicketFactura(factura: FacturaOutput): TicketFactura {
+    const lineas = (factura.detalles ?? []).map((detalle) => ({
+      descripcion: detalle.descripcion?.trim() || 'Item',
+      cantidad: Number(detalle.cantidad ?? 1),
+      precioUnitario: Number(detalle.precio_unitario ?? 0),
+      subtotal: Number(detalle.subtotal ?? 0),
+      tipoIva: (detalle.tipo_iva ?? '10').toUpperCase(),
+    }));
+    let totalExenta = 0;
+    let totalGravada5 = 0;
+    let totalGravada10 = 0;
+    for (const linea of lineas) {
+      if (linea.tipoIva === '5') {
+        totalGravada5 += linea.subtotal;
+      } else if (linea.tipoIva === 'EXENTA') {
+        totalExenta += linea.subtotal;
+      } else {
+        totalGravada10 += linea.subtotal;
+      }
+    }
+    const documento = factura.cliente_ruc?.trim() || factura.cliente_documento?.trim() || null;
+    return {
+      razonSocial: factura.empresa_razon_social?.trim() || 'SIN RAZON SOCIAL',
+      nombreFantasia: factura.empresa_nombre_fantasia?.trim() || null,
+      ruc: factura.empresa_ruc?.trim() || '-',
+      direccion: factura.empresa_direccion?.trim() || null,
+      telefono: factura.empresa_telefono?.trim() || null,
+      actividadEconomica: factura.empresa_actividad_economica?.trim() || null,
+      timbrado: factura.timbrado?.trim() || '-',
+      vigenciaInicio: factura.timbrado_vigencia_inicio?.trim() || '-',
+      vigenciaFin: factura.timbrado_vigencia_fin?.trim() || '-',
+      numeroFactura: factura.numero_factura?.trim() || '-',
+      fecha: factura.fecha_emision?.trim() || this.formatFechaTicket(),
+      condicion: 'CONTADO',
+      formaPago: etiquetaFormaPago(factura.forma_pago),
+      clienteNombre: factura.cliente_nombre?.trim() || 'SIN NOMBRE',
+      clienteDocumento: documento,
+      clienteDireccion: factura.cliente_direccion?.trim() || null,
+      lineas,
+      totalExenta,
+      totalGravada5,
+      totalGravada10,
+      totalIva5: Number(factura.total_iva_5 ?? 0),
+      totalIva10: Number(factura.total_iva_10 ?? 0),
+      total: Number(factura.total ?? 0),
     };
   }
 
@@ -722,7 +817,6 @@ export class PuntoDeVentaComponent {
 
   private bootstrap(): void {
     this.loadingSesion.set(true);
-    this.loadCotizaciones();
     this.sesionCajaService.sesionAbierta().subscribe({
       next: (sesion) => {
         this.loadingSesion.set(false);
@@ -741,18 +835,6 @@ export class PuntoDeVentaComponent {
     });
   }
   
-  private loadCotizaciones(): void {
-    this.cotizacionService.listarCotizacionesActivas().subscribe({
-      next: (cotizaciones) => {
-        this.cotizaciones.set(cotizaciones);
-      },
-      error: (err) => {
-        console.error('Error al cargar cotizaciones:', err);
-        this.cotizaciones.set([]);
-      },
-    });
-  }
-
   private refreshSesion(): void {
     const idCaja = this.sesion()?.caja?.id_caja;
     this.sesionCajaService.sesionAbierta(idCaja).subscribe({
@@ -846,5 +928,16 @@ export class PuntoDeVentaComponent {
       return;
     }
     void this.router.navigateByUrl('/pantalla-principal');
+  }
+}
+
+function etiquetaFormaPago(forma?: string | null): string {
+  switch ((forma ?? '').toUpperCase()) {
+    case 'TARJETA':
+      return 'TARJETA';
+    case 'TRANSFERENCIA':
+      return 'TRANSFERENCIA';
+    default:
+      return 'EFECTIVO';
   }
 }

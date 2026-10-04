@@ -2,7 +2,7 @@
   "name": "ultron-gestion-activos-frontend",
   "version": "1.72.1",
   "main": "electron/dist/main.js",
-  "description": "Ultron Gestión de Activos — aplicación de escritorio para talleres",
+  "description": "CH-SERVICE — aplicación de escritorio para talleres",
   "author": "Ultron Sistemas",
   "scripts": {
     "ng": "ng",
@@ -21,7 +21,7 @@
   "packageManager": "npm@10.9.4",
   "build": {
     "appId": "com.dev.ultron.gestionactivos",
-    "productName": "Ultron Gestion de Activos",
+    "productName": "CH-SERVICE",
     "copyright": "Copyright © Ultron Sistemas",
     "asar": true,
     "directories": {
@@ -49,7 +49,7 @@
         "AppImage"
       ],
       "category": "Office",
-      "artifactName": "Ultron-Gestion-Activos-${version}-linux.${ext}",
+      "artifactName": "CH-SERVICE-${version}-linux.${ext}",
       "icon": "icon.png",
       "synopsis": "Gestion de talleres y activos"
     },
@@ -62,7 +62,7 @@
           ]
         }
       ],
-      "artifactName": "Ultron-Gestion-Activos-${version}-windows.${ext}",
+      "artifactName": "CH-SERVICE-${version}-windows.${ext}",
       "icon": "icon.png"
     },
     "nsis": {
@@ -70,7 +70,7 @@
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "deleteAppDataOnUninstall": false,
-      "shortcutName": "Ultron Gestion de Activos"
+      "shortcutName": "CH-SERVICE"
     },
     "publish": {
       "provider": "github",

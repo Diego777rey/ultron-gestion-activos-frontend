@@ -129,7 +129,7 @@ async function createWindow(): Promise<void> {
     minHeight: 720,
     show: false,
     autoHideMenuBar: true,
-    title: 'Ultron Gestión de Activos',
+    title: 'CH-SERVICE',
     icon,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

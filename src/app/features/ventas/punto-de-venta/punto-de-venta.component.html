@@ -91,7 +91,7 @@
                       <div class="pos-product__hit">
                         <div class="pos-product__thumb" aria-hidden="true">
                           @if (imagenProductoUrl(producto); as imgUrl) {
-                            <img [src]="imgUrl" [alt]="producto.nombre" loading="lazy" />
+                            <img [src]="imgUrl" [alt]="producto.nombre" loading="lazy" (error)="onImagenError(producto)" />
                           } @else {
                             <span class="material-icons">image</span>
                           }
@@ -216,13 +216,9 @@
               Órdenes finalizadas
             </button>
             <div class="pos-catalog__session">
-              <button type="button" class="pos-chip-btn" (click)="onAbrirGestionCaja()">
-                <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
-                Cerrar caja
-              </button>
-              <button type="button" class="pos-chip-btn" (click)="onSalirPos()">
-                <span class="material-icons" aria-hidden="true">logout</span>
-                Salir
+              <button type="button" class="pos-chip-btn" (click)="abrirReimprimirDialog()">
+                <span class="material-icons" aria-hidden="true">print</span>
+                Reimprimir
               </button>
               <button
                 type="button"
@@ -232,6 +228,23 @@
               >
                 <span class="material-icons" aria-hidden="true">point_of_sale</span>
                 Pago
+              </button>
+              <button
+                type="button"
+                class="pos-chip-btn pos-chip-btn--factura"
+                [disabled]="cart().length === 0"
+                (click)="abrirFactura()"
+              >
+                <span class="material-icons" aria-hidden="true">receipt_long</span>
+                Factura
+              </button>
+              <button type="button" class="pos-chip-btn" (click)="onAbrirGestionCaja()">
+                <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
+                Cerrar caja
+              </button>
+              <button type="button" class="pos-chip-btn" (click)="onSalirPos()">
+                <span class="material-icons" aria-hidden="true">logout</span>
+                Salir
               </button>
             </div>
           </div>
@@ -423,7 +436,6 @@
 @if (pagoDialogOpen()) {
   <app-pago-dialog
     [total]="cartTotal()"
-    [cotizaciones]="cotizaciones()"
     (cancelar)="cerrarPagoDialog()"
     (confirmar)="cobrarConMetodo($event)"
   />
@@ -433,8 +445,15 @@
   <app-factura-dialog
     [cart]="cart()"
     [total]="cartTotal()"
-    [cotizaciones]="cotizaciones()"
     (cancelar)="cerrarFacturaDialog()"
     (confirmar)="facturarConCliente($event)"
+  />
+}
+
+@if (reimprimirDialogOpen() && sesion()?.id_sesion_caja) {
+  <app-reimprimir-ticket-dialog
+    [idSesionCaja]="sesion()!.id_sesion_caja"
+    (cerrar)="cerrarReimprimirDialog()"
+    (reimprimir)="reimprimirTicket($event)"
   />
 }

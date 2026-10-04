@@ -91,6 +91,8 @@ export class MainLayoutComponent implements OnInit {
         { label: 'Cajas', icon: 'account_balance_wallet', route: '/financiero/cajas', requiredPermissions: ['CAJAS'] },
         { label: 'Últimas cajas', icon: 'history', route: '/financiero/ultimas', requiredPermissions: ['CAJAS'] },
         { label: 'Cotización', icon: 'currency_exchange', route: '/financiero/cotizaciones', requiredPermissions: ['COTIZACIONES'] },
+        { label: 'Datos de facturación', icon: 'receipt_long', route: '/financiero/facturacion', requiredPermissions: ['FINANCIERO'] },
+        { label: 'Timbrados', icon: 'confirmation_number', route: '/financiero/facturacion/timbrados', requiredPermissions: ['FINANCIERO'] },
       ]
     },
     {
@@ -108,12 +110,13 @@ export class MainLayoutComponent implements OnInit {
     {
       label: 'R.R.H.H.',
       icon: 'people',
-      requiredPermissions: ['RRHH', 'CLIENTES', 'FUNCIONARIOS', 'USUARIOS', 'ROLES'],
+      requiredPermissions: ['RRHH', 'CLIENTES', 'FUNCIONARIOS', 'USUARIOS', 'ROLES', 'EMPRESAS'],
       children: [
         { label: 'Clientes', icon: 'groups', route: '/personas/clientes', requiredPermissions: ['CLIENTES'] },
         { label: 'Funcionarios', icon: 'recent_actors', route: '/personas/funcionarios', requiredPermissions: ['FUNCIONARIOS'] },
         { label: 'Usuarios', icon: 'account_circle', route: '/personas/usuarios', requiredPermissions: ['USUARIOS'] },
         { label: 'Roles', icon: 'shield', route: '/personas/roles', requiredPermissions: ['ROLES'] },
+        { label: 'Empresas', icon: 'business', route: '/personas/empresas', requiredPermissions: ['EMPRESAS'] },
       ]
     },
     {
@@ -174,9 +177,12 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('funcionarios')) return 'Lista de funcionarios';
     if (url.includes('usuarios')) return 'Lista de usuarios';
     if (url.includes('roles')) return 'Lista de roles';
+    if (url.includes('empresas')) return 'Empresas';
     if (url.includes('maletines')) return 'Maletines';
     if (url.includes('ultimas') && url.includes('/ventas')) return 'Ventas de la caja';
     if (url.includes('ultimas')) return 'Últimas cajas';
+    if (url.includes('facturacion/timbrados')) return 'Timbrados';
+    if (url.includes('facturacion')) return 'Datos de facturación';
     if (url.includes('cotizaciones')) return 'Cotizaciones';
     if (url.includes('cajas')) return 'Cajas';
     if (url.includes('productos/nuevo')) return 'Nuevo Producto';

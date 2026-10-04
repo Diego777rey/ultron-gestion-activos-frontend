@@ -1,7 +1,7 @@
 export interface FileUploadResponse {
   fileName: string;
   filePath: string;
-  fileDownloadUri: string;
+  url: string;
   fileType: string;
   size: number;
 }

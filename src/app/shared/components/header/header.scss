@@ -23,6 +23,99 @@
   gap: 16px;
 }
 
+.app-version {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  user-select: text;
+}
+
+.conexion-indicador {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 2px 10px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  line-height: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.26);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+}
+
+.conexion-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75);
+  flex: none;
+}
+
+.conexion-en-linea .conexion-dot {
+  background: #69f0ae;
+  box-shadow: 0 0 0 3px rgba(105, 240, 174, 0.28);
+}
+
+.conexion-sin-red .conexion-dot {
+  background: #ffd54f;
+  box-shadow: 0 0 0 3px rgba(255, 213, 79, 0.28);
+}
+
+.conexion-sin-servidor .conexion-dot {
+  background: #ff8a80;
+  box-shadow: 0 0 0 3px rgba(255, 138, 128, 0.3);
+}
+
+.conexion-comprobando .conexion-dot {
+  animation: conexion-pulso 1.2s ease-in-out infinite;
+}
+
+@keyframes conexion-pulso {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conexion-comprobando .conexion-dot {
+    animation: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .conexion-label {
+    display: none;
+  }
+
+  .conexion-indicador {
+    padding: 6px;
+  }
+}
+
 .header-spacer {
   flex: 1;
 }

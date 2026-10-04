@@ -162,6 +162,11 @@
         <div class="factura-pago">
           <div class="factura-pago__monedas">
             <label class="factura-pago__label">Moneda</label>
+            @if (cargandoMontos()) {
+              <small class="factura-pago__cotizacion">Calculando montos...</small>
+            } @else if (errorMontos()) {
+              <small class="factura-pago__cotizacion">{{ errorMontos() }}</small>
+            }
             <div class="factura-pago__moneda-selector">
               @for (moneda of monedasDisponibles(); track moneda.codigo) {
                 <button
@@ -174,7 +179,7 @@
                   <span class="moneda-btn__codigo">{{ moneda.codigo }}</span>
                   @if (moneda.codigo !== 'PYG') {
                     <span class="moneda-btn__monto">
-                      {{ totalEnMonedaSeleccionada() | number: '1.2-2' }}
+                      {{ montoDe(moneda.codigo) | number: '1.2-2' }}
                     </span>
                   }
                 </button>
@@ -182,7 +187,7 @@
             </div>
             @if (cotizacionActual()) {
               <small class="factura-pago__cotizacion">
-                Cotización: 1 {{ monedaSeleccionada() }} = {{ cotizacionActual()!.valor | number: '1.0-0' }} Gs.
+                Cotización: 1 {{ monedaSeleccionada() }} = {{ cotizacionActual()!.valorCotizacion | number: '1.0-0' }} Gs.
               </small>
             }
           </div>
