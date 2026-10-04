@@ -441,6 +441,15 @@
   />
 }
 
+@if (facturaDialogOpen()) {
+  <app-factura-dialog
+    [cart]="cart()"
+    [total]="cartTotal()"
+    (cancelar)="cerrarFacturaDialog()"
+    (confirmar)="facturarConCliente($event)"
+  />
+}
+
 @if (reimprimirDialogOpen() && sesion()?.id_sesion_caja) {
   <app-reimprimir-ticket-dialog
     [idSesionCaja]="sesion()!.id_sesion_caja"

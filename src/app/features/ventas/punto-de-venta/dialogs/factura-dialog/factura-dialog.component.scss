@@ -1,0 +1,352 @@
+.factura-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  color: var(--text-primary);
+}
+
+.factura-dialog__error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md);
+  color: var(--danger-color);
+  font-size: 0.875rem;
+
+  .material-icons {
+    font-size: 20px;
+  }
+}
+
+.factura-dialog__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.factura-dialog__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.factura-dialog__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.factura-dialog__section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+
+  .material-icons {
+    font-size: 20px;
+    color: var(--primary-color);
+  }
+}
+
+.factura-dialog__btn-nuevo,
+.factura-dialog__btn-cancelar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+.factura-dialog__btn-nuevo {
+  background: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  color: var(--on-primary-color);
+
+  &:hover {
+    background: var(--primary-color-dark);
+  }
+}
+
+.factura-dialog__btn-cancelar {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+
+  &:hover {
+    background: var(--hover-color);
+    color: var(--text-primary);
+  }
+}
+
+// Tarjeta seleccionable de cliente
+.factura-cliente {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--border-strong-hover);
+    background: var(--surface-raised-hover);
+  }
+}
+
+.factura-cliente--seleccionado {
+  &,
+  &:hover {
+    border-color: var(--primary-color);
+    background: var(--active-bg);
+  }
+}
+
+.factura-dialog button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+// Productos
+.factura-productos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.factura-productos,
+.factura-clientes__lista {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 3px;
+  }
+}
+
+.factura-dialog__badge {
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: var(--active-bg);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.factura-producto {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+}
+
+.factura-producto__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+
+  strong {
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+  }
+
+  small {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+}
+
+.factura-producto__presentacion {
+  font-style: italic;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.factura-producto__cantidad {
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.factura-producto__subtotal {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.factura-productos__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--active-bg);
+  border: 1px solid var(--primary-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 1rem;
+
+  strong {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+  }
+}
+
+// Clientes
+.factura-clientes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.factura-clientes__search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+
+  &:focus-within {
+    border-color: var(--primary-color);
+  }
+
+  .material-icons {
+    color: var(--text-muted);
+    font-size: 20px;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+  }
+}
+
+.factura-clientes__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.factura-clientes__empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.factura-cliente {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.factura-cliente__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--surface-color);
+  color: var(--text-secondary);
+
+  .material-icons {
+    font-size: 24px;
+  }
+}
+
+.factura-cliente--seleccionado .factura-cliente__icono {
+  background: var(--primary-color);
+  color: var(--on-primary-color);
+}
+
+.factura-cliente__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+
+  strong {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  small {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+}
+
+.factura-cliente__check {
+  color: var(--primary-color);
+
+  .material-icons {
+    font-size: 24px;
+  }
+}
+
+.factura-clientes__form {
+  padding: 1rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+// Footer
+.factura-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
