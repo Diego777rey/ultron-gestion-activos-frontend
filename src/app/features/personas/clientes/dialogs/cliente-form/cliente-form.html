@@ -21,6 +21,43 @@
       @if (form.controls.documento.touched && form.controls.documento.invalid) {
         <span class="field__error">El documento es obligatorio</span>
       }
+      <div class="ruc-estado" aria-live="polite">
+        @switch (consultaRuc()?.tipo) {
+          @case ('buscando') {
+            <span class="ruc-estado__item">
+              <span class="material-icons ruc-estado__spin" aria-hidden="true">autorenew</span>
+              Buscando en la DNIT…
+            </span>
+          }
+          @case ('encontrado') {
+            @if (contribuyente(); as c) {
+              @if (c.activo) {
+                <span class="ruc-estado__item ruc-estado__item--ok">
+                  <span class="material-icons" aria-hidden="true">verified</span>
+                  RUC {{ c.ruc }} · ACTIVO
+                </span>
+              } @else {
+                <span class="ruc-estado__item ruc-estado__item--alerta" role="alert">
+                  <span class="material-icons" aria-hidden="true">warning</span>
+                  RUC {{ c.ruc }} figura como {{ c.estado || 'SIN ESTADO' }} en la DNIT
+                </span>
+              }
+            }
+          }
+          @case ('no-encontrado') {
+            <span class="ruc-estado__item">
+              <span class="material-icons" aria-hidden="true">info</span>
+              No figura en la DNIT. Cargá los datos a mano.
+            </span>
+          }
+          @case ('error') {
+            <span class="ruc-estado__item ruc-estado__item--alerta">
+              <span class="material-icons" aria-hidden="true">cloud_off</span>
+              {{ errorRuc() }}
+            </span>
+          }
+        }
+      </div>
     </div>
 
     <div class="field">
