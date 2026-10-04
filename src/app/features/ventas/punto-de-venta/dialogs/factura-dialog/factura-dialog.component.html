@@ -16,49 +16,6 @@
     }
 
     <div class="factura-dialog__content">
-      <!-- Sección de productos -->
-      <section class="factura-dialog__section">
-        <h3 class="factura-dialog__section-title">
-          <span class="material-icons" aria-hidden="true">shopping_cart</span>
-          Productos a facturar
-        </h3>
-        <div class="factura-productos">
-          @for (item of cart(); track $index) {
-            <div class="factura-producto">
-              <div class="factura-producto__info">
-                <strong>{{ item.nombre }}</strong>
-                @if (item.presentacion) {
-                  <em class="factura-producto__presentacion">{{ item.presentacion }}</em>
-                }
-                <small>
-                  @if (item.tipo === 'ORDEN') {
-                    Orden de trabajo
-                  } @else if (item.tipo === 'SERVICIO') {
-                    Servicio
-                  } @else {
-                    Producto
-                    @if ((item.unidadesPorPresentacion ?? 1) !== 1) {
-                      · x{{ item.unidadesPorPresentacion | number: '1.0-2' }}
-                    }
-                  }
-                </small>
-              </div>
-              <div class="factura-producto__cantidad">
-                {{ item.cantidad }} × Gs. {{ item.precioUnitario | number: '1.0-0' }}
-              </div>
-              <div class="factura-producto__subtotal">
-                Gs. {{ item.cantidad * item.precioUnitario | number: '1.0-0' }}
-              </div>
-            </div>
-          }
-          <div class="factura-productos__total">
-            <span>Total</span>
-            <strong>Gs. {{ total() | number: '1.0-0' }}</strong>
-          </div>
-        </div>
-      </section>
-
-      <!-- Sección de cliente -->
       <section class="factura-dialog__section">
         @if (!mostrarFormularioCliente()) {
           <div class="factura-dialog__section-header">
@@ -124,9 +81,7 @@
                     }
                   </button>
                 } @empty {
-                  <div class="factura-clientes__empty">
-                    No se encontraron clientes
-                  </div>
+                  <div class="factura-clientes__empty">No se encontraron clientes</div>
                 }
               }
             </div>
@@ -148,77 +103,50 @@
           </div>
 
           <div class="factura-clientes__form">
-            <app-cliente-form
-              (saved)="onClienteGuardado()"
-            />
+            <app-cliente-form (saved)="onClienteGuardado()" />
           </div>
         }
       </section>
 
-      <!-- Sección de forma de pago -->
       <section class="factura-dialog__section">
         <h3 class="factura-dialog__section-title">
-          <span class="material-icons" aria-hidden="true">payment</span>
-          Forma de pago
+          <span class="material-icons" aria-hidden="true">shopping_cart</span>
+          Productos a facturar
+          <span class="factura-dialog__badge">{{ cantidadItems() | number: '1.0-2' }}</span>
         </h3>
-
-        <div class="factura-pago">
-          <div class="factura-pago__monedas">
-            <label class="factura-pago__label">Moneda</label>
-            @if (cargandoMontos()) {
-              <small class="factura-pago__cotizacion">Calculando montos...</small>
-            } @else if (errorMontos()) {
-              <small class="factura-pago__cotizacion">{{ errorMontos() }}</small>
-            }
-            <div class="factura-pago__moneda-selector" role="radiogroup" aria-label="Moneda">
-              @for (moneda of monedasDisponibles(); track moneda.codigo) {
-                <button
-                  type="button"
-                  class="moneda-btn"
-                  role="radio"
-                  [class.moneda-btn--selected]="monedaSeleccionada() === moneda.codigo"
-                  [attr.aria-checked]="monedaSeleccionada() === moneda.codigo"
-                  (click)="seleccionarMoneda(moneda.codigo)"
-                >
-                  <span class="moneda-btn__simbolo">{{ moneda.simbolo }}</span>
-                  <span class="moneda-btn__codigo">{{ moneda.codigo }}</span>
-                  @if (moneda.codigo !== 'PYG') {
-                    <span class="moneda-btn__monto">
-                      {{ montoDe(moneda.codigo) | number: '1.2-2' }}
-                    </span>
-                  }
-                </button>
-              }
-            </div>
-            @if (cotizacionActual()) {
-              <small class="factura-pago__cotizacion">
-                Cotización: 1 {{ monedaSeleccionada() }} = {{ cotizacionActual()!.valorCotizacion | number: '1.0-0' }} Gs.
-              </small>
-            }
-          </div>
-
-          <div class="factura-pago__metodos" role="radiogroup" aria-label="Forma de pago">
-            @for (metodo of metodosPago; track metodo.codigo) {
-              <button
-                type="button"
-                class="factura-pago-metodo"
-                role="radio"
-                [class.factura-pago-metodo--seleccionado]="seleccionado() === metodo.codigo"
-                [attr.aria-checked]="seleccionado() === metodo.codigo"
-                (click)="seleccionar(metodo.codigo)"
-              >
-                <span class="factura-pago-metodo__icono">
-                  <span class="material-icons" aria-hidden="true">{{ metodo.icon }}</span>
-                </span>
-                <span>{{ metodo.label }}</span>
-                @if (seleccionado() === metodo.codigo) {
-                  <span class="factura-pago-metodo__check">
-                    <span class="material-icons" aria-hidden="true">check_circle</span>
-                  </span>
+        <div class="factura-productos" role="list" aria-label="Productos a facturar">
+          @for (item of cart(); track $index) {
+            <div class="factura-producto" role="listitem">
+              <div class="factura-producto__info">
+                <strong>{{ item.nombre }}</strong>
+                @if (item.presentacion) {
+                  <em class="factura-producto__presentacion">{{ item.presentacion }}</em>
                 }
-              </button>
-            }
-          </div>
+                <small>
+                  @if (item.tipo === 'ORDEN') {
+                    Orden de trabajo
+                  } @else if (item.tipo === 'SERVICIO') {
+                    Servicio
+                  } @else {
+                    Producto
+                    @if ((item.unidadesPorPresentacion ?? 1) !== 1) {
+                      · x{{ item.unidadesPorPresentacion | number: '1.0-2' }}
+                    }
+                  }
+                </small>
+              </div>
+              <div class="factura-producto__cantidad">
+                {{ item.cantidad }} × Gs. {{ item.precioUnitario | number: '1.0-0' }}
+              </div>
+              <div class="factura-producto__subtotal">
+                Gs. {{ item.cantidad * item.precioUnitario | number: '1.0-0' }}
+              </div>
+            </div>
+          }
+        </div>
+        <div class="factura-productos__total">
+          <span>Total</span>
+          <strong>Gs. {{ total() | number: '1.0-0' }}</strong>
         </div>
       </section>
     </div>
@@ -234,7 +162,7 @@
         [label]="botonLabel()"
         icon="receipt_long"
         variant="primary"
-        [disabled]="!puedeConfirmar()"
+        [disabled]="!clienteSeleccionado()"
         (clicked)="onConfirmar()"
       />
     </footer>

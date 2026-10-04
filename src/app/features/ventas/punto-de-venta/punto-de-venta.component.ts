@@ -558,7 +558,7 @@ export class PuntoDeVentaComponent {
 
   protected facturarConCliente(factura: FacturaConfirmada): void {
     this.facturaDialogOpen.set(false);
-    this.registrarVenta(true, factura.formaPago, factura.moneda, factura.idCliente);
+    this.registrarVenta(true, 'EFECTIVO', 'PYG', factura.idCliente);
   }
 
   private registrarVenta(

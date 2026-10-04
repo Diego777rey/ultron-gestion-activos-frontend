@@ -98,10 +98,8 @@
   }
 }
 
-// Tarjetas seleccionables: cliente, moneda y forma de pago
-.factura-cliente,
-.moneda-btn,
-.factura-pago-metodo {
+// Tarjeta seleccionable de cliente
+.factura-cliente {
   background: var(--surface-raised);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
@@ -116,9 +114,7 @@
   }
 }
 
-.factura-cliente--seleccionado,
-.moneda-btn--selected,
-.factura-pago-metodo--seleccionado {
+.factura-cliente--seleccionado {
   &,
   &:hover {
     border-color: var(--primary-color);
@@ -136,6 +132,30 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.factura-productos,
+.factura-clientes__lista {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 3px;
+  }
+}
+
+.factura-dialog__badge {
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: var(--active-bg);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .factura-producto {
@@ -189,7 +209,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 0.25rem;
   padding: 0.75rem;
   background: var(--active-bg);
   border: 1px solid var(--primary-color);
@@ -251,15 +270,6 @@
   max-height: 250px;
   overflow-y: auto;
   padding-right: 0.25rem;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
-    border-radius: 3px;
-  }
 }
 
 .factura-clientes__empty {
@@ -330,108 +340,6 @@
   background: var(--surface-raised);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-}
-
-// Pago
-.factura-pago {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.factura-pago__monedas {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.factura-pago__label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.factura-pago__moneda-selector {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.moneda-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  min-width: 100px;
-  padding: 0.75rem 1rem;
-}
-
-.moneda-btn__simbolo {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.moneda-btn__codigo {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.moneda-btn__monto {
-  margin-top: 0.25rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.factura-pago__cotizacion {
-  padding-left: 0.25rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.factura-pago__metodos {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.factura-pago-metodo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.factura-pago-metodo__icono {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: var(--surface-color);
-  color: var(--text-secondary);
-
-  .material-icons {
-    font-size: 20px;
-  }
-}
-
-.factura-pago-metodo--seleccionado .factura-pago-metodo__icono {
-  background: var(--primary-color);
-  color: var(--on-primary-color);
-}
-
-.factura-pago-metodo__check {
-  margin-left: auto;
-  color: var(--primary-color);
-
-  .material-icons {
-    font-size: 20px;
-  }
 }
 
 // Footer
