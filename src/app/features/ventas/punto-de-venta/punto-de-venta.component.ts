@@ -545,7 +545,7 @@ export class PuntoDeVentaComponent {
     }
 
     const ordenCliente = items.find((item) => item.tipo === 'ORDEN' && item.idCliente != null);
-    const idClienteFinal = clienteId ?? ordenCliente?.idCliente ?? null;
+    const idClienteFinal = clienteId != null ? Number(clienteId) : ordenCliente?.idCliente ?? null;
 
     this.selling.set(true);
     this.ventaError.set(null);
