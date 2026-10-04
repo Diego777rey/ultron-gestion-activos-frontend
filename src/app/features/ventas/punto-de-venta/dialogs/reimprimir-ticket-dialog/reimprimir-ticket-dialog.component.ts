@@ -336,12 +336,44 @@ export class ReimprimirTicketDialogComponent implements OnInit {
       })
       .subscribe({
         next: (ventas) => {
-          this.ventas.set(ventas.reverse());
+          this.ventas.set(this.ordenarRecientesPrimero(ventas));
           this.cargando.set(false);
         },
         error: () => {
           this.cargando.set(false);
         },
       });
+  }
+
+  private ordenarRecientesPrimero(ventas: VentaOutput[]): VentaOutput[] {
+    return [...ventas].sort((a, b) => {
+      const diferencia = this.marcaTiempo(b.fecha) - this.marcaTiempo(a.fecha);
+      if (diferencia !== 0) {
+        return diferencia;
+      }
+      return (b.numero ?? '').localeCompare(a.numero ?? '');
+    });
+  }
+
+  private marcaTiempo(fecha?: string): number {
+    if (!fecha?.trim()) {
+      return 0;
+    }
+    const valor = fecha.trim();
+    const partes = valor.match(
+      /^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/,
+    );
+    if (partes) {
+      return new Date(
+        Number(partes[3]),
+        Number(partes[2]) - 1,
+        Number(partes[1]),
+        Number(partes[4] ?? 0),
+        Number(partes[5] ?? 0),
+        Number(partes[6] ?? 0),
+      ).getTime();
+    }
+    const directa = Date.parse(valor);
+    return Number.isNaN(directa) ? 0 : directa;
   }
 }
