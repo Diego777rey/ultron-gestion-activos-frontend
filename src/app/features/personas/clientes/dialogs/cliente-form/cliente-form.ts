@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { DialogRef } from '@angular/cdk/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Observable, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { ClienteInput, ClienteOutput } from '../../interfaces/cliente.interface';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged, switchMap, catchError, map, startWith } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
 import { ClienteService } from '../../services/cliente.service';
 import { PersonaService } from '../../../shared/services/persona.service';
 import {
@@ -18,16 +18,16 @@ import {
 import { nombreCompletoPersona } from '../../../shared/nombre-persona';
 import { PersonaOutput } from '../../../funcionarios/interfaces/funcionario.interface';
 
-type ConsultaRuc =
-  | { tipo: 'buscando' }
-  | { tipo: 'encontrado'; contribuyente: ContribuyenteRuc }
-  | { tipo: 'no-encontrado' }
-  | { tipo: 'error'; mensaje: string };
+/** Resultado de buscar el CI/RUC: base propia, DNIT o carga manual. */
+type Busqueda =
+  | { tipo: 'cliente'; cliente: ClienteOutput }
+  | { tipo: 'persona'; persona: PersonaOutput }
+  | { tipo: 'buscando-dnit' }
+  | { tipo: 'dnit'; contribuyente: ContribuyenteRuc }
+  | { tipo: 'manual' }
+  | { tipo: 'error-dnit'; mensaje: string };
 
-type ResultadoDocumento =
-  | { tipo: 'local'; persona: PersonaOutput }
-  | { tipo: 'ruc'; consulta: ConsultaRuc }
-  | { tipo: 'nada' };
+const TIPO_CLIENTE_DEFAULT = 'Persona Física';
 
 @Component({
   selector: 'app-cliente-form',
@@ -39,13 +39,34 @@ type ResultadoDocumento =
 export class ClienteFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly clienteService = inject(ClienteService);
+  private readonly personaService = inject(PersonaService);
+  private readonly consultaRucService = inject(ConsultaRucService);
+  private readonly dialogRef = inject(DialogRef, { optional: true });
 
+  /** Cliente a editar (desde la lista de clientes). */
   readonly cliente = input<ClienteOutput | null>(null);
-  readonly saved = output<void>();
+  /** CI/RUC con el que arranca un alta (ej. lo tipeado en el buscador de la factura). */
+  readonly documentoInicial = input<string | null>(null);
 
-  protected saving = false;
-  protected error: string | null = null;
-  protected isEdit = false;
+  readonly saved = output<ClienteOutput>();
+  /** El CI/RUC tipeado ya corresponde a un cliente registrado. */
+  readonly existente = output<ClienteOutput>();
+
+  protected readonly saving = signal(false);
+  protected readonly error = signal<string | null>(null);
+  protected readonly busqueda = signal<Busqueda | null>(null);
+  /** Cliente que se va a actualizar: el recibido para editar o el encontrado por documento. */
+  private readonly clienteActual = signal<ClienteOutput | null>(null);
+  protected readonly isEdit = computed(() => !!this.clienteActual()?.id_cliente);
+
+  protected readonly contribuyente = computed(() => {
+    const b = this.busqueda();
+    return b?.tipo === 'dnit' ? b.contribuyente : null;
+  });
+  protected readonly errorDnit = computed(() => {
+    const b = this.busqueda();
+    return b?.tipo === 'error-dnit' ? b.mensaje : null;
+  });
 
   protected readonly tiposCliente = ['Persona Física', 'Empresa', 'Gobierno'];
 
@@ -56,131 +77,165 @@ export class ClienteFormComponent {
     telefono: [''],
     direccion: [''],
     ruc: [''],
-    tipoCliente: ['Persona Física'],
+    tipoCliente: [TIPO_CLIENTE_DEFAULT],
     observaciones: [''],
     estado: [true],
   });
 
-  private readonly personaService = inject(PersonaService);
-  private readonly consultaRucService = inject(ConsultaRucService);
-
-  protected readonly consultaRuc = signal<ConsultaRuc | null>(null);
-  protected readonly contribuyente = computed(() => {
-    const consulta = this.consultaRuc();
-    return consulta?.tipo === 'encontrado' ? consulta.contribuyente : null;
-  });
-  protected readonly errorRuc = computed(() => {
-    const consulta = this.consultaRuc();
-    return consulta?.tipo === 'error' ? consulta.mensaje : null;
-  });
   /** Para no pisar un nombre que el usuario corrigió a mano. */
   private nombreAutocompletado = '';
 
   constructor() {
+    this.form.controls.documento.valueChanges
+      .pipe(
+        takeUntilDestroyed(),
+        debounceTime(500),
+        map((doc) => doc.trim()),
+        distinctUntilChanged(),
+        switchMap((doc) => this.buscar(doc)),
+      )
+      .subscribe((resultado) => this.aplicarBusqueda(resultado));
+
     effect(() => {
       const c = this.cliente();
-      this.consultaRuc.set(null);
+      const documentoInicial = this.documentoInicial();
+      this.busqueda.set(null);
+      this.error.set(null);
       this.nombreAutocompletado = '';
+      this.clienteActual.set(c);
       if (c) {
-        this.isEdit = !!c.id_cliente;
-        this.form.reset({
-          nombre: nombreCompletoPersona(c.persona),
-          documento: c.persona?.documento ?? '',
-          email: c.persona?.email ?? '',
-          telefono: c.persona?.telefono ?? '',
-          direccion: c.persona?.direccion ?? '',
-          ruc: c.ruc ?? '',
-          tipoCliente: c.tipoCliente ?? 'Persona Física',
-          observaciones: c.observaciones ?? '',
-          estado: c.estado ?? true,
-        });
+        this.cargarCliente(c);
       } else {
-        this.isEdit = false;
-        this.form.reset({
-          nombre: '',
-          documento: '',
-          email: '',
-          telefono: '',
-          direccion: '',
-          ruc: '',
-          tipoCliente: 'Persona Física',
-          observaciones: '',
-          estado: true,
-        });
-      }
-    });
-
-    this.form.controls.documento.valueChanges.pipe(
-      takeUntilDestroyed(),
-      debounceTime(500),
-      map((doc) => doc.trim()),
-      distinctUntilChanged(),
-      switchMap((doc) => this.buscarDocumento(doc)),
-    ).subscribe((resultado) => {
-      if (resultado.tipo === 'local') {
-        this.consultaRuc.set(null);
-        this.form.patchValue({
-          nombre: nombreCompletoPersona(resultado.persona),
-          email: resultado.persona.email || '',
-          telefono: resultado.persona.telefono || '',
-          direccion: resultado.persona.direccion || '',
-        });
-        return;
-      }
-      if (resultado.tipo === 'nada') {
-        this.consultaRuc.set(null);
-        return;
-      }
-      this.consultaRuc.set(resultado.consulta);
-      if (resultado.consulta.tipo === 'encontrado') {
-        this.aplicarContribuyente(resultado.consulta.contribuyente);
+        this.form.reset(this.valoresVacios(documentoInicial?.trim() ?? ''));
       }
     });
   }
 
-  /** Primero la base propia (trae teléfono y email); si no está, la DNIT. */
-  private buscarDocumento(doc: string): Observable<ResultadoDocumento> {
-    if (!doc || this.isEdit) {
-      return of({ tipo: 'nada' });
+  /**
+   * 1. Cliente ya registrado → se cargan sus datos.
+   * 2. Persona del sistema (ej. funcionario) → se cargan sus datos.
+   * 3. Contribuyente en la DNIT → nombre/razón social y RUC.
+   * 4. Nada → consumidor final, se carga el nombre a mano.
+   */
+  private buscar(doc: string): Observable<Busqueda | null> {
+    if (!doc || this.cliente()) {
+      return of(null);
     }
-    return this.personaService.buscarPorDocumento(doc).pipe(
-      map((data) => data.buscarPersonaPorDocumento),
+    return this.clienteService.buscarPorDocumento(doc).pipe(
       catchError(() => of(null)),
-      switchMap((persona): Observable<ResultadoDocumento> => {
-        if (persona) {
-          return of({ tipo: 'local', persona });
+      switchMap((cliente): Observable<Busqueda | null> => {
+        if (cliente) {
+          return of({ tipo: 'cliente', cliente });
         }
-        if (!esRucConsultable(doc)) {
-          return of({ tipo: 'nada' });
-        }
-        return this.consultaRucService.consultar(doc).pipe(
-          map((contribuyente): ConsultaRuc =>
-            contribuyente ? { tipo: 'encontrado', contribuyente } : { tipo: 'no-encontrado' },
-          ),
-          catchError((err: Error) =>
-            of<ConsultaRuc>({ tipo: 'error', mensaje: err.message || 'No se pudo consultar el RUC' }),
-          ),
-          startWith<ConsultaRuc>({ tipo: 'buscando' }),
-          map((consulta): ResultadoDocumento => ({ tipo: 'ruc', consulta })),
+        return this.personaService.buscarPorDocumento(doc).pipe(
+          map((data) => data.buscarPersonaPorDocumento),
+          catchError(() => of(null)),
+          switchMap((persona): Observable<Busqueda | null> => {
+            if (persona) {
+              return of({ tipo: 'persona', persona });
+            }
+            return esRucConsultable(doc) ? this.consultarDnit(doc) : of({ tipo: 'manual' });
+          }),
         );
       }),
     );
   }
 
-  private aplicarContribuyente(c: ContribuyenteRuc): void {
-    const nombreActual = this.form.controls.nombre.value.trim();
-    const nombre = c.nombre.trim().toUpperCase();
-    if (!nombreActual || nombreActual === this.nombreAutocompletado) {
-      this.form.controls.nombre.setValue(nombre);
-      this.nombreAutocompletado = nombre;
-    }
-    this.form.patchValue({
-      ruc: c.ruc,
-      tipoCliente: c.entidadPublica ? 'Gobierno' : c.personaJuridica ? 'Empresa' : 'Persona Física',
-    });
+  private consultarDnit(doc: string): Observable<Busqueda> {
+    return this.consultaRucService.consultar(doc).pipe(
+      map((contribuyente): Busqueda =>
+        contribuyente ? { tipo: 'dnit', contribuyente } : { tipo: 'manual' },
+      ),
+      catchError((err: Error) =>
+        of<Busqueda>({ tipo: 'error-dnit', mensaje: err.message || 'No se pudo consultar el RUC' }),
+      ),
+      startWith<Busqueda>({ tipo: 'buscando-dnit' }),
+    );
   }
 
-  private readonly dialogRef = inject(DialogRef, { optional: true });
+  private aplicarBusqueda(resultado: Busqueda | null): void {
+    if (this.cliente()) {
+      return;
+    }
+    if (this.clienteActual() && resultado?.tipo !== 'cliente') {
+      this.descartarClienteEncontrado();
+    }
+    this.busqueda.set(resultado);
+
+    switch (resultado?.tipo) {
+      case 'cliente':
+        this.clienteActual.set(resultado.cliente);
+        this.cargarCliente(resultado.cliente);
+        this.existente.emit(resultado.cliente);
+        break;
+      case 'persona':
+        this.setNombreAutocompletado(nombreCompletoPersona(resultado.persona));
+        this.form.patchValue({
+          email: resultado.persona.email || '',
+          telefono: resultado.persona.telefono || '',
+          direccion: resultado.persona.direccion || '',
+        });
+        break;
+      case 'dnit': {
+        const c = resultado.contribuyente;
+        this.setNombreAutocompletado(c.nombre);
+        this.form.patchValue({
+          ruc: c.ruc,
+          tipoCliente: c.entidadPublica ? 'Gobierno' : c.personaJuridica ? 'Empresa' : TIPO_CLIENTE_DEFAULT,
+        });
+        break;
+      }
+    }
+  }
+
+  /** Se cambió el documento después de cargar un cliente existente: vuelve a ser un alta. */
+  private descartarClienteEncontrado(): void {
+    this.clienteActual.set(null);
+    this.nombreAutocompletado = '';
+    const documento = this.form.controls.documento.value;
+    this.form.reset(this.valoresVacios(documento), { emitEvent: false });
+  }
+
+  private setNombreAutocompletado(nombre: string): void {
+    const actual = this.form.controls.nombre.value.trim();
+    if (actual && actual !== this.nombreAutocompletado) {
+      return;
+    }
+    const valor = nombre.trim().toUpperCase();
+    this.form.controls.nombre.setValue(valor);
+    this.nombreAutocompletado = valor;
+  }
+
+  private cargarCliente(c: ClienteOutput): void {
+    this.form.reset(
+      {
+        nombre: nombreCompletoPersona(c.persona),
+        documento: c.persona?.documento ?? '',
+        email: c.persona?.email ?? '',
+        telefono: c.persona?.telefono ?? '',
+        direccion: c.persona?.direccion ?? '',
+        ruc: c.ruc ?? '',
+        tipoCliente: c.tipoCliente ?? TIPO_CLIENTE_DEFAULT,
+        observaciones: c.observaciones ?? '',
+        estado: c.estado ?? true,
+      },
+      { emitEvent: false },
+    );
+  }
+
+  private valoresVacios(documento: string) {
+    return {
+      nombre: '',
+      documento,
+      email: '',
+      telefono: '',
+      direccion: '',
+      ruc: '',
+      tipoCliente: TIPO_CLIENTE_DEFAULT,
+      observaciones: '',
+      estado: true,
+    };
+  }
 
   protected onSubmit(): void {
     if (this.form.invalid) {
@@ -188,8 +243,7 @@ export class ClienteFormComponent {
       return;
     }
     const v = this.form.getRawValue();
-    const c = this.cliente();
-    const isUpdate = !!(c && c.id_cliente);
+    const c = this.clienteActual();
     const payload: ClienteInput = {
       persona: {
         nombre: v.nombre.trim(),
@@ -202,26 +256,27 @@ export class ClienteFormComponent {
       },
       ruc: v.ruc?.trim() || null,
       tipoCliente: v.tipoCliente || null,
-      limiteCredito: isUpdate ? (c.limiteCredito ?? 0) : 0,
-      fechaRegistro: isUpdate ? (c.fechaRegistro ?? null) : this.today(),
+      limiteCredito: c?.id_cliente ? (c.limiteCredito ?? 0) : 0,
+      fechaRegistro: c?.id_cliente ? (c.fechaRegistro ?? null) : this.today(),
       observaciones: v.observaciones?.trim() || null,
       estado: v.estado,
     };
 
-    this.saving = true;
-    const request = (c && c.id_cliente) 
+    this.saving.set(true);
+    this.error.set(null);
+    const request = c?.id_cliente
       ? this.clienteService.update(c.id_cliente, payload)
       : this.clienteService.create(payload);
 
     request.subscribe({
-      next: () => {
-        this.saving = false;
-        this.saved.emit();
+      next: (guardado) => {
+        this.saving.set(false);
+        this.saved.emit(guardado);
         this.dialogRef?.close(true);
       },
       error: (err: Error) => {
-        this.saving = false;
-        this.error = err.message || 'No se pudo guardar el cliente';
+        this.saving.set(false);
+        this.error.set(err.message || 'No se pudo guardar el cliente');
       },
     });
   }
