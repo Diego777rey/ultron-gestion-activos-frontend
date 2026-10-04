@@ -45,60 +45,80 @@
               />
             </div>
 
-            <div class="factura-clientes__lista" role="radiogroup" aria-label="Clientes">
-              @if (loadingClientes()) {
-                <div class="factura-clientes__empty">Cargando clientes...</div>
-              } @else {
-                @for (cliente of clientesFiltrados(); track cliente.id_cliente) {
-                  <button
-                    type="button"
-                    class="factura-cliente"
-                    role="radio"
-                    [class.factura-cliente--seleccionado]="clienteSeleccionado()?.id_cliente === cliente.id_cliente"
-                    [attr.aria-checked]="clienteSeleccionado()?.id_cliente === cliente.id_cliente"
-                    (click)="seleccionarCliente(cliente)"
-                  >
-                    <div class="factura-cliente__icono">
-                      <span class="material-icons" aria-hidden="true">account_circle</span>
-                    </div>
-                    <div class="factura-cliente__info">
-                      <strong>{{ nombreCliente(cliente) }}</strong>
-                      <small>
-                        @if (cliente.ruc) {
-                          RUC: {{ cliente.ruc }}
-                        } @else if (cliente.persona?.documento) {
-                          Doc: {{ cliente.persona?.documento }}
-                        }
-                        @if (cliente.tipoCliente) {
-                          · {{ cliente.tipoCliente }}
-                        }
-                      </small>
-                    </div>
-                    @if (clienteSeleccionado()?.id_cliente === cliente.id_cliente) {
-                      <span class="factura-cliente__check">
-                        <span class="material-icons" aria-hidden="true">check_circle</span>
-                      </span>
-                    }
-                  </button>
-                } @empty {
-                  @if (documentoSinCliente(); as documento) {
-                    <div class="factura-clientes__empty">
-                      <p>No hay ningún cliente con C.I./RUC {{ documento }}.</p>
-                      <button
-                        type="button"
-                        class="factura-dialog__btn-nuevo"
-                        (click)="abrirFormularioCliente(documento)"
-                      >
-                        <span class="material-icons" aria-hidden="true">person_add</span>
-                        Registrar con C.I./RUC {{ documento }}
-                      </button>
-                    </div>
-                  } @else {
-                    <div class="factura-clientes__empty">No se encontraron clientes</div>
+            <div
+              class="factura-clientes__lista"
+              role="radiogroup"
+              aria-label="Clientes"
+              [attr.aria-busy]="loadingClientes()"
+              (scroll)="onScrollLista($event)"
+            >
+              @for (cliente of clientes(); track cliente.id_cliente) {
+                <button
+                  type="button"
+                  class="factura-cliente"
+                  role="radio"
+                  [class.factura-cliente--seleccionado]="clienteSeleccionado()?.id_cliente === cliente.id_cliente"
+                  [attr.aria-checked]="clienteSeleccionado()?.id_cliente === cliente.id_cliente"
+                  (click)="seleccionarCliente(cliente)"
+                >
+                  <div class="factura-cliente__icono">
+                    <span class="material-icons" aria-hidden="true">account_circle</span>
+                  </div>
+                  <div class="factura-cliente__info">
+                    <strong>{{ nombreCliente(cliente) }}</strong>
+                    <small>
+                      @if (cliente.ruc) {
+                        RUC: {{ cliente.ruc }}
+                      } @else if (cliente.persona?.documento) {
+                        Doc: {{ cliente.persona?.documento }}
+                      }
+                      @if (cliente.tipoCliente) {
+                        · {{ cliente.tipoCliente }}
+                      }
+                    </small>
+                  </div>
+                  @if (clienteSeleccionado()?.id_cliente === cliente.id_cliente) {
+                    <span class="factura-cliente__check">
+                      <span class="material-icons" aria-hidden="true">check_circle</span>
+                    </span>
                   }
+                </button>
+              } @empty {
+                @if (loadingClientes()) {
+                  <div class="factura-clientes__empty">Cargando clientes...</div>
+                } @else if (documentoSinCliente(); as documento) {
+                  <div class="factura-clientes__empty">
+                    <p>No hay ningún cliente con C.I./RUC {{ documento }}.</p>
+                    <button
+                      type="button"
+                      class="factura-dialog__btn-nuevo"
+                      (click)="abrirFormularioCliente(documento)"
+                    >
+                      <span class="material-icons" aria-hidden="true">person_add</span>
+                      Registrar con C.I./RUC {{ documento }}
+                    </button>
+                  </div>
+                } @else {
+                  <div class="factura-clientes__empty">No se encontraron clientes</div>
                 }
               }
+
+              @if (clientes().length > 0 && hayMasClientes()) {
+                <button
+                  type="button"
+                  class="factura-clientes__mas"
+                  [disabled]="loadingClientes()"
+                  (click)="cargarMasClientes()"
+                >
+                  {{ loadingClientes() ? 'Cargando…' : 'Ver más clientes' }}
+                </button>
+              }
             </div>
+            @if (clientes().length > 0) {
+              <small class="factura-clientes__conteo" aria-live="polite">
+                Mostrando {{ clientes().length }} de {{ totalClientes() | number: '1.0-0' }} clientes
+              </small>
+            }
           </div>
         } @else {
           <div class="factura-dialog__section-header">

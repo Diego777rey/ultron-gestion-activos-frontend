@@ -8,6 +8,9 @@ import {
   signal,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, merge, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { ModalComponent } from '../../../../../shared/components/modal/modal';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { CartItem } from '../../interfaces/venta.interface';
@@ -19,11 +22,20 @@ import {
   esRucConsultable,
   normalizarRuc,
 } from '../../../../personas/shared/services/consulta-ruc.service';
-import { LoadingService } from '../../../../../shared/services/loading.service';
+import { PageResponse } from '../../../../../shared/models/pagination.model';
 
 export interface FacturaConfirmada {
   idCliente: number;
 }
+
+interface PedidoClientes {
+  filtro: string;
+  pagina: number;
+}
+
+const CLIENTES_POR_PAGINA = 20;
+/** Distancia al final de la lista (px) a partir de la cual se pide la página siguiente. */
+const UMBRAL_SCROLL = 48;
 
 @Component({
   selector: 'app-factura-dialog',
@@ -34,7 +46,6 @@ export interface FacturaConfirmada {
 })
 export class FacturaDialogComponent {
   private readonly clienteService = inject(ClienteService);
-  private readonly loading = inject(LoadingService);
 
   readonly cart = input.required<CartItem[]>();
   readonly total = input.required<number>();
@@ -46,34 +57,22 @@ export class FacturaDialogComponent {
   protected readonly busqueda = signal('');
   protected readonly clientes = signal<ClienteOutput[]>([]);
   protected readonly loadingClientes = signal(false);
+  protected readonly hayMasClientes = signal(false);
+  protected readonly totalClientes = signal(0);
   protected readonly mostrarFormularioCliente = signal(false);
   protected readonly documentoNuevoCliente = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
 
-  protected readonly clientesFiltrados = computed(() => {
-    const q = this.busqueda().trim().toLowerCase();
-    const items = this.clientes();
-    if (!q) {
-      return items;
-    }
-    const qDocumento = normalizarRuc(q).replace(/-\d$/, '');
-    return items.filter((c) => {
-      const nombre = nombreCompletoPersona(c.persona).toLowerCase();
-      const doc = normalizarRuc(c.persona?.documento).toLowerCase();
-      const ruc = normalizarRuc(c.ruc).toLowerCase();
-      return (
-        nombre.includes(q) ||
-        doc.includes(q) ||
-        ruc.includes(q) ||
-        (!!qDocumento && (doc.includes(qDocumento) || ruc.includes(qDocumento)))
-      );
-    });
-  });
+  /** Cliente recién registrado o encontrado: se muestra primero en la lista. */
+  private readonly clienteDestacado = signal<ClienteOutput | null>(null);
+  private paginaActual = 0;
+  private readonly busqueda$ = new Subject<string>();
+  private readonly pedidos$ = new Subject<PedidoClientes>();
 
   /** Lo tipeado parece un CI/RUC que todavía no es cliente: se ofrece registrarlo. */
   protected readonly documentoSinCliente = computed(() => {
     const q = this.busqueda().trim();
-    if (this.loadingClientes() || this.clientesFiltrados().length > 0 || !esRucConsultable(q)) {
+    if (this.loadingClientes() || this.clientes().length > 0 || !esRucConsultable(q)) {
       return null;
     }
     return normalizarRuc(q);
@@ -88,7 +87,29 @@ export class FacturaDialogComponent {
   );
 
   constructor() {
-    this.cargarClientes();
+    const nuevaBusqueda$ = this.busqueda$.pipe(
+      debounceTime(300),
+      map((q) => q.trim()),
+      distinctUntilChanged(),
+      map((filtro): PedidoClientes => ({ filtro, pagina: 0 })),
+    );
+
+    merge(nuevaBusqueda$, this.pedidos$)
+      .pipe(
+        takeUntilDestroyed(),
+        switchMap((pedido) => {
+          this.loadingClientes.set(true);
+          return this.clienteService
+            .findPaginated(pedido.pagina, CLIENTES_POR_PAGINA, pedido.filtro || undefined)
+            .pipe(
+              map((respuesta) => ({ pedido, respuesta })),
+              catchError(() => of({ pedido, respuesta: null })),
+            );
+        }),
+      )
+      .subscribe(({ pedido, respuesta }) => this.recibirPagina(pedido, respuesta));
+
+    this.pedidos$.next({ filtro: '', pagina: 0 });
   }
 
   protected nombreCliente(cliente: ClienteOutput): string {
@@ -102,6 +123,21 @@ export class FacturaDialogComponent {
 
   protected onBusquedaChange(value: string): void {
     this.busqueda.set(value);
+    this.busqueda$.next(value);
+  }
+
+  protected cargarMasClientes(): void {
+    if (this.loadingClientes() || !this.hayMasClientes()) {
+      return;
+    }
+    this.pedidos$.next({ filtro: this.busqueda().trim(), pagina: this.paginaActual + 1 });
+  }
+
+  protected onScrollLista(event: Event): void {
+    const lista = event.target as HTMLElement;
+    if (lista.scrollTop + lista.clientHeight >= lista.scrollHeight - UMBRAL_SCROLL) {
+      this.cargarMasClientes();
+    }
   }
 
   protected abrirFormularioCliente(documento: string | null = null): void {
@@ -114,12 +150,14 @@ export class FacturaDialogComponent {
     this.mostrarFormularioCliente.set(false);
   }
 
-  /** Nuevo o existente: queda seleccionado para facturar. */
+  /** Nuevo o existente: queda seleccionado y primero en la lista. */
   protected usarCliente(cliente: ClienteOutput): void {
     this.mostrarFormularioCliente.set(false);
-    this.busqueda.set('');
+    this.clienteDestacado.set(cliente);
     this.seleccionarCliente(cliente);
-    this.cargarClientes();
+    this.busqueda.set('');
+    this.busqueda$.next('');
+    this.pedidos$.next({ filtro: '', pagina: 0 });
   }
 
   protected onCancelar(): void {
@@ -135,29 +173,32 @@ export class FacturaDialogComponent {
     this.confirmar.emit({ idCliente: Number(cliente.id_cliente) });
   }
 
-  private cargarClientes(): void {
-    this.loadingClientes.set(true);
-    this.loading
-      .track(this.clienteService.findAll(), {
-        errorTitle: 'No se pudo cargar la lista de clientes',
-        notifyError: false,
-      })
-      .subscribe({
-        next: (items) => {
-          this.clientes.set(items.filter((c) => c.estado !== false));
-          this.loadingClientes.set(false);
-          const seleccionado = this.clienteSeleccionado();
-          if (seleccionado) {
-            const actualizado = items.find((c) => c.id_cliente === seleccionado.id_cliente);
-            if (actualizado) {
-              this.clienteSeleccionado.set(actualizado);
-            }
-          }
-        },
-        error: () => {
-          this.loadingClientes.set(false);
-          this.error.set('No se pudieron cargar los clientes');
-        },
-      });
+  private recibirPagina(pedido: PedidoClientes, respuesta: PageResponse<ClienteOutput> | null): void {
+    this.loadingClientes.set(false);
+    if (!respuesta) {
+      this.error.set('No se pudieron cargar los clientes');
+      return;
+    }
+    this.paginaActual = pedido.pagina;
+    this.hayMasClientes.set(!respuesta.pageInfo.last);
+    this.totalClientes.set(respuesta.pageInfo.totalElements);
+
+    const activos = respuesta.content.filter((c) => c.estado !== false);
+    if (pedido.pagina > 0) {
+      const ids = new Set(this.clientes().map((c) => c.id_cliente));
+      this.clientes.update((actuales) => [...actuales, ...activos.filter((c) => !ids.has(c.id_cliente))]);
+      return;
+    }
+
+    const destacado = this.clienteDestacado();
+    if (destacado && !pedido.filtro) {
+      const actualizado = activos.find((c) => c.id_cliente === destacado.id_cliente) ?? destacado;
+      this.clientes.set([actualizado, ...activos.filter((c) => c.id_cliente !== destacado.id_cliente)]);
+      if (this.clienteSeleccionado()?.id_cliente === destacado.id_cliente) {
+        this.clienteSeleccionado.set(actualizado);
+      }
+      return;
+    }
+    this.clientes.set(activos);
   }
 }
