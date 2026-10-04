@@ -38,8 +38,8 @@
               <span class="material-icons" aria-hidden="true">search</span>
               <input
                 type="search"
-                aria-label="Buscar cliente por nombre, documento o RUC"
-                placeholder="Buscar por nombre, documento o RUC..."
+                aria-label="Buscar cliente por C.I., RUC o nombre"
+                placeholder="Ingresá C.I. / RUC o nombre..."
                 [value]="busqueda()"
                 (input)="onBusquedaChange($any($event.target).value)"
               />
@@ -81,7 +81,21 @@
                     }
                   </button>
                 } @empty {
-                  <div class="factura-clientes__empty">No se encontraron clientes</div>
+                  @if (documentoSinCliente(); as documento) {
+                    <div class="factura-clientes__empty">
+                      <p>No hay ningún cliente con C.I./RUC {{ documento }}.</p>
+                      <button
+                        type="button"
+                        class="factura-dialog__btn-nuevo"
+                        (click)="abrirFormularioCliente(documento)"
+                      >
+                        <span class="material-icons" aria-hidden="true">person_add</span>
+                        Registrar con C.I./RUC {{ documento }}
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="factura-clientes__empty">No se encontraron clientes</div>
+                  }
                 }
               }
             </div>
@@ -103,7 +117,11 @@
           </div>
 
           <div class="factura-clientes__form">
-            <app-cliente-form (saved)="onClienteGuardado()" />
+            <app-cliente-form
+              [documentoInicial]="documentoNuevoCliente()"
+              (existente)="usarCliente($event)"
+              (saved)="usarCliente($event)"
+            />
           </div>
         }
       </section>
