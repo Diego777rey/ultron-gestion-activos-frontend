@@ -15,6 +15,7 @@ export const PRODUCTO_CRUD_CONFIG: CrudConfig = {
     ubicacion
     estado
     imagen
+    tipoIva
     categoriaProducto {
       id_categoria_producto
       nombre

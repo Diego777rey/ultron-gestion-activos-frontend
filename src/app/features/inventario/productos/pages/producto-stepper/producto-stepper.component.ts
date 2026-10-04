@@ -17,7 +17,7 @@ import { UppercaseDirective } from '../../../../../shared/directives/uppercase.d
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { CategoriaProductoService } from '../../services/categoria-producto.service';
 import { ProductoService } from '../../services/producto.service';
-import { CategoriaProductoOutput, PresentacionProductoOutput, ProductoInput, ProductoOutput } from '../../interfaces/producto.interface';
+import { CategoriaProductoOutput, PresentacionProductoInput, PresentacionProductoOutput, ProductoInput, ProductoOutput } from '../../interfaces/producto.interface';
 import { PresentacionesEditorComponent } from '../../components/presentaciones-editor/presentaciones-editor.component';
 import { CategoriaRapidaFormComponent } from '../../dialogs/categoria-rapida-form/categoria-rapida-form.component';
 import { SubcategoriaFormComponent } from '../../dialogs/subcategoria-form/subcategoria-form.component';
@@ -56,6 +56,7 @@ export class ProductoStepperComponent implements OnInit {
   private readonly presentacionesEditor = viewChild(PresentacionesEditorComponent);
 
   protected readonly presentacionesIniciales = signal<PresentacionProductoOutput[]>([]);
+  protected readonly filasVista = signal<PresentacionProductoInput[]>([]);
   protected readonly productoId = signal<number | null>(null);
   protected readonly productoActual = signal<ProductoOutput | null>(null);
   protected readonly loadingProducto = signal(false);
@@ -88,9 +89,26 @@ export class ProductoStepperComponent implements OnInit {
   protected readonly selectedCategoria = signal<CategoriaProductoOutput | null>(null);
   protected readonly selectedSubcategoria = signal<CategoriaProductoOutput | null>(null);
 
+  protected readonly opcionesIva = [
+    { valor: '10', etiqueta: 'IVA 10%' },
+    { valor: '5', etiqueta: 'IVA 5%' },
+    { valor: 'EXENTA', etiqueta: 'Exenta' },
+  ] as const;
+
+  protected readonly precioPrincipal = computed(() => {
+    const precio = this.filasVista()[0]?.precio;
+    return precio == null || Number.isNaN(Number(precio)) ? null : Number(precio);
+  });
+
+  protected readonly costoProducto = computed(() => {
+    const costo = this.productoActual()?.precioCompra;
+    return costo == null ? null : Number(costo);
+  });
+
   protected readonly datosForm = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.maxLength(100)]],
     descripcion: [''],
+    tipoIva: ['10', Validators.required],
   });
 
   protected readonly categoriasFiltradas = computed(() => {
@@ -163,6 +181,7 @@ export class ProductoStepperComponent implements OnInit {
         this.datosForm.reset({
           nombre: producto.nombre ?? '',
           descripcion: producto.descripcion ?? '',
+          tipoIva: producto.tipoIva === '5' || producto.tipoIva === 'EXENTA' ? producto.tipoIva : '10',
         });
         this.imagePath.set(producto.imagen ?? null);
         this.presentacionesIniciales.set(producto.presentaciones ?? []);
@@ -300,6 +319,24 @@ export class ProductoStepperComponent implements OnInit {
     return this.datosForm.valid;
   }
 
+  protected irAPaso(index: number): void {
+    if (index === this.currentStep()) {
+      return;
+    }
+    this.error.set(null);
+    if (index > 1 && !this.selectedCategoria()?.id_categoria_producto) {
+      this.error.set('Seleccioná una categoría para continuar');
+      return;
+    }
+    if (this.currentStep() === 3) {
+      this.conservarPresentaciones();
+    }
+    if (index === 2) {
+      this.loadSubcategorias(this.selectedCategoria()!.id_categoria_producto!);
+    }
+    this.currentStep.set(index);
+  }
+
   protected siguiente(): void {
     this.error.set(null);
     const step = this.currentStep();
@@ -357,6 +394,14 @@ export class ProductoStepperComponent implements OnInit {
     this.imageError.set(message);
   }
 
+  protected onFilas(filas: PresentacionProductoInput[]): void {
+    this.filasVista.set(filas);
+  }
+
+  protected agregarPresentacion(): void {
+    this.presentacionesEditor()?.agregar();
+  }
+
   protected cancelar(): void {
     this.router.navigate(['/inventario/productos']);
   }
@@ -398,6 +443,7 @@ export class ProductoStepperComponent implements OnInit {
       ubicacion: existente?.ubicacion,
       estado: existente?.estado ?? true,
       imagen: this.imagePath() || undefined,
+      tipoIva: v.tipoIva,
       idCategoriaProducto,
       presentaciones,
     };

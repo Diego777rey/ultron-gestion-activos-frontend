@@ -6,11 +6,13 @@ import { ConfiguracionService } from './configuracion.service';
 import {
   ImpresionResultado,
   PrinterInfo,
+  TicketFactura,
   TicketOrdenTrabajo,
   TicketVenta,
 } from '../models/impresion.model';
 import {
   buildPrueba,
+  buildTicketFactura,
   buildTicketOrdenTrabajo,
   buildTicketVenta,
 } from '../printing/escpos-ticket-builder';
@@ -119,6 +121,19 @@ export class ImpresionService {
           message: err.message || 'No se pudo imprimir el ticket',
         }, 'Ticket enviado a la impresora'))),
       );
+  }
+
+  imprimirFactura(ticket: TicketFactura, printerName?: string): Observable<ImpresionResultado> {
+    const name = (printerName ?? this.getConfiguredPrinterName()).trim();
+    if (!name) {
+      const result = {
+        success: false,
+        message: 'Configurá la impresora térmica en Configuración del Sistema',
+      };
+      this.notifications.warning(result.message, { title: 'Impresora' });
+      return of(result);
+    }
+    return this.imprimirLocal(name, buildTicketFactura(ticket), 'Factura enviada a la impresora');
   }
 
   imprimirTicketOrdenTrabajo(

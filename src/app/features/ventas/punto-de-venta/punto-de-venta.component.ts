@@ -33,7 +33,9 @@ import { VentaPosService } from './services/venta.service';
 import { SesionCajaOutput } from './interfaces/sesion-caja.interface';
 import { CartItem, DetalleVentaInput, FormaPago, VentaOutput } from './interfaces/venta.interface';
 import { ImpresionService } from '../../../shared/services/impresion.service';
-import { TicketVenta } from '../../../shared/models/impresion.model';
+import { TicketFactura, TicketVenta } from '../../../shared/models/impresion.model';
+import { FacturaService } from '../../financiero/facturacion/services/factura.service';
+import { FacturaOutput } from '../../financiero/facturacion/interfaces/factura.interface';
 import { CATALOG_PAGE_SIZE } from '../../../shared/models/pagination.model';
 import { AuthService } from '../../../core/auth/auth.service';
 
@@ -65,6 +67,7 @@ export class PuntoDeVentaComponent {
   private readonly sesionCajaService = inject(SesionCajaService);
   private readonly ventaService = inject(VentaPosService);
   private readonly impresion = inject(ImpresionService);
+  private readonly facturaService = inject(FacturaService);
   private readonly auth = inject(AuthService);
   private readonly loading = inject(LoadingService);
   private readonly productoService = inject(ProductoService);
@@ -488,10 +491,7 @@ export class PuntoDeVentaComponent {
   }
 
   protected abrirFactura(): void {
-    if (this.cart().length === 0) {
-      this.ventaError.set('Agregá ítems al carrito antes de facturar');
-      return;
-    }
+    this.cobrarConTicket();
   }
 
   protected cerrarPagoDialog(): void {
@@ -518,7 +518,16 @@ export class PuntoDeVentaComponent {
 
   protected reimprimirTicket(venta: VentaOutput): void {
     this.reimprimirDialogOpen.set(false);
-    this.imprimirTicket(venta);
+    this.facturaService.porVenta(venta.id_venta).subscribe({
+      next: (factura) => {
+        if (factura) {
+          this.impresion.imprimirFactura(this.toTicketFactura(factura)).subscribe();
+          return;
+        }
+        this.imprimirTicket(venta);
+      },
+      error: () => this.imprimirTicket(venta),
+    });
   }
 
   protected cobrar(): void {
@@ -547,41 +556,56 @@ export class PuntoDeVentaComponent {
 
     const ordenCliente = items.find((item) => item.tipo === 'ORDEN' && item.idCliente != null);
 
+    const input = {
+      idSesionCaja: sesion.id_sesion_caja,
+      idCliente: ordenCliente?.idCliente ?? null,
+      descuento: 0,
+      formaPago,
+      moneda: moneda !== 'PYG' ? moneda : undefined,
+      detalles: items.map((item) => this.toDetalleInput(item)),
+    };
     this.selling.set(true);
     this.ventaError.set(null);
-    this.loading
-      .track(
-        this.ventaService.registrarVenta({
-          idSesionCaja: sesion.id_sesion_caja,
-          idCliente: ordenCliente?.idCliente ?? null,
-          descuento: 0,
-          formaPago,
-          moneda: moneda !== 'PYG' ? moneda : undefined,
-          detalles: items.map((item) => this.toDetalleInput(item)),
-        }),
-        {
-          message: imprimirTicket ? 'Cobrando e imprimiendo…' : 'Cobrando…',
-          errorTitle: 'No se pudo registrar la venta',
+    const alCobrar = () => {
+      this.selling.set(false);
+      this.cartActivo().set([]);
+      this.refreshSesion();
+      this.loadProductos(true);
+      if (this.mostrandoOrdenes() || items.some((item) => item.tipo === 'ORDEN')) {
+        this.loadOrdenesFinalizadas();
+      }
+    };
+    const alFallar = (err: Error, fallback: string) => {
+      this.selling.set(false);
+      this.ventaError.set(err.message || fallback);
+    };
+
+    if (imprimirTicket) {
+      this.loading
+        .track(this.ventaService.registrarVentaConFactura(input), {
+          message: 'Cobrando y emitiendo la factura…',
+          errorTitle: 'No se pudo emitir la factura',
           notifyError: false,
-        },
-      )
+        })
+        .subscribe({
+          next: ({ factura }) => {
+            alCobrar();
+            this.impresion.imprimirFactura(this.toTicketFactura(factura)).subscribe();
+          },
+          error: (err: Error) => alFallar(err, 'No se pudo emitir la factura'),
+        });
+      return;
+    }
+
+    this.loading
+      .track(this.ventaService.registrarVenta(input), {
+        message: 'Cobrando…',
+        errorTitle: 'No se pudo registrar la venta',
+        notifyError: false,
+      })
       .subscribe({
-        next: (venta) => {
-          this.selling.set(false);
-          this.cartActivo().set([]);
-          this.refreshSesion();
-          this.loadProductos(true);
-          if (this.mostrandoOrdenes() || items.some((item) => item.tipo === 'ORDEN')) {
-            this.loadOrdenesFinalizadas();
-          }
-          if (imprimirTicket) {
-            this.imprimirTicket(venta);
-          }
-        },
-        error: (err: Error) => {
-          this.selling.set(false);
-          this.ventaError.set(err.message || 'No se pudo registrar la venta');
-        },
+        next: () => alCobrar(),
+        error: (err: Error) => alFallar(err, 'No se pudo registrar la venta'),
       });
   }
 
@@ -606,6 +630,54 @@ export class PuntoDeVentaComponent {
       descuento: Number(venta.descuento ?? 0),
       total: Number(venta.total ?? 0),
       pie: 'Gracias por su compra',
+    };
+  }
+
+  private toTicketFactura(factura: FacturaOutput): TicketFactura {
+    const lineas = (factura.detalles ?? []).map((detalle) => ({
+      descripcion: detalle.descripcion?.trim() || 'Item',
+      cantidad: Number(detalle.cantidad ?? 1),
+      precioUnitario: Number(detalle.precio_unitario ?? 0),
+      subtotal: Number(detalle.subtotal ?? 0),
+      tipoIva: (detalle.tipo_iva ?? '10').toUpperCase(),
+    }));
+    let totalExenta = 0;
+    let totalGravada5 = 0;
+    let totalGravada10 = 0;
+    for (const linea of lineas) {
+      if (linea.tipoIva === '5') {
+        totalGravada5 += linea.subtotal;
+      } else if (linea.tipoIva === 'EXENTA') {
+        totalExenta += linea.subtotal;
+      } else {
+        totalGravada10 += linea.subtotal;
+      }
+    }
+    const documento = factura.cliente_ruc?.trim() || factura.cliente_documento?.trim() || null;
+    return {
+      razonSocial: factura.empresa_razon_social?.trim() || 'SIN RAZON SOCIAL',
+      nombreFantasia: factura.empresa_nombre_fantasia?.trim() || null,
+      ruc: factura.empresa_ruc?.trim() || '-',
+      direccion: factura.empresa_direccion?.trim() || null,
+      telefono: factura.empresa_telefono?.trim() || null,
+      actividadEconomica: factura.empresa_actividad_economica?.trim() || null,
+      timbrado: factura.timbrado?.trim() || '-',
+      vigenciaInicio: factura.timbrado_vigencia_inicio?.trim() || '-',
+      vigenciaFin: factura.timbrado_vigencia_fin?.trim() || '-',
+      numeroFactura: factura.numero_factura?.trim() || '-',
+      fecha: factura.fecha_emision?.trim() || this.formatFechaTicket(),
+      condicion: 'CONTADO',
+      formaPago: etiquetaFormaPago(factura.forma_pago),
+      clienteNombre: factura.cliente_nombre?.trim() || 'SIN NOMBRE',
+      clienteDocumento: documento,
+      clienteDireccion: factura.cliente_direccion?.trim() || null,
+      lineas,
+      totalExenta,
+      totalGravada5,
+      totalGravada10,
+      totalIva5: Number(factura.total_iva_5 ?? 0),
+      totalIva10: Number(factura.total_iva_10 ?? 0),
+      total: Number(factura.total ?? 0),
     };
   }
 
@@ -832,5 +904,16 @@ export class PuntoDeVentaComponent {
       return;
     }
     void this.router.navigateByUrl('/pantalla-principal');
+  }
+}
+
+function etiquetaFormaPago(forma?: string | null): string {
+  switch ((forma ?? '').toUpperCase()) {
+    case 'TARJETA':
+      return 'TARJETA';
+    case 'TRANSFERENCIA':
+      return 'TRANSFERENCIA';
+    default:
+      return 'EFECTIVO';
   }
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
 import { PresentacionProductoInput, PresentacionProductoOutput } from '../../interfaces/producto.interface';
 
 interface FilaPresentacion {
@@ -17,15 +17,18 @@ interface FilaPresentacion {
 })
 export class PresentacionesEditorComponent {
   readonly items = input<PresentacionProductoOutput[]>([]);
+  readonly filasChange = output<PresentacionProductoInput[]>();
 
   protected readonly filas = signal<FilaPresentacion[]>([]);
   protected readonly submitted = signal(false);
+  protected readonly menuAbierto = signal<number | null>(null);
 
   constructor() {
     effect(() => {
-      const items = this.items();
-      this.filas.set(items.map((item) => this.desdeOutput(item)));
+      const filas = this.items().map((item) => this.desdeOutput(item));
+      this.filas.set(filas);
       this.submitted.set(false);
+      this.filasChange.emit(this.aInput(filas));
     });
   }
 
@@ -39,29 +42,26 @@ export class PresentacionesEditorComponent {
   }
 
   toInput(): PresentacionProductoInput[] {
-    return this.filas().map((fila) => {
-      const item: PresentacionProductoInput = {
-        descripcion: fila.descripcion.trim(),
-        codigoBarras: fila.codigoBarras.trim(),
-        cantidad: Number(fila.cantidad),
-        precio: Number(fila.precio),
-      };
-      if (fila.id_presentacion_producto != null) {
-        item.id_presentacion_producto = fila.id_presentacion_producto;
-      }
-      return item;
-    });
+    return this.aInput(this.filas());
   }
 
-  protected agregar(): void {
+  agregar(): void {
+    this.menuAbierto.set(null);
     this.filas.update((filas) => [
       ...filas,
       { id_presentacion_producto: null, descripcion: '', codigoBarras: '', cantidad: 1, precio: 0 },
     ]);
+    this.emitir();
+  }
+
+  protected toggleMenu(index: number): void {
+    this.menuAbierto.update((actual) => (actual === index ? null : index));
   }
 
   protected quitar(index: number): void {
+    this.menuAbierto.set(null);
     this.filas.update((filas) => filas.filter((_, i) => i !== index));
+    this.emitir();
   }
 
   protected onDescripcion(index: number, value: string): void {
@@ -109,6 +109,26 @@ export class PresentacionesEditorComponent {
 
   private patch(index: number, cambio: Partial<FilaPresentacion>): void {
     this.filas.update((filas) => filas.map((fila, i) => (i === index ? { ...fila, ...cambio } : fila)));
+    this.emitir();
+  }
+
+  private emitir(): void {
+    this.filasChange.emit(this.aInput(this.filas()));
+  }
+
+  private aInput(filas: FilaPresentacion[]): PresentacionProductoInput[] {
+    return filas.map((fila) => {
+      const item: PresentacionProductoInput = {
+        descripcion: fila.descripcion.trim(),
+        codigoBarras: fila.codigoBarras.trim(),
+        cantidad: Number(fila.cantidad),
+        precio: Number(fila.precio),
+      };
+      if (fila.id_presentacion_producto != null) {
+        item.id_presentacion_producto = fila.id_presentacion_producto;
+      }
+      return item;
+    });
   }
 
   private desdeOutput(item: PresentacionProductoOutput): FilaPresentacion {
