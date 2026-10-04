@@ -15,16 +15,17 @@ jobs:
         env:
           BRANCH_NAME: ${{ github.head_ref }}
         run: |
-          PATTERN='^(fix|feat|refactor|docs|chore|style|test)/.+$|^release/v[0-9]+\.[0-9]+\.[0-9]+$'
+          PATTERN='^(cursor/)?(fix|feat|refactor|docs|chore|style|test)/.+$|^release/v[0-9]+\.[0-9]+\.[0-9]+$'
 
           if [[ ! "${BRANCH_NAME}" =~ ${PATTERN} ]]; then
             echo "::error::Rama invalida: '${BRANCH_NAME}'"
             echo ""
             echo "Prefijos permitidos:"
             echo "  fix/, feat/, refactor/, docs/, chore/, style/, test/"
+            echo "  cursor/fix/, cursor/feat/, etc. (para ramas de Cloud Agents)"
             echo "  release/vX.Y.Z (ejemplo: release/v1.0.0)"
             echo ""
-            echo "Todas las ramas deben crearse desde main."
+            echo "Todas las ramas deben crearse desde main o develop."
             exit 1
           fi
 
