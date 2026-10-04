@@ -25,6 +25,7 @@ import { OrdenTrabajoService } from '../../taller/orden-de-trabajo/services/orde
 import { OrdenTrabajoOutput } from '../../taller/orden-de-trabajo/interfaces/orden-trabajo.interface';
 import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja-dialog.component';
 import { PagoDialogComponent, PagoConfirmado } from './dialogs/pago-dialog/pago-dialog.component';
+import { FacturaDialogComponent, FacturaConfirmada } from './dialogs/factura-dialog/factura-dialog.component';
 import { LoadingService } from '../../../shared/services/loading.service';
 import { FileUploadService } from '../../../shared/services/file-upload.service';
 import { SesionCajaService } from './services/sesion-caja.service';
@@ -47,7 +48,14 @@ export type PdvNumero = 1 | 2;
 
 @Component({
   selector: 'app-punto-de-venta',
-  imports: [ModalComponent, AbrirCajaDialogComponent, PagoDialogComponent, UiButtonComponent, DecimalPipe],
+  imports: [
+    ModalComponent,
+    AbrirCajaDialogComponent,
+    PagoDialogComponent,
+    FacturaDialogComponent,
+    UiButtonComponent,
+    DecimalPipe,
+  ],
   templateUrl: './punto-de-venta.component.html',
   styleUrls: [
     './punto-de-venta.component.scss',
@@ -78,6 +86,7 @@ export class PuntoDeVentaComponent {
   readonly inicioDialogOpen = signal(true);
   readonly gestionCajaOpen = signal(false);
   readonly pagoDialogOpen = signal(false);
+  readonly facturaDialogOpen = signal(false);
   readonly maletinVerificado = signal(false);
   readonly cajaAbierta = signal(false);
   readonly sesion = signal<SesionCajaOutput | null>(null);
@@ -495,14 +504,34 @@ export class PuntoDeVentaComponent {
   }
 
   protected cobrarConTicket(): void {
-    this.registrarVenta(true, 'EFECTIVO', 'PYG', this.cartTotal());
+    if (this.cart().length === 0) {
+      this.ventaError.set('Agregá ítems al carrito antes de facturar');
+      return;
+    }
+    this.facturaDialogOpen.set(true);
+  }
+
+  protected cerrarFacturaDialog(): void {
+    this.facturaDialogOpen.set(false);
+  }
+
+  protected facturarConCliente(factura: FacturaConfirmada): void {
+    this.facturaDialogOpen.set(false);
+    this.registrarVenta(
+      true,
+      factura.formaPago,
+      factura.moneda,
+      factura.montoMonedaOriginal,
+      factura.clienteId
+    );
   }
 
   private registrarVenta(
     imprimirTicket: boolean,
     formaPago: FormaPago = 'EFECTIVO',
     moneda: string = 'PYG',
-    montoMonedaOriginal?: number
+    montoMonedaOriginal?: number,
+    clienteId?: string
   ): void {
     const sesion = this.sesion();
     const items = this.cart();
@@ -516,6 +545,7 @@ export class PuntoDeVentaComponent {
     }
 
     const ordenCliente = items.find((item) => item.tipo === 'ORDEN' && item.idCliente != null);
+    const idClienteFinal = clienteId ?? ordenCliente?.idCliente ?? null;
 
     this.selling.set(true);
     this.ventaError.set(null);
@@ -523,7 +553,7 @@ export class PuntoDeVentaComponent {
       .track(
         this.ventaService.registrarVenta({
           idSesionCaja: sesion.id_sesion_caja,
-          idCliente: ordenCliente?.idCliente ?? null,
+          idCliente: idClienteFinal,
           descuento: 0,
           formaPago,
           moneda: moneda !== 'PYG' ? moneda : undefined,

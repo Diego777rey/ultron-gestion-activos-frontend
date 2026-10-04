@@ -1,0 +1,230 @@
+<app-modal
+  [open]="true"
+  title="Facturar venta"
+  subtitle="Seleccioná o registrá un cliente para imprimir la factura"
+  maxWidth="900px"
+  headerVariant="primary"
+  [closeOnBackdrop]="false"
+  (closed)="onCancelar()"
+>
+  <div class="factura-dialog">
+    @if (error(); as err) {
+      <div class="factura-dialog__error" role="alert">
+        <span class="material-icons">error_outline</span>
+        <span>{{ err }}</span>
+      </div>
+    }
+
+    <div class="factura-dialog__content">
+      <!-- Sección de productos -->
+      <section class="factura-dialog__section">
+        <h3 class="factura-dialog__section-title">
+          <span class="material-icons">shopping_cart</span>
+          Productos a facturar
+        </h3>
+        <div class="factura-productos">
+          @for (item of cart(); track $index) {
+            <div class="factura-producto">
+              <div class="factura-producto__info">
+                <strong>{{ item.nombre }}</strong>
+                @if (item.presentacion) {
+                  <em class="factura-producto__presentacion">{{ item.presentacion }}</em>
+                }
+                <small>
+                  @if (item.tipo === 'ORDEN') {
+                    Orden de trabajo
+                  } @else if (item.tipo === 'SERVICIO') {
+                    Servicio
+                  } @else {
+                    Producto
+                    @if ((item.unidadesPorPresentacion ?? 1) !== 1) {
+                      · x{{ item.unidadesPorPresentacion | number: '1.0-2' }}
+                    }
+                  }
+                </small>
+              </div>
+              <div class="factura-producto__cantidad">
+                {{ item.cantidad }} × Gs. {{ item.precioUnitario | number: '1.0-0' }}
+              </div>
+              <div class="factura-producto__subtotal">
+                Gs. {{ item.cantidad * item.precioUnitario | number: '1.0-0' }}
+              </div>
+            </div>
+          }
+          <div class="factura-productos__total">
+            <span>Total</span>
+            <strong>Gs. {{ total() | number: '1.0-0' }}</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección de cliente -->
+      <section class="factura-dialog__section">
+        @if (!mostrarFormularioCliente()) {
+          <div class="factura-dialog__section-header">
+            <h3 class="factura-dialog__section-title">
+              <span class="material-icons">person</span>
+              Cliente
+            </h3>
+            <button
+              type="button"
+              class="factura-dialog__btn-nuevo"
+              (click)="abrirFormularioCliente()"
+            >
+              <span class="material-icons">add</span>
+              Nuevo cliente
+            </button>
+          </div>
+
+          <div class="factura-clientes">
+            <div class="factura-clientes__search">
+              <span class="material-icons">search</span>
+              <input
+                type="search"
+                placeholder="Buscar por nombre, documento o RUC..."
+                [value]="busqueda()"
+                (input)="onBusquedaChange($any($event.target).value)"
+              />
+            </div>
+
+            <div class="factura-clientes__lista">
+              @if (loadingClientes()) {
+                <div class="factura-clientes__empty">Cargando clientes...</div>
+              } @else {
+                @for (cliente of clientesFiltrados(); track cliente.id_cliente) {
+                  <button
+                    type="button"
+                    class="factura-cliente"
+                    [class.factura-cliente--seleccionado]="clienteSeleccionado()?.id_cliente === cliente.id_cliente"
+                    (click)="seleccionarCliente(cliente)"
+                  >
+                    <div class="factura-cliente__icono">
+                      <span class="material-icons">account_circle</span>
+                    </div>
+                    <div class="factura-cliente__info">
+                      <strong>{{ nombreCliente(cliente) }}</strong>
+                      <small>
+                        @if (cliente.ruc) {
+                          RUC: {{ cliente.ruc }}
+                        } @else if (cliente.persona?.documento) {
+                          Doc: {{ cliente.persona?.documento }}
+                        }
+                        @if (cliente.tipoCliente) {
+                          · {{ cliente.tipoCliente }}
+                        }
+                      </small>
+                    </div>
+                    @if (clienteSeleccionado()?.id_cliente === cliente.id_cliente) {
+                      <span class="factura-cliente__check">
+                        <span class="material-icons">check_circle</span>
+                      </span>
+                    }
+                  </button>
+                } @empty {
+                  <div class="factura-clientes__empty">
+                    No se encontraron clientes
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="factura-dialog__section-header">
+            <h3 class="factura-dialog__section-title">
+              <span class="material-icons">person_add</span>
+              Registrar nuevo cliente
+            </h3>
+            <button
+              type="button"
+              class="factura-dialog__btn-cancelar"
+              (click)="cerrarFormularioCliente()"
+            >
+              <span class="material-icons">close</span>
+              Cancelar
+            </button>
+          </div>
+
+          <div class="factura-clientes__form">
+            <app-cliente-form
+              (saved)="onClienteGuardado()"
+            />
+          </div>
+        }
+      </section>
+
+      <!-- Sección de forma de pago -->
+      <section class="factura-dialog__section">
+        <h3 class="factura-dialog__section-title">
+          <span class="material-icons">payment</span>
+          Forma de pago
+        </h3>
+
+        <div class="factura-pago">
+          <div class="factura-pago__monedas">
+            <label class="factura-pago__label">Moneda</label>
+            <div class="factura-pago__moneda-selector">
+              @for (moneda of monedasDisponibles(); track moneda.codigo) {
+                <button
+                  type="button"
+                  class="moneda-btn"
+                  [class.moneda-btn--selected]="monedaSeleccionada() === moneda.codigo"
+                  (click)="seleccionarMoneda(moneda.codigo)"
+                >
+                  <span class="moneda-btn__simbolo">{{ moneda.simbolo }}</span>
+                  <span class="moneda-btn__codigo">{{ moneda.codigo }}</span>
+                  @if (moneda.codigo !== 'PYG') {
+                    <span class="moneda-btn__monto">
+                      {{ totalEnMonedaSeleccionada() | number: '1.2-2' }}
+                    </span>
+                  }
+                </button>
+              }
+            </div>
+            @if (cotizacionActual()) {
+              <small class="factura-pago__cotizacion">
+                Cotización: 1 {{ monedaSeleccionada() }} = {{ cotizacionActual()!.valor | number: '1.0-0' }} Gs.
+              </small>
+            }
+          </div>
+
+          <div class="factura-pago__metodos">
+            @for (metodo of metodosPago; track metodo.codigo) {
+              <button
+                type="button"
+                class="factura-pago-metodo"
+                [class.factura-pago-metodo--seleccionado]="seleccionado() === metodo.codigo"
+                (click)="seleccionar(metodo.codigo)"
+              >
+                <span class="factura-pago-metodo__icono">
+                  <span class="material-icons">{{ metodo.icon }}</span>
+                </span>
+                <span>{{ metodo.label }}</span>
+                @if (seleccionado() === metodo.codigo) {
+                  <span class="factura-pago-metodo__check">
+                    <span class="material-icons">check_circle</span>
+                  </span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer class="factura-dialog__footer">
+      <app-ui-button
+        label="Cancelar"
+        icon="close"
+        variant="ghost"
+        (clicked)="onCancelar()"
+      />
+      <app-ui-button
+        [label]="botonLabel()"
+        icon="receipt_long"
+        variant="primary"
+        [disabled]="!puedeConfirmar()"
+        (clicked)="onConfirmar()"
+      />
+    </footer>
+  </div>
+</app-modal>

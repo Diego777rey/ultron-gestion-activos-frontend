@@ -428,3 +428,13 @@
     (confirmar)="cobrarConMetodo($event)"
   />
 }
+
+@if (facturaDialogOpen()) {
+  <app-factura-dialog
+    [cart]="cart()"
+    [total]="cartTotal()"
+    [cotizaciones]="cotizaciones()"
+    (cancelar)="cerrarFacturaDialog()"
+    (confirmar)="facturarConCliente($event)"
+  />
+}
