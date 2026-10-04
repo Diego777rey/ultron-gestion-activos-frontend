@@ -54,23 +54,17 @@
 
 .login-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
-.icon-circle {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  border: 2px solid #0dcaf0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 15px;
-
-  .material-icons {
-    font-size: 36px;
-    color: #0dcaf0;
-  }
+.login-logo {
+  display: block;
+  width: 210px;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 12px;
+  // El archivo es negro. Sobre la tarjeta oscura se muestra en blanco.
+  filter: brightness(0) invert(1);
 }
 
 .login-header h2 {
@@ -137,8 +131,8 @@
 
     &:focus {
       outline: none;
-      border-color: #0dcaf0;
-      box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.25);
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px var(--primary-glow);
     }
 
     &::placeholder {
@@ -169,11 +163,12 @@
   margin-bottom: 25px;
 
   a {
-    color: #0dcaf0;
+    color: var(--primary-color);
     text-decoration: none;
     font-size: 13px;
 
     &:hover {
+      color: #42a5f5;
       text-decoration: underline;
     }
   }
@@ -181,8 +176,8 @@
 
 .btn-primary {
   width: 100%;
-  background-color: #0dcaf0;
-  color: #212529;
+  background-color: var(--primary-color);
+  color: var(--on-primary-color);
   border: none;
   border-radius: 6px;
   padding: 12px;
@@ -192,15 +187,20 @@
   margin-bottom: 15px;
   transition: background-color 0.2s;
 
-  &:hover {
-    background-color: #31d2f2;
+  &:hover:not(:disabled) {
+    background-color: var(--primary-color-dark);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
 }
 
 .btn-secondary {
   width: 100%;
   background-color: transparent;
-  color: #0dcaf0;
+  color: var(--primary-color);
   border: none;
   padding: 12px;
   font-size: 15px;
@@ -209,6 +209,6 @@
   transition: color 0.2s;
 
   &:hover {
-    color: #f8f9fa;
+    color: #42a5f5;
   }
 }
