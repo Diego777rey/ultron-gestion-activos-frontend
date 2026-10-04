@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { DialogRef } from '@angular/cdk/dialog';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
@@ -6,11 +6,29 @@ import { AutofocusDirective } from '../../../../../shared/directives/autofocus.d
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { ClienteInput, ClienteOutput } from '../../interfaces/cliente.interface';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, map, startWith } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
 import { ClienteService } from '../../services/cliente.service';
 import { PersonaService } from '../../../shared/services/persona.service';
+import {
+  ConsultaRucService,
+  ContribuyenteRuc,
+  esRucConsultable,
+} from '../../../shared/services/consulta-ruc.service';
 import { nombreCompletoPersona } from '../../../shared/nombre-persona';
+import { PersonaOutput } from '../../../funcionarios/interfaces/funcionario.interface';
+
+type ConsultaRuc =
+  | { tipo: 'buscando' }
+  | { tipo: 'encontrado'; contribuyente: ContribuyenteRuc }
+  | { tipo: 'no-encontrado' }
+  | { tipo: 'error'; mensaje: string };
+
+type ResultadoDocumento =
+  | { tipo: 'local'; persona: PersonaOutput }
+  | { tipo: 'ruc'; consulta: ConsultaRuc }
+  | { tipo: 'nada' };
+
 @Component({
   selector: 'app-cliente-form',
   imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
@@ -44,10 +62,25 @@ export class ClienteFormComponent {
   });
 
   private readonly personaService = inject(PersonaService);
+  private readonly consultaRucService = inject(ConsultaRucService);
+
+  protected readonly consultaRuc = signal<ConsultaRuc | null>(null);
+  protected readonly contribuyente = computed(() => {
+    const consulta = this.consultaRuc();
+    return consulta?.tipo === 'encontrado' ? consulta.contribuyente : null;
+  });
+  protected readonly errorRuc = computed(() => {
+    const consulta = this.consultaRuc();
+    return consulta?.tipo === 'error' ? consulta.mensaje : null;
+  });
+  /** Para no pisar un nombre que el usuario corrigió a mano. */
+  private nombreAutocompletado = '';
 
   constructor() {
     effect(() => {
       const c = this.cliente();
+      this.consultaRuc.set(null);
+      this.nombreAutocompletado = '';
       if (c) {
         this.isEdit = !!c.id_cliente;
         this.form.reset({
@@ -80,23 +113,70 @@ export class ClienteFormComponent {
     this.form.controls.documento.valueChanges.pipe(
       takeUntilDestroyed(),
       debounceTime(500),
+      map((doc) => doc.trim()),
       distinctUntilChanged(),
-      switchMap(doc => {
-        if (!doc || doc.trim().length === 0) return of(null);
-        return this.personaService.buscarPorDocumento(doc).pipe(
-          catchError(() => of(null))
-        );
-      })
-    ).subscribe(data => {
-      const persona = data?.buscarPersonaPorDocumento;
-      if (persona && !this.isEdit) {
+      switchMap((doc) => this.buscarDocumento(doc)),
+    ).subscribe((resultado) => {
+      if (resultado.tipo === 'local') {
+        this.consultaRuc.set(null);
         this.form.patchValue({
-          nombre: nombreCompletoPersona(persona),
-          email: persona.email || '',
-          telefono: persona.telefono || '',
-          direccion: persona.direccion || ''
+          nombre: nombreCompletoPersona(resultado.persona),
+          email: resultado.persona.email || '',
+          telefono: resultado.persona.telefono || '',
+          direccion: resultado.persona.direccion || '',
         });
+        return;
       }
+      if (resultado.tipo === 'nada') {
+        this.consultaRuc.set(null);
+        return;
+      }
+      this.consultaRuc.set(resultado.consulta);
+      if (resultado.consulta.tipo === 'encontrado') {
+        this.aplicarContribuyente(resultado.consulta.contribuyente);
+      }
+    });
+  }
+
+  /** Primero la base propia (trae teléfono y email); si no está, la DNIT. */
+  private buscarDocumento(doc: string): Observable<ResultadoDocumento> {
+    if (!doc || this.isEdit) {
+      return of({ tipo: 'nada' });
+    }
+    return this.personaService.buscarPorDocumento(doc).pipe(
+      map((data) => data.buscarPersonaPorDocumento),
+      catchError(() => of(null)),
+      switchMap((persona): Observable<ResultadoDocumento> => {
+        if (persona) {
+          return of({ tipo: 'local', persona });
+        }
+        if (!esRucConsultable(doc)) {
+          return of({ tipo: 'nada' });
+        }
+        return this.consultaRucService.consultar(doc).pipe(
+          map((contribuyente): ConsultaRuc =>
+            contribuyente ? { tipo: 'encontrado', contribuyente } : { tipo: 'no-encontrado' },
+          ),
+          catchError((err: Error) =>
+            of<ConsultaRuc>({ tipo: 'error', mensaje: err.message || 'No se pudo consultar el RUC' }),
+          ),
+          startWith<ConsultaRuc>({ tipo: 'buscando' }),
+          map((consulta): ResultadoDocumento => ({ tipo: 'ruc', consulta })),
+        );
+      }),
+    );
+  }
+
+  private aplicarContribuyente(c: ContribuyenteRuc): void {
+    const nombreActual = this.form.controls.nombre.value.trim();
+    const nombre = c.nombre.trim().toUpperCase();
+    if (!nombreActual || nombreActual === this.nombreAutocompletado) {
+      this.form.controls.nombre.setValue(nombre);
+      this.nombreAutocompletado = nombre;
+    }
+    this.form.patchValue({
+      ruc: c.ruc,
+      tipoCliente: c.entidadPublica ? 'Gobierno' : c.personaJuridica ? 'Empresa' : 'Persona Física',
     });
   }
 
