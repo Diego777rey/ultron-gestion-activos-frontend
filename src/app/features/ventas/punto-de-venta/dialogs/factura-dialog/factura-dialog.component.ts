@@ -15,6 +15,10 @@ import { ClienteService } from '../../../../personas/clientes/services/cliente.s
 import { ClienteOutput } from '../../../../personas/clientes/interfaces/cliente.interface';
 import { ClienteFormComponent } from '../../../../personas/clientes/dialogs/cliente-form/cliente-form';
 import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
+import {
+  esRucConsultable,
+  normalizarRuc,
+} from '../../../../personas/shared/services/consulta-ruc.service';
 import { LoadingService } from '../../../../../shared/services/loading.service';
 
 export interface FacturaConfirmada {
@@ -43,6 +47,7 @@ export class FacturaDialogComponent {
   protected readonly clientes = signal<ClienteOutput[]>([]);
   protected readonly loadingClientes = signal(false);
   protected readonly mostrarFormularioCliente = signal(false);
+  protected readonly documentoNuevoCliente = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
 
   protected readonly clientesFiltrados = computed(() => {
@@ -51,12 +56,27 @@ export class FacturaDialogComponent {
     if (!q) {
       return items;
     }
+    const qDocumento = normalizarRuc(q).replace(/-\d$/, '');
     return items.filter((c) => {
       const nombre = nombreCompletoPersona(c.persona).toLowerCase();
-      const doc = c.persona?.documento?.toLowerCase() ?? '';
-      const ruc = c.ruc?.toLowerCase() ?? '';
-      return nombre.includes(q) || doc.includes(q) || ruc.includes(q);
+      const doc = normalizarRuc(c.persona?.documento).toLowerCase();
+      const ruc = normalizarRuc(c.ruc).toLowerCase();
+      return (
+        nombre.includes(q) ||
+        doc.includes(q) ||
+        ruc.includes(q) ||
+        (!!qDocumento && (doc.includes(qDocumento) || ruc.includes(qDocumento)))
+      );
     });
+  });
+
+  /** Lo tipeado parece un CI/RUC que todavía no es cliente: se ofrece registrarlo. */
+  protected readonly documentoSinCliente = computed(() => {
+    const q = this.busqueda().trim();
+    if (this.loadingClientes() || this.clientesFiltrados().length > 0 || !esRucConsultable(q)) {
+      return null;
+    }
+    return normalizarRuc(q);
   });
 
   protected readonly cantidadItems = computed(() =>
@@ -84,7 +104,9 @@ export class FacturaDialogComponent {
     this.busqueda.set(value);
   }
 
-  protected abrirFormularioCliente(): void {
+  protected abrirFormularioCliente(documento: string | null = null): void {
+    const q = this.busqueda().trim();
+    this.documentoNuevoCliente.set(documento ?? (esRucConsultable(q) ? normalizarRuc(q) : null));
     this.mostrarFormularioCliente.set(true);
   }
 
@@ -92,8 +114,11 @@ export class FacturaDialogComponent {
     this.mostrarFormularioCliente.set(false);
   }
 
-  protected onClienteGuardado(): void {
+  /** Nuevo o existente: queda seleccionado para facturar. */
+  protected usarCliente(cliente: ClienteOutput): void {
     this.mostrarFormularioCliente.set(false);
+    this.busqueda.set('');
+    this.seleccionarCliente(cliente);
     this.cargarClientes();
   }
 
@@ -121,6 +146,13 @@ export class FacturaDialogComponent {
         next: (items) => {
           this.clientes.set(items.filter((c) => c.estado !== false));
           this.loadingClientes.set(false);
+          const seleccionado = this.clienteSeleccionado();
+          if (seleccionado) {
+            const actualizado = items.find((c) => c.id_cliente === seleccionado.id_cliente);
+            if (actualizado) {
+              this.clienteSeleccionado.set(actualizado);
+            }
+          }
         },
         error: () => {
           this.loadingClientes.set(false);
