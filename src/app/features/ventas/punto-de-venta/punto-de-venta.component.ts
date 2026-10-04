@@ -27,6 +27,10 @@ import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja
 import { PagoDialogComponent, PagoConfirmado } from './dialogs/pago-dialog/pago-dialog.component';
 import { FacturaDialogComponent, FacturaConfirmada } from './dialogs/factura-dialog/factura-dialog.component';
 import { ReimprimirTicketDialogComponent } from './dialogs/reimprimir-ticket-dialog/reimprimir-ticket-dialog.component';
+import {
+  PresentacionDialogComponent,
+  PresentacionElegida,
+} from './dialogs/presentacion-dialog/presentacion-dialog.component';
 import { LoadingService } from '../../../shared/services/loading.service';
 import { FileUploadService } from '../../../shared/services/file-upload.service';
 import { SesionCajaService } from './services/sesion-caja.service';
@@ -55,6 +59,7 @@ export type PdvNumero = 1 | 2;
     PagoDialogComponent,
     FacturaDialogComponent,
     ReimprimirTicketDialogComponent,
+    PresentacionDialogComponent,
     UiButtonComponent,
     DecimalPipe,
   ],
@@ -109,8 +114,7 @@ export class PuntoDeVentaComponent {
   readonly loadingServicios = signal(false);
   readonly loadingOrdenes = signal(false);
   readonly search = signal('');
-  readonly productoExpandido = signal<number | null>(null);
-  private readonly cantidadPorPresentacion = signal<Record<number, string>>({});
+  readonly presentacionDialogProducto = signal<ProductoOutput | null>(null);
   readonly pdvActivo = signal<PdvNumero>(1);
   private readonly cartPdv1 = signal<CartItem[]>([]);
   private readonly cartPdv2 = signal<CartItem[]>([]);
@@ -286,52 +290,29 @@ export class PuntoDeVentaComponent {
     return producto.presentaciones ?? [];
   }
 
-  protected estaExpandido(producto: ProductoOutput): boolean {
-    return this.productoExpandido() === producto.id_producto;
-  }
-
-  protected cantidadVenta(presentacion: PresentacionProductoOutput): string {
-    const id = presentacion.id_presentacion_producto;
-    if (id == null) {
-      return '1';
-    }
-    return this.cantidadPorPresentacion()[id] ?? '1';
-  }
-
   protected stockProducto(producto: ProductoOutput): number {
     return Number(producto.stock ?? 0) - this.unidadesComprometidas(producto.id_producto);
   }
 
-  /** Cuántas presentaciones se pueden vender con el stock disponible. */
-  protected stockPresentacion(producto: ProductoOutput, presentacion: PresentacionProductoOutput): number {
-    const unidades = this.unidadesDePresentacion(presentacion);
-    return Math.trunc(this.stockProducto(producto) / unidades);
-  }
-
-  protected cambiarCantidad(presentacion: PresentacionProductoOutput, value: string): void {
-    const id = presentacion.id_presentacion_producto;
-    if (id == null) {
-      return;
-    }
-    this.cantidadPorPresentacion.update((actual) => ({ ...actual, [id]: value }));
-  }
-
-  protected venderPresentacion(producto: ProductoOutput, presentacion: PresentacionProductoOutput): void {
-    this.agregarPresentacion(producto, presentacion, this.cantidadNumerica(presentacion));
-  }
-
   protected onProductoClick(producto: ProductoOutput): void {
     if (this.presentacionesDe(producto).length > 0) {
-      this.toggleProducto(producto);
+      this.presentacionDialogProducto.set(producto);
       return;
     }
     this.agregarPresentacion(producto, null, 1);
   }
 
-  protected toggleProducto(producto: ProductoOutput): void {
-    this.productoExpandido.update((actual) =>
-      actual === producto.id_producto ? null : producto.id_producto
-    );
+  protected cerrarPresentacionDialog(): void {
+    this.presentacionDialogProducto.set(null);
+  }
+
+  protected confirmarPresentacion(elegida: PresentacionElegida): void {
+    const producto = this.presentacionDialogProducto();
+    if (!producto) {
+      return;
+    }
+    this.agregarPresentacion(producto, elegida.presentacion, elegida.cantidad);
+    this.presentacionDialogProducto.set(null);
   }
 
   private agregarPresentacion(
@@ -374,14 +355,6 @@ export class PuntoDeVentaComponent {
         },
       ];
     });
-    if (idPresentacion != null) {
-      this.cantidadPorPresentacion.update((actual) => ({ ...actual, [idPresentacion]: '1' }));
-    }
-  }
-
-  private cantidadNumerica(presentacion: PresentacionProductoOutput): number {
-    const cantidad = Math.floor(Number(this.cantidadVenta(presentacion)));
-    return Number.isFinite(cantidad) && cantidad > 0 ? cantidad : 1;
   }
 
   protected addServicio(servicio: ServicioOutput): void {
@@ -489,6 +462,9 @@ export class PuntoDeVentaComponent {
 
   protected onPdvShortcut(event: Event): void {
     event.preventDefault();
+    if (this.presentacionDialogProducto()) {
+      return;
+    }
     this.cambiarPdv();
   }
 
