@@ -20,6 +20,7 @@ import { AppDialogService } from '../../../../../shared/services/app-dialog.serv
 import { ClienteService } from '../../../../personas/clientes/services/cliente.service';
 import { ClienteOutput } from '../../../../personas/clientes/interfaces/cliente.interface';
 import { ClienteFormComponent } from '../../../../personas/clientes/dialogs/cliente-form/cliente-form';
+import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
 import { VehiculoService } from '../../../../activos/vehiculos/services/vehiculo.service';
 import { VehiculoOutput } from '../../../../activos/vehiculos/interfaces/vehiculo.interface';
 import { VehiculoFormComponent } from '../../../../activos/vehiculos/dialogs/vehiculo-form/vehiculo-form';
@@ -256,7 +257,7 @@ export class OtRecepcionStepComponent implements OnInit {
   protected readonly loadingClientes = signal(false);
   protected readonly clienteColumns: TableColumn<ClienteOutput>[] = [
     { key: 'documento', header: 'CI/RUC', value: (c) => c.persona?.documento ?? '' },
-    { key: 'nombre', header: 'Nombre', value: (c) => this.clienteLabel(c) },
+    { key: 'nombre', header: 'Nombre completo', value: (c) => this.clienteLabel(c) },
   ];
   protected readonly clienteLabelFn = (c: ClienteOutput) => this.clienteLabel(c);
   protected readonly clienteKeyFn = (c: ClienteOutput) => c.id_cliente;
@@ -276,7 +277,7 @@ export class OtRecepcionStepComponent implements OnInit {
   protected readonly loadingMecanicos = signal(false);
   protected readonly mecanicoColumns: TableColumn<FuncionarioOutput>[] = [
     { key: 'documento', header: 'CI', value: (f) => f.persona?.documento ?? '' },
-    { key: 'nombre', header: 'Nombre', value: (f) => this.mecanicoLabel(f) },
+    { key: 'nombre', header: 'Nombre completo', value: (f) => this.mecanicoLabel(f) },
   ];
   protected readonly mecanicoLabelFn = (f: FuncionarioOutput) => this.mecanicoLabel(f);
   protected readonly mecanicoKeyFn = (f: FuncionarioOutput) => f.id_funcionario;
@@ -297,14 +298,12 @@ export class OtRecepcionStepComponent implements OnInit {
     { key: 'username', header: 'Usuario', value: (u) => u.username ?? '' },
     {
       key: 'nombre',
-      header: 'Nombre',
-      value: (u) =>
-        `${u.funcionario?.persona?.nombre ?? ''} ${u.funcionario?.persona?.apellido ?? ''}`.trim(),
+      header: 'Nombre completo',
+      value: (u) => nombreCompletoPersona(u.funcionario?.persona),
     },
   ];
   protected readonly usuarioLabelFn = (u: UsuarioOutput) =>
-    u.username ??
-    `${u.funcionario?.persona?.nombre ?? ''} ${u.funcionario?.persona?.apellido ?? ''}`.trim();
+    u.username ?? nombreCompletoPersona(u.funcionario?.persona);
   protected readonly usuarioKeyFn = (u: UsuarioOutput) => u.id;
 
   constructor() {
@@ -816,8 +815,7 @@ export class OtRecepcionStepComponent implements OnInit {
 
   private clienteLabel(c: ClienteOutput | null): string {
     if (!c) return '';
-    return `${c.persona?.nombre ?? ''} ${c.persona?.apellido ?? ''}`.trim() +
-      ` (${c.persona?.documento ?? ''})`;
+    return `${nombreCompletoPersona(c.persona)} (${c.persona?.documento ?? ''})`;
   }
 
   private vehiculoLabel(v: VehiculoOutput | null): string {
@@ -827,6 +825,6 @@ export class OtRecepcionStepComponent implements OnInit {
 
   private mecanicoLabel(f: FuncionarioOutput | null): string {
     if (!f) return '';
-    return `${f.persona?.nombre ?? ''} ${f.persona?.apellido ?? ''}`.trim() || 'Desconocido';
+    return nombreCompletoPersona(f.persona) || 'Desconocido';
   }
 }

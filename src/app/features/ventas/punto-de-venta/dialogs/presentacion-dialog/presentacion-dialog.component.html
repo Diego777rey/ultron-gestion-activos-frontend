@@ -1,0 +1,66 @@
+<div class="presentacion-dialog__backdrop" (click)="onCerrar()">
+  <div
+    class="presentacion-dialog"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="producto().nombre"
+    (click)="$event.stopPropagation()"
+  >
+    <button type="button" class="presentacion-dialog__close" (click)="onCerrar()" aria-label="Cerrar">
+      <span class="material-icons" aria-hidden="true">close</span>
+    </button>
+
+    <h2 class="presentacion-dialog__title">{{ producto().nombre }}</h2>
+
+    <div class="presentacion-dialog__cards">
+      @for (presentacion of presentaciones(); track presentacion.id_presentacion_producto ?? presentacion.descripcion) {
+        <button
+          type="button"
+          class="presentacion-card"
+          (click)="elegir(presentacion)"
+          [attr.aria-label]="'Agregar ' + etiqueta(presentacion)"
+        >
+          <span class="presentacion-card__media">
+            <span class="material-icons" aria-hidden="true">photo_camera</span>
+            <span class="presentacion-card__media-label">SIN<br />IMAGEN</span>
+          </span>
+          <span class="presentacion-card__units">{{ presentacion.cantidad | number: '1.0-2' }}</span>
+          <span class="presentacion-card__info">
+            <strong>{{ presentacion.descripcion }}</strong>
+            <span>{{ presentacion.precio | number: '1.0-0' }}</span>
+          </span>
+        </button>
+      }
+    </div>
+
+    <label class="presentacion-dialog__cantidad">
+      <span>Cantidad:</span>
+      <input
+        #cantidadInput
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        [value]="cantidad()"
+        [class.presentacion-dialog__cantidad-input--invalid]="cantidadInvalida()"
+        (input)="onCantidadInput($event)"
+        aria-label="Cantidad a agregar"
+      />
+    </label>
+
+    <div class="presentacion-dialog__pad" role="group" aria-label="Cantidad rápida">
+      @for (tecla of teclas; track tecla) {
+        <button type="button" (mousedown)="$event.preventDefault()" (click)="pulsar(tecla)">
+          {{ tecla }}
+        </button>
+      }
+      <button
+        type="button"
+        (mousedown)="$event.preventDefault()"
+        (click)="borrar()"
+        aria-label="Borrar cantidad"
+      >
+        ×
+      </button>
+    </div>
+  </div>
+</div>

@@ -100,6 +100,41 @@
   margin-top: 4px;
 }
 
+.busqueda-estado__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+
+  .material-icons {
+    font-size: 16px;
+  }
+
+  &--ok {
+    color: var(--success-color, #66bb6a);
+  }
+
+  &--alerta {
+    color: #ffb74d;
+  }
+}
+
+.busqueda-estado__spin {
+  animation: busqueda-estado-spin 1s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes busqueda-estado-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .field--checkbox {
   flex-direction: row;
   align-items: center;

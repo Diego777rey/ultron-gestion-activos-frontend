@@ -34,6 +34,17 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Do NOT use `ngStyle`, use `style` bindings instead
 - When using external templates/styles, use paths relative to the component TS file.
 
+## Styles and Dark Theme
+
+The app is dark-only. All colors come from the CSS variables in `src/styles.scss` (`:root`).
+
+- Use only those tokens: `--bg-color`, `--surface-color`, `--surface-raised`, `--surface-raised-hover`, `--border-color`, `--border-strong`, `--border-strong-hover`, `--text-primary`, `--text-secondary`, `--text-muted`, `--primary-color`, `--primary-color-dark`, `--active-bg`, `--hover-color`, `--on-primary-color`, `--danger-color`, `--danger-bg`, `--danger-border`, `--success-color`, `--success-bg`, `--radius-md`.
+- Do NOT invent token names and do NOT write light fallbacks like `var(--surface-card, #fff)`. If a token is missing, add it to `src/styles.scss`.
+- Do NOT hardcode white or light backgrounds (`#fff`, `#f8f9fa`, `white`). Text is white, so a light background makes it unreadable.
+- Dialogs use `app-modal` (background `--surface-color`). Inside, cards/options/inputs use `--surface-raised` with `--border-strong`; selected state uses `--active-bg` with `--primary-color` border. See `pago-dialog` as reference.
+- Native inputs inside custom containers need `background: transparent` (or `--surface-raised`), `color: var(--text-primary)` and `font: inherit`.
+- Small text must use `--text-secondary` or `--text-muted`; never `--primary-color` text on `--surface-raised` (fails AA contrast).
+
 ## State Management
 
 - Use signals for local component state

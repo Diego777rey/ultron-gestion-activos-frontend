@@ -56,6 +56,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'personas/empresas',
+        loadChildren: () =>
+          import('./features/personas/empresas/empresas.routes').then(
+            (m) => m.EMPRESAS_ROUTES
+          ),
+      },
+      {
         path: 'ventas/punto-de-venta',
         loadComponent: () =>
           import('./features/ventas/punto-de-venta/punto-de-venta.component').then(
@@ -123,6 +130,22 @@ export const routes: Routes = [
             (m) => m.CotizacionesPageComponent
           ),
         data: { tabTitle: 'Cotizaciones' },
+      },
+      {
+        path: 'financiero/facturacion',
+        loadComponent: () =>
+          import('./features/financiero/facturacion/pages/datos-facturacion-page/datos-facturacion-page.component').then(
+            (m) => m.DatosFacturacionPageComponent
+          ),
+        data: { tabTitle: 'Datos de facturación' },
+      },
+      {
+        path: 'financiero/facturacion/timbrados',
+        loadComponent: () =>
+          import('./features/financiero/facturacion/pages/timbrados-page/timbrados-page.component').then(
+            (m) => m.TimbradosPageComponent
+          ),
+        data: { tabTitle: 'Timbrados' },
       },
       {
         path: 'inventario/productos',

@@ -17,6 +17,7 @@ import { AppDialogService } from '../../../../../shared/services/app-dialog.serv
 import { VehiculoService } from '../../../../activos/vehiculos/services/vehiculo.service';
 import { VehiculoOutput } from '../../../../activos/vehiculos/interfaces/vehiculo.interface';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { nombreCompletoPersona } from '../../../shared/nombre-persona';
 
 /** Estado de carga de los vehículos asociados a un cliente. */
 interface VehiculosClienteState {
@@ -56,7 +57,7 @@ export class ClientesListComponent {
 
   protected readonly columns: TableColumn<ClienteOutput>[] = [
     { key: 'id', header: 'Id', width: '80px', align: 'center' },
-    { key: 'nombre', header: 'Nombre', width: '220px' },
+    { key: 'nombre', header: 'Nombre completo', width: '260px' },
     { key: 'direccion', header: 'Dirección', width: '220px' },
     { key: 'telefono', header: 'Teléfono', width: '140px' },
     { key: 'email', header: 'Gmail', width: '200px' },
@@ -208,7 +209,7 @@ export class ClientesListComponent {
   protected trackVehiculo = (v: VehiculoOutput): unknown => v.id_bien;
 
   protected fullName(c: ClienteOutput): string {
-    return `${c.persona?.nombre ?? ''} ${c.persona?.apellido ?? ''}`.trim() || 'Sin nombre';
+    return nombreCompletoPersona(c.persona) || 'Sin nombre';
   }
 
   protected trackById = (c: ClienteOutput): unknown => c.id_cliente;

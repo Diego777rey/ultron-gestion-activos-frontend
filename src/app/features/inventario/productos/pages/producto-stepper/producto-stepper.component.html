@@ -1,10 +1,12 @@
 <div class="stepper-page">
   <header class="stepper-header" role="navigation" aria-label="Pasos del producto">
     @for (step of steps; track step.index) {
-      <div
+      <button
+        type="button"
         class="stepper-step"
         [class.active]="currentStep() === step.index"
         [class.done]="currentStep() > step.index"
+        (click)="irAPaso(step.index)"
       >
         <span class="stepper-step__circle" aria-hidden="true">
           @if (currentStep() > step.index) {
@@ -14,7 +16,7 @@
           }
         </span>
         <span class="stepper-step__label">{{ step.label }}</span>
-      </div>
+      </button>
       @if (!$last) {
         <span class="stepper-connector" [class.done]="currentStep() > step.index" aria-hidden="true"></span>
       }
@@ -46,12 +48,10 @@
               />
             </div>
             <div class="table-toolbar__actions">
-              <button type="button" class="icon-tool" title="Agregar categoría" (click)="openNuevaCategoria()">
-                <span class="material-icons">add</span>
-              </button>
               <button type="button" class="icon-tool" title="Actualizar" (click)="loadCategorias()">
                 <span class="material-icons">refresh</span>
               </button>
+              <button type="button" class="ficha__add" (click)="openNuevaCategoria()">Agregar</button>
             </div>
           </div>
 
@@ -128,9 +128,6 @@
               />
             </div>
             <div class="table-toolbar__actions">
-              <button type="button" class="icon-tool" title="Agregar subcategoría" (click)="openNuevaSubcategoria()">
-                <span class="material-icons">add</span>
-              </button>
               <button
                 type="button"
                 class="icon-tool"
@@ -139,6 +136,7 @@
               >
                 <span class="material-icons">refresh</span>
               </button>
+              <button type="button" class="ficha__add" (click)="openNuevaSubcategoria()">Agregar</button>
             </div>
           </div>
 
@@ -197,30 +195,14 @@
 
       <!-- Paso 3: Datos generales -->
       @if (currentStep() === 3) {
-        <section class="datos-panel">
-          <h2 class="datos-panel__title">Datos generales</h2>
-          <p class="step-hint">Nombre, descripción, imagen y presentaciones. El precio y el código de barras se cargan en cada presentación.</p>
-
-          <form class="datos-form" [formGroup]="datosForm">
-            <div class="datos-field datos-field--full">
-              <label for="prod-nombre">Nombre*</label>
-              <input id="prod-nombre" type="text" formControlName="nombre" appAutofocus appUppercase placeholder="Nombre del producto" />
-              @if (datosForm.controls.nombre.touched && datosForm.controls.nombre.invalid) {
-                <span class="field-error">El nombre es obligatorio</span>
-              }
-            </div>
-
-            <div class="datos-field datos-field--full">
-              <label for="prod-desc">Descripción</label>
-              <textarea id="prod-desc" formControlName="descripcion" appUppercase rows="3" placeholder="Notas del producto"></textarea>
-            </div>
-          </form>
-
-          <div class="datos-imagen">
+        <section class="producto-layout">
+          <aside class="resumen">
+            <h2 class="resumen__titulo">Resumen del producto</h2>
             <app-image-uploader
               [currentImagePath]="imagePath()"
               folder="productos"
               label="Imagen del producto"
+              appearance="circle"
               [maxSizeMB]="5"
               (imageChange)="onImageChange($event)"
               (uploadError)="onImageError($event)"
@@ -228,9 +210,61 @@
             @if (imageError()) {
               <span class="field-error">{{ imageError() }}</span>
             }
-          </div>
 
-          <app-presentaciones-editor [items]="presentacionesIniciales()" />
+            <form class="resumen__datos" [formGroup]="datosForm">
+              <label class="resumen__campo" for="prod-nombre">
+                <span>Nombre*</span>
+                <input id="prod-nombre" type="text" formControlName="nombre" appAutofocus appUppercase placeholder="Nombre del producto" />
+              </label>
+              @if (datosForm.controls.nombre.touched && datosForm.controls.nombre.invalid) {
+                <span class="field-error">El nombre es obligatorio</span>
+              }
+
+              <div class="resumen__campo">
+                <span>Familia</span>
+                <strong>{{ selectedCategoria()?.nombre || '—' }}</strong>
+              </div>
+              <div class="resumen__campo">
+                <span>Subfamilia</span>
+                <strong>{{ selectedSubcategoria()?.nombre || '—' }}</strong>
+              </div>
+              <label class="resumen__campo" for="prod-desc">
+                <span>Descripción</span>
+                <textarea id="prod-desc" formControlName="descripcion" appUppercase rows="2" placeholder="Notas del producto"></textarea>
+              </label>
+              <div class="resumen__campo">
+                <span id="prod-iva-label">IVA</span>
+                <div class="iva-opciones" role="radiogroup" aria-labelledby="prod-iva-label">
+                  @for (opcion of opcionesIva; track opcion.valor) {
+                    <label class="iva-opcion">
+                      <input type="radio" formControlName="tipoIva" [value]="opcion.valor" />
+                      {{ opcion.etiqueta }}
+                    </label>
+                  }
+                </div>
+              </div>
+            </form>
+          </aside>
+
+          <div class="ficha">
+            <header class="ficha__top">
+              <div class="ficha__stats">
+                <div class="ficha__stat">
+                  <span>Precio venta</span>
+                  <strong>{{ precioPrincipal() != null ? (precioPrincipal() | number: '1.0-0') + ' Gs.' : '—' }}</strong>
+                </div>
+                <div class="ficha__stat">
+                  <span>Costo</span>
+                  <strong>{{ costoProducto() != null ? (costoProducto() | number: '1.0-0') + ' Gs.' : '—' }}</strong>
+                </div>
+              </div>
+              <button type="button" class="ficha__add" (click)="agregarPresentacion()">Agregar</button>
+            </header>
+            <app-presentaciones-editor
+              [items]="presentacionesIniciales()"
+              (filasChange)="onFilas($event)"
+            />
+          </div>
         </section>
       }
     </section>

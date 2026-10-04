@@ -29,6 +29,41 @@ export interface TicketVenta {
   pie?: string | null;
 }
 
+/** Factura autoimpresa en papel. Los importes van con IVA incluido. */
+export interface TicketFacturaLinea {
+  descripcion: string;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+  tipoIva: string;
+}
+
+export interface TicketFactura {
+  razonSocial: string;
+  nombreFantasia?: string | null;
+  ruc: string;
+  direccion?: string | null;
+  telefono?: string | null;
+  actividadEconomica?: string | null;
+  timbrado: string;
+  vigenciaInicio: string;
+  vigenciaFin: string;
+  numeroFactura: string;
+  fecha: string;
+  condicion: string;
+  formaPago?: string | null;
+  clienteNombre: string;
+  clienteDocumento?: string | null;
+  clienteDireccion?: string | null;
+  lineas: TicketFacturaLinea[];
+  totalExenta: number;
+  totalGravada5: number;
+  totalGravada10: number;
+  totalIva5: number;
+  totalIva10: number;
+  total: number;
+}
+
 export interface TicketCampo {
   etiqueta: string;
   valor: string;

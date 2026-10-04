@@ -14,7 +14,7 @@
   min-height: 0;
   padding: 24px 32px;
   gap: 20px;
-  overflow-y: auto;
+  overflow: hidden;
   background: var(--content-bg);
 }
 
@@ -97,6 +97,8 @@
 .stepper-body {
   flex: 1;
   min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .cat-layout {
@@ -465,6 +467,7 @@
 }
 
 .stepper-footer {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;

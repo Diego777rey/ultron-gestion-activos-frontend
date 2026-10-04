@@ -1,52 +1,89 @@
-@if (error) {
+@if (error(); as err) {
   <div class="cliente-form__error" role="alert">
     <span class="material-icons" aria-hidden="true">error_outline</span>
-    <span>{{ error }}</span>
+    <span>{{ err }}</span>
   </div>
 }
 
 <form class="cliente-form" [formGroup]="form" (ngSubmit)="onSubmit()">
   <div class="cliente-form__grid">
-    <div class="field">
-      <input id="nombre" class="field__input" type="text" formControlName="nombre" appAutofocus appUppercase placeholder=" " />
-      <label class="field__label" for="nombre">Nombre**</label>
+    <div class="field field--full">
+      <input
+        id="documento"
+        class="field__input"
+        type="text"
+        formControlName="documento"
+        appAutofocus
+        appUppercase
+        placeholder=" "
+        aria-describedby="documento-estado"
+      />
+      <label class="field__label" for="documento">CI/RUC**</label>
+      @if (form.controls.documento.touched && form.controls.documento.invalid) {
+        <span class="field__error">El documento es obligatorio</span>
+      }
+      <div id="documento-estado" class="busqueda-estado" aria-live="polite">
+        @switch (busqueda()?.tipo) {
+          @case ('cliente') {
+            <span class="busqueda-estado__item busqueda-estado__item--ok">
+              <span class="material-icons" aria-hidden="true">how_to_reg</span>
+              Ya es cliente. Se cargaron sus datos; podés actualizarlos.
+            </span>
+          }
+          @case ('persona') {
+            <span class="busqueda-estado__item busqueda-estado__item--ok">
+              <span class="material-icons" aria-hidden="true">person_search</span>
+              Datos cargados de tu sistema.
+            </span>
+          }
+          @case ('buscando-dnit') {
+            <span class="busqueda-estado__item">
+              <span class="material-icons busqueda-estado__spin" aria-hidden="true">autorenew</span>
+              Buscando en la DNIT…
+            </span>
+          }
+          @case ('dnit') {
+            @if (contribuyente(); as c) {
+              @if (c.activo) {
+                <span class="busqueda-estado__item busqueda-estado__item--ok">
+                  <span class="material-icons" aria-hidden="true">verified</span>
+                  Datos de la DNIT · RUC {{ c.ruc }} · ACTIVO
+                </span>
+              } @else {
+                <span class="busqueda-estado__item busqueda-estado__item--alerta" role="alert">
+                  <span class="material-icons" aria-hidden="true">warning</span>
+                  RUC {{ c.ruc }} figura como {{ c.estado || 'SIN ESTADO' }} en la DNIT
+                </span>
+              }
+            }
+          }
+          @case ('manual') {
+            <span class="busqueda-estado__item">
+              <span class="material-icons" aria-hidden="true">edit_note</span>
+              No figura en la DNIT. Escribí el nombre (consumidor final) y guardalo.
+            </span>
+          }
+          @case ('error-dnit') {
+            <span class="busqueda-estado__item busqueda-estado__item--alerta">
+              <span class="material-icons" aria-hidden="true">cloud_off</span>
+              {{ errorDnit() }}
+            </span>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="field field--full">
+      <input id="nombre" class="field__input" type="text" formControlName="nombre" appUppercase placeholder=" " />
+      <label class="field__label" for="nombre">Nombre completo / Razón social**</label>
       @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
         <span class="field__error">El nombre es obligatorio</span>
       }
     </div>
 
     <div class="field">
-      <input id="apellido" class="field__input" type="text" formControlName="apellido" appUppercase placeholder=" " />
-      <label class="field__label" for="apellido">Apellido*</label>
-      @if (form.controls.apellido.touched && form.controls.apellido.invalid) {
-        <span class="field__error">El apellido es obligatorio</span>
-      }
-    </div>
-
-    <div class="field">
-      <input id="documento" class="field__input" type="text" formControlName="documento" appUppercase placeholder=" " />
-      <label class="field__label" for="documento">CI/RUC**</label>
-      @if (form.controls.documento.touched && form.controls.documento.invalid) {
-        <span class="field__error">El documento es obligatorio</span>
-      }
-    </div>
-
-    <div class="field">
       <input id="telefono" class="field__input" type="text" formControlName="telefono" appUppercase placeholder=" " />
-      <label class="field__label" for="telefono">Teléfono**</label>
-    </div>
-
-    <div class="field field--full">
-      <input id="direccion" class="field__input" type="text" formControlName="direccion" appUppercase placeholder=" " />
-      <label class="field__label" for="direccion">Dirección</label>
-    </div>
-
-    <div class="field">
-      <input id="email" class="field__input" type="email" formControlName="email" appUppercase placeholder=" " />
-      <label class="field__label" for="email">Email</label>
-      @if (form.controls.email.touched && form.controls.email.invalid) {
-        <span class="field__error">Email inválido</span>
-      }
+      <label class="field__label" for="telefono">Teléfono</label>
     </div>
 
     <div class="field">
@@ -58,15 +95,27 @@
       <label class="field__label" for="tipoCliente">Tipo*</label>
     </div>
 
+    <div class="field field--full">
+      <input id="direccion" class="field__input" type="text" formControlName="direccion" appUppercase placeholder=" " />
+      <label class="field__label" for="direccion">Dirección</label>
+    </div>
+
+    <div class="field field--full">
+      <input id="email" class="field__input" type="email" formControlName="email" appUppercase placeholder=" " />
+      <label class="field__label" for="email">Email</label>
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <span class="field__error">Email inválido</span>
+      }
+    </div>
   </div>
 </form>
 
 <div class="cliente-form-footer">
   <app-ui-button
-    [label]="isEdit ? 'Guardar Cambios' : 'Registrar Cliente'"
+    [label]="isEdit() ? 'Guardar Cambios' : 'Registrar Cliente'"
     icon="save"
     variant="primary"
-    [loading]="saving"
+    [loading]="saving()"
     (clicked)="onSubmit()"
   />
 </div>

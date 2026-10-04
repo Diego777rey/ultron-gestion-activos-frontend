@@ -13,6 +13,7 @@ import { PageChange } from '../../../../../shared/models/pagination.model';
 import { VehiculoService } from '../../services/vehiculo.service';
 import { VehiculoOutput } from '../../interfaces/vehiculo.interface';
 import { VehiculoFormComponent } from '../../dialogs/vehiculo-form/vehiculo-form';
+import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
 
@@ -156,7 +157,7 @@ export class VehiculosListComponent {
 
   protected formatCliente(v: VehiculoOutput): string {
     const p = v.cliente?.persona;
-    return p ? `${p.nombre ?? ''} ${p.apellido ?? ''}`.trim() : 'Sin cliente';
+    return p ? nombreCompletoPersona(p) || 'Sin cliente' : 'Sin cliente';
   }
 
   protected trackById = (v: VehiculoOutput): unknown => v.id_bien;

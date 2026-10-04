@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - develop
 
 jobs:
   validate-branch-name:
@@ -13,17 +14,25 @@ jobs:
       - name: Validar prefijo de rama
         env:
           BRANCH_NAME: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          PATTERN='^(fix|feat|refactor|docs|chore|style|test)/.+$|^release/v[0-9]+\.[0-9]+\.[0-9]+$'
+          PATTERN='^(fix|feat|refactor|docs|chore|style|test|cursor)/.+$|^release/v[0-9]+\.[0-9]+\.[0-9]+$'
+
+          # PR de develop hacia main es valido
+          if [[ "${BASE_REF}" == "main" && "${BRANCH_NAME}" == "develop" ]]; then
+            echo "Rama valida: ${BRANCH_NAME} (merge de develop a main)"
+            exit 0
+          fi
 
           if [[ ! "${BRANCH_NAME}" =~ ${PATTERN} ]]; then
             echo "::error::Rama invalida: '${BRANCH_NAME}'"
             echo ""
             echo "Prefijos permitidos:"
-            echo "  fix/, feat/, refactor/, docs/, chore/, style/, test/"
+            echo "  fix/, feat/, refactor/, docs/, chore/, style/, test/, cursor/"
             echo "  release/vX.Y.Z (ejemplo: release/v1.0.0)"
+            echo "  develop (solo hacia main)"
             echo ""
-            echo "Todas las ramas deben crearse desde main."
+            echo "Las ramas de trabajo deben mergearse hacia develop."
             exit 1
           fi
 
