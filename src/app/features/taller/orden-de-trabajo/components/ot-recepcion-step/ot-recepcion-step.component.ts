@@ -9,12 +9,17 @@ import {
   OnInit,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, firstValueFrom, map, startWith } from 'rxjs';
+import { DataTableComponent } from '../../../../../shared/components/data-table/data-table';
+import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
 import { EntitySearcherComponent } from '../../../../../shared/components/entity-searcher/entity-searcher';
-import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
+import { PaginatorComponent } from '../../../../../shared/components/paginator/paginator';
+import { PageChange } from '../../../../../shared/models/pagination.model';
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { ClienteService } from '../../../../personas/clientes/services/cliente.service';
@@ -37,17 +42,14 @@ import { UsuarioService } from '../../../../personas/usuarios/services/usuario.s
 import { UsuarioOutput } from '../../../../personas/usuarios/interfaces/usuario.interface';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import {
+  ETAPAS_ORDEN,
   OrdenTrabajoInput,
   OrdenTrabajoOutput,
   TipoRecepcion,
   tipoRecepcionDe,
 } from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
-import { OtHistorialPanelComponent } from '../ot-historial-panel/ot-historial-panel.component';
-import {
-  OtCollapsibleSectionComponent,
-  OtSectionStatus,
-} from '../ot-collapsible-section/ot-collapsible-section.component';
+import { OtSectionStatus } from '../ot-collapsible-section/ot-collapsible-section.component';
 
 export interface EstadoInicialOpcion {
   control: string;
@@ -61,12 +63,12 @@ export interface EstadoInicialOpcion {
   imports: [
     ReactiveFormsModule,
     EntitySearcherComponent,
-    UiButtonComponent,
-    OtCollapsibleSectionComponent,
-    OtHistorialPanelComponent,
+    DataTableComponent,
+    TableCellDirective,
+    PaginatorComponent,
   ],
   templateUrl: './ot-recepcion-step.component.html',
-  styleUrls: ['../../styles/ot-form.scss', './ot-recepcion-step.component.scss'],
+  styleUrls: ['../../styles/ot-form.scss', '../../styles/ot-diagnostico.scss', './ot-recepcion-step.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OtRecepcionStepComponent implements OnInit {
@@ -81,6 +83,7 @@ export class OtRecepcionStepComponent implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly ordenService = inject(OrdenTrabajoService);
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly orden = input<OrdenTrabajoOutput | null>(null);
@@ -91,11 +94,6 @@ export class OtRecepcionStepComponent implements OnInit {
 
   protected readonly estadoGuardado = signal<'idle' | 'guardando' | 'guardado'>('idle');
 
-  protected readonly openClienteVehiculo = signal(true);
-  protected readonly openDatos = signal(true);
-  protected readonly openFalla = signal(true);
-  protected readonly openEstado = signal(false);
-
   /** Fuerza recomputo de badges cuando se marca touched al avanzar. */
   private readonly formTick = signal(0);
   private hidratado = false;
@@ -105,7 +103,10 @@ export class OtRecepcionStepComponent implements OnInit {
 
   protected readonly historial = signal<OrdenTrabajoOutput[]>([]);
   protected readonly historialLoading = signal(false);
-  protected readonly historialAbierto = signal(false);
+  protected readonly historialPageIndex = signal(0);
+  protected readonly historialPageSize = signal(10);
+  protected readonly historialTotal = signal(0);
+  private historialSeq = 0;
 
   protected readonly selectedCliente = signal<ClienteOutput | null>(null);
   protected readonly selectedVehiculo = signal<VehiculoOutput | null>(null);
@@ -169,18 +170,13 @@ export class OtRecepcionStepComponent implements OnInit {
     { initialValue: this.form.getRawValue() }
   );
 
-  private readonly historialKeys = toSignal(
+  private readonly historialVehiculoId = toSignal(
     this.form.valueChanges.pipe(
       startWith(this.form.getRawValue()),
-      map((v) => ({
-        idCliente: (v.id_cliente as string) || null,
-        idVehiculo: (v.id_vehiculo as string) || null,
-      })),
-      distinctUntilChanged(
-        (a, b) => a.idCliente === b.idCliente && a.idVehiculo === b.idVehiculo
-      )
+      map((v) => ((v.id_vehiculo as string) || null)),
+      distinctUntilChanged()
     ),
-    { initialValue: { idCliente: null as string | null, idVehiculo: null as string | null } }
+    { initialValue: null as string | null }
   );
 
   protected readonly tipoRecepcion = computed<TipoRecepcion>(() => {
@@ -188,61 +184,42 @@ export class OtRecepcionStepComponent implements OnInit {
     return this.form.controls.tipo_recepcion.value;
   });
 
-  protected readonly resumenClienteVehiculo = computed(() => {
+  protected readonly vehiculoSeleccionado = computed(() => {
     this.formValue();
-    const cliente = this.selectedCliente();
-    const vehiculo = this.selectedVehiculo();
-    const equipo = this.tipoRecepcion() === 'EQUIPO' ? this.selectedEquipo() : null;
-    const parts: string[] = [];
-    if (cliente) parts.push(this.clienteLabel(cliente));
-    if (equipo) parts.push(equipoLabel(equipo));
-    if (vehiculo) parts.push(this.vehiculoLabel(vehiculo));
-    return parts.length ? parts.join(' · ') : 'Sin seleccionar';
+    return !!this.form.controls.id_vehiculo.value;
   });
 
-  protected readonly resumenDatos = computed(() => {
-    this.formValue();
-    const parts: string[] = [];
-    const sector = this.selectedSector();
-    const usuario = this.selectedUsuario();
-    const mecanicos = this.selectedMecanicos();
-    if (sector?.nombre) parts.push(sector.nombre);
-    if (usuario) parts.push(this.usuarioLabelFn(usuario));
-    if (mecanicos.length) {
-      parts.push(mecanicos.map((m) => this.mecanicoLabel(m)).join(', '));
-    }
-    return parts.length ? parts.join(' · ') : 'Sin asignar';
-  });
+  protected readonly historialColumns: TableColumn<OrdenTrabajoOutput>[] = [
+    { key: 'numero_orden', header: 'Nº Orden', width: '110px' },
+    { key: 'etapa', header: 'Etapa', width: '128px' },
+    {
+      key: 'fecha_recepcion',
+      header: 'Recepción',
+      width: '112px',
+      value: (orden) => this.formatFecha(orden.fecha_creacion),
+    },
+    {
+      key: 'fecha_finalizacion',
+      header: 'Finalización',
+      width: '118px',
+      value: (orden) => this.formatFecha(orden.fecha_finalizacion),
+    },
+    {
+      key: 'falla',
+      header: 'Falla',
+      value: (orden) => orden.recepcion?.descripcion_falla?.trim() || '—',
+    },
+    {
+      key: 'diagnostico',
+      header: 'Presupuesto',
+      width: '120px',
+      align: 'right',
+      value: (orden) => this.formatMonto(orden.diagnostico?.total_presupuesto),
+    },
+    { key: 'ver', header: '', width: '52px', align: 'center' },
+  ];
 
-  protected readonly resumenFalla = computed(() => {
-    const v = this.formValue();
-    const text = (v.descripcion_falla ?? '').trim();
-    if (!text) return 'Sin descripción';
-    return text.length > 90 ? `${text.slice(0, 90)}…` : text;
-  });
-
-  protected readonly resumenEstado = computed(() => {
-    const v = this.formValue();
-    const fallas = this.opcionesEstado.filter(
-      (o) => o.group === 'falla' && !!(v as Record<string, unknown>)[o.control]
-    ).length;
-    const condiciones = this.opcionesEstado.filter(
-      (o) => o.group === 'condicion' && !!(v as Record<string, unknown>)[o.control]
-    ).length;
-    const parts: string[] = [];
-    if (fallas) parts.push(`${fallas} falla${fallas > 1 ? 's' : ''}`);
-    if (condiciones) parts.push(`${condiciones} condición${condiciones > 1 ? 'es' : ''}`);
-    const km = v.kilometraje;
-    if (km !== null && km !== undefined && String(km).trim() !== '') {
-      const n = Number(km);
-      if (!Number.isNaN(n)) {
-        parts.push(`${n.toLocaleString('es-PY')} km`);
-      }
-    }
-    const nivel = this.nivelesCombustible.find((n) => n.value === (v.nivel_combustible || ''));
-    if (nivel?.value) parts.push(nivel.label);
-    return parts.length ? parts.join(' · ') : 'Sin registrar';
-  });
+  protected readonly trackHistorial = (orden: OrdenTrabajoOutput): unknown => orden.id_orden_trabajo;
 
   protected readonly statusClienteVehiculo = computed(() =>
     this.sectionStatus(['id_cliente', 'id_vehiculo', 'id_equipo'])
@@ -253,22 +230,13 @@ export class OtRecepcionStepComponent implements OnInit {
   protected readonly statusFalla = computed(() => this.sectionStatus(['descripcion_falla']));
   protected readonly statusEstado = computed((): OtSectionStatus => {
     this.formTick();
-    this.formValue();
-    return this.resumenEstado() === 'Sin registrar' ? 'none' : 'ok';
-  });
-
-  protected readonly puedeVerHistorial = computed(() => {
-    this.formValue();
-    return !!(this.form.controls.id_cliente.value || this.form.controls.id_vehiculo.value);
-  });
-
-  protected readonly historialCount = computed(() => this.historial().length);
-
-  protected readonly historialLabel = computed(() => {
-    if (this.historialAbierto()) return 'Ocultar historial';
-    if (!this.puedeVerHistorial()) return 'Ver historial';
-    if (this.historialLoading()) return 'Ver historial…';
-    return `Ver historial (${this.historialCount()})`;
+    const v = this.formValue();
+    const marcado = this.opcionesEstado.some((o) => !!(v as Record<string, unknown>)[o.control]);
+    const km = v.kilometraje;
+    const tieneKm = km !== null && km !== undefined && String(km).trim() !== '';
+    const tieneNivel = !!v.nivel_combustible;
+    const tieneObs = !!String(v.observaciones_estado ?? '').trim();
+    return marcado || tieneKm || tieneNivel || tieneObs ? 'ok' : 'none';
   });
 
   protected readonly clientes = signal<ClienteOutput[]>([]);
@@ -354,14 +322,8 @@ export class OtRecepcionStepComponent implements OnInit {
     });
 
     effect(() => {
-      const { idCliente, idVehiculo } = this.historialKeys();
-      if (idVehiculo) {
-        this.cargarHistorialPorVehiculo(idVehiculo);
-      } else if (idCliente) {
-        this.cargarHistorialPorCliente(idCliente);
-      } else {
-        this.historial.set([]);
-      }
+      const idVehiculo = this.historialVehiculoId();
+      untracked(() => this.abrirHistorial(idVehiculo));
     });
   }
 
@@ -400,7 +362,6 @@ export class OtRecepcionStepComponent implements OnInit {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.formTick.update((n) => n + 1);
-      this.revealInvalidSections();
       return null;
     }
     return this.armarInput();
@@ -482,13 +443,40 @@ export class OtRecepcionStepComponent implements OnInit {
     }
   }
 
-  protected toggleHistorial(): void {
-    if (!this.puedeVerHistorial() && !this.historialAbierto()) return;
-    this.historialAbierto.update((abierto) => !abierto);
+  protected statusIcon(status: OtSectionStatus): string {
+    switch (status) {
+      case 'ok':
+        return 'check_circle';
+      case 'error':
+        return 'error';
+      default:
+        return 'radio_button_unchecked';
+    }
   }
 
-  protected cerrarHistorial(): void {
-    this.historialAbierto.set(false);
+  protected verOrden(orden: OrdenTrabajoOutput, event: Event): void {
+    event.stopPropagation();
+    const id = orden.id_orden_trabajo;
+    if (!id) return;
+    void this.router.navigate(['/taller/orden-de-trabajo/detalle', id]);
+  }
+
+  protected onHistorialPage(event: PageChange): void {
+    this.historialPageIndex.set(event.pageIndex);
+    this.historialPageSize.set(event.pageSize);
+    const idVehiculo = this.form.controls.id_vehiculo.value;
+    if (!idVehiculo) return;
+    this.cargarHistorial(idVehiculo, event.pageIndex, event.pageSize);
+  }
+
+  protected getEtapaInfo(etapa?: string | null) {
+    return (
+      ETAPAS_ORDEN.find((item) => item.valor === etapa) ?? {
+        label: etapa ?? '—',
+        icono: 'help',
+        color: '#9E9E9E',
+      }
+    );
   }
 
   protected opcionesPorGrupo(group: 'falla' | 'condicion'): EstadoInicialOpcion[] {
@@ -889,52 +877,56 @@ export class OtRecepcionStepComponent implements OnInit {
     return 'pending';
   }
 
-  private revealInvalidSections(): void {
-    if (
-      this.form.controls.id_cliente.invalid ||
-      this.form.controls.id_vehiculo.invalid ||
-      this.form.controls.id_equipo.invalid
-    ) {
-      this.openClienteVehiculo.set(true);
+  private abrirHistorial(idVehiculo: string | null): void {
+    this.historialPageIndex.set(0);
+    if (!idVehiculo) {
+      this.historialSeq += 1;
+      this.historial.set([]);
+      this.historialTotal.set(0);
+      this.historialLoading.set(false);
+      return;
     }
-    if (
-      this.form.controls.id_sector.invalid ||
-      this.form.controls.id_responsable.invalid ||
-      this.form.controls.ids_mecanicos.invalid
-    ) {
-      this.openDatos.set(true);
-    }
-    if (this.form.controls.descripcion_falla.invalid) {
-      this.openFalla.set(true);
-    }
+    this.cargarHistorial(idVehiculo, 0, this.historialPageSize());
   }
 
-  private cargarHistorialPorCliente(id: string): void {
+  private cargarHistorial(idVehiculo: string, page: number, size: number): void {
+    const seq = ++this.historialSeq;
     this.historialLoading.set(true);
-    this.ordenService.findByCliente(id, 0, 8).subscribe({
-      next: (list) => {
-        this.historial.set(list);
+    this.ordenService.findByVehiculo(idVehiculo, page, size).subscribe({
+      next: (res) => {
+        if (seq !== this.historialSeq) return;
+        const propia = this.ordenId;
+        const mismoVehiculo =
+          !!propia && String(this.orden()?.vehiculo?.id_bien ?? '') === String(idVehiculo);
+        const content = (res?.content ?? []).filter((orden) => orden.id_orden_trabajo !== propia);
+        const total = Math.max(0, (res?.pageInfo?.totalElements ?? 0) - (mismoVehiculo ? 1 : 0));
+        this.historial.set(content);
+        this.historialTotal.set(total);
         this.historialLoading.set(false);
       },
       error: () => {
+        if (seq !== this.historialSeq) return;
         this.historial.set([]);
+        this.historialTotal.set(0);
         this.historialLoading.set(false);
       },
     });
   }
 
-  private cargarHistorialPorVehiculo(id: string): void {
-    this.historialLoading.set(true);
-    this.ordenService.findByVehiculo(id, 0, 8).subscribe({
-      next: (list) => {
-        this.historial.set(list);
-        this.historialLoading.set(false);
-      },
-      error: () => {
-        this.historial.set([]);
-        this.historialLoading.set(false);
-      },
-    });
+  private formatFecha(fecha?: string | null): string {
+    if (!fecha) return '—';
+    const date = new Date(fecha);
+    if (Number.isNaN(date.getTime())) return fecha;
+    return new Intl.DateTimeFormat('es-PY', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(date);
+  }
+
+  private formatMonto(value?: number | null): string {
+    if (value == null) return '—';
+    return `${new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(value)} ₲`;
   }
 
   private ensureInList<T>(list: T[], item: T, keyFn: (item: T) => unknown): T[] {
