@@ -96,8 +96,6 @@ export class PuntoDeVentaComponent {
   readonly inicioDialogOpen = signal(true);
   readonly gestionCajaOpen = signal(false);
   readonly pagoDialogOpen = signal(false);
-  /** Método preseleccionado al abrir el diálogo de pago (EFECTIVO desde "Cobrar efectivo"). */
-  readonly pagoMetodoInicial = signal<FormaPago | null>(null);
   /** Vuelto de la última venta en efectivo, mostrado hasta que el cajero confirma que lo entregó. */
   readonly vueltoPendiente = signal<{ vuelto: VueltoCalculado; numeroVenta: string } | null>(null);
   readonly facturaDialogOpen = signal(false);
@@ -475,12 +473,11 @@ export class PuntoDeVentaComponent {
     this.cambiarPdv();
   }
 
-  protected abrirPagoDialog(metodoInicial: FormaPago | null = null): void {
+  protected abrirPagoDialog(): void {
     if (this.cart().length === 0) {
       this.ventaError.set('Agregá ítems al carrito antes de cobrar');
       return;
     }
-    this.pagoMetodoInicial.set(metodoInicial);
     this.pagoDialogOpen.set(true);
   }
 
@@ -532,9 +529,8 @@ export class PuntoDeVentaComponent {
     });
   }
 
-  /** Cobro en efectivo: pasa por el diálogo de pago para cargar el monto recibido y calcular el vuelto. */
   protected cobrar(): void {
-    this.abrirPagoDialog('EFECTIVO');
+    this.registrarVenta(false, 'EFECTIVO', 'PYG');
   }
 
   protected cobrarConTicket(): void {

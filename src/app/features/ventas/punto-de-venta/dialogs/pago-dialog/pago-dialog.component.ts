@@ -718,9 +718,6 @@ export class PagoDialogComponent implements OnInit {
   readonly total = input.required<number>();
   /** Ítems del carrito que se están cobrando; se muestran como resumen a la izquierda. */
   readonly items = input<CartItem[]>([]);
-  /** Método que queda preseleccionado al abrir (p. ej. EFECTIVO desde "Cobrar efectivo"). */
-  readonly metodoInicial = input<FormaPago | null>(null);
-
   readonly cancelar = output<void>();
   readonly confirmar = output<PagoConfirmado>();
 
@@ -883,10 +880,6 @@ export class PagoDialogComponent implements OnInit {
 
   ngOnInit(): void {
     const total = Number(this.total());
-    const inicial = this.metodoInicial();
-    if (inicial) {
-      this.seleccionado.set(inicial);
-    }
     this.cotizacionService.cotizarTotal(total).subscribe({
       next: (montos) => {
         this.montos.set(montos);
