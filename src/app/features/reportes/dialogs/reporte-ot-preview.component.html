@@ -20,8 +20,9 @@
     @let etapa = etapaInfo(orden.etapa);
     @let estado = condiciones(orden);
     <article class="ot-doc">
-      <header class="ot-doc__head">
-        <div>
+      <header class="ot-doc__brand">
+        <img class="ot-doc__logo" src="brand/chservice-logo.png" alt="CH Service" />
+        <div class="ot-doc__identity">
           <p class="ot-doc__kicker">Orden de trabajo</p>
           <h3 class="ot-doc__numero">{{ orden.numero_orden | defaultEmpty }}</h3>
         </div>
@@ -41,10 +42,6 @@
           <span class="ot-doc__label">Vehículo</span>
           <strong>{{ formatVehiculo(orden) }}</strong>
           <small>{{ orden.vehiculo?.tipo_vehiculo | defaultEmpty }}</small>
-        </div>
-        <div>
-          <span class="ot-doc__label">Sector</span>
-          <strong>{{ orden.sector?.nombre | defaultEmpty }}</strong>
         </div>
         <div>
           <span class="ot-doc__label">Mecánicos</span>
@@ -98,11 +95,6 @@
             <span class="ot-doc__label">Fin estimado</span>
             <strong>{{ formatFecha(orden.diagnostico?.fecha_fin_estimada) }}</strong>
           </div>
-          <div>
-            <span class="ot-doc__label">Presupuesto</span>
-            <strong>{{ formatMoneda(orden.diagnostico?.total_presupuesto) }}</strong>
-            <small>{{ orden.diagnostico?.presupuesto_aprobado ? 'Aprobado' : 'Pendiente' }}</small>
-          </div>
         </div>
         <p>{{ orden.diagnostico?.observaciones | defaultEmpty }}</p>
       </section>
@@ -128,7 +120,6 @@
               <tr>
                 <th>Tipo</th>
                 <th>Ítem</th>
-                <th>Mecánico</th>
                 <th>Cant.</th>
                 <th>Precio</th>
                 <th>Subtotal</th>
@@ -139,7 +130,6 @@
                 <tr>
                   <td>{{ detalle.tipo | defaultEmpty }}</td>
                   <td>{{ nombreLinea(detalle) }}</td>
-                  <td>{{ formatMecanicoLinea(detalle) }}</td>
                   <td>{{ detalle.cantidad ?? '—' }}</td>
                   <td>{{ formatMoneda(detalle.precio_unitario) }}</td>
                   <td>{{ formatMoneda(detalle.subtotal) }}</td>
@@ -148,7 +138,7 @@
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="5">Total líneas</td>
+                <td colspan="4">Total</td>
                 <td>{{ formatMoneda(totalLineas(orden)) }}</td>
               </tr>
             </tfoot>
