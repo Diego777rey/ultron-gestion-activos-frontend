@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  HostListener,
   inject,
   input,
   OnInit,
@@ -32,7 +33,12 @@ import { nombreCompletoPersona } from '../../../../personas/shared/nombre-person
   selector: 'app-ot-detalle-lineas',
   imports: [CurrencyPipe, ReactiveFormsModule, UiButtonComponent, EntitySearcherComponent],
   templateUrl: './ot-detalle-lineas.component.html',
-  styleUrls: ['../../styles/ot-form.scss', '../../styles/ot-diagnostico.scss'],
+  styleUrls: [
+    '../../styles/ot-form.scss',
+    '../../styles/ot-proceso.scss',
+    '../../styles/ot-diagnostico.scss',
+    '../../styles/ot-diagnostico-shell.scss',
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OtDetalleLineasComponent implements OnInit {
@@ -65,6 +71,7 @@ export class OtDetalleLineasComponent implements OnInit {
   });
 
   protected readonly isAdding = signal(false);
+  protected readonly mecanicoOpen = signal(false);
 
   protected readonly productos = signal<ProductoOutput[]>([]);
   protected readonly productosTotal = signal(0);
@@ -122,8 +129,20 @@ export class OtDetalleLineasComponent implements OnInit {
     return all.filter((d) => d.etapa_origen === 'EN_PROCESO');
   }
 
+  protected serviciosAgregados(): OrdenTrabajoDetalleOutput[] {
+    return this.lineasVisibles().filter((d) => d.tipo === 'SERVICIO');
+  }
+
   protected totalAjuste(): number {
     return this.lineasVisibles().reduce((sum, d) => sum + Number(d.subtotal ?? 0), 0);
+  }
+
+  protected montoFinal(): number {
+    return Number(this.orden().diagnostico?.total_presupuesto ?? 0);
+  }
+
+  protected montoAnterior(): number {
+    return Math.max(this.montoFinal() - this.totalAjuste(), 0);
   }
 
   protected fetchProductos(page: number, size: number, filter: string): void {
@@ -233,12 +252,17 @@ export class OtDetalleLineasComponent implements OnInit {
     if (!orden.id_orden_trabajo || !det.id_detalle) {
       return;
     }
-    if (!confirm('¿Eliminar este ítem del presupuesto?')) {
-      return;
-    }
-    this.ordenService.eliminarDetalle(orden.id_orden_trabajo, det.id_detalle).subscribe({
-      next: (updated) => this.ordenChange.emit(updated),
-      error: (err) => this.errorChange.emit(err?.message ?? 'No se pudo eliminar el detalle'),
+    const mensaje = det.tipo === 'SERVICIO'
+      ? '¿Quitar este servicio del ajuste?'
+      : '¿Eliminar este ítem del presupuesto?';
+    this.dialogService.confirm(mensaje).subscribe((aceptado) => {
+      if (!aceptado || !orden.id_orden_trabajo || !det.id_detalle) {
+        return;
+      }
+      this.ordenService.eliminarDetalle(orden.id_orden_trabajo, det.id_detalle).subscribe({
+        next: (updated) => this.ordenChange.emit(updated),
+        error: (err) => this.errorChange.emit(err?.message ?? 'No se pudo eliminar el detalle'),
+      });
     });
   }
 
@@ -256,6 +280,28 @@ export class OtDetalleLineasComponent implements OnInit {
 
   protected esServicio(): boolean {
     return this.detalleForm.controls.tipo.value === 'SERVICIO';
+  }
+
+  @HostListener('document:click')
+  protected closeMecanico(): void {
+    this.mecanicoOpen.set(false);
+  }
+
+  protected toggleMecanico(event: Event): void {
+    event.stopPropagation();
+    this.mecanicoOpen.update((open) => !open);
+  }
+
+  protected pickMecanico(id: string): void {
+    this.detalleForm.controls.id_mecanico.setValue(id);
+    this.detalleForm.controls.id_mecanico.markAsTouched();
+    this.mecanicoOpen.set(false);
+  }
+
+  protected labelMecanicoSeleccionado(): string {
+    const id = this.detalleForm.controls.id_mecanico.value;
+    const found = this.mecanicosAsignados().find((m) => (m.id_funcionario ?? '') === id);
+    return found ? this.nombreMecanico(found) : 'Seleccionar mecánico...';
   }
 
   private aplicarValidadorMecanico(tipo: string | null): void {

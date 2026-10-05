@@ -27,7 +27,7 @@ import {
   selector: 'app-ot-solicitud-repuesto',
   imports: [ReactiveFormsModule, UiButtonComponent, EntitySearcherComponent, DatePipe],
   templateUrl: './ot-solicitud-repuesto.component.html',
-  styleUrl: '../../styles/ot-form.scss',
+  styleUrls: ['../../styles/ot-form.scss', '../../styles/ot-proceso.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OtSolicitudRepuestoComponent implements OnInit {

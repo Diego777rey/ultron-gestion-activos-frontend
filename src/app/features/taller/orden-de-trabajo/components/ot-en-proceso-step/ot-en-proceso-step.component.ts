@@ -28,8 +28,7 @@ import { TableColumn } from '../../../../../shared/models/table-column.model';
     UiButtonComponent,
   ],
   template: `
-    <div class="ot-en-proceso">
-
+    <div class="ot-proceso">
       @if (editable() && !orden().sector?.id_sector) {
         <div class="ot-sector-warn">
           <span class="material-icons ot-sector-warn__icon">warning_amber</span>
@@ -65,32 +64,38 @@ import { TableColumn } from '../../../../../shared/models/table-column.model';
         </div>
       }
 
-      @if (orden().id_orden_trabajo) {
-        <app-ot-solicitud-repuesto
-          [idOrden]="orden().id_orden_trabajo!"
-          [sectorDestinoInicial]="orden().sector ?? null"
-          [editable]="editable()"
-          (errorChange)="errorChange.emit($event)"
-          (solicitudCreada)="recargarOrden()"
-        />
-      }
+      <div class="ot-proceso__panel">
+        <div class="ot-proceso__detalle">
+          <app-ot-detalle-lineas
+            [orden]="orden()"
+            [editable]="editable()"
+            [allowCreateServicio]="editable()"
+            [modoEnProceso]="true"
+            (ordenChange)="ordenChange.emit($event)"
+            (errorChange)="errorChange.emit($event)"
+          />
+        </div>
 
-      <app-ot-diagnostico-hallazgos
-        [orden]="orden()"
-        [editable]="editable()"
-        [modoEnProceso]="true"
-        (ordenChange)="ordenChange.emit($event)"
-        (errorChange)="errorChange.emit($event)"
-      />
+        <div class="ot-proceso__split ot-diag-shell">
+          <app-ot-diagnostico-hallazgos
+            [orden]="orden()"
+            [editable]="editable()"
+            [modoEnProceso]="true"
+            (ordenChange)="ordenChange.emit($event)"
+            (errorChange)="errorChange.emit($event)"
+          />
 
-      <app-ot-detalle-lineas
-        [orden]="orden()"
-        [editable]="editable()"
-        [allowCreateServicio]="editable()"
-        [modoEnProceso]="true"
-        (ordenChange)="ordenChange.emit($event)"
-        (errorChange)="errorChange.emit($event)"
-      />
+          @if (orden().id_orden_trabajo) {
+            <app-ot-solicitud-repuesto
+              [idOrden]="orden().id_orden_trabajo!"
+              [sectorDestinoInicial]="orden().sector ?? null"
+              [editable]="editable()"
+              (errorChange)="errorChange.emit($event)"
+              (solicitudCreada)="recargarOrden()"
+            />
+          }
+        </div>
+      </div>
     </div>
   `,
   styleUrls: ['../../styles/ot-form.scss', './ot-en-proceso-step.component.scss'],
