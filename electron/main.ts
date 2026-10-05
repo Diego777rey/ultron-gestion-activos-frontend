@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { loadDesktopConfig } from './config';
 import { printRaw } from './raw-printer';
@@ -11,8 +12,54 @@ const DESKTOP_CONFIG = {
 
 const isDev = !app.isPackaged && process.argv.includes('--dev');
 
+const ZOOM_MIN = 0.5;
+const ZOOM_MAX = 2;
+const ZOOM_STEP = 0.1;
+
 let mainWindow: BrowserWindow | undefined;
 let staticServer: StaticServer | undefined;
+
+function clampZoom(factor: number): number {
+  const rounded = Math.round(factor * 100) / 100;
+  return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, rounded));
+}
+
+function zoomFile(): string {
+  return path.join(app.getPath('userData'), 'zoom-factor.json');
+}
+
+function readSavedZoom(): number {
+  try {
+    const raw = fs.readFileSync(zoomFile(), 'utf8');
+    const factor = Number((JSON.parse(raw) as { factor?: unknown }).factor);
+    if (Number.isFinite(factor)) {
+      return clampZoom(factor);
+    }
+  } catch {
+    // Primera ejecución: tamaño real.
+  }
+  return 1;
+}
+
+function persistZoom(factor: number): void {
+  try {
+    fs.writeFileSync(zoomFile(), JSON.stringify({ factor }));
+  } catch {
+    // El zoom queda aplicado aunque no se pueda guardar.
+  }
+}
+
+function publishZoom(factor: number): number {
+  const next = clampZoom(factor);
+  const win = mainWindow;
+  if (!win) {
+    return next;
+  }
+  win.webContents.setZoomFactor(next);
+  persistZoom(next);
+  win.webContents.send('zoom:changed', next);
+  return next;
+}
 
 function resolveAngularBrowserDir(): string {
   return path.join(__dirname, '../../dist/ultron-gestion-activos-frontend/browser');
@@ -62,6 +109,15 @@ function registerIpc(): void {
     }
   });
 
+  ipcMain.handle('zoom:get', () => mainWindow?.webContents.getZoomFactor() ?? readSavedZoom());
+  ipcMain.handle('zoom:in', () =>
+    publishZoom((mainWindow?.webContents.getZoomFactor() ?? 1) + ZOOM_STEP),
+  );
+  ipcMain.handle('zoom:out', () =>
+    publishZoom((mainWindow?.webContents.getZoomFactor() ?? 1) - ZOOM_STEP),
+  );
+  ipcMain.handle('zoom:reset', () => publishZoom(1));
+
   ipcMain.handle('whatsapp:share-file', async (_event, pdfBase64: unknown, filename: unknown) => {
     try {
       if (typeof pdfBase64 !== 'string' || !pdfBase64) {
@@ -104,6 +160,11 @@ function buildMenu(): Electron.Menu {
       label: 'Ver',
       submenu: [
         { role: 'reload', label: 'Recargar' },
+        { type: 'separator' },
+        { role: 'zoomIn', label: 'Acercar', accelerator: 'CommandOrControl+=' },
+        { role: 'zoomOut', label: 'Alejar', accelerator: 'CommandOrControl+-' },
+        { role: 'resetZoom', label: 'Tamaño real', accelerator: 'CommandOrControl+0' },
+        { type: 'separator' },
         { role: 'togglefullscreen', label: 'Pantalla completa' },
         ...(isDev ? [{ type: 'separator' as const }, { role: 'toggleDevTools' as const, label: 'Herramientas de desarrollo' }] : []),
       ],
@@ -148,12 +209,19 @@ async function createWindow(): Promise<void> {
     return { action: 'deny' };
   });
 
+  mainWindow.webContents.on('zoom-changed', () => {
+    const factor = clampZoom(mainWindow?.webContents.getZoomFactor() ?? 1);
+    persistZoom(factor);
+    mainWindow?.webContents.send('zoom:changed', factor);
+  });
+
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
   });
 
   const startUrl = await resolveStartUrl();
   await mainWindow.loadURL(startUrl);
+  publishZoom(readSavedZoom());
 }
 
 function closeStaticServer(): void {
