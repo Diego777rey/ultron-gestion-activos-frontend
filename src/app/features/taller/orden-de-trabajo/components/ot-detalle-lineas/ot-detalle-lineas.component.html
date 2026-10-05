@@ -2,11 +2,25 @@
   <div class="ot-diag-card ot-diag-card--green">
     <div class="ot-diag-card__head">
       <span class="ot-diag-card__icon" aria-hidden="true">
-        <span class="material-icons">request_quote</span>
+        <span class="material-icons">{{ editable() || tituloLectura() ? 'request_quote' : 'build' }}</span>
       </span>
       <div class="ot-diag-card__titles">
-        <h3 class="ot-diag-card__title">Presupuesto detallado</h3>
-        <p class="ot-diag-card__hint">Cargá servicios y productos. En cada servicio indicá qué mecánico lo va a realizar.</p>
+        <h3 class="ot-diag-card__title">
+          @if (editable()) {
+            Presupuesto detallado
+          } @else {
+            {{ tituloLectura() || 'Servicios y productos' }}
+          }
+        </h3>
+        <p class="ot-diag-card__hint">
+          @if (editable()) {
+            Cargá servicios y productos. En cada servicio indicá qué mecánico lo va a realizar.
+          } @else if (tituloLectura()) {
+            Servicios y productos incluidos en el cobro.
+          } @else {
+            Servicios realizados y productos utilizados.
+          }
+        </p>
       </div>
     </div>
     <div class="ot-diag-card__body">
@@ -171,7 +185,11 @@
             } @empty {
               <tr>
                 <td [attr.colspan]="editable() ? 7 : 6" class="ot-diag-empty">
-                  No hay productos ni servicios en el presupuesto.
+                  @if (editable() || tituloLectura()) {
+                    No hay productos ni servicios en el presupuesto.
+                  } @else {
+                    No hay servicios ni productos utilizados.
+                  }
                 </td>
               </tr>
             }

@@ -51,12 +51,21 @@
   padding-bottom: 8px;
 }
 
-.stepper-body > app-ot-finalizada-step,
+.stepper-body > app-ot-finalizada-step {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+}
+
 .stepper-body > app-ot-facturado-step {
   flex: 1;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   padding-bottom: 8px;
 }
 
