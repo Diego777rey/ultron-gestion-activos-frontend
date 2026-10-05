@@ -10,8 +10,6 @@ import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-act
 import { PageChange } from '../../../../../shared/models/pagination.model';
 import { ServicioService } from '../../services/servicio.service';
 import { ServicioOutput } from '../../interfaces/servicio.interface';
-import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
-import { ServicioFormComponent } from '../../dialogs/servicio-form/servicio-form.component';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
 
 @Component({
@@ -29,7 +27,6 @@ import { ReporteService } from '../../../../../shared/services/reporte.service';
 })
 export class ServiciosListComponent {
   private readonly servicioService = inject(ServicioService);
-  private readonly dialogService = inject(AppDialogService);
   private readonly router = inject(Router);
   private readonly reporteService = inject(ReporteService);
 
@@ -132,22 +129,16 @@ export class ServiciosListComponent {
     });
   }
 
-  protected openEditDialog(servicio: ServicioOutput): void {
-    this.dialogService.openForm(ServicioFormComponent, {
-      title: 'Editar Servicio',
-      subtitle: 'Actualizá los datos del servicio',
-      maxWidth: '820px',
-      inputs: { servicio },
-    }).subscribe((saved) => {
-      if (saved) {
-        this.load();
-      }
-    });
+  protected editarServicio(servicio: ServicioOutput): void {
+    if (!servicio.id_servicio) {
+      return;
+    }
+    this.router.navigate(['/inventario/servicios', servicio.id_servicio, 'editar']);
   }
 
   protected onRowAction(actionId: string, servicio: ServicioOutput): void {
     if (actionId === 'edit') {
-      this.openEditDialog(servicio);
+      this.editarServicio(servicio);
     } else if (actionId === 'generar') {
       this.generarFicha(servicio);
     }

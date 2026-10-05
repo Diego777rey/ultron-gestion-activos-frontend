@@ -8,6 +8,12 @@ export const SERVICIOS_ROUTES: Routes = [
     data: { tabTitle: 'Nuevo Servicio', noReuse: true },
   },
   {
+    path: ':id/editar',
+    loadComponent: () =>
+      import('./pages/servicio-stepper/servicio-stepper.component').then((m) => m.ServicioStepperComponent),
+    data: { tabTitle: 'Editar Servicio', noReuse: true },
+  },
+  {
     path: 'categorias/nueva',
     loadComponent: () =>
       import('./pages/categoria-servicio-stepper/categoria-servicio-stepper.component').then((m) => m.CategoriaServicioStepperComponent),
