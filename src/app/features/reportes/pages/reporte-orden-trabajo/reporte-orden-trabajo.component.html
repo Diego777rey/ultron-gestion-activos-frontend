@@ -63,16 +63,8 @@
 
     <div class="ot-expand__grid">
       <div>
-        <span class="ot-expand__label">Sector</span>
-        <strong>{{ orden.sector?.nombre | defaultEmpty }}</strong>
-      </div>
-      <div>
         <span class="ot-expand__label">Mecánicos</span>
         <strong>{{ formatMecanicos(orden) }}</strong>
-      </div>
-      <div>
-        <span class="ot-expand__label">Presupuesto</span>
-        <strong>{{ formatMoneda(orden.diagnostico?.total_presupuesto) }}</strong>
       </div>
       <div class="ot-expand__falla">
         <span class="ot-expand__label">Falla</span>
@@ -86,7 +78,6 @@
           <tr>
             <th>Tipo</th>
             <th>Ítem</th>
-            <th>Mecánico</th>
             <th>Cant.</th>
             <th>Subtotal</th>
           </tr>
@@ -96,7 +87,6 @@
             <tr>
               <td>{{ detalle.tipo | defaultEmpty }}</td>
               <td>{{ nombreLinea(detalle) }}</td>
-              <td>{{ formatMecanicoLinea(detalle) }}</td>
               <td>{{ detalle.cantidad ?? '—' }}</td>
               <td>{{ formatMoneda(detalle.subtotal) }}</td>
             </tr>
