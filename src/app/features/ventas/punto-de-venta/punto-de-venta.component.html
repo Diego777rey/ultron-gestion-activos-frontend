@@ -372,7 +372,6 @@
   <app-pago-dialog
     [total]="cartTotal()"
     [items]="cart()"
-    [metodoInicial]="pagoMetodoInicial()"
     (cancelar)="cerrarPagoDialog()"
     (confirmar)="cobrarConMetodo($event)"
   />
