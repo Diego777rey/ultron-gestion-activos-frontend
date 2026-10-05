@@ -85,6 +85,11 @@ export function buildTicketVenta(ticket: TicketVenta): Uint8Array {
   builder.bold(true);
   builder.columns('TOTAL Gs.', formatGs(ticket.total));
   builder.bold(false);
+  if (ticket.montoRecibido != null) {
+    imprimirImporteConMoneda(builder, 'Recibido', ticket.montoRecibido, ticket.monedaRecibida, ticket.montoRecibidoPyg);
+    const vueltoPyg = ticket.vueltoPyg ?? Math.max((ticket.montoRecibidoPyg ?? ticket.montoRecibido) - ticket.total, 0);
+    imprimirImporteConMoneda(builder, 'Vuelto', ticket.vuelto ?? vueltoPyg, ticket.monedaVuelto, vueltoPyg);
+  }
   builder.separator();
   builder.align(1);
   builder.line(blankTo(ticket.pie, 'Gracias por su compra'));
@@ -347,6 +352,65 @@ export function formatGs(value: number | null | undefined): string {
   const sign = rounded < 0 ? '-' : '';
   const digits = Math.abs(rounded).toString();
   return sign + digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+/** Importe en moneda extranjera con dos decimales y coma decimal: 1234.5 → "1.234,50". */
+export function formatMonedaExtranjera(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) {
+    return '0,00';
+  }
+  const centavos = Math.round(Math.abs(value) * 100);
+  const entero = formatGs(Math.floor(centavos / 100));
+  const decimales = String(centavos % 100).padStart(2, '0');
+  return `${value < 0 ? '-' : ''}${entero},${decimales}`;
+}
+
+const SIMBOLOS_TICKET: Record<string, string> = {
+  PYG: 'Gs.',
+  GS: 'Gs.',
+  GUARANI: 'Gs.',
+  GUARANIES: 'Gs.',
+  USD: 'US$',
+  DOLAR: 'US$',
+  DOLARES: 'US$',
+  BRL: 'R$',
+  REAL: 'R$',
+  REALES: 'R$',
+  ARS: '$',
+  PESO: '$',
+  EUR: 'EUR',
+  EURO: 'EUR',
+};
+
+function esGuaraniTicket(moneda: string | null | undefined): boolean {
+  const clave = sanitize(moneda).trim().toUpperCase();
+  return !clave || SIMBOLOS_TICKET[clave] === 'Gs.';
+}
+
+function simboloTicket(moneda: string | null | undefined): string {
+  const clave = sanitize(moneda).trim().toUpperCase();
+  return SIMBOLOS_TICKET[clave] ?? clave;
+}
+
+/**
+ * "Recibido Gs.      600.000" en guaraníes; en otra moneda imprime el importe
+ * original y, debajo, su equivalente en guaraníes para que el ticket cierre.
+ */
+function imprimirImporteConMoneda(
+  builder: EscPosTicketBuilder,
+  etiqueta: string,
+  importe: number,
+  moneda: string | null | undefined,
+  equivalentePyg: number | null | undefined,
+): void {
+  if (esGuaraniTicket(moneda)) {
+    builder.columns(`${etiqueta} Gs.`, formatGs(importe));
+    return;
+  }
+  builder.columns(`${etiqueta} ${simboloTicket(moneda)}`, formatMonedaExtranjera(importe));
+  if (equivalentePyg != null) {
+    builder.columns('  equiv. Gs.', formatGs(equivalentePyg));
+  }
 }
 
 export function sanitize(text: string | null | undefined): string {

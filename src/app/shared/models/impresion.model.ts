@@ -26,6 +26,18 @@ export interface TicketVenta {
   lineas: TicketLinea[];
   descuento?: number | null;
   total: number;
+  /** Efectivo recibido, en `monedaRecibida`. Si viene, el ticket imprime Recibido y Vuelto. */
+  montoRecibido?: number | null;
+  /** Moneda en la que pagó el cliente. Vacío o "PYG" = guaraníes. */
+  monedaRecibida?: string | null;
+  /** Equivalente en guaraníes de `montoRecibido`, cuando se pagó en otra moneda. */
+  montoRecibidoPyg?: number | null;
+  /** Vuelto entregado, en `monedaVuelto`. */
+  vuelto?: number | null;
+  /** Moneda en la que se entregó el vuelto. Vacío o "PYG" = guaraníes. */
+  monedaVuelto?: string | null;
+  /** Equivalente en guaraníes de `vuelto`, cuando se devolvió en otra moneda. */
+  vueltoPyg?: number | null;
   pie?: string | null;
 }
 

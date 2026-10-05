@@ -371,8 +371,18 @@
 @if (pagoDialogOpen()) {
   <app-pago-dialog
     [total]="cartTotal()"
+    [items]="cart()"
+    [metodoInicial]="pagoMetodoInicial()"
     (cancelar)="cerrarPagoDialog()"
     (confirmar)="cobrarConMetodo($event)"
+  />
+}
+
+@if (vueltoPendiente(); as pendiente) {
+  <app-vuelto-dialog
+    [vuelto]="pendiente.vuelto"
+    [numeroVenta]="pendiente.numeroVenta"
+    (listo)="cerrarVueltoDialog()"
   />
 }
 
