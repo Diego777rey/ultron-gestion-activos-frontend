@@ -13,14 +13,30 @@ import { FormsModule } from '@angular/forms';
 import { ModalComponent } from '../../../../../shared/components/modal/modal';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { ImpresionService } from '../../../../../shared/services/impresion.service';
-import { TicketCampo, TicketOrdenTrabajo } from '../../../../../shared/models/impresion.model';
-import { layoutTicketOrdenTrabajo } from '../../../../../shared/printing/escpos-ticket-builder';
+import {
+  EstadoReparacion,
+  TicketCampo,
+  TicketCondicionVehiculo,
+  TicketOrdenTrabajo,
+  TicketOrdenTrabajoBase,
+  TicketOrdenTrabajoVehiculo,
+} from '../../../../../shared/models/impresion.model';
+import {
+  formatGs,
+  layoutTicketOrdenTrabajo,
+  layoutTicketOrdenTrabajoVehiculo,
+} from '../../../../../shared/printing/escpos-ticket-builder';
 import {
   CHSERVICE_LOGO_HEIGHT,
   CHSERVICE_LOGO_WIDTH,
   chserviceLogoRaster,
 } from '../../../../../shared/printing/chservice-logo';
-import { OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
+import {
+  OrdenEstadoVehiculoOutput,
+  OrdenTrabajoOutput,
+  labelSistemaHallazgo,
+  tipoRecepcionDe,
+} from '../../interfaces/orden-trabajo.interface';
 import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
 
 const CONDICIONES_KEY = 'ot-ticket-condiciones';
@@ -32,9 +48,32 @@ const COMPONENTES = [
 
 const SERVICIOS = ['Programacion', 'Diagnostico', 'Test en banco', 'Reparacion de hardware', 'Presupuesto'];
 
-type CampoTexto =
+/** Condiciones del estado inicial que se imprimen en el ticket de vehículo. */
+const CONDICIONES_VEHICULO: { campo: keyof OrdenEstadoVehiculoOutput; etiqueta: string }[] = [
+  { campo: 'estado_llantas', etiqueta: 'Ruedas dañadas' },
+  { campo: 'estado_pintura', etiqueta: 'Pintura dañada' },
+  { campo: 'estado_rayones', etiqueta: 'Rayones' },
+  { campo: 'estado_golpes', etiqueta: 'Golpes / abolladuras' },
+  { campo: 'estado_vidrios', etiqueta: 'Vidrios dañados' },
+  { campo: 'perdida_aceite', etiqueta: 'Pérdida de aceite' },
+  { campo: 'luces_danadas', etiqueta: 'Luces dañadas' },
+  { campo: 'espejos_danados', etiqueta: 'Espejos dañados' },
+  { campo: 'accesorios_faltantes', etiqueta: 'Accesorios faltantes' },
+];
+
+const COMBUSTIBLE: Record<string, string> = {
+  VACIO: 'Vacío',
+  CUARTO: '1/4',
+  MEDIO: '1/2',
+  TRES_CUARTOS: '3/4',
+  LLENO: 'Lleno',
+};
+
+type CampoBase =
   | 'empresa' | 'direccion' | 'telefono' | 'numero' | 'fecha' | 'hora'
-  | 'cliente' | 'celular' | 'ruc' | 'codigoUnidad' | 'vehiculo' | 'vin' | 'descripcionProblema';
+  | 'cliente' | 'celular' | 'ruc' | 'vehiculo' | 'descripcionProblema';
+type CampoEquipo = 'codigoUnidad' | 'vin';
+type CampoVehiculo = 'chapa' | 'kilometraje' | 'combustible' | 'tipoFalla' | 'observacionesEstado';
 
 @Component({
   selector: 'app-ot-ticket-dialog',
@@ -50,49 +89,120 @@ export class OtTicketDialogComponent {
   readonly orden = input.required<OrdenTrabajoOutput>();
   readonly closed = output<void>();
 
-  protected readonly ticket = signal<TicketOrdenTrabajo>(ticketDesdeOrden({}));
+  /** Recepción de equipo: ticket de componentes. Recepción de vehículo: ticket de estado y servicios. */
+  protected readonly tipo = computed(() => tipoRecepcionDe(this.orden()));
+  protected readonly ticketEquipo = signal<TicketOrdenTrabajo>(ticketEquipoDesdeOrden({}));
+  protected readonly ticketVehiculo = signal<TicketOrdenTrabajoVehiculo>(ticketVehiculoDesdeOrden({}));
+  protected readonly ticket = computed<TicketOrdenTrabajoBase>(() =>
+    this.tipo() === 'EQUIPO' ? this.ticketEquipo() : this.ticketVehiculo(),
+  );
+  protected readonly renglones = computed(() =>
+    this.tipo() === 'EQUIPO'
+      ? layoutTicketOrdenTrabajo(this.ticketEquipo())
+      : layoutTicketOrdenTrabajoVehiculo(this.ticketVehiculo()),
+  );
   protected readonly imprimiendo = signal(false);
-  protected readonly renglones = computed(() => layoutTicketOrdenTrabajo(this.ticket()));
   protected readonly logoUrl = logoDataUrl();
+  protected readonly estadosReparacion: { valor: EstadoReparacion; label: string }[] = [
+    { valor: 'SI', label: 'Reparado' },
+    { valor: 'NO', label: 'No reparado' },
+    { valor: 'PENDIENTE', label: 'Pendiente' },
+  ];
 
   constructor() {
     effect(() => {
       if (!this.open()) return;
       const orden = this.orden();
-      untracked(() => this.ticket.set(ticketDesdeOrden(orden)));
+      untracked(() => {
+        this.ticketEquipo.set(ticketEquipoDesdeOrden(orden));
+        this.ticketVehiculo.set(ticketVehiculoDesdeOrden(orden));
+      });
     });
   }
 
-  protected set(campo: CampoTexto, valor: string): void {
-    this.ticket.update((t) => ({ ...t, [campo]: valor ?? '' }));
+  protected set(campo: CampoBase, valor: string): void {
+    this.actualizarBase({ [campo]: valor ?? '' });
   }
 
   protected setNumero(campo: 'pagoRevision' | 'recargoUrgente', valor: number | null): void {
     const numero = valor == null || Number.isNaN(Number(valor)) ? null : Number(valor);
-    this.ticket.update((t) => ({ ...t, [campo]: numero }));
+    this.actualizarBase({ [campo]: numero });
+  }
+
+  protected montoTexto(valor: number | null): string {
+    return valor != null && valor > 0 ? formatGs(valor) : '';
+  }
+
+  /** Acepta el monto con o sin puntos de miles y lo deja formateado mientras se escribe. */
+  protected setMonto(campo: 'pagoRevision', event: Event): void {
+    const el = event.target as HTMLInputElement;
+    const digitos = el.value.replace(/\D/g, '');
+    const numero = digitos ? Number(digitos) : null;
+    el.value = this.montoTexto(numero);
+    this.actualizarBase({ [campo]: numero });
+  }
+
+  protected setEquipo(campo: CampoEquipo, valor: string): void {
+    this.ticketEquipo.update((t) => ({ ...t, [campo]: valor ?? '' }));
   }
 
   protected setItem(lista: 'componentes' | 'servicios', index: number, valor: string): void {
-    this.ticket.update((t) => ({
+    this.ticketEquipo.update((t) => ({
       ...t,
       [lista]: t[lista].map((c, i) => (i === index ? { ...c, valor: valor ?? '' } : c)),
     }));
   }
 
+  protected setVehiculo(campo: CampoVehiculo, valor: string): void {
+    this.ticketVehiculo.update((t) => ({ ...t, [campo]: valor ?? '' }));
+  }
+
+  protected setReparado(index: number, reparado: EstadoReparacion): void {
+    this.ticketVehiculo.update((t) => ({
+      ...t,
+      condiciones: t.condiciones.map((c, i) => (i === index ? { ...c, reparado } : c)),
+    }));
+  }
+
+  protected setServicio(index: number, valor: string): void {
+    this.ticketVehiculo.update((t) => ({
+      ...t,
+      servicios: t.servicios.map((s, i) => (i === index ? valor ?? '' : s)),
+    }));
+  }
+
+  protected agregarServicio(): void {
+    this.ticketVehiculo.update((t) => ({ ...t, servicios: [...t.servicios, ''] }));
+  }
+
+  protected quitarServicio(index: number): void {
+    this.ticketVehiculo.update((t) => ({ ...t, servicios: t.servicios.filter((_, i) => i !== index) }));
+  }
+
   protected imprimir(): void {
-    const ticket = this.ticket();
-    guardarCondiciones(ticket);
+    guardarCondiciones(this.ticket());
     this.imprimiendo.set(true);
-    this.impresion.imprimirTicketOrdenTrabajo(ticket).subscribe({
+    const envio = this.tipo() === 'EQUIPO'
+      ? this.impresion.imprimirTicketOrdenTrabajo(this.ticketEquipo())
+      : this.impresion.imprimirTicketOrdenTrabajoVehiculo(this.ticketVehiculo());
+    envio.subscribe({
       next: () => this.imprimiendo.set(false),
       error: () => this.imprimiendo.set(false),
     });
   }
+
+  private actualizarBase(cambio: Partial<TicketOrdenTrabajoBase>): void {
+    if (this.tipo() === 'EQUIPO') {
+      this.ticketEquipo.update((t) => ({ ...t, ...cambio }));
+    } else {
+      this.ticketVehiculo.update((t) => ({ ...t, ...cambio }));
+    }
+  }
 }
 
-function ticketDesdeOrden(orden: OrdenTrabajoOutput): TicketOrdenTrabajo {
+function ticketBaseDesdeOrden(orden: OrdenTrabajoOutput): TicketOrdenTrabajoBase {
   const persona = orden.cliente?.persona;
-  const vehiculo = orden.vehiculo;
+  const vehiculo = orden.vehiculo ?? orden.equipo?.vehiculo;
   const fecha = orden.fecha_creacion ? new Date(orden.fecha_creacion) : new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
   const condiciones = leerCondiciones();
@@ -106,18 +216,80 @@ function ticketDesdeOrden(orden: OrdenTrabajoOutput): TicketOrdenTrabajo {
     cliente: nombreCompletoPersona(persona),
     celular: persona?.telefono ?? '',
     ruc: orden.cliente?.ruc || persona?.documento || '',
-    codigoUnidad: vehiculo?.chapa ?? '',
     vehiculo: [vehiculo?.marca, vehiculo?.modelo, vehiculo?.anio].filter(Boolean).join(' '),
-    vin: '',
-    componentes: COMPONENTES.map((etiqueta): TicketCampo => ({ etiqueta, valor: '' })),
-    servicios: SERVICIOS.map((etiqueta): TicketCampo => ({ etiqueta, valor: '' })),
     descripcionProblema: orden.recepcion?.descripcion_falla ?? '',
     pagoRevision: condiciones.pagoRevision,
     recargoUrgente: condiciones.recargoUrgente,
   };
 }
 
-function leerCondiciones(): Pick<TicketOrdenTrabajo, 'pagoRevision' | 'recargoUrgente'> {
+/** Marca con SI el componente que coincide con el tipo del equipo recepcionado. */
+function ticketEquipoDesdeOrden(orden: OrdenTrabajoOutput): TicketOrdenTrabajo {
+  const vehiculo = orden.vehiculo ?? orden.equipo?.vehiculo;
+  const tipoEquipo = normalizar(orden.equipo?.tipo_equipo);
+  const componentes = COMPONENTES.map((etiqueta): TicketCampo => ({
+    etiqueta,
+    valor: tipoEquipo && normalizar(etiqueta) === tipoEquipo ? 'SI' : '',
+  }));
+  if (tipoEquipo && !componentes.some((c) => c.valor === 'SI')) {
+    componentes.push({ etiqueta: orden.equipo!.tipo_equipo!.trim(), valor: 'SI' });
+  }
+  return {
+    ...ticketBaseDesdeOrden(orden),
+    codigoUnidad: vehiculo?.chapa ?? '',
+    vin: '',
+    componentes,
+    servicios: SERVICIOS.map((etiqueta): TicketCampo => ({ etiqueta, valor: '' })),
+  };
+}
+
+function ticketVehiculoDesdeOrden(orden: OrdenTrabajoOutput): TicketOrdenTrabajoVehiculo {
+  const estado = orden.estado_vehiculo;
+  const terminada = orden.etapa === 'FINALIZADA' || orden.etapa === 'FACTURADO';
+  const km = estado?.kilometraje;
+  return {
+    ...ticketBaseDesdeOrden(orden),
+    chapa: orden.vehiculo?.chapa ?? '',
+    kilometraje: km != null ? `${formatGs(km)} km` : '',
+    combustible: COMBUSTIBLE[estado?.nivel_combustible ?? ''] ?? '',
+    tipoFalla: tipoFallaDesdeOrden(orden),
+    condiciones: CONDICIONES_VEHICULO
+      .filter((c) => !!estado?.[c.campo])
+      .map((c): TicketCondicionVehiculo => ({ etiqueta: c.etiqueta, reparado: terminada ? 'SI' : 'PENDIENTE' })),
+    observacionesEstado: estado?.observaciones_estado ?? '',
+    servicios: (orden.detalles ?? [])
+      .filter((d) => d.tipo === 'SERVICIO')
+      .map((d) => (d.nombre_servicio || d.descripcion || '').trim())
+      .filter(Boolean),
+  };
+}
+
+/** Tipos marcados en la recepción más los sistemas de los hallazgos del diagnóstico, sin repetir. */
+function tipoFallaDesdeOrden(orden: OrdenTrabajoOutput): string {
+  const estado = orden.estado_vehiculo;
+  const tipos: string[] = [];
+  if (estado?.falla_mecanica) tipos.push('Mecánica');
+  if (estado?.falla_electrica) tipos.push('Eléctrica');
+  for (const h of orden.hallazgos ?? []) {
+    if (!h.sistema || (h.sistema === 'ELECTRICO' && estado?.falla_electrica)) continue;
+    const label = labelSistemaHallazgo(h.sistema);
+    if (!tipos.includes(label)) tipos.push(label);
+  }
+  return tipos.length > 1
+    ? `${tipos.slice(0, -1).join(', ')} y ${tipos[tipos.length - 1]}`
+    : (tipos[0] ?? '');
+}
+
+function normalizar(texto: string | null | undefined): string {
+  return (texto ?? '')
+    .normalize('NFD')
+    .replace(/\p{M}+/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+}
+
+function leerCondiciones(): Pick<TicketOrdenTrabajoBase, 'pagoRevision' | 'recargoUrgente'> {
   try {
     const raw = JSON.parse(localStorage.getItem(CONDICIONES_KEY) ?? '{}');
     return {
@@ -129,7 +301,7 @@ function leerCondiciones(): Pick<TicketOrdenTrabajo, 'pagoRevision' | 'recargoUr
   }
 }
 
-function guardarCondiciones(ticket: TicketOrdenTrabajo): void {
+function guardarCondiciones(ticket: TicketOrdenTrabajoBase): void {
   try {
     localStorage.setItem(
       CONDICIONES_KEY,

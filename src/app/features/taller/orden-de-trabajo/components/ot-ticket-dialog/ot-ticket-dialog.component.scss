@@ -37,6 +37,7 @@
   }
 
   input,
+  select,
   textarea {
     width: 100%;
     box-sizing: border-box;
@@ -64,6 +65,51 @@
 .ticket-dialog__grid {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.ticket-dialog__condicion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ticket-dialog__servicio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ticket-dialog__quitar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+
+  &:hover {
+    color: #ff8aa3;
+    border-color: rgba(255, 61, 113, 0.5);
+  }
+
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+.ticket-dialog__vacio {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .ticket-dialog__preview-wrap {

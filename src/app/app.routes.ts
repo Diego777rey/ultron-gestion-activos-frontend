@@ -101,6 +101,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'activos/equipos',
+        loadChildren: () =>
+          import('./features/activos/equipos/equipos.routes').then(
+            (m) => m.EQUIPOS_ROUTES
+          ),
+      },
+      {
         path: 'financiero/maletines',
         loadComponent: () =>
           import('./features/financiero/maletines/pages/maletines-page/maletines-page.component').then(

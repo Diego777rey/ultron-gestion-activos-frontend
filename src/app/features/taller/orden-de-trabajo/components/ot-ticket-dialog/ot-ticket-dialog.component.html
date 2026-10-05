@@ -1,6 +1,6 @@
 <app-modal
   [open]="open()"
-  title="Imprimir orden de trabajo"
+  [title]="tipo() === 'EQUIPO' ? 'Imprimir orden de trabajo · Equipo' : 'Imprimir orden de trabajo · Vehículo'"
   subtitle="Revisá y editá el ticket térmico antes de imprimir"
   maxWidth="1080px"
   (closed)="closed.emit()"
@@ -40,44 +40,119 @@
         <label>RUC
           <input [ngModel]="ticket().ruc" (ngModelChange)="set('ruc', $event)" name="ruc" />
         </label>
-        <label>Cód. unidad
-          <input [ngModel]="ticket().codigoUnidad" (ngModelChange)="set('codigoUnidad', $event)" name="codigoUnidad" />
-        </label>
+        @if (tipo() === 'EQUIPO') {
+          <label>Cód. unidad
+            <input [ngModel]="ticketEquipo().codigoUnidad" (ngModelChange)="setEquipo('codigoUnidad', $event)" name="codigoUnidad" />
+          </label>
+        } @else {
+          <label>Chapa
+            <input [ngModel]="ticketVehiculo().chapa" (ngModelChange)="setVehiculo('chapa', $event)" name="chapa" />
+          </label>
+        }
         <label>Vehículo
           <input [ngModel]="ticket().vehiculo" (ngModelChange)="set('vehiculo', $event)" name="vehiculo" />
         </label>
-        <label>VIN
-          <input [ngModel]="ticket().vin" (ngModelChange)="set('vin', $event)" name="vin" />
-        </label>
-      </fieldset>
-
-      <fieldset class="ticket-dialog__grid">
-        <legend>Componentes</legend>
-        @for (c of ticket().componentes; track c.etiqueta; let i = $index) {
-          <label>{{ c.etiqueta }}
-            <input
-              [ngModel]="c.valor"
-              (ngModelChange)="setItem('componentes', i, $event)"
-              [name]="'componente-' + i"
-              placeholder="SI / NO"
-            />
+        @if (tipo() === 'EQUIPO') {
+          <label>VIN
+            <input [ngModel]="ticketEquipo().vin" (ngModelChange)="setEquipo('vin', $event)" name="vin" />
+          </label>
+        } @else {
+          <label>Kilometraje
+            <input [ngModel]="ticketVehiculo().kilometraje" (ngModelChange)="setVehiculo('kilometraje', $event)" name="kilometraje" />
+          </label>
+          <label>Combustible
+            <input [ngModel]="ticketVehiculo().combustible" (ngModelChange)="setVehiculo('combustible', $event)" name="combustible" />
           </label>
         }
       </fieldset>
 
-      <fieldset class="ticket-dialog__grid">
-        <legend>Servicios</legend>
-        @for (s of ticket().servicios; track s.etiqueta; let i = $index) {
-          <label>{{ s.etiqueta }}
+      @if (tipo() === 'EQUIPO') {
+        <fieldset class="ticket-dialog__grid">
+          <legend>Componentes</legend>
+          @for (c of ticketEquipo().componentes; track c.etiqueta; let i = $index) {
+            <label>{{ c.etiqueta }}
+              <input
+                [ngModel]="c.valor"
+                (ngModelChange)="setItem('componentes', i, $event)"
+                [name]="'componente-' + i"
+                placeholder="SI / NO"
+              />
+            </label>
+          }
+        </fieldset>
+
+        <fieldset class="ticket-dialog__grid">
+          <legend>Servicios</legend>
+          @for (s of ticketEquipo().servicios; track s.etiqueta; let i = $index) {
+            <label>{{ s.etiqueta }}
+              <input
+                [ngModel]="s.valor"
+                (ngModelChange)="setItem('servicios', i, $event)"
+                [name]="'servicio-' + i"
+                placeholder="SI / NO"
+              />
+            </label>
+          }
+        </fieldset>
+      } @else {
+        <fieldset>
+          <legend>Tipo de falla</legend>
+          <input
+            [ngModel]="ticketVehiculo().tipoFalla"
+            (ngModelChange)="setVehiculo('tipoFalla', $event)"
+            name="tipoFalla"
+            placeholder="Mecánica, Suspensión y Frenos"
+          />
+        </fieldset>
+
+        <fieldset>
+          <legend>Estado al ingreso</legend>
+          @for (c of ticketVehiculo().condiciones; track c.etiqueta; let i = $index) {
+            <div class="ticket-dialog__condicion">
+              <span>{{ c.etiqueta }}</span>
+              <select
+                [ngModel]="c.reparado"
+                (ngModelChange)="setReparado(i, $event)"
+                [name]="'reparado-' + i"
+                [attr.aria-label]="'¿Se reparó? ' + c.etiqueta"
+              >
+                @for (op of estadosReparacion; track op.valor) {
+                  <option [ngValue]="op.valor">{{ op.label }}</option>
+                }
+              </select>
+            </div>
+          } @empty {
+            <p class="ticket-dialog__vacio">En la recepción no se marcaron daños en el vehículo.</p>
+          }
+          <label>Observaciones
             <input
-              [ngModel]="s.valor"
-              (ngModelChange)="setItem('servicios', i, $event)"
-              [name]="'servicio-' + i"
-              placeholder="SI / NO"
+              [ngModel]="ticketVehiculo().observacionesEstado"
+              (ngModelChange)="setVehiculo('observacionesEstado', $event)"
+              name="observacionesEstado"
             />
           </label>
-        }
-      </fieldset>
+        </fieldset>
+
+        <fieldset>
+          <legend>Servicios realizados</legend>
+          @for (s of ticketVehiculo().servicios; track $index; let i = $index) {
+            <div class="ticket-dialog__servicio">
+              <input [ngModel]="s" (ngModelChange)="setServicio(i, $event)" [name]="'servicio-v-' + i" />
+              <button
+                type="button"
+                class="ticket-dialog__quitar"
+                (click)="quitarServicio(i)"
+                [attr.aria-label]="'Quitar ' + s"
+              >
+                <span class="material-icons" aria-hidden="true">close</span>
+              </button>
+            </div>
+          } @empty {
+            <p class="ticket-dialog__vacio">La orden todavía no tiene servicios cargados.</p>
+          }
+          <app-ui-button label="Agregar servicio" icon="add" variant="ghost" size="sm" (clicked)="agregarServicio()" />
+        </fieldset>
+      }
 
       <fieldset>
         <legend>Descripción del problema</legend>
@@ -93,13 +168,13 @@
         <legend>Condiciones</legend>
         <label>Pago de revisión (Gs.)
           <input
-            type="number"
-            min="0"
-            step="1000"
-            [ngModel]="ticket().pagoRevision"
-            (ngModelChange)="setNumero('pagoRevision', $event)"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            [value]="montoTexto(ticket().pagoRevision)"
+            (input)="setMonto('pagoRevision', $event)"
             name="pagoRevision"
-            placeholder="250000"
+            placeholder="250.000"
           />
         </label>
         <label>Recargo trabajo urgente (%)

@@ -1,0 +1,34 @@
+<app-generic-list [columns]="columns" [data]="equipos()" [loading]="loading()" [error]="error()"
+  [total]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Tipo, marca, serie, chapa o cliente" [searchValue]="search()" (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions" emptyMessage="No hay equipos que coincidan con la búsqueda" [trackBy]="trackById"
+  (pageChange)="onPageChange($event)" (retry)="load()" (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()">
+  <ng-template appTableCell="id" [appTableCellFrom]="equipos()" let-equipo>
+    {{ equipo.id_equipo }}
+  </ng-template>
+
+  <ng-template appTableCell="cliente" [appTableCellFrom]="equipos()" let-equipo>
+    {{ formatCliente(equipo) }}
+  </ng-template>
+
+  <ng-template appTableCell="tipo_equipo" [appTableCellFrom]="equipos()" let-equipo>
+    {{ equipo.tipo_equipo | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="marca_modelo" [appTableCellFrom]="equipos()" let-equipo>
+    {{ formatMarcaModelo(equipo) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="numero_serie" [appTableCellFrom]="equipos()" let-equipo>
+    {{ equipo.numero_serie | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="vehiculo" [appTableCellFrom]="equipos()" let-equipo>
+    {{ formatVehiculo(equipo) }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="equipos()" let-equipo>
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, equipo)" />
+  </ng-template>
+</app-generic-list>

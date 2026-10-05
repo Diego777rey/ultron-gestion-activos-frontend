@@ -82,6 +82,7 @@ export class MainLayoutComponent implements OnInit {
       ],
     },
     { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos', requiredPermissions: ['VEHICULOS'] },
+    { label: 'Equipos', icon: 'memory', route: '/activos/equipos', requiredPermissions: ['EQUIPOS', 'VEHICULOS'] },
     {
       label: 'Financiero',
       icon: 'account_balance',
@@ -173,6 +174,7 @@ export class MainLayoutComponent implements OnInit {
 
   private getTitleFromUrl(url: string): string {
     if (url.includes('vehiculos')) return 'Lista de vehículos';
+    if (url.includes('activos/equipos')) return 'Lista de equipos';
     if (url.includes('clientes')) return 'Lista de clientes';
     if (url.includes('funcionarios')) return 'Lista de funcionarios';
     if (url.includes('usuarios')) return 'Lista de usuarios';

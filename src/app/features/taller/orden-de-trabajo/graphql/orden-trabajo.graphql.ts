@@ -14,6 +14,7 @@ export const ORDEN_TRABAJO_SELECTION = `{
       telefono
     }
   }
+  tipo_recepcion
   vehiculo {
     id_bien
     marca
@@ -21,6 +22,21 @@ export const ORDEN_TRABAJO_SELECTION = `{
     anio
     chapa
     tipo_vehiculo
+  }
+  equipo {
+    id_equipo
+    tipo_equipo
+    marca
+    modelo
+    numero_serie
+    descripcion
+    vehiculo {
+      id_bien
+      marca
+      modelo
+      anio
+      chapa
+    }
   }
   mecanico {
     id_funcionario
