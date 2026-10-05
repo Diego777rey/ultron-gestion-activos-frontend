@@ -1,0 +1,98 @@
+/* Dentro del panel de diagnóstico, las tablas siguen el estilo de productos y servicios. */
+:host-context(.ot-diag-shell) {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+:host-context(.ot-diag-shell) .ot-diag-row--hallazgos {
+  grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.6fr) auto;
+}
+
+:host-context(.ot-diag-shell) .ot-diag-row--hallazgos > * {
+  grid-column: auto;
+}
+
+:host-context(.ot-diag-shell) .ot-diag-row--lineas {
+  grid-template-columns: 96px 112px auto;
+}
+
+:host-context(.ot-diag-shell) .ot-diag-row--lineas > :not(.ot-diag-field--pair):not(.ot-diag-field--action) {
+  grid-column: 1 / -1;
+}
+
+:host-context(.ot-diag-shell) .ot-diag-row .ot-diag-field__label[aria-hidden='true'] {
+  display: none;
+}
+
+:host-context(.ot-diag-shell) .ot-diag-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+:host-context(.ot-diag-shell) .ot-diag-card--green {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+:host-context(.ot-diag-shell) .ot-diag-card__head {
+  align-items: center;
+  padding: 14px 16px 4px;
+}
+
+:host-context(.ot-diag-shell) .ot-diag-card__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  box-shadow: none;
+
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+:host-context(.ot-diag-shell) .ot-diag-card__title {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+:host-context(.ot-diag-shell) .ot-diag-card__body {
+  padding: 8px 4px 16px;
+}
+
+:host-context(.ot-diag-shell) .ot-diag-table-wrap {
+  margin: 12px 12px 0;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: auto;
+}
+
+:host-context(.ot-diag-shell) .ot-diag-table {
+  th {
+    letter-spacing: 0;
+    text-transform: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+    background: #2c2c2c;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  td {
+    background: #262626;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  tbody tr:hover td {
+    background: rgba(25, 118, 210, 0.12);
+  }
+
+  tfoot td {
+    background: #2a2a2a;
+    border-bottom: none;
+  }
+}

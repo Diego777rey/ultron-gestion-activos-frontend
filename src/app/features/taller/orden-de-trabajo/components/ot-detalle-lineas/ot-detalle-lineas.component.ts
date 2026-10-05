@@ -33,7 +33,12 @@ import { nombreCompletoPersona } from '../../../../personas/shared/nombre-person
   selector: 'app-ot-detalle-lineas',
   imports: [CurrencyPipe, ReactiveFormsModule, UiButtonComponent, EntitySearcherComponent],
   templateUrl: './ot-detalle-lineas.component.html',
-  styleUrls: ['../../styles/ot-form.scss', '../../styles/ot-diagnostico.scss'],
+  styleUrls: [
+    '../../styles/ot-form.scss',
+    '../../styles/ot-proceso.scss',
+    '../../styles/ot-diagnostico.scss',
+    '../../styles/ot-diagnostico-shell.scss',
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OtDetalleLineasComponent implements OnInit {
