@@ -84,7 +84,46 @@ describe('escpos-ticket-builder', () => {
     expect(text).toContain('LIQUIDO DE FRENOS DOT 4');
     expect(text).toContain('BATERIA 12V');
     expect(text).toContain('1.162.000');
+    expect(text).not.toContain('Recibido');
     expect(text).toContain('Gracias por su compra');
+  });
+
+  it('imprime recibido y vuelto cuando el cobro fue en efectivo con monto informado', () => {
+    const ticket: TicketVenta = {
+      lineas: [{ descripcion: 'FILTRO DE AIRE', cantidad: 1, precioUnitario: 566000, subtotal: 566000 }],
+      total: 566000,
+      montoRecibido: 600000,
+      vuelto: 34000,
+    };
+
+    const text = asText(buildTicketVenta(ticket));
+
+    expect(text).toContain('Recibido Gs.');
+    expect(text).toContain('600.000');
+    expect(text).toContain('Vuelto Gs.');
+    expect(text).toContain('34.000');
+  });
+
+  it('imprime recibido y vuelto en otras monedas con su equivalente en guaraníes', () => {
+    const ticket: TicketVenta = {
+      lineas: [{ descripcion: 'FILTRO DE AIRE', cantidad: 1, precioUnitario: 566000, subtotal: 566000 }],
+      total: 566000,
+      montoRecibido: 100,
+      monedaRecibida: 'USD',
+      montoRecibidoPyg: 730000,
+      vuelto: 117.14,
+      monedaVuelto: 'BRL',
+      vueltoPyg: 164000,
+    };
+
+    const text = asText(buildTicketVenta(ticket));
+
+    expect(text).toContain('Recibido US$');
+    expect(text).toContain('100,00');
+    expect(text).toContain('730.000');
+    expect(text).toContain('Vuelto R$');
+    expect(text).toContain('117,14');
+    expect(text).toContain('164.000');
   });
 
   it('arma la factura en papel con timbrado, número y liquidación de IVA', () => {
