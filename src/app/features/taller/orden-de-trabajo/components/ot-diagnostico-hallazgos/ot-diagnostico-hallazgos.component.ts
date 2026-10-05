@@ -14,6 +14,8 @@ import {
   OrdenDiagnosticoHallazgoInput,
   OrdenDiagnosticoHallazgoOutput,
   OrdenTrabajoOutput,
+  SISTEMAS_HALLAZGO,
+  labelSistemaHallazgo,
 } from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 
@@ -49,19 +51,7 @@ export class OtDiagnosticoHallazgosComponent implements OnInit {
     { value: 'CRITICA', label: 'Crítica' },
   ];
 
-  protected readonly sistemas = [
-    { value: 'MOTOR', label: 'Motor' },
-    { value: 'TRANSMISION', label: 'Transmisión' },
-    { value: 'FRENOS', label: 'Frenos' },
-    { value: 'SUSPENSION', label: 'Suspensión' },
-    { value: 'DIRECCION', label: 'Dirección' },
-    { value: 'ELECTRICO', label: 'Eléctrico' },
-    { value: 'REFRIGERACION', label: 'Refrigeración' },
-    { value: 'ESCAPE', label: 'Escape' },
-    { value: 'CARROCERIA', label: 'Carrocería' },
-    { value: 'NEUMATICOS', label: 'Neumáticos' },
-    { value: 'OTRO', label: 'Otro' },
-  ];
+  protected readonly sistemas = SISTEMAS_HALLAZGO;
 
   protected readonly form = this.fb.group({
     tipo: ['FALLO', Validators.required],
@@ -168,6 +158,6 @@ export class OtDiagnosticoHallazgosComponent implements OnInit {
 
   protected labelSistema(sistema: string | null | undefined, vacio = 'Sin especificar'): string {
     if (!sistema) return vacio;
-    return this.sistemas.find((s) => s.value === sistema)?.label ?? sistema;
+    return labelSistemaHallazgo(sistema);
   }
 }

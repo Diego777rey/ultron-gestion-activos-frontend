@@ -26,6 +26,9 @@ import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
               <span>
                 <strong>{{ ot.numero_orden }}</strong>
                 · {{ ot.etapa }}
+                @if (ot.equipo?.tipo_equipo) {
+                  · {{ ot.equipo?.tipo_equipo }}
+                }
                 @if (ot.vehiculo?.chapa) {
                   · {{ ot.vehiculo?.chapa }}
                 }

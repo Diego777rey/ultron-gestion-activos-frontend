@@ -743,12 +743,14 @@ export class PuntoDeVentaComponent {
       .join(' ')
       .trim();
     const vehiculo = [orden.vehiculo?.marca, orden.vehiculo?.modelo].filter(Boolean).join(' ').trim();
-    return [cliente || 'Sin cliente', vehiculo].filter(Boolean).join(' · ');
+    return [cliente || 'Sin cliente', orden.equipo?.tipo_equipo, vehiculo].filter(Boolean).join(' · ');
   }
 
   private textoOrden(orden: OrdenTrabajoOutput): string {
     return [
       orden.numero_orden,
+      orden.equipo?.tipo_equipo,
+      orden.equipo?.numero_serie,
       orden.vehiculo?.chapa,
       orden.vehiculo?.marca,
       orden.vehiculo?.modelo,

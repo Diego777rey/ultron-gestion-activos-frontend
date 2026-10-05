@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
+import { OrdenTrabajoOutput, unidadOrden } from '../../interfaces/orden-trabajo.interface';
 import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas.component';
 import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-diagnostico-hallazgos.component';
 import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
@@ -30,8 +30,8 @@ import { nombreCompletoPersona } from '../../../../personas/shared/nombre-person
           </span>
         </li>
         <li class="ot-panel__item">
-          <span>Vehículo</span>
-          <span>{{ orden().vehiculo?.chapa }} · {{ orden().vehiculo?.marca }} {{ orden().vehiculo?.modelo }}</span>
+          <span>{{ orden().tipo_recepcion === 'EQUIPO' ? 'Equipo' : 'Vehículo' }}</span>
+          <span>{{ unidad() }}</span>
         </li>
         <li class="ot-panel__item">
           <span>Finalizada</span>
@@ -59,6 +59,10 @@ export class OtFinalizadaStepComponent {
 
   protected nombreCliente(): string {
     return nombreCompletoPersona(this.orden().cliente?.persona) || '—';
+  }
+
+  protected unidad(): string {
+    return unidadOrden(this.orden()) || '—';
   }
 
   protected resumenPlazo(): string {

@@ -5,7 +5,7 @@
         @if (soloLectura()) {
           Datos cargados en la recepción.
         } @else {
-          Se guarda solo mientras completás. Queda registrada cuando cliente, vehículo, mecánico y la falla están cargados.
+          Se guarda solo mientras completás. Queda registrada cuando cliente, {{ tipoRecepcion() === 'EQUIPO' ? 'equipo' : 'vehículo' }}, mecánico y la falla están cargados.
           @if (estadoGuardado() === 'guardando') {
             Guardando…
           } @else if (estadoGuardado() === 'guardado') {
@@ -24,15 +24,45 @@
     </div>
 
     <form class="ot-form ot-form--wide" [formGroup]="form">
-    <!-- Cliente y vehículo -->
+    <!-- Cliente y vehículo / equipo -->
     <app-ot-collapsible-section
-      icon="directions_car"
-      title="Cliente y vehículo"
+      [icon]="tipoRecepcion() === 'EQUIPO' ? 'memory' : 'directions_car'"
+      [title]="tipoRecepcion() === 'EQUIPO' ? 'Cliente y equipo' : 'Cliente y vehículo'"
       hint="Busca existentes o registra nuevos"
       [summary]="resumenClienteVehiculo()"
       [status]="statusClienteVehiculo()"
       [(expanded)]="openClienteVehiculo"
     >
+      <div class="ot-estado-block">
+        <span class="ot-estado-block__label">¿Qué se recepciona?</span>
+        <div class="ot-chip-grid" role="radiogroup" aria-label="Tipo de recepción">
+          <button
+            type="button"
+            class="ot-chip"
+            role="radio"
+            [attr.aria-checked]="tipoRecepcion() === 'VEHICULO'"
+            [class.ot-chip--active]="tipoRecepcion() === 'VEHICULO'"
+            [disabled]="soloLectura()"
+            (click)="seleccionarTipoRecepcion('VEHICULO')"
+          >
+            <span class="material-icons" aria-hidden="true">directions_car</span>
+            Vehículo
+          </button>
+          <button
+            type="button"
+            class="ot-chip"
+            role="radio"
+            [attr.aria-checked]="tipoRecepcion() === 'EQUIPO'"
+            [class.ot-chip--active]="tipoRecepcion() === 'EQUIPO'"
+            [disabled]="soloLectura()"
+            (click)="seleccionarTipoRecepcion('EQUIPO')"
+          >
+            <span class="material-icons" aria-hidden="true">memory</span>
+            Equipo (ECU, tablero, módulo…)
+          </button>
+        </div>
+      </div>
+
       <div class="ot-form__grid--2">
         <div class="ot-field">
           <label class="ot-field__label-static">Cliente*</label>
@@ -57,8 +87,36 @@
           }
         </div>
 
+        @if (tipoRecepcion() === 'EQUIPO') {
+          <div class="ot-field">
+            <label class="ot-field__label-static">Equipo*</label>
+            <app-entity-searcher
+              [items]="equipos()"
+              [columns]="equipoColumns"
+              [totalItems]="equiposTotal()"
+              [loading]="loadingEquipos()"
+              [displayFn]="equipoLabelFn"
+              [keyFn]="equipoKeyFn"
+              [value]="form.controls.id_equipo.value"
+              (searchChange)="fetchEquipos(0, 10, $event)"
+              (pageChange)="fetchEquipos($event.pageIndex, $event.pageSize, '')"
+              (itemChange)="onEquipoSelected($event)"
+              [allowAdd]="true"
+              addLabel="Nuevo equipo"
+              [backendPagination]="true"
+              (addClicked)="onAddEquipo()"
+              label="Buscar equipo..."
+            />
+            @if (form.controls.id_equipo.touched && form.controls.id_equipo.invalid) {
+              <span class="ot-field__error">Debes seleccionar un equipo</span>
+            }
+          </div>
+        }
+
         <div class="ot-field">
-          <label class="ot-field__label-static">Vehículo*</label>
+          <label class="ot-field__label-static">
+            {{ tipoRecepcion() === 'EQUIPO' ? 'Vehículo (opcional)' : 'Vehículo*' }}
+          </label>
           <app-entity-searcher
             [items]="vehiculos()"
             [columns]="vehiculoColumns"
@@ -202,6 +260,7 @@
     </app-ot-collapsible-section>
 
     <!-- Estado inicial del vehículo -->
+    @if (tipoRecepcion() === 'VEHICULO') {
     <app-ot-collapsible-section
       icon="fact_check"
       title="Estado inicial del vehículo"
@@ -278,6 +337,7 @@
         </div>
       </div>
     </app-ot-collapsible-section>
+    }
     </form>
   </div>
 

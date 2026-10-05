@@ -24,6 +24,9 @@ import { nombreCompletoPersona } from '../../../../personas/shared/nombre-person
 import { VehiculoService } from '../../../../activos/vehiculos/services/vehiculo.service';
 import { VehiculoOutput } from '../../../../activos/vehiculos/interfaces/vehiculo.interface';
 import { VehiculoFormComponent } from '../../../../activos/vehiculos/dialogs/vehiculo-form/vehiculo-form';
+import { EquipoService } from '../../../../activos/equipos/services/equipo.service';
+import { EquipoOutput, equipoLabel } from '../../../../activos/equipos/interfaces/equipo.interface';
+import { EquipoFormComponent } from '../../../../activos/equipos/dialogs/equipo-form/equipo-form';
 import { FuncionarioService } from '../../../../personas/funcionarios/services/funcionario.service';
 import { FuncionarioOutput } from '../../../../personas/funcionarios/interfaces/funcionario.interface';
 import { SectorService } from '../../../../sectores/services/sector.service';
@@ -33,7 +36,12 @@ import { UltimoSectorStore } from '../../../../sectores/services/ultimo-sector.s
 import { UsuarioService } from '../../../../personas/usuarios/services/usuario.service';
 import { UsuarioOutput } from '../../../../personas/usuarios/interfaces/usuario.interface';
 import { AuthService } from '../../../../../core/auth/auth.service';
-import { OrdenTrabajoInput, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
+import {
+  OrdenTrabajoInput,
+  OrdenTrabajoOutput,
+  TipoRecepcion,
+  tipoRecepcionDe,
+} from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 import { OtHistorialPanelComponent } from '../ot-historial-panel/ot-historial-panel.component';
 import {
@@ -66,6 +74,7 @@ export class OtRecepcionStepComponent implements OnInit {
   private readonly dialogService = inject(AppDialogService);
   private readonly clienteService = inject(ClienteService);
   private readonly vehiculoService = inject(VehiculoService);
+  private readonly equipoService = inject(EquipoService);
   private readonly funcionarioService = inject(FuncionarioService);
   private readonly sectorService = inject(SectorService);
   private readonly ultimoSector = inject(UltimoSectorStore);
@@ -100,6 +109,7 @@ export class OtRecepcionStepComponent implements OnInit {
 
   protected readonly selectedCliente = signal<ClienteOutput | null>(null);
   protected readonly selectedVehiculo = signal<VehiculoOutput | null>(null);
+  protected readonly selectedEquipo = signal<EquipoOutput | null>(null);
   protected readonly selectedSector = signal<SectorOutput | null>(null);
   protected readonly selectedUsuario = signal<UsuarioOutput | null>(null);
   protected readonly selectedMecanicos = signal<FuncionarioOutput[]>([]);
@@ -132,7 +142,9 @@ export class OtRecepcionStepComponent implements OnInit {
     id_sector: ['', Validators.required],
     id_responsable: ['', Validators.required],
     id_cliente: ['', Validators.required],
+    tipo_recepcion: this.fb.nonNullable.control<TipoRecepcion>('VEHICULO'),
     id_vehiculo: ['', Validators.required],
+    id_equipo: [''],
     id_mecanico: [''],
     ids_mecanicos: this.fb.nonNullable.control<string[]>([], Validators.minLength(1)),
     descripcion_falla: ['', Validators.required],
@@ -171,12 +183,19 @@ export class OtRecepcionStepComponent implements OnInit {
     { initialValue: { idCliente: null as string | null, idVehiculo: null as string | null } }
   );
 
+  protected readonly tipoRecepcion = computed<TipoRecepcion>(() => {
+    this.formValue();
+    return this.form.controls.tipo_recepcion.value;
+  });
+
   protected readonly resumenClienteVehiculo = computed(() => {
     this.formValue();
     const cliente = this.selectedCliente();
     const vehiculo = this.selectedVehiculo();
+    const equipo = this.tipoRecepcion() === 'EQUIPO' ? this.selectedEquipo() : null;
     const parts: string[] = [];
     if (cliente) parts.push(this.clienteLabel(cliente));
+    if (equipo) parts.push(equipoLabel(equipo));
     if (vehiculo) parts.push(this.vehiculoLabel(vehiculo));
     return parts.length ? parts.join(' · ') : 'Sin seleccionar';
   });
@@ -226,7 +245,7 @@ export class OtRecepcionStepComponent implements OnInit {
   });
 
   protected readonly statusClienteVehiculo = computed(() =>
-    this.sectionStatus(['id_cliente', 'id_vehiculo'])
+    this.sectionStatus(['id_cliente', 'id_vehiculo', 'id_equipo'])
   );
   protected readonly statusDatos = computed(() =>
     this.sectionStatus(['id_sector', 'id_responsable', 'ids_mecanicos'])
@@ -271,6 +290,18 @@ export class OtRecepcionStepComponent implements OnInit {
   ];
   protected readonly vehiculoLabelFn = (v: VehiculoOutput) => this.vehiculoLabel(v);
   protected readonly vehiculoKeyFn = (v: VehiculoOutput) => v.id_bien;
+
+  protected readonly equipos = signal<EquipoOutput[]>([]);
+  protected readonly equiposTotal = signal(0);
+  protected readonly loadingEquipos = signal(false);
+  protected readonly equipoColumns: TableColumn<EquipoOutput>[] = [
+    { key: 'tipo', header: 'Tipo', value: (e) => e.tipo_equipo ?? '' },
+    { key: 'equipo', header: 'Marca / Modelo', value: (e) => [e.marca, e.modelo].filter(Boolean).join(' ') },
+    { key: 'serie', header: 'N° de serie', value: (e) => e.numero_serie ?? '' },
+    { key: 'vehiculo', header: 'Vehículo', value: (e) => (e.vehiculo ? this.vehiculoLabel(e.vehiculo) : 'Sin vehículo') },
+  ];
+  protected readonly equipoLabelFn = (e: EquipoOutput) => equipoLabel(e);
+  protected readonly equipoKeyFn = (e: EquipoOutput) => e.id_equipo;
 
   protected readonly mecanicos = signal<FuncionarioOutput[]>([]);
   protected readonly mecanicosTotal = signal(0);
@@ -338,6 +369,7 @@ export class OtRecepcionStepComponent implements OnInit {
     this.formReady.emit(this.form);
     this.fetchClientes(0, 10, '');
     this.fetchVehiculos(0, 10, '');
+    this.fetchEquipos(0, 10, '');
     this.fetchMecanicos(0, 10, '');
     this.fetchSectores(0, 10, '');
     this.fetchUsuarios(0, 10, '');
@@ -382,17 +414,21 @@ export class OtRecepcionStepComponent implements OnInit {
         ? null
         : Number(kmRaw);
 
+    const esEquipo = v.tipo_recepcion === 'EQUIPO';
+
     return {
       id_sector: v.id_sector,
       id_responsable: v.id_responsable,
       id_cliente: v.id_cliente,
-      id_vehiculo: v.id_vehiculo,
+      tipo_recepcion: v.tipo_recepcion,
+      id_vehiculo: v.id_vehiculo || null,
+      id_equipo: esEquipo ? v.id_equipo || null : null,
       id_mecanico: v.ids_mecanicos[0] ?? v.id_mecanico ?? null,
       ids_mecanicos: v.ids_mecanicos,
       recepcion: {
         descripcion_falla: v.descripcion_falla,
       },
-      estado_vehiculo: {
+      estado_vehiculo: esEquipo ? null : {
         falla_mecanica: !!v.falla_mecanica,
         falla_electrica: !!v.falla_electrica,
         estado_llantas: !!v.estado_llantas,
@@ -473,11 +509,15 @@ export class OtRecepcionStepComponent implements OnInit {
   protected patchFromOrden(data: OrdenTrabajoOutput | null): void {
     if (!data) return;
     const estado = data.estado_vehiculo;
+    const tipo = tipoRecepcionDe(data);
+    this.aplicarValidadoresTipo(tipo);
     this.form.patchValue({
       id_sector: data.sector?.id_sector ? String(data.sector.id_sector) : '',
       id_responsable: data.responsable?.id ? String(data.responsable.id) : '',
       id_cliente: data.cliente?.id_cliente ?? '',
+      tipo_recepcion: tipo,
       id_vehiculo: data.vehiculo?.id_bien ?? '',
+      id_equipo: data.equipo?.id_equipo ?? '',
       descripcion_falla: data.recepcion?.descripcion_falla || '',
       falla_mecanica: !!estado?.falla_mecanica,
       falla_electrica: !!estado?.falla_electrica,
@@ -502,6 +542,10 @@ export class OtRecepcionStepComponent implements OnInit {
     if (data.vehiculo) {
       this.selectedVehiculo.set(data.vehiculo);
       this.vehiculos.update((list) => this.ensureInList(list, data.vehiculo!, (v) => v.id_bien));
+    }
+    if (data.equipo) {
+      this.selectedEquipo.set(data.equipo);
+      this.equipos.update((list) => this.ensureInList(list, data.equipo!, (e) => e.id_equipo));
     }
     if (data.sector) {
       const sector = {
@@ -550,7 +594,90 @@ export class OtRecepcionStepComponent implements OnInit {
     this.selectedCliente.set(cliente);
     this.form.controls.id_vehiculo.setValue('');
     this.selectedVehiculo.set(null);
+    this.form.controls.id_equipo.setValue('');
+    this.selectedEquipo.set(null);
     this.fetchVehiculos(0, 10, '');
+    this.fetchEquipos(0, 10, '');
+  }
+
+  protected seleccionarTipoRecepcion(tipo: TipoRecepcion): void {
+    if (this.soloLectura() || this.form.controls.tipo_recepcion.value === tipo) return;
+    this.aplicarValidadoresTipo(tipo);
+    if (tipo === 'VEHICULO') {
+      this.form.controls.id_equipo.setValue('');
+      this.selectedEquipo.set(null);
+    }
+    this.form.controls.tipo_recepcion.setValue(tipo);
+    this.form.controls.tipo_recepcion.markAsDirty();
+    this.formTick.update((n) => n + 1);
+  }
+
+  /** Vehículo: el vehículo es obligatorio. Equipo: el equipo es obligatorio y el vehículo opcional. */
+  private aplicarValidadoresTipo(tipo: TipoRecepcion): void {
+    const { id_vehiculo, id_equipo } = this.form.controls;
+    id_vehiculo.setValidators(tipo === 'VEHICULO' ? Validators.required : null);
+    id_equipo.setValidators(tipo === 'EQUIPO' ? Validators.required : null);
+    id_vehiculo.updateValueAndValidity({ emitEvent: false });
+    id_equipo.updateValueAndValidity({ emitEvent: false });
+  }
+
+  protected fetchEquipos(page: number, size: number, filter: string): void {
+    this.loadingEquipos.set(true);
+    const idCliente = this.form.controls.id_cliente.value;
+    const request = idCliente
+      ? this.equipoService.findByCliente(idCliente, 100, filter).pipe(
+          map((content) => ({ content, total: content.length })),
+        )
+      : this.equipoService
+          .findPaginated(page, size, filter)
+          .pipe(map((res) => ({ content: res.content, total: res.pageInfo.totalElements })));
+    request.subscribe({
+      next: ({ content, total }) => {
+        const selected = this.selectedEquipo();
+        this.equipos.set(selected ? this.ensureInList(content, selected, (e) => e.id_equipo) : content);
+        this.equiposTotal.set(total);
+        this.loadingEquipos.set(false);
+      },
+      error: () => this.loadingEquipos.set(false),
+    });
+  }
+
+  /** Al elegir un equipo se completa el cliente si faltaba y su vehículo, si tiene. */
+  protected onEquipoSelected(equipo: EquipoOutput | null): void {
+    this.form.controls.id_equipo.setValue(equipo?.id_equipo ?? '');
+    this.form.controls.id_equipo.markAsTouched();
+    this.selectedEquipo.set(equipo);
+    if (!equipo) return;
+    if (equipo.cliente?.id_cliente && !this.form.controls.id_cliente.value) {
+      this.form.controls.id_cliente.setValue(equipo.cliente.id_cliente);
+      this.selectedCliente.set(equipo.cliente);
+      this.clientes.update((list) => this.ensureInList(list, equipo.cliente!, (c) => c.id_cliente));
+      this.fetchVehiculos(0, 10, '');
+    }
+    if (equipo.vehiculo?.id_bien) {
+      this.form.controls.id_vehiculo.setValue(equipo.vehiculo.id_bien);
+      this.selectedVehiculo.set(equipo.vehiculo);
+      this.vehiculos.update((list) => this.ensureInList(list, equipo.vehiculo!, (v) => v.id_bien));
+    }
+  }
+
+  protected onAddEquipo(): void {
+    const cliente = this.selectedCliente();
+    const vehiculo = this.selectedVehiculo();
+    this.dialogService
+      .openForm<EquipoOutput | boolean>(EquipoFormComponent, {
+        title: 'Nuevo Equipo',
+        subtitle: 'Registra un equipo del cliente; el vehículo es opcional',
+        maxWidth: '760px',
+        inputs: cliente ? { equipo: { cliente, vehiculo } as EquipoOutput } : {},
+      })
+      .subscribe((saved) => {
+        if (!saved) return;
+        if (typeof saved === 'object') {
+          this.onEquipoSelected(saved);
+        }
+        this.fetchEquipos(0, 10, '');
+      });
   }
 
   protected onAddCliente(): void {
@@ -763,7 +890,11 @@ export class OtRecepcionStepComponent implements OnInit {
   }
 
   private revealInvalidSections(): void {
-    if (this.form.controls.id_cliente.invalid || this.form.controls.id_vehiculo.invalid) {
+    if (
+      this.form.controls.id_cliente.invalid ||
+      this.form.controls.id_vehiculo.invalid ||
+      this.form.controls.id_equipo.invalid
+    ) {
       this.openClienteVehiculo.set(true);
     }
     if (

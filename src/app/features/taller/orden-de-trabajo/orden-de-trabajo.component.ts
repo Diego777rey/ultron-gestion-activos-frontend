@@ -16,6 +16,7 @@ import { OrdenTrabajoService } from './services/orden-trabajo.service';
 import {
   OrdenTrabajoOutput,
   ETAPAS_ORDEN,
+  unidadOrden,
 } from './interfaces/orden-trabajo.interface';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReporteService } from '../../../shared/services/reporte.service';
@@ -59,7 +60,7 @@ export class OrdenDeTrabajoComponent {
     { key: 'numero_orden', header: 'Nº Orden', width: '120px', align: 'center' },
     { key: 'etapa', header: 'Etapa', width: '140px', align: 'center' },
     { key: 'cliente', header: 'Cliente', width: '200px' },
-    { key: 'vehiculo', header: 'Vehículo', width: '180px' },
+    { key: 'vehiculo', header: 'Vehículo / Equipo', width: '200px' },
     { key: 'mecanico', header: 'Mecánico', width: '160px' },
     { key: 'diagnostico', header: 'Presupuesto', width: '130px', align: 'right' },
     { key: 'fecha_creacion', header: 'Fecha', width: '120px', align: 'center' },
@@ -190,10 +191,7 @@ export class OrdenDeTrabajoComponent {
   }
 
   protected formatVehiculo(o: OrdenTrabajoOutput): string {
-    const v = o.vehiculo;
-    if (!v) return '—';
-    const desc = `${v.marca ?? ''} ${v.modelo ?? ''}`.trim();
-    return v.chapa ? `${desc} (${v.chapa})` : desc || '—';
+    return unidadOrden(o) || '—';
   }
 
   protected formatMecanico(o: OrdenTrabajoOutput): string {
