@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  HostListener,
   inject,
   input,
   OnInit,
@@ -65,6 +66,7 @@ export class OtDetalleLineasComponent implements OnInit {
   });
 
   protected readonly isAdding = signal(false);
+  protected readonly mecanicoOpen = signal(false);
 
   protected readonly productos = signal<ProductoOutput[]>([]);
   protected readonly productosTotal = signal(0);
@@ -256,6 +258,28 @@ export class OtDetalleLineasComponent implements OnInit {
 
   protected esServicio(): boolean {
     return this.detalleForm.controls.tipo.value === 'SERVICIO';
+  }
+
+  @HostListener('document:click')
+  protected closeMecanico(): void {
+    this.mecanicoOpen.set(false);
+  }
+
+  protected toggleMecanico(event: Event): void {
+    event.stopPropagation();
+    this.mecanicoOpen.update((open) => !open);
+  }
+
+  protected pickMecanico(id: string): void {
+    this.detalleForm.controls.id_mecanico.setValue(id);
+    this.detalleForm.controls.id_mecanico.markAsTouched();
+    this.mecanicoOpen.set(false);
+  }
+
+  protected labelMecanicoSeleccionado(): string {
+    const id = this.detalleForm.controls.id_mecanico.value;
+    const found = this.mecanicosAsignados().find((m) => (m.id_funcionario ?? '') === id);
+    return found ? this.nombreMecanico(found) : 'Seleccionar mecánico...';
   }
 
   private aplicarValidadorMecanico(tipo: string | null): void {

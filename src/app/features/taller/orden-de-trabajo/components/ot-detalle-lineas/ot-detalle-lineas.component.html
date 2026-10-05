@@ -69,27 +69,54 @@
 
             @if (esServicio()) {
               <div class="ot-diag-field">
-                <label class="ot-diag-field__label" for="ot-det-mec">Mecánico*</label>
-                <select id="ot-det-mec" class="ot-diag-field__control" formControlName="id_mecanico">
-                  <option value="">Seleccionar mecánico...</option>
-                  @for (m of mecanicosAsignados(); track m.id_funcionario) {
-                    <option [value]="m.id_funcionario">{{ nombreMecanico(m) }}</option>
+                <span class="ot-diag-field__label">Mecánico*</span>
+                <div class="ot-diag-select" [class.ot-diag-select--open]="mecanicoOpen()">
+                  <button
+                    type="button"
+                    class="ot-diag-select__trigger"
+                    [class.ot-diag-select__trigger--placeholder]="!detalleForm.controls.id_mecanico.value"
+                    [attr.aria-expanded]="mecanicoOpen()"
+                    aria-haspopup="listbox"
+                    (click)="toggleMecanico($event)"
+                  >
+                    <span>{{ labelMecanicoSeleccionado() }}</span>
+                    <span class="material-icons" aria-hidden="true">expand_more</span>
+                  </button>
+                  @if (mecanicoOpen()) {
+                    <ul class="ot-diag-select__menu" role="listbox" (click)="$event.stopPropagation()">
+                      @for (m of mecanicosAsignados(); track m.id_funcionario) {
+                        <li>
+                          <button
+                            type="button"
+                            class="ot-diag-select__option"
+                            [class.ot-diag-select__option--on]="detalleForm.controls.id_mecanico.value === m.id_funcionario"
+                            (click)="pickMecanico(m.id_funcionario ?? '')"
+                          >
+                            {{ nombreMecanico(m) }}
+                          </button>
+                        </li>
+                      } @empty {
+                        <li>
+                          <span class="ot-diag-select__empty">No hay mecánicos asignados en la recepción.</span>
+                        </li>
+                      }
+                    </ul>
                   }
-                </select>
+                </div>
               </div>
             }
 
-            <div class="ot-diag-field">
+            <div class="ot-diag-field ot-diag-field--pair">
               <label class="ot-diag-field__label" for="ot-det-cant">Cantidad*</label>
               <input id="ot-det-cant" type="number" class="ot-diag-field__control" formControlName="cantidad" min="0.01" step="0.01" />
             </div>
 
-            <div class="ot-diag-field">
+            <div class="ot-diag-field ot-diag-field--pair">
               <label class="ot-diag-field__label" for="ot-det-precio">Precio*</label>
               <input id="ot-det-precio" type="number" class="ot-diag-field__control" formControlName="precio_unitario" min="0" step="1" />
             </div>
 
-            <div class="ot-diag-field">
+            <div class="ot-diag-field ot-diag-field--action">
               <span class="ot-diag-field__label" aria-hidden="true">&nbsp;</span>
               <app-ui-button
                 class="ot-diag-add"
