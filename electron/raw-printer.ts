@@ -38,66 +38,79 @@ function printCups(printerName: string, data: Buffer): Promise<void> {
 function printWindows(printerName: string, data: Buffer): Promise<void> {
   const script = `
 $ErrorActionPreference = 'Stop'
-Add-Type -TypeDefinition @"
-using System;
-using System.Runtime.InteropServices;
-public class UltronRawPrinter {
-  [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-  public class DOCINFOA {
-    [MarshalAs(UnmanagedType.LPStr)] public string pDocName;
-    [MarshalAs(UnmanagedType.LPStr)] public string pOutputFile;
-    [MarshalAs(UnmanagedType.LPStr)] public string pDataType;
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$Marshal = [Runtime.InteropServices.Marshal]
+
+# Add-Type necesita csc.exe, que falta en algunos Windows 10: se declara winspool con Reflection.Emit.
+$asmName = New-Object Reflection.AssemblyName 'UltronRawPrinter'
+$asm = [AppDomain]::CurrentDomain.DefineDynamicAssembly($asmName, [Reflection.Emit.AssemblyBuilderAccess]::Run)
+$typeBuilder = $asm.DefineDynamicModule('UltronRawPrinter').DefineType('UltronRawPrinter', 'Public, Class')
+$dllImport = [Runtime.InteropServices.DllImportAttribute]
+$dllImportCtor = $dllImport.GetConstructor([Type[]]@([string]))
+$dllImportFields = [Reflection.FieldInfo[]]@(
+  $dllImport.GetField('EntryPoint'),
+  $dllImport.GetField('SetLastError'),
+  $dllImport.GetField('CharSet')
+)
+function Add-Winspool([string]$Entry, [Type[]]$Params) {
+  $method = $typeBuilder.DefineMethod($Entry, 'Public, Static, PinvokeImpl', [bool], $Params)
+  for ($i = 0; $i -lt $Params.Length; $i++) {
+    if ($Params[$i].IsByRef) {
+      [void]$method.DefineParameter($i + 1, 'Out', $null)
+    }
   }
-  [DllImport("winspool.drv", EntryPoint = "OpenPrinterA", SetLastError = true, CharSet = CharSet.Ansi)]
-  public static extern bool OpenPrinter(string szPrinter, out IntPtr hPrinter, IntPtr pd);
-  [DllImport("winspool.drv", SetLastError = true)]
-  public static extern bool ClosePrinter(IntPtr hPrinter);
-  [DllImport("winspool.drv", EntryPoint = "StartDocPrinterA", SetLastError = true, CharSet = CharSet.Ansi)]
-  public static extern bool StartDocPrinter(IntPtr hPrinter, int level, [In] DOCINFOA di);
-  [DllImport("winspool.drv", SetLastError = true)]
-  public static extern bool EndDocPrinter(IntPtr hPrinter);
-  [DllImport("winspool.drv", SetLastError = true)]
-  public static extern bool StartPagePrinter(IntPtr hPrinter);
-  [DllImport("winspool.drv", SetLastError = true)]
-  public static extern bool EndPagePrinter(IntPtr hPrinter);
-  [DllImport("winspool.drv", SetLastError = true)]
-  public static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, int dwCount, out int dwWritten);
+  $values = [object[]]@($Entry, $true, [Runtime.InteropServices.CharSet]::Ansi)
+  $attr = New-Object Reflection.Emit.CustomAttributeBuilder($dllImportCtor, [object[]]@('winspool.drv'), $dllImportFields, $values)
+  $method.SetCustomAttribute($attr)
 }
-"@
+Add-Winspool 'OpenPrinterA' @([string], [IntPtr].MakeByRefType(), [IntPtr])
+Add-Winspool 'ClosePrinter' @([IntPtr])
+Add-Winspool 'StartDocPrinterA' @([IntPtr], [int], [IntPtr])
+Add-Winspool 'EndDocPrinter' @([IntPtr])
+Add-Winspool 'StartPagePrinter' @([IntPtr])
+Add-Winspool 'EndPagePrinter' @([IntPtr])
+Add-Winspool 'WritePrinter' @([IntPtr], [IntPtr], [int], [int].MakeByRefType())
+$winspool = $typeBuilder.CreateType()
+
 $name = $env:ULTRON_PRINTER_NAME
 $b64 = [Console]::In.ReadToEnd().Trim()
 $bytes = [Convert]::FromBase64String($b64)
 $handle = [IntPtr]::Zero
-if (-not [UltronRawPrinter]::OpenPrinter($name, [ref]$handle, [IntPtr]::Zero)) {
-  $code = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+if (-not $winspool::OpenPrinterA($name, [ref]$handle, [IntPtr]::Zero)) {
+  $code = $Marshal::GetLastWin32Error()
   throw "No se pudo abrir la impresora $name (error $code). Instalá la térmica como Generic / Text Only."
 }
+$docName = $Marshal::StringToHGlobalAnsi('Ultron ticket')
+$dataType = $Marshal::StringToHGlobalAnsi('RAW')
+$ptrSize = [IntPtr]::Size
+$docInfo = $Marshal::AllocHGlobal($ptrSize * 3)
+$ptr = $Marshal::AllocHGlobal($bytes.Length)
 try {
-  $info = New-Object UltronRawPrinter+DOCINFOA
-  $info.pDocName = 'Ultron ticket'
-  $info.pDataType = 'RAW'
-  if (-not [UltronRawPrinter]::StartDocPrinter($handle, 1, $info)) {
-    $code = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+  # DOC_INFO_1A: pDocName, pOutputFile, pDatatype
+  $Marshal::WriteIntPtr($docInfo, 0, $docName)
+  $Marshal::WriteIntPtr($docInfo, $ptrSize, [IntPtr]::Zero)
+  $Marshal::WriteIntPtr($docInfo, $ptrSize * 2, $dataType)
+  if (-not $winspool::StartDocPrinterA($handle, 1, $docInfo)) {
+    $code = $Marshal::GetLastWin32Error()
     throw "No se pudo iniciar la impresion (error $code)"
   }
-  if (-not [UltronRawPrinter]::StartPagePrinter($handle)) {
+  if (-not $winspool::StartPagePrinter($handle)) {
     throw "No se pudo iniciar la pagina"
   }
-  $ptr = [Runtime.InteropServices.Marshal]::AllocCoTaskMem($bytes.Length)
-  try {
-    [Runtime.InteropServices.Marshal]::Copy($bytes, 0, $ptr, $bytes.Length)
-    $written = 0
-    if (-not [UltronRawPrinter]::WritePrinter($handle, $ptr, $bytes.Length, [ref]$written)) {
-      $code = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
-      throw "No se pudo escribir en la impresora (error $code)"
-    }
-  } finally {
-    [Runtime.InteropServices.Marshal]::FreeCoTaskMem($ptr)
+  $Marshal::Copy($bytes, 0, $ptr, $bytes.Length)
+  $written = 0
+  if (-not $winspool::WritePrinter($handle, $ptr, $bytes.Length, [ref]$written)) {
+    $code = $Marshal::GetLastWin32Error()
+    throw "No se pudo escribir en la impresora (error $code)"
   }
-  [UltronRawPrinter]::EndPagePrinter($handle) | Out-Null
-  [UltronRawPrinter]::EndDocPrinter($handle) | Out-Null
+  [void]$winspool::EndPagePrinter($handle)
+  [void]$winspool::EndDocPrinter($handle)
 } finally {
-  [UltronRawPrinter]::ClosePrinter($handle) | Out-Null
+  [void]$winspool::ClosePrinter($handle)
+  $Marshal::FreeHGlobal($ptr)
+  $Marshal::FreeHGlobal($docInfo)
+  $Marshal::FreeHGlobal($docName)
+  $Marshal::FreeHGlobal($dataType)
 }
 `;
 
