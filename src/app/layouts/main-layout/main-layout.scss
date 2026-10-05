@@ -4,10 +4,15 @@
   height: 100dvh;
   width: 100vw;
   overflow: hidden;
+  --sidebar-width: 60px;
   background-color: var(--bg-color);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+
+  &.sidebar-expanded {
+    --sidebar-width: 280px;
+  }
 }
 
 .layout-body {

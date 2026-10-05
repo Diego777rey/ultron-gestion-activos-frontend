@@ -33,7 +33,8 @@ import { PermissionService } from '../../core/auth/permission.service';
   styleUrl: './main-layout.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'app-layout-root'
+    class: 'app-layout-root',
+    '[class.sidebar-expanded]': 'sidebarOpen()',
   }
 })
 export class MainLayoutComponent implements OnInit {

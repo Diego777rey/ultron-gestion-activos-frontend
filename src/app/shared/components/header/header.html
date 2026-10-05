@@ -22,6 +22,13 @@
 <div class="header-spacer"></div>
 
 <div class="header-right">
+  @if (zoomDisponible) {
+    <div class="header-zoom" role="group" aria-label="Zoom de la pantalla">
+      <button type="button" class="header-zoom__btn" (click)="alejar()" aria-label="Alejar" title="Alejar (Ctrl −)">−</button>
+      <button type="button" class="header-zoom__valor" (click)="restablecerZoom()" title="Tamaño real (Ctrl 0)">{{ zoomPorcentaje() }}%</button>
+      <button type="button" class="header-zoom__btn" (click)="acercar()" aria-label="Acercar" title="Acercar (Ctrl +)">+</button>
+    </div>
+  }
   <button class="header-icon-btn notification-btn" aria-label="View Notifications">
     <span class="material-icons">notifications</span>
     <span class="notification-badge">3</span>
