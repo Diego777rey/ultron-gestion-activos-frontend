@@ -124,8 +124,20 @@ export class OtDetalleLineasComponent implements OnInit {
     return all.filter((d) => d.etapa_origen === 'EN_PROCESO');
   }
 
+  protected serviciosAgregados(): OrdenTrabajoDetalleOutput[] {
+    return this.lineasVisibles().filter((d) => d.tipo === 'SERVICIO');
+  }
+
   protected totalAjuste(): number {
     return this.lineasVisibles().reduce((sum, d) => sum + Number(d.subtotal ?? 0), 0);
+  }
+
+  protected montoFinal(): number {
+    return Number(this.orden().diagnostico?.total_presupuesto ?? 0);
+  }
+
+  protected montoAnterior(): number {
+    return Math.max(this.montoFinal() - this.totalAjuste(), 0);
   }
 
   protected fetchProductos(page: number, size: number, filter: string): void {
@@ -235,12 +247,17 @@ export class OtDetalleLineasComponent implements OnInit {
     if (!orden.id_orden_trabajo || !det.id_detalle) {
       return;
     }
-    if (!confirm('¿Eliminar este ítem del presupuesto?')) {
-      return;
-    }
-    this.ordenService.eliminarDetalle(orden.id_orden_trabajo, det.id_detalle).subscribe({
-      next: (updated) => this.ordenChange.emit(updated),
-      error: (err) => this.errorChange.emit(err?.message ?? 'No se pudo eliminar el detalle'),
+    const mensaje = det.tipo === 'SERVICIO'
+      ? '¿Quitar este servicio del ajuste?'
+      : '¿Eliminar este ítem del presupuesto?';
+    this.dialogService.confirm(mensaje).subscribe((aceptado) => {
+      if (!aceptado || !orden.id_orden_trabajo || !det.id_detalle) {
+        return;
+      }
+      this.ordenService.eliminarDetalle(orden.id_orden_trabajo, det.id_detalle).subscribe({
+        next: (updated) => this.ordenChange.emit(updated),
+        error: (err) => this.errorChange.emit(err?.message ?? 'No se pudo eliminar el detalle'),
+      });
     });
   }
 

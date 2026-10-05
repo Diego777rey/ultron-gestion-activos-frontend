@@ -194,10 +194,42 @@
       {{ modoEnProceso() ? 'Ajuste automático de presupuesto' : 'Presupuesto detallado' }}
     </h3>
     @if (modoEnProceso()) {
-      <p class="ot-hint">
-        El presupuesto del diagnóstico se mantiene. Acá solo aparecen ítems nuevos:
-        un repuesto que no estaba cargado, o un servicio si descubriste un defecto.
-      </p>
+      <div class="ot-ajuste">
+        <div class="ot-ajuste__campo">
+          <span class="ot-ajuste__label">Monto anterior</span>
+          <strong>{{ montoAnterior() | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </div>
+        <div class="ot-ajuste__campo">
+          <span class="ot-ajuste__label">Ajuste en esta etapa</span>
+          <strong class="ot-ajuste__valor">{{ totalAjuste() | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </div>
+        <div class="ot-ajuste__campo">
+          <span class="ot-ajuste__label">Monto final</span>
+          <strong class="ot-ajuste__valor">{{ montoFinal() | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </div>
+      </div>
+
+      <div class="ot-ajuste__servicios">
+        <span class="ot-ajuste__label">Servicios agregados</span>
+        @for (det of serviciosAgregados(); track det.id_detalle) {
+          <div class="ot-ajuste__servicio">
+            <span class="ot-ajuste__servicio-nombre">{{ nombreItem(det) }}</span>
+            <strong>{{ det.subtotal | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</strong>
+            @if (editable()) {
+              <button
+                type="button"
+                class="ot-icon-btn"
+                (click)="eliminarDetalle(det)"
+                aria-label="Quitar servicio"
+              >
+                <span class="material-icons" aria-hidden="true">delete</span>
+              </button>
+            }
+          </div>
+        } @empty {
+          <p class="ot-ajuste__vacio">Todavía no se agregó un servicio.</p>
+        }
+      </div>
     }
 
     @if (editable() && !modoEnProceso()) {
@@ -346,6 +378,7 @@
       }
     }
 
+    @if (!modoEnProceso()) {
     <div class="ot-table-wrap">
       <table class="ot-table">
         <thead>
@@ -385,24 +418,12 @@
           } @empty {
             <tr>
               <td [attr.colspan]="editable() ? 7 : 6" style="text-align: center; color: rgba(255,255,255,0.45); padding: 22px;">
-                @if (modoEnProceso()) {
-                  Sin ajustes. El presupuesto queda como en el diagnóstico.
-                } @else {
-                  No hay productos ni servicios en el presupuesto.
-                }
+                No hay productos ni servicios en el presupuesto.
               </td>
             </tr>
           }
         </tbody>
         <tfoot>
-          @if (modoEnProceso()) {
-            <tr>
-              <td colspan="5" style="text-align: right;">Ajuste en esta etapa:</td>
-              <td [attr.colspan]="editable() ? 2 : 1" class="ot-total">
-                {{ totalAjuste() | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}
-              </td>
-            </tr>
-          }
           <tr>
             <td colspan="5" style="text-align: right;">Total presupuesto:</td>
             <td [attr.colspan]="editable() ? 2 : 1" class="ot-total">
@@ -412,5 +433,6 @@
         </tfoot>
       </table>
     </div>
+    }
   </div>
 }

@@ -1,7 +1,8 @@
 import { Injectable, Type, inject } from '@angular/core';
 import { Dialog } from '@angular/cdk/dialog';
+import { Observable, map } from 'rxjs';
 import { GenericFormDialogComponent, GenericDialogData } from '../components/generic-form-dialog/generic-form-dialog';
-import { Observable } from 'rxjs';
+import { ConfirmDialogComponent } from '../components/confirm-dialog/confirm-dialog.component';
 
 @Injectable({ providedIn: 'root' })
 export class AppDialogService {
@@ -24,6 +25,15 @@ export class AppDialogService {
     });
 
     return dialogRef.closed;
+  }
+
+  /** Diálogo de confirmación con el modal de la app. Emite true solo si se confirma. */
+  confirm(message: string, title = 'Eliminar', confirmLabel = 'Eliminar'): Observable<boolean> {
+    return this.openForm<boolean>(ConfirmDialogComponent, {
+      title,
+      maxWidth: '420px',
+      inputs: { message, confirmLabel },
+    }).pipe(map((result) => result === true));
   }
 
   /** Cierra todos los modales abiertos (p. ej. al mostrar el visor de reportes). */

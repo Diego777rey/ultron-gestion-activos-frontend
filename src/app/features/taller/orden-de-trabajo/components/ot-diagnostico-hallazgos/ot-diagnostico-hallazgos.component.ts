@@ -18,6 +18,7 @@ import {
   labelSistemaHallazgo,
 } from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
+import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 
 @Component({
   selector: 'app-ot-diagnostico-hallazgos',
@@ -32,6 +33,7 @@ import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 export class OtDiagnosticoHallazgosComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly ordenService = inject(OrdenTrabajoService);
+  private readonly dialogService = inject(AppDialogService);
 
   readonly orden = input.required<OrdenTrabajoOutput>();
   readonly editable = input(true);
@@ -137,14 +139,17 @@ export class OtDiagnosticoHallazgosComponent implements OnInit {
     if (!orden.id_orden_trabajo || !item.id_hallazgo) {
       return;
     }
-    if (!confirm(this.modoEnProceso()
+    const mensaje = this.modoEnProceso()
       ? '¿Eliminar este defecto descubierto?'
-      : '¿Eliminar este hallazgo del diagnóstico?')) {
-      return;
-    }
-    this.ordenService.eliminarHallazgo(orden.id_orden_trabajo, item.id_hallazgo).subscribe({
-      next: (updated) => this.ordenChange.emit(updated),
-      error: (err) => this.errorChange.emit(err?.message ?? 'No se pudo eliminar el hallazgo'),
+      : '¿Eliminar este hallazgo del diagnóstico?';
+    this.dialogService.confirm(mensaje).subscribe((aceptado) => {
+      if (!aceptado || !orden.id_orden_trabajo || !item.id_hallazgo) {
+        return;
+      }
+      this.ordenService.eliminarHallazgo(orden.id_orden_trabajo, item.id_hallazgo).subscribe({
+        next: (updated) => this.ordenChange.emit(updated),
+        error: (err) => this.errorChange.emit(err?.message ?? 'No se pudo eliminar el hallazgo'),
+      });
     });
   }
 
