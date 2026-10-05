@@ -7,51 +7,58 @@ import { nombreCompletoPersona } from '../../../../personas/shared/nombre-person
 
 @Component({
   selector: 'app-ot-finalizada-step',
-  imports: [CurrencyPipe, DatePipe, OtDetalleLineasComponent, OtDiagnosticoHallazgosComponent],
+  imports: [CurrencyPipe, DatePipe, OtDiagnosticoHallazgosComponent, OtDetalleLineasComponent],
   template: `
-    <p class="ot-hint">
-      El trabajo está finalizado. Podés imprimir el ticket de la orden de trabajo.
-      La orden pasa a Facturado al cobrarla en el punto de venta.
-    </p>
-
-    <section class="ot-section ot-section--narrow">
-      <h3 class="ot-panel__title">
-        <span class="material-icons" aria-hidden="true">info</span>
-        Resumen
-      </h3>
-      <ul class="ot-panel__list">
-        <li class="ot-panel__item">
-          <span>Número</span><span><strong>{{ orden().numero_orden }}</strong></span>
-        </li>
-        <li class="ot-panel__item">
-          <span>Cliente</span>
-          <span>
-            {{ nombreCliente() }}
+    <div class="ot-fin-shell">
+      <aside class="ot-fin-resumen">
+        <h2 class="ot-fin-resumen__titulo">Resumen</h2>
+        <div class="ot-fin-resumen__avatar" aria-hidden="true">
+          <span class="material-icons">
+            {{ orden().tipo_recepcion === 'EQUIPO' ? 'precision_manufacturing' : 'directions_car' }}
           </span>
-        </li>
-        <li class="ot-panel__item">
-          <span>{{ orden().tipo_recepcion === 'EQUIPO' ? 'Equipo' : 'Vehículo' }}</span>
-          <span>{{ unidad() }}</span>
-        </li>
-        <li class="ot-panel__item">
-          <span>Finalizada</span>
-          <span>{{ orden().fecha_finalizacion | date: 'dd/MM/yyyy HH:mm' }}</span>
-        </li>
-        <li class="ot-panel__item">
-          <span>Plazo estimado</span>
-          <span>{{ resumenPlazo() }}</span>
-        </li>
-        <li class="ot-panel__item">
-          <span>Total</span>
-          <span class="ot-total">{{ orden().diagnostico?.total_presupuesto | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}</span>
-        </li>
-      </ul>
-    </section>
+        </div>
 
-    <app-ot-diagnostico-hallazgos [orden]="orden()" [editable]="false" />
-    <app-ot-detalle-lineas [orden]="orden()" [editable]="false" />
+        <div class="ot-fin-resumen__datos">
+          <div class="ot-fin-resumen__campo">
+            <span>Número</span>
+            <strong>{{ orden().numero_orden || '—' }}</strong>
+          </div>
+          <div class="ot-fin-resumen__campo">
+            <span>Cliente</span>
+            <strong>{{ nombreCliente() }}</strong>
+          </div>
+          <div class="ot-fin-resumen__campo">
+            <span>{{ orden().tipo_recepcion === 'EQUIPO' ? 'Equipo' : 'Vehículo' }}</span>
+            <strong>{{ unidad() }}</strong>
+          </div>
+          <div class="ot-fin-resumen__campo">
+            <span>Finalizada</span>
+            <strong>{{ orden().fecha_finalizacion | date: 'dd/MM/yyyy HH:mm' }}</strong>
+          </div>
+          <div class="ot-fin-resumen__campo">
+            <span>Plazo estimado</span>
+            <strong>{{ resumenPlazo() }}</strong>
+          </div>
+          <div class="ot-fin-resumen__campo">
+            <span>Total</span>
+            <strong class="ot-fin-resumen__total">
+              {{ orden().diagnostico?.total_presupuesto | currency: 'PYG' : 'symbol-narrow' : '1.0-0' }}
+            </strong>
+          </div>
+        </div>
+      </aside>
+
+      <div class="ot-fin-split ot-diag-shell">
+        <app-ot-diagnostico-hallazgos [orden]="orden()" [editable]="false" />
+        <app-ot-detalle-lineas
+          [orden]="orden()"
+          [editable]="false"
+          [diagnosticoLook]="true"
+        />
+      </div>
+    </div>
   `,
-  styleUrl: '../../styles/ot-form.scss',
+  styleUrl: './ot-finalizada-step.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OtFinalizadaStepComponent {

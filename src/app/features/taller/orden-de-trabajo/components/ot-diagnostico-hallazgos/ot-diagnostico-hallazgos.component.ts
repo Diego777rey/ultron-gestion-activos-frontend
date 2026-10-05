@@ -82,6 +82,10 @@ export class OtDiagnosticoHallazgosComponent implements OnInit {
       : 'Un fallo es algo que no funciona. Un defecto es daño, desgaste o una condición irregular.';
   }
 
+  protected iconoCard(): string {
+    return this.modoEnProceso() ? 'warning' : 'search';
+  }
+
   protected hallazgosVisibles(): OrdenDiagnosticoHallazgoOutput[] {
     const all = this.orden().hallazgos ?? [];
     if (!this.modoEnProceso()) {

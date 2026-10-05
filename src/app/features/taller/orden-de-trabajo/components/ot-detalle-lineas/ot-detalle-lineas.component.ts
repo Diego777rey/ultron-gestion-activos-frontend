@@ -53,6 +53,8 @@ export class OtDetalleLineasComponent implements OnInit {
   readonly allowCreateServicio = input(true);
   readonly diagnosticoLook = input(false);
   readonly modoEnProceso = input(false);
+  /** Título de la tarjeta cuando se muestra en solo lectura. */
+  readonly tituloLectura = input<string | null>(null);
   readonly ordenChange = output<OrdenTrabajoOutput>();
   readonly errorChange = output<string>();
 

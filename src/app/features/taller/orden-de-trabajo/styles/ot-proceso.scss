@@ -25,7 +25,11 @@
 }
 
 :host-context(.ot-proceso) .ot-form__row--solicitud-top {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+:host-context(.ot-proceso) .ot-form__row--solicitud-top > :nth-child(3) {
+  grid-column: 1 / -1;
 }
 
 :host-context(.ot-proceso) .ot-form__row--solicitud-add {
