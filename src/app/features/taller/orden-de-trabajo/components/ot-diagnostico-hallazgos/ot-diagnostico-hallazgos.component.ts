@@ -25,6 +25,7 @@ import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
   templateUrl: './ot-diagnostico-hallazgos.component.html',
   styleUrls: [
     '../../styles/ot-diagnostico.scss',
+    '../../styles/ot-diagnostico-shell.scss',
     './ot-diagnostico-hallazgos.component.scss',
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
