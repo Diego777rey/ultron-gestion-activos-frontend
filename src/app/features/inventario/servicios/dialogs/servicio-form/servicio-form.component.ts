@@ -11,10 +11,11 @@ import { ServicioService } from '../../services/servicio.service';
 import { CategoriaServicioService } from '../../services/categoria-servicio.service';
 import { DialogRef } from '@angular/cdk/dialog';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-servicio-form',
-  imports: [
+  imports: [NotifyErrorComponent, 
     CommonModule,
     ReactiveFormsModule,
     UiButtonComponent,
@@ -206,6 +207,7 @@ export class ServicioFormComponent {
   }
 
   protected onSubmit(): void {
+    this.error = null;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

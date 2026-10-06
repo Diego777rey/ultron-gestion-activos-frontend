@@ -14,7 +14,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { EMPTY, Subject, catchError, concatMap, debounceTime, finalize, switchMap, tap } from 'rxjs';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
 import { WhatsAppService } from '../../../../../shared/services/whatsapp.service';
-import { OrdenTrabajoInput, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
+import { OrdenTrabajoInput, OrdenTrabajoOutput, unidadOrden } from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 import { OtDetalleLineasComponent } from '../ot-detalle-lineas/ot-detalle-lineas.component';
 import { OtDiagnosticoHallazgosComponent } from '../ot-diagnostico-hallazgos/ot-diagnostico-hallazgos.component';
@@ -62,12 +62,11 @@ export class OtDiagnosticoStepComponent implements OnInit {
     return nombreCompletoPersona(p) || '—';
   });
 
-  protected readonly resumenVehiculo = computed(() => {
-    const v = this.orden().vehiculo;
-    if (!v) return '—';
-    const partes = [v.chapa, v.marca, v.modelo].filter(Boolean);
-    return partes.length ? partes.join(' · ') : '—';
-  });
+  protected readonly resumenVehiculo = computed(() => unidadOrden(this.orden()) || '—');
+
+  protected readonly etiquetaUnidad = computed(() =>
+    this.orden().tipo_recepcion === 'EQUIPO' ? 'Equipo' : 'Vehículo',
+  );
 
   protected readonly resumenMecanico = computed(() => {
     const list = this.orden().mecanicos?.length

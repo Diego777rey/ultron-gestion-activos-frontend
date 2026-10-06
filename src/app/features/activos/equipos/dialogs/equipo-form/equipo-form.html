@@ -1,0 +1,96 @@
+<app-notify-error [message]="error()" />
+
+<form class="vehiculo-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="vehiculo-form__grid">
+    <div>
+      <app-entity-searcher
+        [items]="clientesDisponibles()"
+        [value]="form.controls.id_cliente.value"
+        (itemChange)="onClienteSelected($event)"
+        [displayFn]="clienteLabelFn"
+        [keyFn]="clienteKeyFn"
+        [columns]="clienteColumns"
+        [backendPagination]="true"
+        [totalItems]="clientesTotal()"
+        [pageSize]="clientesPageSize()"
+        [loading]="loadingClientes()"
+        (searchChange)="fetchClientes(0, clientesPageSize(), $event)"
+        (pageChange)="onClientePageChange($event)"
+        label="Cliente**"
+        searchPlaceholder="Buscar por documento o nombre..."
+        [allowAdd]="true"
+        addLabel="Nuevo cliente"
+        (addClicked)="onAddCliente()"
+      />
+      @if (form.controls.id_cliente.touched && form.controls.id_cliente.invalid) {
+        <span class="field__error">El cliente es obligatorio</span>
+      }
+    </div>
+
+    <div>
+      <app-entity-searcher
+        [items]="vehiculosDisponibles()"
+        [value]="form.controls.id_vehiculo.value"
+        (itemChange)="onVehiculoSelected($event)"
+        [displayFn]="vehiculoLabelFn"
+        [keyFn]="vehiculoKeyFn"
+        [columns]="vehiculoColumns"
+        [loading]="loadingVehiculos()"
+        [totalItems]="vehiculosDisponibles().length"
+        label="Vehículo (opcional)"
+        searchPlaceholder="Chapa, marca o modelo..."
+      />
+      <span class="field__hint">
+        @if (form.controls.id_cliente.value) {
+          Déjalo vacío si el equipo llega sin vehículo.
+        } @else {
+          Elegí primero el cliente para ver sus vehículos.
+        }
+      </span>
+    </div>
+
+    <div class="field">
+      <input id="tipo_equipo" class="field__input" type="text" formControlName="tipo_equipo" list="tipos-equipo"
+        appAutofocus appUppercase placeholder=" " />
+      <label class="field__label" for="tipo_equipo">Tipo de equipo**</label>
+      <datalist id="tipos-equipo">
+        @for (tipo of tiposEquipo; track tipo) {
+          <option [value]="tipo"></option>
+        }
+      </datalist>
+      @if (form.controls.tipo_equipo.touched && form.controls.tipo_equipo.invalid) {
+        <span class="field__error">El tipo de equipo es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="numero_serie" class="field__input" type="text" formControlName="numero_serie" appUppercase placeholder=" " />
+      <label class="field__label" for="numero_serie">N° de serie</label>
+    </div>
+
+    <div class="field">
+      <input id="marca" class="field__input" type="text" formControlName="marca" appUppercase placeholder=" " />
+      <label class="field__label" for="marca">Marca</label>
+    </div>
+
+    <div class="field">
+      <input id="modelo" class="field__input" type="text" formControlName="modelo" appUppercase placeholder=" " />
+      <label class="field__label" for="modelo">Modelo</label>
+    </div>
+
+    <div class="field field--full">
+      <input id="descripcion" class="field__input" type="text" formControlName="descripcion" appUppercase placeholder=" " />
+      <label class="field__label" for="descripcion">Descripción</label>
+    </div>
+  </div>
+</form>
+
+<div class="vehiculo-form-footer">
+  <app-ui-button
+    [label]="isEdit() ? 'Guardar Cambios' : 'Registrar Equipo'"
+    icon="save"
+    variant="primary"
+    [loading]="saving()"
+    (clicked)="onSubmit()"
+  />
+</div>

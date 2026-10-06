@@ -4,10 +4,11 @@ import { DialogRef } from '@angular/cdk/dialog';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { TimbradoInput, TimbradoOutput } from '../../interfaces/timbrado.interface';
 import { TimbradoService } from '../../services/timbrado.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-timbrado-form',
-  imports: [ReactiveFormsModule, UiButtonComponent],
+  imports: [NotifyErrorComponent, ReactiveFormsModule, UiButtonComponent],
   templateUrl: './timbrado-form.component.html',
   styleUrl: './timbrado-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -60,6 +61,7 @@ export class TimbradoFormComponent {
   }
 
   protected onSubmit(): void {
+    this.error = null;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

@@ -1,6 +1,9 @@
 import {
+  EstadoReparacion,
   TicketFactura,
   TicketOrdenTrabajo,
+  TicketOrdenTrabajoBase,
+  TicketOrdenTrabajoVehiculo,
   TicketRenglon,
   TicketSegmento,
   TicketVenta,
@@ -85,6 +88,11 @@ export function buildTicketVenta(ticket: TicketVenta): Uint8Array {
   builder.bold(true);
   builder.columns('TOTAL Gs.', formatGs(ticket.total));
   builder.bold(false);
+  if (ticket.montoRecibido != null) {
+    imprimirImporteConMoneda(builder, 'Recibido', ticket.montoRecibido, ticket.monedaRecibida, ticket.montoRecibidoPyg);
+    const vueltoPyg = ticket.vueltoPyg ?? Math.max((ticket.montoRecibidoPyg ?? ticket.montoRecibido) - ticket.total, 0);
+    imprimirImporteConMoneda(builder, 'Vuelto', ticket.vuelto ?? vueltoPyg, ticket.monedaVuelto, vueltoPyg);
+  }
   builder.separator();
   builder.align(1);
   builder.line(blankTo(ticket.pie, 'Gracias por su compra'));
@@ -165,9 +173,19 @@ export function buildTicketFactura(ticket: TicketFactura): Uint8Array {
   return builder.toBytes();
 }
 
+/** Ticket de recepción de equipos. */
 export function buildTicketOrdenTrabajo(ticket: TicketOrdenTrabajo): Uint8Array {
+  return buildDesdeRenglones(layoutTicketOrdenTrabajo(ticket));
+}
+
+/** Ticket de recepción de vehículos. */
+export function buildTicketOrdenTrabajoVehiculo(ticket: TicketOrdenTrabajoVehiculo): Uint8Array {
+  return buildDesdeRenglones(layoutTicketOrdenTrabajoVehiculo(ticket));
+}
+
+function buildDesdeRenglones(renglones: TicketRenglon[]): Uint8Array {
   const builder = new EscPosTicketBuilder().init().smallFont(LINE_SPACING_FONT_B);
-  for (const renglon of layoutTicketOrdenTrabajo(ticket)) {
+  for (const renglon of renglones) {
     if ('logo' in renglon) {
       builder.align(1).logo();
       continue;
@@ -180,60 +198,137 @@ export function buildTicketOrdenTrabajo(ticket: TicketOrdenTrabajo): Uint8Array 
 }
 
 export function layoutTicketOrdenTrabajo(ticket: TicketOrdenTrabajo): TicketRenglon[] {
-  const renglones: TicketRenglon[] = [{ logo: true }];
-  const agregar = (centrado: boolean, segmentos: TicketSegmento[]) => {
+  const t = new LayoutOrdenTrabajo();
+  t.encabezado(ticket);
+  t.campo('Cod. unidad', ticket.codigoUnidad);
+  t.campo('Vehiculo', ticket.vehiculo);
+  t.campo('VIN', ticket.vin);
+  t.vacio();
+  for (const c of ticket.componentes ?? []) t.campo(c.etiqueta, c.valor);
+  t.vacio();
+  t.titulo('SERVICIOS');
+  for (const s of ticket.servicios ?? []) t.campo(s.etiqueta, s.valor);
+  const cargados = (ticket.serviciosOrden ?? []).map((s) => s.trim()).filter(notBlank);
+  if (cargados.length) {
+    t.vacio();
+    for (const s of cargados) t.linea(`- ${s}`);
+  }
+  t.vacio();
+  t.descripcionProblema(ticket);
+  t.cierre(ticket);
+  return t.renglones;
+}
+
+const TEXTO_REPARACION: Record<EstadoReparacion, string> = {
+  SI: 'REPARADO',
+  NO: 'NO REPARADO',
+  PENDIENTE: 'PENDIENTE',
+};
+
+export function layoutTicketOrdenTrabajoVehiculo(ticket: TicketOrdenTrabajoVehiculo): TicketRenglon[] {
+  const t = new LayoutOrdenTrabajo();
+  t.encabezado(ticket, 'RECEPCION DE VEHICULO');
+  t.campo('Chapa', ticket.chapa);
+  t.campo('Vehiculo', ticket.vehiculo);
+  if (notBlank(ticket.kilometraje)) t.campo('Kilometraje', ticket.kilometraje);
+  if (notBlank(ticket.combustible)) t.campo('Combustible', ticket.combustible);
+  t.vacio();
+  t.titulo('TIPO DE FALLA');
+  t.centrado(blankTo(ticket.tipoFalla, 'NO ESPECIFICADA'));
+  t.vacio();
+  t.titulo('ESTADO AL INGRESO');
+  const condiciones = ticket.condiciones ?? [];
+  if (condiciones.length === 0) t.centrado('SIN DAÑOS OBSERVADOS');
+  for (const c of condiciones) t.campo(c.etiqueta, TEXTO_REPARACION[c.reparado] ?? c.reparado);
+  if (notBlank(ticket.observacionesEstado)) t.campo('Obs.', ticket.observacionesEstado);
+  t.vacio();
+  t.descripcionProblema(ticket);
+  t.vacio();
+  t.titulo('SERVICIOS REALIZADOS');
+  const servicios = (ticket.servicios ?? []).filter(notBlank);
+  if (servicios.length === 0) t.centrado('SIN SERVICIOS CARGADOS');
+  for (const s of servicios) t.linea(`- ${s.trim()}`);
+  t.cierre(ticket);
+  return t.renglones;
+}
+
+/** Piezas compartidas por los tickets de orden de trabajo: encabezado, garantía y firma. */
+class LayoutOrdenTrabajo {
+  readonly renglones: TicketRenglon[] = [{ logo: true }];
+
+  agregar(centrado: boolean, segmentos: TicketSegmento[]): void {
     for (const linea of envolver(segmentos, WIDTH_58MM_FONT_B)) {
-      renglones.push({ centrado, segmentos: linea });
+      this.renglones.push({ centrado, segmentos: linea });
     }
-  };
-  const vacio = () => renglones.push({ centrado: false, segmentos: [] });
-  const titulo = (texto: string) => agregar(true, [{ texto, negrita: true }]);
-  const campo = (etiqueta: string, valor: string | null | undefined) => {
+  }
+
+  vacio(): void {
+    this.renglones.push({ centrado: false, segmentos: [] });
+  }
+
+  regla(): void {
+    this.renglones.push({ centrado: false, segmentos: [{ texto: '-'.repeat(WIDTH_58MM_FONT_B) }] });
+  }
+
+  titulo(texto: string): void {
+    this.agregar(true, [{ texto, negrita: true }]);
+  }
+
+  centrado(texto: string): void {
+    this.agregar(true, [{ texto: texto.toUpperCase() }]);
+  }
+
+  linea(texto: string): void {
+    this.agregar(false, [{ texto: texto.toUpperCase() }]);
+  }
+
+  campo(etiqueta: string, valor: string | null | undefined): void {
     const v = (valor ?? '').trim();
-    agregar(false, [
+    this.agregar(false, [
       { texto: `${etiqueta.trim().toUpperCase()}:`, negrita: true },
       ...(v ? [{ texto: ` ${v.toUpperCase()}` }] : []),
     ]);
-  };
-
-  vacio();
-  titulo(blankTo(ticket.empresa, 'CH SERVICE').toUpperCase());
-  if (notBlank(ticket.direccion)) agregar(true, [{ texto: ticket.direccion.toUpperCase() }]);
-  if (notBlank(ticket.telefono)) agregar(true, [{ texto: `CEL. ${ticket.telefono.trim()}` }]);
-  renglones.push({ centrado: false, segmentos: [{ texto: '-'.repeat(WIDTH_58MM_FONT_B) }] });
-  titulo('ORDEN DE TRABAJO');
-  if (notBlank(ticket.numero)) agregar(true, [{ texto: ticket.numero!.trim() }]);
-  vacio();
-  campo('Fecha', ticket.fecha);
-  campo('Hora', ticket.hora);
-  vacio();
-  campo('Cliente', ticket.cliente);
-  campo('Cel', ticket.celular);
-  campo('RUC', ticket.ruc);
-  campo('Cod. unidad', ticket.codigoUnidad);
-  campo('Vehiculo', ticket.vehiculo);
-  campo('VIN', ticket.vin);
-  vacio();
-  for (const c of ticket.componentes ?? []) campo(c.etiqueta, c.valor);
-  vacio();
-  titulo('SERVICIOS');
-  for (const s of ticket.servicios ?? []) campo(s.etiqueta, s.valor);
-  vacio();
-  titulo('DESCRIPCION DEL PROBLEMA');
-  agregar(true, [{ texto: (ticket.descripcionProblema ?? '').toUpperCase() }]);
-  renglones.push({ centrado: false, segmentos: [{ texto: '-'.repeat(WIDTH_58MM_FONT_B) }] });
-  for (const parrafo of condicionesOrdenTrabajo(ticket)) {
-    agregar(false, parrafo.map((s) => ({ ...s, texto: s.texto.toUpperCase() })));
   }
-  vacio();
-  vacio();
-  vacio();
-  agregar(true, [{ texto: '_'.repeat(26) }]);
-  titulo('FIRMA DEL CLIENTE');
-  return renglones;
+
+  /** Empresa, número, fecha y cliente; termina listo para los datos de la unidad. */
+  encabezado(ticket: TicketOrdenTrabajoBase, subtitulo?: string): void {
+    this.vacio();
+    this.titulo(blankTo(ticket.empresa, 'CH SERVICE').toUpperCase());
+    if (notBlank(ticket.direccion)) this.centrado(ticket.direccion);
+    if (notBlank(ticket.telefono)) this.agregar(true, [{ texto: `CEL. ${ticket.telefono.trim()}` }]);
+    this.regla();
+    this.titulo('ORDEN DE TRABAJO');
+    if (subtitulo) this.centrado(subtitulo);
+    if (notBlank(ticket.numero)) this.agregar(true, [{ texto: ticket.numero!.trim() }]);
+    this.vacio();
+    this.campo('Fecha', ticket.fecha);
+    this.campo('Hora', ticket.hora);
+    this.vacio();
+    this.campo('Cliente', ticket.cliente);
+    this.campo('Cel', ticket.celular);
+    this.campo('RUC', ticket.ruc);
+  }
+
+  descripcionProblema(ticket: TicketOrdenTrabajoBase): void {
+    this.titulo('DESCRIPCION DEL PROBLEMA');
+    this.agregar(true, [{ texto: (ticket.descripcionProblema ?? '').toUpperCase() }]);
+  }
+
+  /** Condiciones y garantía: el texto es el mismo en todos los tickets de orden de trabajo. */
+  cierre(ticket: TicketOrdenTrabajoBase): void {
+    this.regla();
+    for (const parrafo of condicionesOrdenTrabajo(ticket)) {
+      this.agregar(false, parrafo.map((s) => ({ ...s, texto: s.texto.toUpperCase() })));
+    }
+    this.vacio();
+    this.vacio();
+    this.vacio();
+    this.agregar(true, [{ texto: '_'.repeat(26) }]);
+    this.titulo('FIRMA DEL CLIENTE');
+  }
 }
 
-function condicionesOrdenTrabajo(ticket: TicketOrdenTrabajo): TicketSegmento[][] {
+function condicionesOrdenTrabajo(ticket: TicketOrdenTrabajoBase): TicketSegmento[][] {
   const b = (texto: string): TicketSegmento => ({ texto, negrita: true });
   const t = (texto: string): TicketSegmento => ({ texto });
   const pago = ticket.pagoRevision != null && ticket.pagoRevision > 0
@@ -347,6 +442,65 @@ export function formatGs(value: number | null | undefined): string {
   const sign = rounded < 0 ? '-' : '';
   const digits = Math.abs(rounded).toString();
   return sign + digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+/** Importe en moneda extranjera con dos decimales y coma decimal: 1234.5 → "1.234,50". */
+export function formatMonedaExtranjera(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) {
+    return '0,00';
+  }
+  const centavos = Math.round(Math.abs(value) * 100);
+  const entero = formatGs(Math.floor(centavos / 100));
+  const decimales = String(centavos % 100).padStart(2, '0');
+  return `${value < 0 ? '-' : ''}${entero},${decimales}`;
+}
+
+const SIMBOLOS_TICKET: Record<string, string> = {
+  PYG: 'Gs.',
+  GS: 'Gs.',
+  GUARANI: 'Gs.',
+  GUARANIES: 'Gs.',
+  USD: 'US$',
+  DOLAR: 'US$',
+  DOLARES: 'US$',
+  BRL: 'R$',
+  REAL: 'R$',
+  REALES: 'R$',
+  ARS: '$',
+  PESO: '$',
+  EUR: 'EUR',
+  EURO: 'EUR',
+};
+
+function esGuaraniTicket(moneda: string | null | undefined): boolean {
+  const clave = sanitize(moneda).trim().toUpperCase();
+  return !clave || SIMBOLOS_TICKET[clave] === 'Gs.';
+}
+
+function simboloTicket(moneda: string | null | undefined): string {
+  const clave = sanitize(moneda).trim().toUpperCase();
+  return SIMBOLOS_TICKET[clave] ?? clave;
+}
+
+/**
+ * "Recibido Gs.      600.000" en guaraníes; en otra moneda imprime el importe
+ * original y, debajo, su equivalente en guaraníes para que el ticket cierre.
+ */
+function imprimirImporteConMoneda(
+  builder: EscPosTicketBuilder,
+  etiqueta: string,
+  importe: number,
+  moneda: string | null | undefined,
+  equivalentePyg: number | null | undefined,
+): void {
+  if (esGuaraniTicket(moneda)) {
+    builder.columns(`${etiqueta} Gs.`, formatGs(importe));
+    return;
+  }
+  builder.columns(`${etiqueta} ${simboloTicket(moneda)}`, formatMonedaExtranjera(importe));
+  if (equivalentePyg != null) {
+    builder.columns('  equiv. Gs.', formatGs(equivalentePyg));
+  }
 }
 
 export function sanitize(text: string | null | undefined): string {

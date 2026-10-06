@@ -1,10 +1,12 @@
 <div class="stepper-page">
   <header class="stepper-header" role="navigation" aria-label="Pasos del servicio">
     @for (step of steps; track step.index) {
-      <div
+      <button
+        type="button"
         class="stepper-step"
         [class.active]="currentStep() === step.index"
         [class.done]="currentStep() > step.index"
+        (click)="irAPaso(step.index)"
       >
         <span class="stepper-step__circle" aria-hidden="true">
           @if (currentStep() > step.index) {
@@ -14,23 +16,20 @@
           }
         </span>
         <span class="stepper-step__label">{{ step.label }}</span>
-      </div>
+      </button>
       @if (!$last) {
         <span class="stepper-connector" [class.done]="currentStep() > step.index" aria-hidden="true"></span>
       }
     }
   </header>
 
-  @if (error()) {
-    <div class="form-error" role="alert">
-      <span class="material-icons" aria-hidden="true">error_outline</span>
-      <span>{{ error() }}</span>
-    </div>
-  }
+  <app-notify-error [message]="error()" />
 
   <div class="wizard">
     <section class="wizard__main">
-      @if (currentStep() === 1) {
+      @if (loadingServicio()) {
+        <p class="step-hint">Cargando servicio...</p>
+      } @else if (currentStep() === 1) {
         <div class="table-panel">
           <div class="table-toolbar">
             <div class="table-search">
@@ -44,12 +43,10 @@
               />
             </div>
             <div class="table-toolbar__actions">
-              <button type="button" class="icon-tool" title="Agregar categoría" (click)="openNuevaCategoria()">
-                <span class="material-icons">add</span>
-              </button>
               <button type="button" class="icon-tool" title="Actualizar" (click)="loadCategorias()">
                 <span class="material-icons">refresh</span>
               </button>
+              <button type="button" class="ficha__add" (click)="openNuevaCategoria()">Agregar</button>
             </div>
           </div>
 
@@ -125,9 +122,6 @@
               />
             </div>
             <div class="table-toolbar__actions">
-              <button type="button" class="icon-tool" title="Agregar subcategoría" (click)="openNuevaSubcategoria()">
-                <span class="material-icons">add</span>
-              </button>
               <button
                 type="button"
                 class="icon-tool"
@@ -136,6 +130,7 @@
               >
                 <span class="material-icons">refresh</span>
               </button>
+              <button type="button" class="ficha__add" (click)="openNuevaSubcategoria()">Agregar</button>
             </div>
           </div>
 
@@ -193,38 +188,80 @@
       }
 
       @if (currentStep() === 3) {
-        <section class="datos-panel">
-          <h2 class="datos-panel__title">Datos generales</h2>
-          <p class="step-hint">Completá la identificación del servicio.</p>
+        <form class="servicio-layout" [formGroup]="datosForm">
+          <aside class="resumen">
+            <h2 class="resumen__titulo">Resumen del servicio</h2>
+            <div class="resumen__avatar" aria-hidden="true">
+              <span class="material-icons">build</span>
+            </div>
 
-          <form class="datos-form" [formGroup]="datosForm">
-            <div class="datos-field">
-              <label for="srv-nombre">Nombre*</label>
-              <input id="srv-nombre" type="text" formControlName="nombre" appAutofocus appUppercase placeholder="Nombre del servicio" />
+            <div class="resumen__datos">
+              <label class="resumen__campo" for="srv-nombre">
+                <span>Nombre*</span>
+                <input id="srv-nombre" type="text" formControlName="nombre" appAutofocus appUppercase placeholder="Nombre del servicio" />
+              </label>
               @if (datosForm.controls.nombre.touched && datosForm.controls.nombre.invalid) {
                 <span class="field-error">El nombre es obligatorio</span>
               }
-            </div>
 
-            <div class="datos-field">
-              <label for="srv-codigo">Código</label>
-              <input id="srv-codigo" type="text" formControlName="codigo" appUppercase placeholder="Opcional" />
+              <div class="resumen__campo">
+                <span>Familia</span>
+                <strong>{{ selectedCategoria()?.nombre || '—' }}</strong>
+              </div>
+              <div class="resumen__campo">
+                <span>Subfamilia</span>
+                <strong>{{ selectedSubcategoria()?.nombre || '—' }}</strong>
+              </div>
+              <label class="resumen__campo" for="srv-desc">
+                <span>Descripción</span>
+                <textarea id="srv-desc" formControlName="descripcion" appUppercase rows="3" placeholder="Notas del servicio"></textarea>
+              </label>
             </div>
+          </aside>
 
-            <div class="datos-field">
-              <label for="srv-precio">Precio*</label>
-              <input id="srv-precio" type="number" formControlName="precio" min="0" step="1" placeholder="0" />
-              @if (datosForm.controls.precio.touched && datosForm.controls.precio.invalid) {
-                <span class="field-error">Precio válido requerido</span>
-              }
-            </div>
+          <div class="ficha">
+            <header class="ficha__top">
+              <div class="ficha__stats">
+                <div class="ficha__stat">
+                  <span>Precio venta</span>
+                  <strong>{{ datosForm.controls.precio.value != null ? (datosForm.controls.precio.value | number: '1.0-0') + ' Gs.' : '—' }}</strong>
+                </div>
+                <div class="ficha__stat">
+                  <span>Código</span>
+                  <strong>{{ datosForm.controls.codigo.value || '—' }}</strong>
+                </div>
+              </div>
+            </header>
 
-            <div class="datos-field datos-field--full">
-              <label for="srv-desc">Descripción</label>
-              <textarea id="srv-desc" formControlName="descripcion" appUppercase rows="3" placeholder="Notas del servicio"></textarea>
+            <div class="detalle__wrap">
+              <table class="detalle__table">
+                <thead>
+                  <tr>
+                    <th class="col-id">Id</th>
+                    <th>Código</th>
+                    <th class="col-num">Precio*</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="col-id">{{ servicioActual()?.id_servicio ?? '—' }}</td>
+                    <td>
+                      <input type="text" formControlName="codigo" appUppercase maxlength="50" placeholder="Opcional" aria-label="Código del servicio" />
+                    </td>
+                    <td class="col-num">
+                      <input type="number" formControlName="precio" min="0" step="1" placeholder="0" aria-label="Precio del servicio" />
+                    </td>
+                  </tr>
+                  @if (datosForm.controls.precio.touched && datosForm.controls.precio.invalid) {
+                    <tr class="detalle__error-row">
+                      <td colspan="3">Precio válido requerido</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
             </div>
-          </form>
-        </section>
+          </div>
+        </form>
       }
     </section>
   </div>
@@ -244,7 +281,7 @@
         (clicked)="generarReporte()"
       />
       <app-ui-button
-        [label]="currentStep() === 3 ? 'Registrar servicio' : 'Siguiente'"
+        [label]="currentStep() === 3 ? (editando() ? 'Guardar cambios' : 'Registrar servicio') : 'Siguiente'"
         [icon]="currentStep() === 3 ? 'save' : 'arrow_forward'"
         variant="primary"
         [loading]="saving()"

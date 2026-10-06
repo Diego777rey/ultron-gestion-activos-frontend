@@ -26,6 +26,18 @@ export interface TicketVenta {
   lineas: TicketLinea[];
   descuento?: number | null;
   total: number;
+  /** Efectivo recibido, en `monedaRecibida`. Si viene, el ticket imprime Recibido y Vuelto. */
+  montoRecibido?: number | null;
+  /** Moneda en la que pagó el cliente. Vacío o "PYG" = guaraníes. */
+  monedaRecibida?: string | null;
+  /** Equivalente en guaraníes de `montoRecibido`, cuando se pagó en otra moneda. */
+  montoRecibidoPyg?: number | null;
+  /** Vuelto entregado, en `monedaVuelto`. */
+  vuelto?: number | null;
+  /** Moneda en la que se entregó el vuelto. Vacío o "PYG" = guaraníes. */
+  monedaVuelto?: string | null;
+  /** Equivalente en guaraníes de `vuelto`, cuando se devolvió en otra moneda. */
+  vueltoPyg?: number | null;
   pie?: string | null;
 }
 
@@ -69,7 +81,8 @@ export interface TicketCampo {
   valor: string;
 }
 
-export interface TicketOrdenTrabajo {
+/** Datos comunes a los tickets de orden de trabajo (equipo y vehículo). */
+export interface TicketOrdenTrabajoBase {
   empresa: string;
   direccion: string;
   telefono: string;
@@ -79,14 +92,40 @@ export interface TicketOrdenTrabajo {
   cliente: string;
   celular: string;
   ruc: string;
-  codigoUnidad: string;
   vehiculo: string;
-  vin: string;
-  componentes: TicketCampo[];
-  servicios: TicketCampo[];
   descripcionProblema: string;
   pagoRevision: number | null;
   recargoUrgente: number | null;
+}
+
+/** Ticket de recepción de equipos (ECU, tablero, módulos...). */
+export interface TicketOrdenTrabajo extends TicketOrdenTrabajoBase {
+  codigoUnidad: string;
+  vin: string;
+  componentes: TicketCampo[];
+  /** Checklist fijo (programación, diagnóstico, test en banco...). */
+  servicios: TicketCampo[];
+  /** Servicios cargados en la orden. */
+  serviciosOrden?: string[];
+}
+
+export type EstadoReparacion = 'SI' | 'NO' | 'PENDIENTE';
+
+/** Condición observada al recibir el vehículo y si quedó reparada. */
+export interface TicketCondicionVehiculo {
+  etiqueta: string;
+  reparado: EstadoReparacion;
+}
+
+/** Ticket de recepción de vehículos: estado al ingreso, falla y servicios realizados. */
+export interface TicketOrdenTrabajoVehiculo extends TicketOrdenTrabajoBase {
+  chapa: string;
+  kilometraje: string;
+  combustible: string;
+  tipoFalla: string;
+  condiciones: TicketCondicionVehiculo[];
+  observacionesEstado: string;
+  servicios: string[];
 }
 
 export interface TicketSegmento {

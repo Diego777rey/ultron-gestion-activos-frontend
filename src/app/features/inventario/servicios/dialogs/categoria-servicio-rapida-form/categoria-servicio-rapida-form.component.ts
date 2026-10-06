@@ -7,17 +7,13 @@ import { UppercaseDirective } from '../../../../../shared/directives/uppercase.d
 import { CategoriaServicioService, CategoriaServicioInput } from '../../services/categoria-servicio.service';
 import { CategoriaServicioOutput } from '../../interfaces/servicio.interface';
 import { DialogRef } from '@angular/cdk/dialog';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-categoria-servicio-rapida-form',
-  imports: [CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [NotifyErrorComponent, CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   template: `
-    @if (error()) {
-      <div class="form-error" role="alert">
-        <span class="material-icons" aria-hidden="true">error_outline</span>
-        <span>{{ error() }}</span>
-      </div>
-    }
+    <app-notify-error [message]="error()" />
 
     <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="field">

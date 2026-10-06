@@ -11,10 +11,13 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  height: 100%;
+  max-height: 100%;
   min-height: 0;
-  padding: 24px 32px 0;
+  padding: 24px 32px 72px;
   gap: 20px;
   overflow: hidden;
+  box-sizing: border-box;
   background: var(--content-bg);
 }
 
@@ -33,14 +36,39 @@
   overflow: hidden;
 }
 
-.stepper-body > app-ot-diagnostico-step,
-.stepper-body > app-ot-en-proceso-step,
-.stepper-body > app-ot-finalizada-step,
+.stepper-body > app-ot-diagnostico-step {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+}
+
+.stepper-body > app-ot-en-proceso-step {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+}
+
+.stepper-body > app-ot-finalizada-step {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+}
+
 .stepper-body > app-ot-facturado-step {
   flex: 1;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   padding-bottom: 8px;
 }
 
@@ -89,18 +117,22 @@
 }
 
 .stepper-footer {
-  position: relative;
-  z-index: 20;
-  flex-shrink: 0;
+  position: fixed;
+  z-index: 30;
+  left: var(--sidebar-width, 60px);
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 -32px;
+  min-height: 72px;
+  margin: 0;
   padding: 16px 32px;
+  box-sizing: border-box;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   background: #1a1a1a;
-  isolation: isolate;
+  transition: left 0.3s ease;
 }
 
 .stepper-footer__right {

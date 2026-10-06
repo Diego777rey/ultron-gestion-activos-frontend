@@ -15,12 +15,7 @@
   </header>
 
   <div class="page__body">
-    @if (error(); as errMsg) {
-      <div class="status-note status-note--warn" role="alert">
-        <span class="material-icons" aria-hidden="true">error_outline</span>
-        <span>{{ errMsg }}</span>
-      </div>
-    }
+    <app-notify-error [message]="error()" />
 
     @if (loadingSesion() && !sesionVista()) {
       <div class="page-state">Cargando sesión…</div>

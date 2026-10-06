@@ -55,6 +55,11 @@ const VENTA_SELECTION = `{
   total
   estado
   formaPago
+  montoRecibido
+  montoRecibidoPyg
+  monedaVuelto
+  vuelto
+  vueltoPyg
   detalles {
     id_detalle_venta
     idProducto

@@ -17,6 +17,10 @@ export interface VentaInput {
   formaPago?: FormaPago;
   moneda?: string;
   montoMonedaOriginal?: number;
+  /** Efectivo entregado por el cliente, en la moneda de la venta (`moneda`). Solo aplica a EFECTIVO. */
+  montoRecibido?: number;
+  /** Moneda en la que el cajero entrega el vuelto (PYG por defecto). */
+  monedaVuelto?: string;
   detalles: DetalleVentaInput[];
 }
 
@@ -47,6 +51,16 @@ export interface VentaOutput {
   formaPago?: FormaPago;
   moneda?: string;
   montoMonedaOriginal?: number;
+  /** Efectivo recibido, en la moneda de la venta; null si no se informó. */
+  montoRecibido?: number | null;
+  /** Equivalente en guaraníes del monto recibido. */
+  montoRecibidoPyg?: number | null;
+  /** Moneda en la que se entregó el vuelto. */
+  monedaVuelto?: string | null;
+  /** Vuelto calculado por el backend, en `monedaVuelto`; null si no se informó el monto recibido. */
+  vuelto?: number | null;
+  /** Equivalente en guaraníes del vuelto. */
+  vueltoPyg?: number | null;
   detalles?: DetalleVentaOutput[];
 }
 

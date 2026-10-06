@@ -15,10 +15,11 @@ import { SectorOutput } from '../../../../../sectores/interfaces/sector.interfac
 import { SectorService } from '../../../../../sectores/services/sector.service';
 import { TransferenciaService } from '../../services/transferencia.service';
 import { TransferenciaOutput } from '../../interfaces/transferencia.interface';
+import { NotifyErrorComponent } from '../../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-transferencia-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, EntitySearcherComponent],
+  imports: [NotifyErrorComponent, ReactiveFormsModule, UiButtonComponent, EntitySearcherComponent],
   templateUrl: './transferencia-form.component.html',
   styleUrl: './transferencia-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -8,12 +8,14 @@ import {
   PrinterInfo,
   TicketFactura,
   TicketOrdenTrabajo,
+  TicketOrdenTrabajoVehiculo,
   TicketVenta,
 } from '../models/impresion.model';
 import {
   buildPrueba,
   buildTicketFactura,
   buildTicketOrdenTrabajo,
+  buildTicketOrdenTrabajoVehiculo,
   buildTicketVenta,
 } from '../printing/escpos-ticket-builder';
 
@@ -136,10 +138,23 @@ export class ImpresionService {
     return this.imprimirLocal(name, buildTicketFactura(ticket), 'Factura enviada a la impresora');
   }
 
+  /** Ticket de recepción de equipos. */
   imprimirTicketOrdenTrabajo(
     ticket: TicketOrdenTrabajo,
     printerName?: string,
   ): Observable<ImpresionResultado> {
+    return this.imprimirOrdenTrabajo(buildTicketOrdenTrabajo(ticket), printerName);
+  }
+
+  /** Ticket de recepción de vehículos. */
+  imprimirTicketOrdenTrabajoVehiculo(
+    ticket: TicketOrdenTrabajoVehiculo,
+    printerName?: string,
+  ): Observable<ImpresionResultado> {
+    return this.imprimirOrdenTrabajo(buildTicketOrdenTrabajoVehiculo(ticket), printerName);
+  }
+
+  private imprimirOrdenTrabajo(data: Uint8Array, printerName?: string): Observable<ImpresionResultado> {
     const name = (printerName ?? this.getConfiguredPrinterName()).trim();
     if (!name) {
       const result = {
@@ -149,11 +164,7 @@ export class ImpresionService {
       this.notifications.warning(result.message, { title: 'Impresora' });
       return of(result);
     }
-    return this.imprimirLocal(
-      name,
-      buildTicketOrdenTrabajo(ticket),
-      'Orden de trabajo enviada a la impresora',
-    );
+    return this.imprimirLocal(name, data, 'Orden de trabajo enviada a la impresora');
   }
 
   private canPrintLocal(): boolean {

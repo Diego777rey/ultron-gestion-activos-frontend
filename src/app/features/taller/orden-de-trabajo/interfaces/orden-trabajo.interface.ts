@@ -1,6 +1,23 @@
 import { ClienteOutput } from '../../../personas/clientes/interfaces/cliente.interface';
 import { VehiculoOutput } from '../../../activos/vehiculos/interfaces/vehiculo.interface';
+import { EquipoOutput, equipoLabel } from '../../../activos/equipos/interfaces/equipo.interface';
 import { CajaOutput } from '../../../financiero/cajas/interfaces/caja.interface';
+
+/** Qué se recepciona: define los datos obligatorios y el ticket que se imprime. */
+export type TipoRecepcion = 'VEHICULO' | 'EQUIPO';
+
+export function tipoRecepcionDe(orden: Pick<OrdenTrabajoOutput, 'tipo_recepcion'> | null | undefined): TipoRecepcion {
+  return orden?.tipo_recepcion === 'EQUIPO' ? 'EQUIPO' : 'VEHICULO';
+}
+
+/** Lo recepcionado en una línea: "Marca Modelo (CHAPA)", precedido por el equipo si lo hay. */
+export function unidadOrden(orden: Pick<OrdenTrabajoOutput, 'tipo_recepcion' | 'vehiculo' | 'equipo'>): string {
+  const v = orden.vehiculo;
+  const desc = [v?.marca, v?.modelo].filter(Boolean).join(' ');
+  const vehiculo = v?.chapa ? `${desc} (${v.chapa})`.trim() : desc;
+  const equipo = tipoRecepcionDe(orden) === 'EQUIPO' ? equipoLabel(orden.equipo) : '';
+  return [equipo, vehiculo].filter(Boolean).join(' · ');
+}
 
 export interface OrdenRecepcionOutput {
   descripcion_falla?: string | null;
@@ -32,6 +49,24 @@ export interface OrdenDiagnosticoOutput {
   observaciones?: string | null;
 }
 
+export const SISTEMAS_HALLAZGO: { value: string; label: string }[] = [
+  { value: 'MOTOR', label: 'Motor' },
+  { value: 'TRANSMISION', label: 'Transmisión' },
+  { value: 'FRENOS', label: 'Frenos' },
+  { value: 'SUSPENSION', label: 'Suspensión' },
+  { value: 'DIRECCION', label: 'Dirección' },
+  { value: 'ELECTRICO', label: 'Eléctrico' },
+  { value: 'REFRIGERACION', label: 'Refrigeración' },
+  { value: 'ESCAPE', label: 'Escape' },
+  { value: 'CARROCERIA', label: 'Carrocería' },
+  { value: 'NEUMATICOS', label: 'Neumáticos' },
+  { value: 'OTRO', label: 'Otro' },
+];
+
+export function labelSistemaHallazgo(sistema: string): string {
+  return SISTEMAS_HALLAZGO.find((s) => s.value === sistema)?.label ?? sistema;
+}
+
 export interface OrdenDiagnosticoHallazgoOutput {
   id_hallazgo?: string | null;
   tipo?: string | null;
@@ -46,7 +81,9 @@ export interface OrdenTrabajoOutput {
   numero_orden?: string | null;
   etapa?: string | null;
   cliente?: ClienteOutput | null;
+  tipo_recepcion?: TipoRecepcion | null;
   vehiculo?: VehiculoOutput | null;
+  equipo?: EquipoOutput | null;
   mecanico?: FuncionarioResumen | null;
   mecanicos?: FuncionarioResumen[] | null;
   sector?: SectorResumen | null;
@@ -118,7 +155,9 @@ export interface OrdenTrabajoInput {
   id_sector?: string | null;
   id_responsable?: string | null;
   id_cliente?: string | null;
+  tipo_recepcion?: TipoRecepcion | null;
   id_vehiculo?: string | null;
+  id_equipo?: string | null;
   id_mecanico?: string | null;
   ids_mecanicos?: string[] | null;
   id_caja?: string | null;

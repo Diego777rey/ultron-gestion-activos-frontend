@@ -1,308 +1,432 @@
-<div class="ot-recepcion-split" [class.ot-recepcion-split--con-historial]="historialAbierto()" [class.ot-recepcion--lectura]="soloLectura()">
-  <div class="ot-recepcion-layout">
-    <div class="ot-recepcion-topbar">
-      <p class="ot-recepcion-topbar__hint">
+<div class="ot-recepcion" [class.ot-recepcion--lectura]="soloLectura()">
+  <section class="ot-recepcion__detalle" aria-label="Datos de recepción">
+    @if (soloLectura() || estadoGuardado() !== 'idle') {
+      <p class="ot-recepcion__status" aria-live="polite">
         @if (soloLectura()) {
           Datos cargados en la recepción.
+        } @else if (estadoGuardado() === 'guardando') {
+          Guardando…
         } @else {
-          Se guarda solo mientras completás. Queda registrada cuando cliente, vehículo, mecánico y la falla están cargados.
-          @if (estadoGuardado() === 'guardando') {
-            Guardando…
-          } @else if (estadoGuardado() === 'guardado') {
-            Guardado.
-          }
+          Guardado.
         }
       </p>
-      <app-ui-button
-        [label]="historialLabel()"
-        [icon]="historialAbierto() ? 'chevron_right' : 'history'"
-        variant="outline"
-        size="sm"
-        [disabled]="!puedeVerHistorial() && !historialAbierto()"
-        (clicked)="toggleHistorial()"
-      />
-    </div>
+    }
 
     <form class="ot-form ot-form--wide" [formGroup]="form">
-    <!-- Cliente y vehículo -->
-    <app-ot-collapsible-section
-      icon="directions_car"
-      title="Cliente y vehículo"
-      hint="Busca existentes o registra nuevos"
-      [summary]="resumenClienteVehiculo()"
-      [status]="statusClienteVehiculo()"
-      [(expanded)]="openClienteVehiculo"
-    >
-      <div class="ot-form__grid--2">
-        <div class="ot-field">
-          <label class="ot-field__label-static">Cliente*</label>
-          <app-entity-searcher
-            [items]="clientes()"
-            [columns]="clienteColumns"
-            [totalItems]="clientesTotal()"
-            [loading]="loadingClientes()"
-            [displayFn]="clienteLabelFn"
-            [keyFn]="clienteKeyFn"
-            [value]="form.controls.id_cliente.value"
-            (searchChange)="fetchClientes(0, 10, $event)"
-            (pageChange)="fetchClientes($event.pageIndex, $event.pageSize, '')"
-            (itemChange)="onClienteSelected($event)"
-            [allowAdd]="true"
-            [backendPagination]="true"
-            (addClicked)="onAddCliente()"
-            label="Buscar cliente..."
-          />
-          @if (form.controls.id_cliente.touched && form.controls.id_cliente.invalid) {
-            <span class="ot-field__error">Debes seleccionar un cliente</span>
-          }
-        </div>
+      <section class="ot-diag-card">
+        <header class="ot-diag-card__head">
+          <span class="ot-diag-card__icon" aria-hidden="true">
+            <span class="material-icons">{{ tipoRecepcion() === 'EQUIPO' ? 'memory' : 'directions_car' }}</span>
+          </span>
+          <div class="ot-diag-card__titles">
+            <h3 class="ot-diag-card__title">
+              {{ tipoRecepcion() === 'EQUIPO' ? 'Cliente y equipo' : 'Cliente y vehículo' }}
+            </h3>
+            <p class="ot-diag-card__hint">Busca existentes o registra nuevos</p>
+          </div>
+          <span
+            class="ot-recepcion-status"
+            [class.ot-recepcion-status--ok]="statusClienteVehiculo() === 'ok'"
+            [class.ot-recepcion-status--pending]="statusClienteVehiculo() === 'pending'"
+            [class.ot-recepcion-status--error]="statusClienteVehiculo() === 'error'"
+          >
+            <span class="material-icons" aria-hidden="true">{{ statusIcon(statusClienteVehiculo()) }}</span>
+          </span>
+        </header>
+        <div class="ot-diag-card__body">
+          <div class="ot-estado-block">
+            <span class="ot-estado-block__label">¿Qué se recepciona?</span>
+            <div class="ot-chip-grid" role="radiogroup" aria-label="Tipo de recepción">
+              <button
+                type="button"
+                class="ot-chip"
+                role="radio"
+                [attr.aria-checked]="tipoRecepcion() === 'VEHICULO'"
+                [class.ot-chip--active]="tipoRecepcion() === 'VEHICULO'"
+                [disabled]="soloLectura()"
+                (click)="seleccionarTipoRecepcion('VEHICULO')"
+              >
+                <span class="material-icons" aria-hidden="true">directions_car</span>
+                Vehículo
+              </button>
+              <button
+                type="button"
+                class="ot-chip"
+                role="radio"
+                [attr.aria-checked]="tipoRecepcion() === 'EQUIPO'"
+                [class.ot-chip--active]="tipoRecepcion() === 'EQUIPO'"
+                [disabled]="soloLectura()"
+                (click)="seleccionarTipoRecepcion('EQUIPO')"
+              >
+                <span class="material-icons" aria-hidden="true">memory</span>
+                Equipo (ECU, tablero, módulo…)
+              </button>
+            </div>
+          </div>
 
-        <div class="ot-field">
-          <label class="ot-field__label-static">Vehículo*</label>
-          <app-entity-searcher
-            [items]="vehiculos()"
-            [columns]="vehiculoColumns"
-            [totalItems]="vehiculosTotal()"
-            [loading]="loadingVehiculos()"
-            [displayFn]="vehiculoLabelFn"
-            [keyFn]="vehiculoKeyFn"
-            [value]="form.controls.id_vehiculo.value"
-            (searchChange)="fetchVehiculos(0, 10, $event)"
-            (pageChange)="fetchVehiculos($event.pageIndex, $event.pageSize, '')"
-            (itemChange)="onVehiculoSelected($event)"
-            [allowAdd]="true"
-            [backendPagination]="true"
-            (addClicked)="onAddVehiculo()"
-            label="Buscar vehículo..."
-          />
-          @if (form.controls.id_vehiculo.touched && form.controls.id_vehiculo.invalid) {
-            <span class="ot-field__error">Debes seleccionar un vehículo</span>
-          }
-        </div>
-      </div>
-    </app-ot-collapsible-section>
+          <div class="ot-form__grid--2">
+            <div class="ot-field">
+              <label class="ot-field__label-static">Cliente*</label>
+              <app-entity-searcher
+                [items]="clientes()"
+                [columns]="clienteColumns"
+                [totalItems]="clientesTotal()"
+                [loading]="loadingClientes()"
+                [displayFn]="clienteLabelFn"
+                [keyFn]="clienteKeyFn"
+                [value]="form.controls.id_cliente.value"
+                (searchChange)="fetchClientes(0, 10, $event)"
+                (pageChange)="fetchClientes($event.pageIndex, $event.pageSize, '')"
+                (itemChange)="onClienteSelected($event)"
+                [allowAdd]="true"
+                [backendPagination]="true"
+                (addClicked)="onAddCliente()"
+                label="Buscar cliente..."
+              />
+              @if (form.controls.id_cliente.touched && form.controls.id_cliente.invalid) {
+                <span class="ot-field__error">Debes seleccionar un cliente</span>
+              }
+            </div>
 
-    <!-- Datos de la orden -->
-    <app-ot-collapsible-section
-      icon="assignment"
-      title="Datos de la orden"
-      hint="Sector, responsable y mecánicos asignados"
-      [summary]="resumenDatos()"
-      [status]="statusDatos()"
-      [(expanded)]="openDatos"
-    >
-      <div class="ot-form__grid--2">
-        <div class="ot-field">
-          <label class="ot-field__label-static">Sector (reparaciones)*</label>
-          <app-entity-searcher
-            [items]="sectores()"
-            [columns]="sectorColumns"
-            [totalItems]="sectoresTotal()"
-            [loading]="loadingSectores()"
-            [displayFn]="sectorLabelFn"
-            [keyFn]="sectorKeyFn"
-            [value]="form.controls.id_sector.value"
-            (searchChange)="fetchSectores(0, 10, $event)"
-            (pageChange)="fetchSectores($event.pageIndex, $event.pageSize, '')"
-            (itemChange)="onSectorSelected($event)"
-            [backendPagination]="true"
-            label="Buscar sector..."
-            [allowAdd]="true"
-            addLabel="Nuevo sector"
-            (addClicked)="onAddSector()"
-          />
-          @if (form.controls.id_sector.touched && form.controls.id_sector.invalid) {
-            <span class="ot-field__error">Debes seleccionar un sector</span>
-          }
-        </div>
+            @if (tipoRecepcion() === 'EQUIPO') {
+              <div class="ot-field">
+                <label class="ot-field__label-static">Equipo*</label>
+                <app-entity-searcher
+                  [items]="equipos()"
+                  [columns]="equipoColumns"
+                  [totalItems]="equiposTotal()"
+                  [loading]="loadingEquipos()"
+                  [displayFn]="equipoLabelFn"
+                  [keyFn]="equipoKeyFn"
+                  [value]="form.controls.id_equipo.value"
+                  (searchChange)="fetchEquipos(0, 10, $event)"
+                  (pageChange)="fetchEquipos($event.pageIndex, $event.pageSize, '')"
+                  (itemChange)="onEquipoSelected($event)"
+                  [allowAdd]="true"
+                  addLabel="Nuevo equipo"
+                  [backendPagination]="true"
+                  (addClicked)="onAddEquipo()"
+                  label="Buscar equipo..."
+                />
+                @if (form.controls.id_equipo.touched && form.controls.id_equipo.invalid) {
+                  <span class="ot-field__error">Debes seleccionar un equipo</span>
+                }
+              </div>
+            }
 
-        <div class="ot-field">
-          <label class="ot-field__label-static">Usuario responsable*</label>
-          <app-entity-searcher
-            [items]="usuarios()"
-            [columns]="usuarioColumns"
-            [totalItems]="usuariosTotal()"
-            [loading]="loadingUsuarios()"
-            [displayFn]="usuarioLabelFn"
-            [keyFn]="usuarioKeyFn"
-            [value]="form.controls.id_responsable.value"
-            (searchChange)="fetchUsuarios(0, 10, $event)"
-            (pageChange)="fetchUsuarios($event.pageIndex, $event.pageSize, '')"
-            (itemChange)="onUsuarioSelected($event)"
-            [backendPagination]="true"
-            label="Buscar responsable..."
-          />
-          @if (form.controls.id_responsable.touched && form.controls.id_responsable.invalid) {
-            <span class="ot-field__error">Debes seleccionar un responsable</span>
-          }
+            <div class="ot-field">
+              <label class="ot-field__label-static">
+                {{ tipoRecepcion() === 'EQUIPO' ? 'Vehículo (opcional)' : 'Vehículo*' }}
+              </label>
+              <app-entity-searcher
+                [items]="vehiculos()"
+                [columns]="vehiculoColumns"
+                [totalItems]="vehiculosTotal()"
+                [loading]="loadingVehiculos()"
+                [displayFn]="vehiculoLabelFn"
+                [keyFn]="vehiculoKeyFn"
+                [value]="form.controls.id_vehiculo.value"
+                (searchChange)="fetchVehiculos(0, 10, $event)"
+                (pageChange)="fetchVehiculos($event.pageIndex, $event.pageSize, '')"
+                (itemChange)="onVehiculoSelected($event)"
+                [allowAdd]="true"
+                [backendPagination]="true"
+                (addClicked)="onAddVehiculo()"
+                label="Buscar vehículo..."
+              />
+              @if (form.controls.id_vehiculo.touched && form.controls.id_vehiculo.invalid) {
+                <span class="ot-field__error">Debes seleccionar un vehículo</span>
+              }
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div class="ot-field ot-field--full">
-          <label class="ot-field__label-static">Mecánicos asignados*</label>
-          <app-entity-searcher
-            [items]="mecanicos()"
-            [columns]="mecanicoColumns"
-            [totalItems]="mecanicosTotal()"
-            [loading]="loadingMecanicos()"
-            [displayFn]="mecanicoLabelFn"
-            [keyFn]="mecanicoKeyFn"
-            [value]="mecanicoBusquedaId()"
-            (searchChange)="fetchMecanicos(0, 10, $event)"
-            (pageChange)="fetchMecanicos($event.pageIndex, $event.pageSize, '')"
-            (itemChange)="onMecanicoSelected($event)"
-            [backendPagination]="true"
-            label="Agregar mecánico..."
-          />
-          @if (selectedMecanicos().length) {
-            <ul class="ot-mecanico-list">
-              @for (mecanico of selectedMecanicos(); track mecanico.id_funcionario) {
-                <li class="ot-mecanico-chip">
-                  <span class="material-icons" aria-hidden="true">engineering</span>
-                  <span>{{ mecanicoLabelFn(mecanico) }}</span>
+      <section class="ot-diag-card">
+        <header class="ot-diag-card__head">
+          <span class="ot-diag-card__icon" aria-hidden="true">
+            <span class="material-icons">assignment</span>
+          </span>
+          <div class="ot-diag-card__titles">
+            <h3 class="ot-diag-card__title">Datos de la orden</h3>
+            <p class="ot-diag-card__hint">Sector, responsable y mecánicos asignados</p>
+          </div>
+          <span
+            class="ot-recepcion-status"
+            [class.ot-recepcion-status--ok]="statusDatos() === 'ok'"
+            [class.ot-recepcion-status--pending]="statusDatos() === 'pending'"
+            [class.ot-recepcion-status--error]="statusDatos() === 'error'"
+          >
+            <span class="material-icons" aria-hidden="true">{{ statusIcon(statusDatos()) }}</span>
+          </span>
+        </header>
+        <div class="ot-diag-card__body">
+          <div class="ot-form__grid--2">
+            <div class="ot-field">
+              <label class="ot-field__label-static">Sector (reparaciones)*</label>
+              <app-entity-searcher
+                [items]="sectores()"
+                [columns]="sectorColumns"
+                [totalItems]="sectoresTotal()"
+                [loading]="loadingSectores()"
+                [displayFn]="sectorLabelFn"
+                [keyFn]="sectorKeyFn"
+                [value]="form.controls.id_sector.value"
+                (searchChange)="fetchSectores(0, 10, $event)"
+                (pageChange)="fetchSectores($event.pageIndex, $event.pageSize, '')"
+                (itemChange)="onSectorSelected($event)"
+                [backendPagination]="true"
+                label="Buscar sector..."
+                [allowAdd]="true"
+                addLabel="Nuevo sector"
+                (addClicked)="onAddSector()"
+              />
+              @if (form.controls.id_sector.touched && form.controls.id_sector.invalid) {
+                <span class="ot-field__error">Debes seleccionar un sector</span>
+              }
+            </div>
+
+            <div class="ot-field">
+              <label class="ot-field__label-static">Usuario responsable*</label>
+              <app-entity-searcher
+                [items]="usuarios()"
+                [columns]="usuarioColumns"
+                [totalItems]="usuariosTotal()"
+                [loading]="loadingUsuarios()"
+                [displayFn]="usuarioLabelFn"
+                [keyFn]="usuarioKeyFn"
+                [value]="form.controls.id_responsable.value"
+                (searchChange)="fetchUsuarios(0, 10, $event)"
+                (pageChange)="fetchUsuarios($event.pageIndex, $event.pageSize, '')"
+                (itemChange)="onUsuarioSelected($event)"
+                [backendPagination]="true"
+                label="Buscar responsable..."
+              />
+              @if (form.controls.id_responsable.touched && form.controls.id_responsable.invalid) {
+                <span class="ot-field__error">Debes seleccionar un responsable</span>
+              }
+            </div>
+
+            <div class="ot-field ot-field--full">
+              <label class="ot-field__label-static">Mecánicos asignados*</label>
+              <app-entity-searcher
+                [items]="mecanicos()"
+                [columns]="mecanicoColumns"
+                [totalItems]="mecanicosTotal()"
+                [loading]="loadingMecanicos()"
+                [displayFn]="mecanicoLabelFn"
+                [keyFn]="mecanicoKeyFn"
+                [value]="mecanicoBusquedaId()"
+                (searchChange)="fetchMecanicos(0, 10, $event)"
+                (pageChange)="fetchMecanicos($event.pageIndex, $event.pageSize, '')"
+                (itemChange)="onMecanicoSelected($event)"
+                [backendPagination]="true"
+                label="Agregar mecánico..."
+              />
+              @if (selectedMecanicos().length) {
+                <ul class="ot-mecanico-list">
+                  @for (mecanico of selectedMecanicos(); track mecanico.id_funcionario) {
+                    <li class="ot-mecanico-chip">
+                      <span class="material-icons" aria-hidden="true">engineering</span>
+                      <span>{{ mecanicoLabelFn(mecanico) }}</span>
+                      <button
+                        type="button"
+                        class="ot-mecanico-chip__remove"
+                        (click)="quitarMecanico(mecanico)"
+                        [attr.aria-label]="'Quitar a ' + mecanicoLabelFn(mecanico)"
+                      >
+                        <span class="material-icons" aria-hidden="true">close</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+              @if (form.controls.ids_mecanicos.touched && form.controls.ids_mecanicos.invalid) {
+                <span class="ot-field__error">Debes asignar al menos un mecánico</span>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ot-diag-card">
+        <header class="ot-diag-card__head">
+          <span class="ot-diag-card__icon" aria-hidden="true">
+            <span class="material-icons">report_problem</span>
+          </span>
+          <div class="ot-diag-card__titles">
+            <h3 class="ot-diag-card__title">Descripción de la falla*</h3>
+            <p class="ot-diag-card__hint">Lo que el cliente reporta sobre el problema</p>
+          </div>
+          <span
+            class="ot-recepcion-status"
+            [class.ot-recepcion-status--ok]="statusFalla() === 'ok'"
+            [class.ot-recepcion-status--pending]="statusFalla() === 'pending'"
+            [class.ot-recepcion-status--error]="statusFalla() === 'error'"
+          >
+            <span class="material-icons" aria-hidden="true">{{ statusIcon(statusFalla()) }}</span>
+          </span>
+        </header>
+        <div class="ot-diag-card__body">
+          <div class="ot-field">
+            <textarea
+              id="ot-falla"
+              class="ot-field__input ot-field__input--tall"
+              formControlName="descripcion_falla"
+              rows="4"
+              placeholder="Describe con detalle los síntomas, ruidos, luces de tablero, etc."
+            ></textarea>
+            @if (form.controls.descripcion_falla.touched && form.controls.descripcion_falla.invalid) {
+              <span class="ot-field__error">Debes ingresar la descripción de la falla</span>
+            }
+          </div>
+        </div>
+      </section>
+
+      @if (tipoRecepcion() === 'VEHICULO') {
+        <section class="ot-diag-card">
+          <header class="ot-diag-card__head">
+            <span class="ot-diag-card__icon" aria-hidden="true">
+              <span class="material-icons">fact_check</span>
+            </span>
+            <div class="ot-diag-card__titles">
+              <h3 class="ot-diag-card__title">Estado inicial del vehículo</h3>
+              <p class="ot-diag-card__hint">Marca el tipo de falla y las condiciones observadas al ingreso</p>
+            </div>
+            @if (statusEstado() !== 'none') {
+              <span class="ot-recepcion-status ot-recepcion-status--ok">
+                <span class="material-icons" aria-hidden="true">check_circle</span>
+              </span>
+            }
+          </header>
+          <div class="ot-diag-card__body">
+            <div class="ot-estado-block">
+              <span class="ot-estado-block__label">Tipo de falla</span>
+              <div class="ot-chip-grid" role="group" aria-label="Tipo de falla">
+                @for (op of opcionesPorGrupo('falla'); track op.control) {
                   <button
                     type="button"
-                    class="ot-mecanico-chip__remove"
-                    (click)="quitarMecanico(mecanico)"
-                    [attr.aria-label]="'Quitar a ' + mecanicoLabelFn(mecanico)"
+                    class="ot-chip"
+                    [class.ot-chip--active]="isChecked(op.control)"
+                    (click)="toggleEstado(op.control)"
                   >
-                    <span class="material-icons" aria-hidden="true">close</span>
+                    <span class="material-icons" aria-hidden="true">{{ op.icon }}</span>
+                    {{ op.label }}
                   </button>
-                </li>
-              }
-            </ul>
-          }
-          @if (form.controls.ids_mecanicos.touched && form.controls.ids_mecanicos.invalid) {
-            <span class="ot-field__error">Debes asignar al menos un mecánico</span>
-          }
-        </div>
-      </div>
-    </app-ot-collapsible-section>
+                }
+              </div>
+            </div>
 
-    <!-- Descripción de la falla -->
-    <app-ot-collapsible-section
-      icon="report_problem"
-      title="Descripción de la falla*"
-      hint="Lo que el cliente reporta sobre el problema"
-      [summary]="resumenFalla()"
-      [status]="statusFalla()"
-      [(expanded)]="openFalla"
-    >
-      <div class="ot-field">
-        <textarea
-          id="ot-falla"
-          class="ot-field__input ot-field__input--tall"
-          formControlName="descripcion_falla"
-          rows="4"
-          placeholder="Describe con detalle los síntomas, ruidos, luces de tablero, etc."
-        ></textarea>
-        @if (form.controls.descripcion_falla.touched && form.controls.descripcion_falla.invalid) {
-          <span class="ot-field__error">Debes ingresar la descripción de la falla</span>
-        }
-      </div>
-    </app-ot-collapsible-section>
+            <div class="ot-estado-block">
+              <span class="ot-estado-block__label">Condición al ingreso</span>
+              <div class="ot-chip-grid" role="group" aria-label="Condición del vehículo">
+                @for (op of opcionesPorGrupo('condicion'); track op.control) {
+                  <button
+                    type="button"
+                    class="ot-chip"
+                    [class.ot-chip--active]="isChecked(op.control)"
+                    (click)="toggleEstado(op.control)"
+                  >
+                    <span class="material-icons" aria-hidden="true">{{ op.icon }}</span>
+                    {{ op.label }}
+                  </button>
+                }
+              </div>
+            </div>
 
-    <!-- Estado inicial del vehículo -->
-    <app-ot-collapsible-section
-      icon="fact_check"
-      title="Estado inicial del vehículo"
-      hint="Marca el tipo de falla y las condiciones observadas al ingreso"
-      [summary]="resumenEstado()"
-      [status]="statusEstado()"
-      [(expanded)]="openEstado"
-    >
-      <div class="ot-estado-block">
-        <span class="ot-estado-block__label">Tipo de falla</span>
-        <div class="ot-chip-grid" role="group" aria-label="Tipo de falla">
-          @for (op of opcionesPorGrupo('falla'); track op.control) {
-            <button
-              type="button"
-              class="ot-chip"
-              [class.ot-chip--active]="isChecked(op.control)"
-              (click)="toggleEstado(op.control)"
-            >
-              <span class="material-icons" aria-hidden="true">{{ op.icon }}</span>
-              {{ op.label }}
-            </button>
-          }
-        </div>
-      </div>
+            <div class="ot-form__grid--2">
+              <div class="ot-field">
+                <label class="ot-field__label-static" for="ot-km">Kilometraje</label>
+                <input
+                  id="ot-km"
+                  class="ot-field__input"
+                  type="number"
+                  min="0"
+                  formControlName="kilometraje"
+                  placeholder="Ej: 85400"
+                />
+              </div>
 
-      <div class="ot-estado-block">
-        <span class="ot-estado-block__label">Condición al ingreso</span>
-        <div class="ot-chip-grid" role="group" aria-label="Condición del vehículo">
-          @for (op of opcionesPorGrupo('condicion'); track op.control) {
-            <button
-              type="button"
-              class="ot-chip"
-              [class.ot-chip--active]="isChecked(op.control)"
-              (click)="toggleEstado(op.control)"
-            >
-              <span class="material-icons" aria-hidden="true">{{ op.icon }}</span>
-              {{ op.label }}
-            </button>
-          }
-        </div>
-      </div>
+              <div class="ot-field">
+                <label class="ot-field__label-static" for="ot-combustible">Nivel de combustible</label>
+                <select id="ot-combustible" class="ot-field__input" formControlName="nivel_combustible">
+                  @for (nivel of nivelesCombustible; track nivel.value) {
+                    <option [value]="nivel.value">{{ nivel.label }}</option>
+                  }
+                </select>
+              </div>
 
-      <div class="ot-form__grid--2">
-        <div class="ot-field">
-          <label class="ot-field__label-static" for="ot-km">Kilometraje</label>
-          <input
-            id="ot-km"
-            class="ot-field__input"
-            type="number"
-            min="0"
-            formControlName="kilometraje"
-            placeholder="Ej: 85400"
-          />
-        </div>
-
-        <div class="ot-field">
-          <label class="ot-field__label-static" for="ot-combustible">Nivel de combustible</label>
-          <select id="ot-combustible" class="ot-field__input" formControlName="nivel_combustible">
-            @for (nivel of nivelesCombustible; track nivel.value) {
-              <option [value]="nivel.value">{{ nivel.label }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="ot-field ot-field--full">
-          <label class="ot-field__label-static" for="ot-obs-estado">Observaciones del estado</label>
-          <textarea
-            id="ot-obs-estado"
-            class="ot-field__input"
-            formControlName="observaciones_estado"
-            rows="2"
-            placeholder="Detalle adicional: accesorios, objetos en el interior, etc."
-          ></textarea>
-        </div>
-      </div>
-    </app-ot-collapsible-section>
+              <div class="ot-field ot-field--full">
+                <label class="ot-field__label-static" for="ot-obs-estado">Observaciones del estado</label>
+                <textarea
+                  id="ot-obs-estado"
+                  class="ot-field__input"
+                  formControlName="observaciones_estado"
+                  rows="2"
+                  placeholder="Detalle adicional: accesorios, objetos en el interior, etc."
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
     </form>
-  </div>
+  </section>
 
-  @if (historialAbierto()) {
-    <aside class="ot-historial-aside" aria-label="Historial de órdenes">
-      <header class="ot-historial-aside__header">
-        <h3 class="ot-historial-aside__title">
-          <span class="material-icons" aria-hidden="true">history</span>
-          Historial
-        </h3>
-        <button
-          type="button"
-          class="ot-historial-aside__close"
-          aria-label="Cerrar historial"
-          (click)="cerrarHistorial()"
-        >
-          <span class="material-icons" aria-hidden="true">close</span>
-        </button>
-      </header>
-      <p class="ot-historial-aside__hint">
-        Órdenes anteriores del cliente o vehículo seleccionado
+  <aside class="ot-recepcion__historial" aria-label="Historial del vehículo">
+    <header class="ot-recepcion__historial-head">
+      <h3 class="ot-recepcion__historial-title">
+        <span class="material-icons" aria-hidden="true">history</span>
+        Historial del vehículo
+      </h3>
+      <p class="ot-recepcion__historial-hint">
+        @if (vehiculoSeleccionado()) {
+          Órdenes anteriores de la unidad seleccionada
+        } @else {
+          Seleccioná un vehículo para ver sus órdenes anteriores
+        }
       </p>
-      <div class="ot-historial-aside__body">
-        <app-ot-historial-panel [items]="historial()" [loading]="historialLoading()" />
-      </div>
-    </aside>
-  }
+    </header>
+
+    <div class="ot-recepcion__historial-table">
+      <app-data-table
+        [columns]="historialColumns"
+        [data]="historial()"
+        [loading]="historialLoading()"
+        [trackBy]="trackHistorial"
+        [emptyMessage]="vehiculoSeleccionado() ? 'Este vehículo no tiene órdenes anteriores' : 'Seleccioná un vehículo para ver el historial'"
+      >
+        <ng-template appTableCell="numero_orden" [appTableCellFrom]="historial()" let-orden>
+          <span class="ot-historial-numero">{{ orden.numero_orden || '—' }}</span>
+        </ng-template>
+
+          <ng-template appTableCell="etapa" [appTableCellFrom]="historial()" let-orden>
+            <span class="ot-historial-etapa" [style.background]="getEtapaInfo(orden.etapa).color">
+              <span class="material-icons" aria-hidden="true">{{ getEtapaInfo(orden.etapa).icono }}</span>
+              {{ getEtapaInfo(orden.etapa).label }}
+            </span>
+          </ng-template>
+
+          <ng-template appTableCell="ver" [appTableCellFrom]="historial()" let-orden>
+            <button
+              type="button"
+              class="ot-historial-ver"
+              [attr.aria-label]="'Ver orden ' + (orden.numero_orden || '')"
+              title="Ver la orden"
+              (click)="verOrden(orden, $event)"
+            >
+              <span class="material-icons" aria-hidden="true">visibility</span>
+            </button>
+          </ng-template>
+      </app-data-table>
+    </div>
+
+    <app-paginator
+      [total]="historialTotal()"
+      [pageIndex]="historialPageIndex()"
+      [pageSize]="historialPageSize()"
+      [pageSizeOptions]="[10, 15, 25]"
+      (pageChange)="onHistorialPage($event)"
+    />
+  </aside>
 </div>

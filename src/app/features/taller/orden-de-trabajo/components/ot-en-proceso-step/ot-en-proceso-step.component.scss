@@ -1,18 +1,64 @@
-.ot-en-proceso {
+:host {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding-bottom: 8px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
-.ot-en-proceso > .ot-hint {
-  margin-bottom: 0;
+.ot-proceso {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 12px;
+}
+
+.ot-proceso__panel {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1e1e1e;
+}
+
+.ot-proceso__detalle {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: #2a2a2a;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ot-proceso__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #242424;
+
+  > app-ot-diagnostico-hallazgos,
+  > app-ot-solicitud-repuesto {
+    min-width: 0;
+    min-height: 0;
+  }
+
+  > app-ot-solicitud-repuesto {
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+  }
 }
 
 .ot-sector-warn {
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  flex-shrink: 0;
   background: rgba(251, 191, 36, 0.12);
   border: 1px solid rgba(251, 191, 36, 0.5);
   border-radius: 8px;
@@ -50,4 +96,36 @@
     flex-wrap: wrap;
     margin-top: 4px;
   }
+}
+
+@media (max-width: 1080px) {
+  :host {
+    overflow: auto;
+  }
+
+  .ot-proceso,
+  .ot-proceso__panel {
+    flex: none;
+    min-height: min-content;
+    overflow: visible;
+    grid-template-columns: 1fr;
+  }
+
+  .ot-proceso__detalle {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: visible;
+  }
+
+  .ot-proceso__split {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    overflow: visible;
+  }
+
+  .ot-proceso__split > app-ot-solicitud-repuesto {
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
 }

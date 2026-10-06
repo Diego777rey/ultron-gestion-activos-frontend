@@ -7,10 +7,11 @@ import { UppercaseDirective } from '../../../../../shared/directives/uppercase.d
 import { CategoriaServicioService, CategoriaServicioInput } from '../../services/categoria-servicio.service';
 import { CategoriaServicioOutput } from '../../interfaces/servicio.interface';
 import { DialogRef } from '@angular/cdk/dialog';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-subcategoria-servicio-form',
-  imports: [CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [NotifyErrorComponent, CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './subcategoria-servicio-form.component.html',
   styleUrl: './subcategoria-servicio-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,6 +35,7 @@ export class SubcategoriaServicioFormComponent {
   });
 
   protected onSubmit(): void {
+    this.error = null;
     const idPadre = this.idCategoriaPadre();
     if (!idPadre) {
       this.error = 'No se pudo identificar la categoría padre';

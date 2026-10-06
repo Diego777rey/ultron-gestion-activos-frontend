@@ -11,9 +11,11 @@ import { of } from 'rxjs';
 import { FuncionarioService } from '../../services/funcionario.service';
 import { PersonaService } from '../../../shared/services/persona.service';
 import { nombreCompletoPersona } from '../../../shared/nombre-persona';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
+
 @Component({
   selector: 'app-funcionario-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [NotifyErrorComponent, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './funcionario-form.html',
   styleUrl: './funcionario-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -104,6 +106,7 @@ export class FuncionarioFormComponent {
   private readonly dialogRef = inject(DialogRef, { optional: true });
 
   protected onSubmit(): void {
+    this.error = null;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

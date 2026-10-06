@@ -27,6 +27,8 @@ import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja
 import { PagoDialogComponent, PagoConfirmado } from './dialogs/pago-dialog/pago-dialog.component';
 import { FacturaDialogComponent, FacturaConfirmada } from './dialogs/factura-dialog/factura-dialog.component';
 import { ReimprimirTicketDialogComponent } from './dialogs/reimprimir-ticket-dialog/reimprimir-ticket-dialog.component';
+import { VueltoDialogComponent } from './dialogs/vuelto-dialog/vuelto-dialog.component';
+import { VueltoCalculado } from './interfaces/vuelto.interface';
 import {
   PresentacionDialogComponent,
   PresentacionElegida,
@@ -43,6 +45,7 @@ import { FacturaService } from '../../financiero/facturacion/services/factura.se
 import { FacturaOutput } from '../../financiero/facturacion/interfaces/factura.interface';
 import { CATALOG_PAGE_SIZE } from '../../../shared/models/pagination.model';
 import { AuthService } from '../../../core/auth/auth.service';
+import { NotifyErrorComponent } from '../../../shared/components/notify-error/notify-error';
 
 const POS_ROUTE = '/ventas/punto-de-venta';
 /** Umbral (px) antes del final del scroll para pedir la siguiente página. */
@@ -53,12 +56,13 @@ export type PdvNumero = 1 | 2;
 
 @Component({
   selector: 'app-punto-de-venta',
-  imports: [
+  imports: [NotifyErrorComponent, 
     ModalComponent,
     AbrirCajaDialogComponent,
     PagoDialogComponent,
     FacturaDialogComponent,
     ReimprimirTicketDialogComponent,
+    VueltoDialogComponent,
     PresentacionDialogComponent,
     UiButtonComponent,
     DecimalPipe,
@@ -93,6 +97,8 @@ export class PuntoDeVentaComponent {
   readonly inicioDialogOpen = signal(true);
   readonly gestionCajaOpen = signal(false);
   readonly pagoDialogOpen = signal(false);
+  /** Vuelto de la última venta en efectivo, mostrado hasta que el cajero confirma que lo entregó. */
+  readonly vueltoPendiente = signal<{ vuelto: VueltoCalculado; numeroVenta: string } | null>(null);
   readonly facturaDialogOpen = signal(false);
   readonly reimprimirDialogOpen = signal(false);
   readonly maletinVerificado = signal(false);
@@ -490,7 +496,11 @@ export class PuntoDeVentaComponent {
 
   protected cobrarConMetodo(pago: PagoConfirmado): void {
     this.pagoDialogOpen.set(false);
-    this.registrarVenta(false, pago.formaPago, pago.moneda);
+    this.registrarVenta(false, pago.formaPago, pago.moneda, undefined, pago);
+  }
+
+  protected cerrarVueltoDialog(): void {
+    this.vueltoPendiente.set(null);
   }
 
   protected abrirReimprimirDialog(): void {
@@ -542,6 +552,7 @@ export class PuntoDeVentaComponent {
     formaPago: FormaPago = 'EFECTIVO',
     moneda: string = 'PYG',
     idCliente?: number,
+    pago?: PagoConfirmado,
   ): void {
     const sesion = this.sesion();
     const items = this.cart();
@@ -562,13 +573,16 @@ export class PuntoDeVentaComponent {
       descuento: 0,
       formaPago,
       moneda: moneda !== 'PYG' ? moneda : undefined,
+      montoRecibido: pago?.montoRecibido,
+      monedaVuelto: pago?.monedaVuelto,
       detalles: items.map((item) => this.toDetalleInput(item)),
     };
     this.selling.set(true);
     this.ventaError.set(null);
-    const alCobrar = () => {
+    const alCobrar = (venta: VentaOutput) => {
       this.selling.set(false);
       this.cartActivo().set([]);
+      this.mostrarVuelto(venta, pago?.vuelto);
       this.refreshSesion();
       this.loadProductos(true);
       if (this.mostrandoOrdenes() || items.some((item) => item.tipo === 'ORDEN')) {
@@ -588,8 +602,8 @@ export class PuntoDeVentaComponent {
           notifyError: false,
         })
         .subscribe({
-          next: ({ factura }) => {
-            alCobrar();
+          next: ({ venta, factura }) => {
+            alCobrar(venta);
             this.impresion.imprimirFactura(this.toTicketFactura(factura)).subscribe();
           },
           error: (err: Error) => alFallar(err, 'No se pudo emitir la factura'),
@@ -604,9 +618,21 @@ export class PuntoDeVentaComponent {
         notifyError: false,
       })
       .subscribe({
-        next: () => alCobrar(),
+        next: (venta) => alCobrar(venta),
         error: (err: Error) => alFallar(err, 'No se pudo registrar la venta'),
       });
+  }
+
+  /**
+   * El vuelto que manda el backend en la venta es la fuente de verdad; el desglose
+   * en billetes y monedas es el que ya calculó el backend para ese mismo monto.
+   */
+  private mostrarVuelto(venta: VentaOutput, calculo?: VueltoCalculado): void {
+    const vueltoPyg = Number(venta.vueltoPyg ?? venta.vuelto ?? 0);
+    if (!calculo || vueltoPyg <= 0 || calculo.vueltoPyg !== vueltoPyg) {
+      return;
+    }
+    this.vueltoPendiente.set({ vuelto: calculo, numeroVenta: venta.numero });
   }
 
   private imprimirTicket(venta: VentaOutput): void {
@@ -629,6 +655,12 @@ export class PuntoDeVentaComponent {
       })),
       descuento: Number(venta.descuento ?? 0),
       total: Number(venta.total ?? 0),
+      montoRecibido: venta.montoRecibido != null ? Number(venta.montoRecibido) : null,
+      monedaRecibida: venta.moneda ?? null,
+      montoRecibidoPyg: venta.montoRecibidoPyg != null ? Number(venta.montoRecibidoPyg) : null,
+      vuelto: venta.vuelto != null ? Number(venta.vuelto) : null,
+      monedaVuelto: venta.monedaVuelto ?? null,
+      vueltoPyg: venta.vueltoPyg != null ? Number(venta.vueltoPyg) : null,
       pie: 'Gracias por su compra',
     };
   }
@@ -712,12 +744,14 @@ export class PuntoDeVentaComponent {
       .join(' ')
       .trim();
     const vehiculo = [orden.vehiculo?.marca, orden.vehiculo?.modelo].filter(Boolean).join(' ').trim();
-    return [cliente || 'Sin cliente', vehiculo].filter(Boolean).join(' · ');
+    return [cliente || 'Sin cliente', orden.equipo?.tipo_equipo, vehiculo].filter(Boolean).join(' · ');
   }
 
   private textoOrden(orden: OrdenTrabajoOutput): string {
     return [
       orden.numero_orden,
+      orden.equipo?.tipo_equipo,
+      orden.equipo?.numero_serie,
       orden.vehiculo?.chapa,
       orden.vehiculo?.marca,
       orden.vehiculo?.modelo,

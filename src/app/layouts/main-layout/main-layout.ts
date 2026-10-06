@@ -33,7 +33,8 @@ import { PermissionService } from '../../core/auth/permission.service';
   styleUrl: './main-layout.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'app-layout-root'
+    class: 'app-layout-root',
+    '[class.sidebar-expanded]': 'sidebarOpen()',
   }
 })
 export class MainLayoutComponent implements OnInit {
@@ -57,9 +58,12 @@ export class MainLayoutComponent implements OnInit {
     {
       label: 'Taller',
       icon: 'construction',
-      requiredPermissions: ['TALLER', 'ORDEN_TRABAJO'],
+      requiredPermissions: ['TALLER', 'ORDEN_TRABAJO', 'VEHICULOS', 'EQUIPOS', 'SERVICIOS'],
       children: [
         { label: 'Orden de Trabajo', icon: 'assignment', route: '/taller/orden-de-trabajo', requiredPermissions: ['ORDEN_TRABAJO'] },
+        { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos', requiredPermissions: ['VEHICULOS'] },
+        { label: 'Equipos', icon: 'memory', route: '/activos/equipos', requiredPermissions: ['EQUIPOS', 'VEHICULOS'] },
+        { label: 'Servicios', icon: 'handyman', route: '/inventario/servicios', requiredPermissions: ['SERVICIOS'] },
       ]
     },
     {
@@ -81,7 +85,6 @@ export class MainLayoutComponent implements OnInit {
         },
       ],
     },
-    { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos', requiredPermissions: ['VEHICULOS'] },
     {
       label: 'Financiero',
       icon: 'account_balance',
@@ -94,12 +97,6 @@ export class MainLayoutComponent implements OnInit {
         { label: 'Datos de facturación', icon: 'receipt_long', route: '/financiero/facturacion', requiredPermissions: ['FINANCIERO'] },
         { label: 'Timbrados', icon: 'confirmation_number', route: '/financiero/facturacion/timbrados', requiredPermissions: ['FINANCIERO'] },
       ]
-    },
-    {
-      label: 'Servicios',
-      icon: 'handyman',
-      route: '/inventario/servicios',
-      requiredPermissions: ['SERVICIOS'],
     },
     {
       label: 'Productos',
@@ -173,6 +170,7 @@ export class MainLayoutComponent implements OnInit {
 
   private getTitleFromUrl(url: string): string {
     if (url.includes('vehiculos')) return 'Lista de vehículos';
+    if (url.includes('activos/equipos')) return 'Lista de equipos';
     if (url.includes('clientes')) return 'Lista de clientes';
     if (url.includes('funcionarios')) return 'Lista de funcionarios';
     if (url.includes('usuarios')) return 'Lista de usuarios';

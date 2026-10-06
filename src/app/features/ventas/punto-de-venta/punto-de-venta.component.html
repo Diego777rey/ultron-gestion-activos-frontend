@@ -6,12 +6,7 @@
     </div>
   } @else if (cajaAbierta()) {
     <div class="pos-workspace">
-      @if (ventaError(); as err) {
-        <div class="pos-alert" role="alert">
-          <span class="material-icons" aria-hidden="true">error_outline</span>
-          <span>{{ err }}</span>
-        </div>
-      }
+      <app-notify-error [message]="ventaError()" />
 
       <div class="pos-grid">
         <section class="pos-catalog" aria-label="Catálogo de productos">
@@ -371,8 +366,17 @@
 @if (pagoDialogOpen()) {
   <app-pago-dialog
     [total]="cartTotal()"
+    [items]="cart()"
     (cancelar)="cerrarPagoDialog()"
     (confirmar)="cobrarConMetodo($event)"
+  />
+}
+
+@if (vueltoPendiente(); as pendiente) {
+  <app-vuelto-dialog
+    [vuelto]="pendiente.vuelto"
+    [numeroVenta]="pendiente.numeroVenta"
+    (listo)="cerrarVueltoDialog()"
   />
 }
 

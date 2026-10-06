@@ -1,9 +1,4 @@
-@if (error(); as errMsg) {
-  <div class="form-error" role="alert">
-    <span class="material-icons" aria-hidden="true">error_outline</span>
-    <span>{{ errMsg }}</span>
-  </div>
-}
+<app-notify-error [message]="error()" />
 
 <div class="entity-form">
   <app-entity-searcher

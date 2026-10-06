@@ -170,19 +170,26 @@ export class OrdenTrabajoService extends BaseCrudService<OrdenTrabajoOutput, Ord
       .pipe(map((data) => data.listarOrdenesPorClientePaginado?.content ?? []));
   }
 
-  findByVehiculo(idVehiculo: string, page = 0, size = 10): Observable<OrdenTrabajoOutput[]> {
+  findByVehiculo(idVehiculo: string, page = 0, size = 10): Observable<PageResponse<OrdenTrabajoOutput>> {
     const document = `query($idVehiculo: ID!, $page: Int!, $size: Int!) {
       listarOrdenesPorVehiculoPaginado(idVehiculo: $idVehiculo, page: $page, size: $size) {
         content ${ORDEN_TRABAJO_SELECTION}
+        pageInfo {
+          pageNumber
+          pageSize
+          totalElements
+          totalPages
+          last
+        }
       }
     }`;
     return this.gql
-      .query<{ listarOrdenesPorVehiculoPaginado: { content: OrdenTrabajoOutput[] } }>(document, {
+      .query<{ listarOrdenesPorVehiculoPaginado: PageResponse<OrdenTrabajoOutput> }>(document, {
         idVehiculo,
         page,
         size,
       })
-      .pipe(map((data) => data.listarOrdenesPorVehiculoPaginado?.content ?? []));
+      .pipe(map((data) => data.listarOrdenesPorVehiculoPaginado));
   }
 
   listarAgendaMecanico(

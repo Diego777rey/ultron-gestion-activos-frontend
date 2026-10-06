@@ -1,0 +1,148 @@
+/* Ajustes visuales cuando el componente está dentro del panel En Proceso. */
+:host-context(.ot-proceso) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+:host-context(.ot-proceso) .ot-section {
+  max-width: none;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+:host-context(.ot-proceso) .ot-form,
+:host-context(.ot-proceso) .ot-form--wide {
+  max-width: none;
+}
+
+:host-context(.ot-proceso) .ot-form__row--solicitud-top {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+:host-context(.ot-proceso) .ot-form__row--solicitud-top > :nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+:host-context(.ot-proceso) .ot-form__row--solicitud-add {
+  grid-template-columns: minmax(0, 1fr) 96px auto;
+}
+
+:host-context(.ot-proceso) .ot-form__row--lineas {
+  grid-template-columns: 1fr;
+}
+
+:host-context(.ot-proceso) .ot-form__row--lineas > * {
+  grid-column: auto;
+}
+
+:host-context(.ot-proceso) .ot-hint {
+  max-width: none;
+}
+
+:host-context(.ot-proceso) .ot-table-wrap {
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  overflow: auto;
+}
+
+.ot-ajuste {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 4px 0 16px;
+}
+
+.ot-ajuste__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    font-size: 16px;
+    font-weight: 600;
+    color: #f3f3f3;
+    line-height: 1.2;
+  }
+}
+
+.ot-ajuste__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64b5f6;
+}
+
+.ot-ajuste__campo strong.ot-ajuste__valor {
+  font-size: 22px;
+  color: #90caf9;
+}
+
+.ot-ajuste__servicios {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.ot-ajuste__servicio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f3f3f3;
+  }
+}
+
+.ot-ajuste__servicio-nombre {
+  min-width: 0;
+  font-size: 13px;
+  color: #f3f3f3;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.ot-ajuste__vacio {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+:host-context(.ot-proceso) .ot-table {
+  th {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: rgba(255, 255, 255, 0.82);
+    background: #2c2c2c;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  td {
+    background: #262626;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  tbody tr:hover td {
+    background: rgba(25, 118, 210, 0.12);
+  }
+
+  tfoot td {
+    background: #2a2a2a;
+    border-bottom: none;
+  }
+}

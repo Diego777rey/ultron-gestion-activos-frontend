@@ -33,13 +33,7 @@
     </div>
   </div>
 
-  @if (error()) {
-    <div class="error-alert">
-      <span class="material-icons">error_outline</span>
-      <span>{{ error() }}</span>
-      <button type="button" (click)="onRetry()">Reintentar</button>
-    </div>
-  }
+  <app-notify-error [message]="error()" />
 
   <div class="generic-list__body">
     <div class="generic-list__table-area">

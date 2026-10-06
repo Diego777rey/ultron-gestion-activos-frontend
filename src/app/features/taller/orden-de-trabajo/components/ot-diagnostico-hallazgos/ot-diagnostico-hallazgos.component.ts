@@ -14,8 +14,11 @@ import {
   OrdenDiagnosticoHallazgoInput,
   OrdenDiagnosticoHallazgoOutput,
   OrdenTrabajoOutput,
+  SISTEMAS_HALLAZGO,
+  labelSistemaHallazgo,
 } from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
+import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 
 @Component({
   selector: 'app-ot-diagnostico-hallazgos',
@@ -23,6 +26,7 @@ import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
   templateUrl: './ot-diagnostico-hallazgos.component.html',
   styleUrls: [
     '../../styles/ot-diagnostico.scss',
+    '../../styles/ot-diagnostico-shell.scss',
     './ot-diagnostico-hallazgos.component.scss',
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,6 +34,7 @@ import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 export class OtDiagnosticoHallazgosComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly ordenService = inject(OrdenTrabajoService);
+  private readonly dialogService = inject(AppDialogService);
 
   readonly orden = input.required<OrdenTrabajoOutput>();
   readonly editable = input(true);
@@ -49,19 +54,7 @@ export class OtDiagnosticoHallazgosComponent implements OnInit {
     { value: 'CRITICA', label: 'Crítica' },
   ];
 
-  protected readonly sistemas = [
-    { value: 'MOTOR', label: 'Motor' },
-    { value: 'TRANSMISION', label: 'Transmisión' },
-    { value: 'FRENOS', label: 'Frenos' },
-    { value: 'SUSPENSION', label: 'Suspensión' },
-    { value: 'DIRECCION', label: 'Dirección' },
-    { value: 'ELECTRICO', label: 'Eléctrico' },
-    { value: 'REFRIGERACION', label: 'Refrigeración' },
-    { value: 'ESCAPE', label: 'Escape' },
-    { value: 'CARROCERIA', label: 'Carrocería' },
-    { value: 'NEUMATICOS', label: 'Neumáticos' },
-    { value: 'OTRO', label: 'Otro' },
-  ];
+  protected readonly sistemas = SISTEMAS_HALLAZGO;
 
   protected readonly form = this.fb.group({
     tipo: ['FALLO', Validators.required],
@@ -87,6 +80,10 @@ export class OtDiagnosticoHallazgosComponent implements OnInit {
     return this.modoEnProceso()
       ? 'Solo si durante el trabajo aparece un daño o condición que no estaba en el diagnóstico. Eso habilita un servicio extra.'
       : 'Un fallo es algo que no funciona. Un defecto es daño, desgaste o una condición irregular.';
+  }
+
+  protected iconoCard(): string {
+    return this.modoEnProceso() ? 'warning' : 'search';
   }
 
   protected hallazgosVisibles(): OrdenDiagnosticoHallazgoOutput[] {
@@ -147,14 +144,17 @@ export class OtDiagnosticoHallazgosComponent implements OnInit {
     if (!orden.id_orden_trabajo || !item.id_hallazgo) {
       return;
     }
-    if (!confirm(this.modoEnProceso()
+    const mensaje = this.modoEnProceso()
       ? '¿Eliminar este defecto descubierto?'
-      : '¿Eliminar este hallazgo del diagnóstico?')) {
-      return;
-    }
-    this.ordenService.eliminarHallazgo(orden.id_orden_trabajo, item.id_hallazgo).subscribe({
-      next: (updated) => this.ordenChange.emit(updated),
-      error: (err) => this.errorChange.emit(err?.message ?? 'No se pudo eliminar el hallazgo'),
+      : '¿Eliminar este hallazgo del diagnóstico?';
+    this.dialogService.confirm(mensaje).subscribe((aceptado) => {
+      if (!aceptado || !orden.id_orden_trabajo || !item.id_hallazgo) {
+        return;
+      }
+      this.ordenService.eliminarHallazgo(orden.id_orden_trabajo, item.id_hallazgo).subscribe({
+        next: (updated) => this.ordenChange.emit(updated),
+        error: (err) => this.errorChange.emit(err?.message ?? 'No se pudo eliminar el hallazgo'),
+      });
     });
   }
 
@@ -168,6 +168,6 @@ export class OtDiagnosticoHallazgosComponent implements OnInit {
 
   protected labelSistema(sistema: string | null | undefined, vacio = 'Sin especificar'): string {
     if (!sistema) return vacio;
-    return this.sistemas.find((s) => s.value === sistema)?.label ?? sistema;
+    return labelSistemaHallazgo(sistema);
   }
 }

@@ -8,17 +8,18 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { AutofocusDirective } from '../../../../../shared/directives/autofocus.directive';
 import { UppercaseDirective } from '../../../../../shared/directives/uppercase.directive';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 import { CategoriaServicioService } from '../../services/categoria-servicio.service';
 import { ServicioService } from '../../services/servicio.service';
-import { CategoriaServicioOutput, ServicioInput } from '../../interfaces/servicio.interface';
+import { CategoriaServicioOutput, ServicioInput, ServicioOutput } from '../../interfaces/servicio.interface';
 import { CategoriaServicioRapidaFormComponent } from '../../dialogs/categoria-servicio-rapida-form/categoria-servicio-rapida-form.component';
 import { SubcategoriaServicioFormComponent } from '../../dialogs/subcategoria-servicio-form/subcategoria-servicio-form.component';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 interface StepDef {
   index: number;
@@ -28,7 +29,7 @@ interface StepDef {
 
 @Component({
   selector: 'app-servicio-stepper',
-  imports: [CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [NotifyErrorComponent, CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './servicio-stepper.component.html',
   styleUrl: './servicio-stepper.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,10 +38,16 @@ interface StepDef {
 export class ServicioStepperComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly dialogService = inject(AppDialogService);
   private readonly categoriaService = inject(CategoriaServicioService);
   private readonly servicioService = inject(ServicioService);
   private readonly reporteService = inject(ReporteService);
+
+  protected readonly servicioId = signal<number | null>(null);
+  protected readonly servicioActual = signal<ServicioOutput | null>(null);
+  protected readonly loadingServicio = signal(false);
+  protected readonly editando = computed(() => this.servicioId() != null);
 
   protected readonly steps: StepDef[] = [
     { index: 1, label: 'Categoría', icon: 'category' },
@@ -121,7 +128,48 @@ export class ServicioStepperComponent implements OnInit {
   );
 
   ngOnInit(): void {
+    const idParam = this.route.snapshot.paramMap.get('id');
     this.loadCategorias();
+    if (idParam) {
+      const id = Number(idParam);
+      this.servicioId.set(id);
+      this.cargarServicio(id);
+    }
+  }
+
+  private cargarServicio(id: number): void {
+    this.loadingServicio.set(true);
+    this.error.set(null);
+    this.servicioService.findById(id, true).subscribe({
+      next: (servicio) => {
+        this.loadingServicio.set(false);
+        if (!servicio) {
+          this.error.set('No se encontró el servicio');
+          return;
+        }
+        this.servicioActual.set(servicio);
+        this.datosForm.reset({
+          nombre: servicio.nombre ?? '',
+          codigo: servicio.codigo ?? '',
+          precio: servicio.precio ?? 0,
+          descripcion: servicio.descripcion ?? '',
+        });
+        const cat = servicio.categoriaServicio;
+        if (cat?.categoriaPadre?.id_categoria_servicio) {
+          this.selectedCategoria.set(cat.categoriaPadre);
+          this.selectedSubcategoria.set(cat);
+          this.loadSubcategorias(cat.categoriaPadre.id_categoria_servicio);
+        } else if (cat?.id_categoria_servicio) {
+          this.selectedCategoria.set(cat);
+          this.selectedSubcategoria.set(null);
+        }
+        this.currentStep.set(3);
+      },
+      error: (err: Error) => {
+        this.loadingServicio.set(false);
+        this.error.set(err.message || 'No se pudo cargar el servicio');
+      },
+    });
   }
 
   protected loadCategorias(): void {
@@ -239,6 +287,21 @@ export class ServicioStepperComponent implements OnInit {
     return this.datosForm.valid;
   }
 
+  protected irAPaso(index: number): void {
+    if (index === this.currentStep()) {
+      return;
+    }
+    this.error.set(null);
+    if (index > 1 && !this.selectedCategoria()?.id_categoria_servicio) {
+      this.error.set('Seleccioná una categoría para continuar');
+      return;
+    }
+    if (index === 2) {
+      this.loadSubcategorias(this.selectedCategoria()!.id_categoria_servicio!);
+    }
+    this.currentStep.set(index);
+  }
+
   protected siguiente(): void {
     this.error.set(null);
     const step = this.currentStep();
@@ -292,20 +355,24 @@ export class ServicioStepperComponent implements OnInit {
       nombre: v.nombre.trim(),
       descripcion: v.descripcion?.trim() || undefined,
       precio: v.precio,
-      estado: true,
+      estado: this.servicioActual()?.estado ?? true,
       idCategoriaServicio,
     };
 
     this.saving.set(true);
     this.error.set(null);
-    this.servicioService.create(payload).subscribe({
+    const id = this.servicioId();
+    const request = id
+      ? this.servicioService.update(id, payload)
+      : this.servicioService.create(payload);
+    request.subscribe({
       next: () => {
         this.saving.set(false);
         this.router.navigate(['/inventario/servicios']);
       },
       error: (err: Error) => {
         this.saving.set(false);
-        this.error.set(err.message || 'No se pudo registrar el servicio');
+        this.error.set(err.message || 'No se pudo guardar el servicio');
       },
     });
   }
@@ -315,7 +382,7 @@ export class ServicioStepperComponent implements OnInit {
       return;
     }
     this.generando.set(true);
-    this.reporteService.generarInventario('servicio').subscribe({
+    this.reporteService.generarInventario('servicio', this.servicioId() ? { id: this.servicioId()! } : {}).subscribe({
       next: () => this.generando.set(false),
       error: () => this.generando.set(false),
     });

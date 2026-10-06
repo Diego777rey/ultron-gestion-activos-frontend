@@ -2,11 +2,19 @@ import {
   buildPrueba,
   buildTicketFactura,
   buildTicketOrdenTrabajo,
+  buildTicketOrdenTrabajoVehiculo,
   buildTicketVenta,
   envolver,
+  layoutTicketOrdenTrabajo,
+  layoutTicketOrdenTrabajoVehiculo,
   sanitize,
 } from './escpos-ticket-builder';
-import { TicketFactura, TicketOrdenTrabajo, TicketVenta } from '../models/impresion.model';
+import {
+  TicketFactura,
+  TicketOrdenTrabajo,
+  TicketOrdenTrabajoVehiculo,
+  TicketVenta,
+} from '../models/impresion.model';
 
 function asText(bytes: Uint8Array): string {
   return new TextDecoder('latin1').decode(bytes);
@@ -84,7 +92,46 @@ describe('escpos-ticket-builder', () => {
     expect(text).toContain('LIQUIDO DE FRENOS DOT 4');
     expect(text).toContain('BATERIA 12V');
     expect(text).toContain('1.162.000');
+    expect(text).not.toContain('Recibido');
     expect(text).toContain('Gracias por su compra');
+  });
+
+  it('imprime recibido y vuelto cuando el cobro fue en efectivo con monto informado', () => {
+    const ticket: TicketVenta = {
+      lineas: [{ descripcion: 'FILTRO DE AIRE', cantidad: 1, precioUnitario: 566000, subtotal: 566000 }],
+      total: 566000,
+      montoRecibido: 600000,
+      vuelto: 34000,
+    };
+
+    const text = asText(buildTicketVenta(ticket));
+
+    expect(text).toContain('Recibido Gs.');
+    expect(text).toContain('600.000');
+    expect(text).toContain('Vuelto Gs.');
+    expect(text).toContain('34.000');
+  });
+
+  it('imprime recibido y vuelto en otras monedas con su equivalente en guaraníes', () => {
+    const ticket: TicketVenta = {
+      lineas: [{ descripcion: 'FILTRO DE AIRE', cantidad: 1, precioUnitario: 566000, subtotal: 566000 }],
+      total: 566000,
+      montoRecibido: 100,
+      monedaRecibida: 'USD',
+      montoRecibidoPyg: 730000,
+      vuelto: 117.14,
+      monedaVuelto: 'BRL',
+      vueltoPyg: 164000,
+    };
+
+    const text = asText(buildTicketVenta(ticket));
+
+    expect(text).toContain('Recibido US$');
+    expect(text).toContain('100,00');
+    expect(text).toContain('730.000');
+    expect(text).toContain('Vuelto R$');
+    expect(text).toContain('117,14');
+    expect(text).toContain('164.000');
   });
 
   it('arma la factura en papel con timbrado, número y liquidación de IVA', () => {
@@ -162,6 +209,7 @@ describe('escpos-ticket-builder', () => {
       vin: '',
       componentes: [{ etiqueta: 'ECU', valor: 'SI' }],
       servicios: [{ etiqueta: 'Diagnostico', valor: 'SI' }],
+      serviciosOrden: ['Reparacion de ecu', 'Programacion de llaves'],
       descripcionProblema: 'Arranca pero no comunica',
       pagoRevision: 250000,
       recargoUrgente: 36,
@@ -175,9 +223,76 @@ describe('escpos-ticket-builder', () => {
     expect(text).toContain('\x1bM\x01');
     expect(text).toContain('ORDEN DE TRABAJO');
     expect(text).toContain('ANGEL ARMOA');
+    expect(text).toContain('- REPARACION DE ECU');
+    expect(text).toContain('- PROGRAMACION DE LLAVES');
     expect(text).toContain('250.000 GS.');
     expect(text).toContain('36%');
     expect(text).toContain('FIRMA DEL CLIENTE');
+  });
+
+  it('arma el ticket de vehículo con estado al ingreso, falla y servicios', () => {
+    const ticket: TicketOrdenTrabajoVehiculo = {
+      empresa: 'CH SERVICE',
+      direccion: 'Ñemby - PY',
+      telefono: '0992 752 201',
+      numero: 'OT-0002',
+      fecha: '05/10/2026',
+      hora: '11:25',
+      cliente: 'Angel Armoa',
+      celular: '0972 539 093',
+      ruc: '3339179',
+      chapa: 'ABC123',
+      vehiculo: 'Toyota Hilux 2018',
+      kilometraje: '85.400 km',
+      combustible: '1/2',
+      tipoFalla: 'Mecánica',
+      condiciones: [
+        { etiqueta: 'Rayones', reparado: 'SI' },
+        { etiqueta: 'Luces dañadas', reparado: 'NO' },
+      ],
+      observacionesEstado: '',
+      servicios: ['Cambio de aceite', 'Pulido'],
+      descripcionProblema: 'Ruido en el motor',
+      pagoRevision: 250000,
+      recargoUrgente: 36,
+    };
+
+    const bytes = buildTicketOrdenTrabajoVehiculo(ticket);
+    const text = asText(bytes);
+
+    expect(containsLogo(bytes)).toBe(true);
+    expect(containsCut(bytes)).toBe(true);
+    expect(text).toContain('RECEPCION DE VEHICULO');
+    expect(text).toContain('ABC123');
+    expect(text).toContain('MECANICA');
+    expect(text).toContain('RAYONES:');
+    expect(text).toContain(' REPARADO');
+    expect(text).toContain('NO REPARADO');
+    expect(text).toContain('- CAMBIO DE ACEITE');
+    expect(text).toContain('250.000 GS.');
+    expect(text).toContain('FIRMA DEL CLIENTE');
+    expect(text).not.toContain('COMPONENTES');
+  });
+
+  it('imprime la misma garantía en el ticket de equipo y en el de vehículo', () => {
+    const base = {
+      empresa: 'CH SERVICE', direccion: '', telefono: '', numero: '', fecha: '', hora: '',
+      cliente: '', celular: '', ruc: '', vehiculo: '', descripcionProblema: '',
+      pagoRevision: 100000, recargoUrgente: 20,
+    };
+    const garantia = (renglones: ReturnType<typeof layoutTicketOrdenTrabajo>) => {
+      const lineas = renglones.map((r) => ('logo' in r ? '' : r.segmentos.map((s) => s.texto).join('')));
+      return lineas.slice(lineas.findIndex((l) => l.startsWith('EN CASO DE QUE EL CLIENTE')));
+    };
+
+    const equipo = layoutTicketOrdenTrabajo({ ...base, codigoUnidad: '', vin: '', componentes: [], servicios: [] });
+    const vehiculo = layoutTicketOrdenTrabajoVehiculo({
+      ...base, chapa: '', kilometraje: '', combustible: '', tipoFalla: '',
+      condiciones: [], observacionesEstado: '', servicios: [],
+    });
+
+    expect(garantia(equipo).length).toBeGreaterThan(5);
+    expect(garantia(vehiculo)).toEqual(garantia(equipo));
   });
 
   it('envuelve el texto a 32 columnas sin cortar palabras', () => {

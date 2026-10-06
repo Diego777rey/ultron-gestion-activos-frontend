@@ -6,20 +6,17 @@
     (stepSelect)="verPaso($event)"
   />
 
-  @if (error()) {
-    <div class="form-error" role="alert">
-      <span class="material-icons" aria-hidden="true">error_outline</span>
-      <span>{{ error() }}</span>
-    </div>
-  }
+  <app-notify-error [message]="error()" />
 
   <section class="stepper-body">
-    <h2 class="stepper-body__title">
-      {{ tituloPaso() }}
-      @if (orden()?.numero_orden) {
-        <span class="stepper-body__subtitle">({{ orden()?.numero_orden }})</span>
-      }
-    </h2>
+    @if (pasoMostrado() !== 2) {
+      <h2 class="stepper-body__title">
+        {{ tituloPaso() }}
+        @if (orden()?.numero_orden) {
+          <span class="stepper-body__subtitle">({{ orden()?.numero_orden }})</span>
+        }
+      </h2>
+    }
 
     @if (revisando()) {
       <p class="stepper-body__hint">
@@ -28,11 +25,6 @@
     } @else if (pasoMostrado() === 1) {
       <p class="stepper-body__hint">
         Completá la recepción. Los datos se guardan mientras los cargás, sin cambiar de etapa.
-      </p>
-    } @else if (pasoMostrado() === 2) {
-      <p class="stepper-body__hint">
-        El mecánico revisa el vehículo, carga fallos y defectos, arma el presupuesto
-        y estima plazos. Lo que cargues se guarda en el momento, sin cambiar de etapa.
       </p>
     } @else if (pasoMostrado() === 3) {
       <p class="stepper-body__hint">

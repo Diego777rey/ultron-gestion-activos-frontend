@@ -1,166 +1,119 @@
-<div class="ot-diag-layout">
-  <div class="ot-diag-layout__recepcion">
-    <div class="ot-diag-card">
-      <div class="ot-diag-card__head">
-        <span class="ot-diag-card__icon" aria-hidden="true">
-          <span class="material-icons">directions_car</span>
-        </span>
-        <div class="ot-diag-card__titles">
-          <h3 class="ot-diag-card__title">Datos de recepción</h3>
-          <p class="ot-diag-card__hint">Lo que se registró al ingresar el vehículo.</p>
-        </div>
+<div class="ot-diag-shell">
+  <aside class="ot-diag-resumen">
+    <h2 class="ot-diag-resumen__titulo">Resumen de recepción</h2>
+    <div class="ot-diag-resumen__avatar" aria-hidden="true">
+      <span class="material-icons">
+        {{ orden().tipo_recepcion === 'EQUIPO' ? 'precision_manufacturing' : 'directions_car' }}
+      </span>
+    </div>
+
+    <div class="ot-diag-resumen__datos">
+      <div class="ot-diag-resumen__campo">
+        <span>Cliente</span>
+        <strong>{{ resumenCliente() }}</strong>
       </div>
-      <div class="ot-diag-card__body">
-        <div class="ot-diag-facts">
-          <div class="ot-diag-fact">
-            <span class="material-icons ot-diag-fact__icon" aria-hidden="true">person</span>
-            <div>
-              <span class="ot-diag-fact__label">Cliente</span>
-              <span class="ot-diag-fact__value">{{ resumenCliente() }}</span>
-            </div>
-          </div>
-          <div class="ot-diag-fact">
-            <span class="material-icons ot-diag-fact__icon" aria-hidden="true">directions_car</span>
-            <div>
-              <span class="ot-diag-fact__label">Vehículo</span>
-              <span class="ot-diag-fact__value">{{ resumenVehiculo() }}</span>
-            </div>
-          </div>
-          <div class="ot-diag-fact">
-            <span class="material-icons ot-diag-fact__icon" aria-hidden="true">build</span>
-            <div>
-              <span class="ot-diag-fact__label">Mecánicos</span>
-              <span class="ot-diag-fact__value">{{ resumenMecanico() }}</span>
-            </div>
-          </div>
-          <div class="ot-diag-fact">
-            <span class="material-icons ot-diag-fact__icon" aria-hidden="true">report_problem</span>
-            <div>
-              <span class="ot-diag-fact__label">Falla reportada</span>
-              <span class="ot-diag-fact__value">{{ orden().recepcion?.descripcion_falla || '—' }}</span>
-            </div>
-          </div>
-          @if (orden().estado_vehiculo?.kilometraje != null) {
-            <div class="ot-diag-fact">
-              <span class="material-icons ot-diag-fact__icon" aria-hidden="true">speed</span>
-              <div>
-                <span class="ot-diag-fact__label">Kilometraje</span>
-                <span class="ot-diag-fact__value">{{ orden().estado_vehiculo?.kilometraje }} km</span>
-              </div>
-            </div>
-          }
+      <div class="ot-diag-resumen__campo">
+        <span>{{ etiquetaUnidad() }}</span>
+        <strong>{{ resumenVehiculo() }}</strong>
+      </div>
+      <div class="ot-diag-resumen__campo">
+        <span>Mecánicos</span>
+        <strong>{{ resumenMecanico() }}</strong>
+      </div>
+      <div class="ot-diag-resumen__campo">
+        <span>Falla reportada</span>
+        <strong>{{ orden().recepcion?.descripcion_falla || '—' }}</strong>
+      </div>
+      @if (orden().estado_vehiculo?.kilometraje != null) {
+        <div class="ot-diag-resumen__campo">
+          <span>Kilometraje</span>
+          <strong>{{ orden().estado_vehiculo?.kilometraje }} km</strong>
         </div>
-        @if (condicionesIngreso().length) {
-          <div class="ot-diag-chips">
-            @for (c of condicionesIngreso(); track c) {
-              <span class="ot-diag-chip ot-diag-chip--readonly">{{ c }}</span>
-            }
-          </div>
+      }
+    </div>
+
+    @if (condicionesIngreso().length) {
+      <div class="ot-diag-chips">
+        @for (c of condicionesIngreso(); track c) {
+          <span class="ot-diag-chip ot-diag-chip--readonly">{{ c }}</span>
         }
       </div>
-    </div>
-  </div>
+    }
 
-  <div class="ot-diag-layout__plazos">
-    <div class="ot-diag-card">
-      <div class="ot-diag-card__head">
-        <span class="ot-diag-card__icon" aria-hidden="true">
-          <span class="material-icons">event</span>
+    <form class="ot-diag-plazos" [formGroup]="form">
+      <h3 class="ot-diag-plazos__titulo">Plazos estimados</h3>
+      <p class="ot-diag-plazos__hint">
+        Indicá cuándo empieza y cuándo termina. El tiempo se calcula solo.
+      </p>
+
+      <label class="ot-diag-resumen__campo" for="ot-f-inicio">
+        <span>Fecha de inicio</span>
+        <input id="ot-f-inicio" type="date" formControlName="fecha_inicio_estimada" />
+      </label>
+      <label class="ot-diag-resumen__campo" for="ot-f-fin">
+        <span>Fecha de fin</span>
+        <input id="ot-f-fin" type="date" formControlName="fecha_fin_estimada" />
+      </label>
+      <div class="ot-diag-resumen__campo" aria-live="polite">
+        <span>Tiempo</span>
+        <strong class="ot-diag-plazos__tiempo">{{ resumenDuracion() }}</strong>
+      </div>
+      <label class="ot-diag-resumen__campo" for="ot-f-obs">
+        <span>Observaciones del diagnóstico</span>
+        <textarea
+          id="ot-f-obs"
+          formControlName="observaciones"
+          rows="3"
+          placeholder="Notas técnicas, recomendaciones, pendientes..."
+        ></textarea>
+      </label>
+
+      <label class="ot-diag-approve" for="ot-p-aprobado">
+        <input id="ot-p-aprobado" type="checkbox" formControlName="presupuesto_aprobado" />
+        <span>
+          <span class="ot-diag-approve__text">Presupuesto aprobado por el cliente</span>
+          <span class="ot-diag-approve__sub">Necesario para iniciar la reparación</span>
         </span>
-        <div class="ot-diag-card__titles">
-          <h3 class="ot-diag-card__title">Plazos estimados</h3>
-          <p class="ot-diag-card__hint">Indicá cuándo empieza y cuándo termina el trabajo. El tiempo se calcula solo y se guarda al completarlo.</p>
-        </div>
+      </label>
+
+      @if (estadoGuardado() === 'guardando') {
+        <p class="ot-diag-save">Guardando…</p>
+      } @else if (estadoGuardado() === 'guardado') {
+        <p class="ot-diag-save">Guardado</p>
+      }
+
+      <div class="ot-diag-buttons">
+        <button
+          type="button"
+          class="ot-diag-pdf-button"
+          (click)="generarPdfPresupuesto()"
+          [disabled]="!puedeGenerarPdf()"
+        >
+          <span class="material-icons">picture_as_pdf</span>
+          <span>Ver PDF</span>
+        </button>
+        <button
+          type="button"
+          class="ot-diag-whatsapp-button"
+          (click)="compartirPorWhatsapp()"
+          [disabled]="!puedeGenerarPdf() || compartiendo()"
+          title="Abrir WhatsApp con el PDF del presupuesto"
+        >
+          <span class="material-icons">share</span>
+          <span>{{ compartiendo() ? 'Abriendo…' : 'WhatsApp' }}</span>
+        </button>
       </div>
-      <div class="ot-diag-card__body">
-        <form class="ot-form ot-form--wide" [formGroup]="form">
-          <div class="ot-diag-row ot-diag-row--plazos">
-            <div class="ot-diag-field">
-              <label class="ot-diag-field__label" for="ot-f-inicio">Fecha de inicio</label>
-              <input
-                id="ot-f-inicio"
-                type="date"
-                class="ot-diag-field__control"
-                formControlName="fecha_inicio_estimada"
-              />
-            </div>
-            <div class="ot-diag-field">
-              <label class="ot-diag-field__label" for="ot-f-fin">Fecha de fin</label>
-              <input
-                id="ot-f-fin"
-                type="date"
-                class="ot-diag-field__control"
-                formControlName="fecha_fin_estimada"
-              />
-            </div>
-            <div class="ot-diag-duration" aria-live="polite">
-              <span class="ot-diag-duration__label">Tiempo</span>
-              <span class="ot-diag-duration__value">{{ resumenDuracion() }}</span>
-            </div>
-          </div>
+    </form>
+  </aside>
 
-          <div class="ot-diag-field" style="margin-top: 14px;">
-            <label class="ot-diag-field__label" for="ot-f-obs">Observaciones del diagnóstico</label>
-            <textarea
-              id="ot-f-obs"
-              class="ot-diag-field__control"
-              formControlName="observaciones"
-              rows="4"
-              placeholder="Notas técnicas, recomendaciones, pendientes..."
-            ></textarea>
-          </div>
-
-          <label class="ot-diag-approve" for="ot-p-aprobado">
-            <input id="ot-p-aprobado" type="checkbox" formControlName="presupuesto_aprobado" />
-            <span>
-              <span class="ot-diag-approve__text">Presupuesto aprobado por el cliente</span>
-              <span class="ot-diag-approve__sub">Necesario para iniciar la reparación</span>
-            </span>
-          </label>
-
-          @if (estadoGuardado() === 'guardando') {
-            <p class="ot-diag-save">Guardando…</p>
-          } @else if (estadoGuardado() === 'guardado') {
-            <p class="ot-diag-save">Guardado</p>
-          }
-
-          <div class="ot-diag-buttons">
-            <button
-              type="button"
-              class="ot-diag-pdf-button"
-              (click)="generarPdfPresupuesto()"
-              [disabled]="!puedeGenerarPdf()"
-            >
-              <span class="material-icons">picture_as_pdf</span>
-              <span>Ver PDF</span>
-            </button>
-            
-            <button
-              type="button"
-              class="ot-diag-whatsapp-button"
-              (click)="compartirPorWhatsapp()"
-              [disabled]="!puedeGenerarPdf() || compartiendo()"
-              title="Abrir WhatsApp con el PDF del presupuesto"
-            >
-              <span class="material-icons">share</span>
-              <span>{{ compartiendo() ? 'Abriendo WhatsApp…' : 'Compartir por WhatsApp' }}</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div class="ot-diag-layout__hallazgos">
+  <div class="ot-diag-ficha">
     <app-ot-diagnostico-hallazgos
       [orden]="orden()"
       [editable]="editable()"
       (ordenChange)="ordenChange.emit($event)"
       (errorChange)="errorChange.emit($event)"
     />
-  </div>
 
-  <div class="ot-diag-layout__presupuesto">
     <app-ot-detalle-lineas
       [orden]="orden()"
       [editable]="editable()"

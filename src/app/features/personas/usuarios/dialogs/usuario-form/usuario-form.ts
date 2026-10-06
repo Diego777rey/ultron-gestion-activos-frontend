@@ -27,10 +27,11 @@ import { RoleService } from '../../../roles/services/role.service';
 import { UsuarioInput, UsuarioOutput } from '../../interfaces/usuario.interface';
 import { UsuarioService } from '../../services/usuario.service';
 import { nombreCompletoPersona } from '../../../shared/nombre-persona';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-usuario-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective, EntitySearcherComponent],
+  imports: [NotifyErrorComponent, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective, EntitySearcherComponent],
   templateUrl: './usuario-form.html',
   styleUrl: './usuario-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -228,6 +229,7 @@ export class UsuarioFormComponent implements OnInit {
   private readonly dialogRef = inject(DialogRef, { optional: true });
 
   protected onSubmit(): void {
+    this.error = null;
     if (!this.isEdit && !this.form.controls.password.value.trim()) {
       this.form.controls.password.setErrors({ required: true });
       this.form.controls.password.markAsTouched();
