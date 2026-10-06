@@ -19,6 +19,7 @@ import { CategoriaServicioOutput, ServicioInput, ServicioOutput } from '../../in
 import { CategoriaServicioRapidaFormComponent } from '../../dialogs/categoria-servicio-rapida-form/categoria-servicio-rapida-form.component';
 import { SubcategoriaServicioFormComponent } from '../../dialogs/subcategoria-servicio-form/subcategoria-servicio-form.component';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 interface StepDef {
   index: number;
@@ -28,7 +29,7 @@ interface StepDef {
 
 @Component({
   selector: 'app-servicio-stepper',
-  imports: [CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [NotifyErrorComponent, CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './servicio-stepper.component.html',
   styleUrl: './servicio-stepper.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

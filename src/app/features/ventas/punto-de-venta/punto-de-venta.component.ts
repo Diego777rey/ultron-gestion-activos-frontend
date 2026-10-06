@@ -45,6 +45,7 @@ import { FacturaService } from '../../financiero/facturacion/services/factura.se
 import { FacturaOutput } from '../../financiero/facturacion/interfaces/factura.interface';
 import { CATALOG_PAGE_SIZE } from '../../../shared/models/pagination.model';
 import { AuthService } from '../../../core/auth/auth.service';
+import { NotifyErrorComponent } from '../../../shared/components/notify-error/notify-error';
 
 const POS_ROUTE = '/ventas/punto-de-venta';
 /** Umbral (px) antes del final del scroll para pedir la siguiente página. */
@@ -55,7 +56,7 @@ export type PdvNumero = 1 | 2;
 
 @Component({
   selector: 'app-punto-de-venta',
-  imports: [
+  imports: [NotifyErrorComponent, 
     ModalComponent,
     AbrirCajaDialogComponent,
     PagoDialogComponent,

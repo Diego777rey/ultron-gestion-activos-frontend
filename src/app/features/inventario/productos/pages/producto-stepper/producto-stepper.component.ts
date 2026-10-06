@@ -22,6 +22,7 @@ import { PresentacionesEditorComponent } from '../../components/presentaciones-e
 import { CategoriaRapidaFormComponent } from '../../dialogs/categoria-rapida-form/categoria-rapida-form.component';
 import { SubcategoriaFormComponent } from '../../dialogs/subcategoria-form/subcategoria-form.component';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 interface StepDef {
   index: number;
@@ -31,7 +32,7 @@ interface StepDef {
 
 @Component({
   selector: 'app-producto-stepper',
-  imports: [
+  imports: [NotifyErrorComponent, 
     CommonModule,
     ReactiveFormsModule,
     UiButtonComponent,

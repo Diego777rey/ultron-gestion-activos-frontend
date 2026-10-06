@@ -32,10 +32,11 @@ import {
   RechazoDetalleDialogComponent,
   RechazoDetalleResult,
 } from '../../dialogs/rechazo-detalle-dialog/rechazo-detalle-dialog.component';
+import { NotifyErrorComponent } from '../../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-transferencia-gestion',
-  imports: [
+  imports: [NotifyErrorComponent, 
     DecimalPipe,
     UiButtonComponent,
     EntitySearcherComponent,

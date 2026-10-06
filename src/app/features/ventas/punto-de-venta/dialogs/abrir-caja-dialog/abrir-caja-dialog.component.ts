@@ -21,6 +21,7 @@ import {
   ConteoDenominacionInput,
   SesionCajaOutput,
 } from '../../interfaces/sesion-caja.interface';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 type MonedaCodigo = 'PYG' | 'BRL' | 'USD';
 type TipoConteo = 'apertura' | 'cierre';
@@ -81,7 +82,7 @@ function crearMonedasVacias(): MonedaConfig[] {
 
 @Component({
   selector: 'app-abrir-caja-dialog',
-  imports: [ModalComponent, UiButtonComponent, DecimalPipe, EntitySearcherComponent],
+  imports: [NotifyErrorComponent, ModalComponent, UiButtonComponent, DecimalPipe, EntitySearcherComponent],
   templateUrl: './abrir-caja-dialog.component.html',
   styleUrl: './abrir-caja-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

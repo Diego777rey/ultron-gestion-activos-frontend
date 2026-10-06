@@ -1,9 +1,4 @@
-@if (error(); as err) {
-  <div class="cliente-form__error" role="alert">
-    <span class="material-icons" aria-hidden="true">error_outline</span>
-    <span>{{ err }}</span>
-  </div>
-}
+<app-notify-error [message]="error()" />
 
 <form class="cliente-form" [formGroup]="form" (ngSubmit)="onSubmit()">
   <div class="cliente-form__grid">

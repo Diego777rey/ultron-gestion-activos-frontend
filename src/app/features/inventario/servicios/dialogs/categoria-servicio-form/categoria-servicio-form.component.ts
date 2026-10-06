@@ -7,10 +7,11 @@ import { UppercaseDirective } from '../../../../../shared/directives/uppercase.d
 import { CategoriaServicioInput, CategoriaServicioService } from '../../services/categoria-servicio.service';
 import { CategoriaServicioOutput } from '../../interfaces/servicio.interface';
 import { DialogRef } from '@angular/cdk/dialog';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-categoria-servicio-form',
-  imports: [CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [NotifyErrorComponent, CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './categoria-servicio-form.component.html',
   styleUrl: './categoria-servicio-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -55,6 +56,7 @@ export class CategoriaServicioFormComponent {
   }
 
   protected onSubmit(): void {
+    this.error = null;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

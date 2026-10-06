@@ -2,17 +2,18 @@ import { Component, ChangeDetectionStrategy, inject, OnInit, signal, input, effe
 import { CommonModule } from '@angular/common';
 import { ProductoOutput } from '../../interfaces/producto.interface';
 import { ProductoService } from '../../services/producto.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-stock-sectores-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NotifyErrorComponent],
   template: `
     <div class="p-4">
       @if (loading()) {
         <div class="text-center py-4">Cargando stock...</div>
       } @else if (error()) {
-        <div class="text-center text-red-500 py-4">{{ error() }}</div>
+        <app-notify-error [message]="error()" />
       } @else {
         <table class="w-full text-left border-collapse">
           <thead>

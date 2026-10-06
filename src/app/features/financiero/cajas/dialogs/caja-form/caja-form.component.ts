@@ -22,10 +22,11 @@ import { SectorService } from '../../../../sectores/services/sector.service';
 import { SectorFormComponent } from '../../../../sectores/dialogs/sector-form/sector-form.component';
 import { CajaInput, CajaOutput } from '../../interfaces/caja.interface';
 import { CajaService } from '../../services/caja.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-caja-form',
-  imports: [
+  imports: [NotifyErrorComponent, 
     ReactiveFormsModule,
     UiButtonComponent,
     AutofocusDirective,

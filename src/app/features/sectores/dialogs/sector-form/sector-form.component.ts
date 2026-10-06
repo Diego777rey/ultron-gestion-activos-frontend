@@ -7,10 +7,11 @@ import { UppercaseDirective } from '../../../../shared/directives/uppercase.dire
 import { SectorInput, SectorOutput } from '../../interfaces/sector.interface';
 import { SectorService } from '../../services/sector.service';
 import { UltimoSectorStore } from '../../services/ultimo-sector.store';
+import { NotifyErrorComponent } from '../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-sector-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [NotifyErrorComponent, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './sector-form.component.html',
   styleUrl: './sector-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

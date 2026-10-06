@@ -17,10 +17,11 @@ import { ClienteService } from '../../../../personas/clientes/services/cliente.s
 import { ClienteOutput } from '../../../../personas/clientes/interfaces/cliente.interface';
 import { ClienteFormComponent } from '../../../../personas/clientes/dialogs/cliente-form/cliente-form';
 import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-vehiculo-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective, EntitySearcherComponent],
+  imports: [NotifyErrorComponent, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective, EntitySearcherComponent],
   templateUrl: './vehiculo-form.html',
   styleUrl: './vehiculo-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -202,6 +203,7 @@ export class VehiculoFormComponent implements OnInit {
   private readonly dialogRef = inject(DialogRef, { optional: true });
 
   protected onSubmit(): void {
+    this.error = null;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

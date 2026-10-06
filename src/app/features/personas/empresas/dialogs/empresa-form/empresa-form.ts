@@ -15,10 +15,11 @@ import { UppercaseDirective } from '../../../../../shared/directives/uppercase.d
 import { ImageUploaderComponent } from '../../../../../shared/components/image-uploader/image-uploader.component';
 import { EmpresaInput, EmpresaOutput } from '../../interfaces/empresa.interface';
 import { EmpresaService } from '../../services/empresa.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-empresa-form',
-  imports: [
+  imports: [NotifyErrorComponent, 
     ReactiveFormsModule,
     UiButtonComponent,
     AutofocusDirective,
@@ -96,6 +97,7 @@ export class EmpresaFormComponent {
   }
 
   protected onSubmit(): void {
+    this.error = null;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

@@ -8,12 +8,7 @@
   (closed)="onCancelar()"
 >
   <div class="factura-dialog">
-    @if (error(); as err) {
-      <div class="factura-dialog__error" role="alert">
-        <span class="material-icons" aria-hidden="true">error_outline</span>
-        <span>{{ err }}</span>
-      </div>
-    }
+    <app-notify-error [message]="error()" />
 
     <div class="factura-dialog__content">
       <section class="factura-dialog__section">

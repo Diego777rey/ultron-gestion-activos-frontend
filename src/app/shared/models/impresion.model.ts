@@ -103,7 +103,10 @@ export interface TicketOrdenTrabajo extends TicketOrdenTrabajoBase {
   codigoUnidad: string;
   vin: string;
   componentes: TicketCampo[];
+  /** Checklist fijo (programación, diagnóstico, test en banco...). */
   servicios: TicketCampo[];
+  /** Servicios cargados en la orden. */
+  serviciosOrden?: string[];
 }
 
 export type EstadoReparacion = 'SI' | 'NO' | 'PENDIENTE';

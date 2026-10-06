@@ -22,10 +22,11 @@ import { ZonaInput, ZonaOutput } from '../../interfaces/zona.interface';
 import { SectorService } from '../../services/sector.service';
 import { ZonaService } from '../../services/zona.service';
 import { SectorFormComponent } from '../sector-form/sector-form.component';
+import { NotifyErrorComponent } from '../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-zona-form',
-  imports: [
+  imports: [NotifyErrorComponent, 
     ReactiveFormsModule,
     UiButtonComponent,
     AutofocusDirective,

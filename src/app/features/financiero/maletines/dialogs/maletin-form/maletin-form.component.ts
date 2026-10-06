@@ -22,10 +22,11 @@ import { SectorService } from '../../../../sectores/services/sector.service';
 import { SectorFormComponent } from '../../../../sectores/dialogs/sector-form/sector-form.component';
 import { MaletinInput, MaletinOutput } from '../../interfaces/maletin.interface';
 import { MaletinService } from '../../services/maletin.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-maletin-form',
-  imports: [
+  imports: [NotifyErrorComponent, 
     ReactiveFormsModule,
     UiButtonComponent,
     AutofocusDirective,

@@ -6,12 +6,7 @@
     (stepSelect)="verPaso($event)"
   />
 
-  @if (error()) {
-    <div class="form-error" role="alert">
-      <span class="material-icons" aria-hidden="true">error_outline</span>
-      <span>{{ error() }}</span>
-    </div>
-  }
+  <app-notify-error [message]="error()" />
 
   <section class="stepper-body">
     @if (pasoMostrado() !== 2) {

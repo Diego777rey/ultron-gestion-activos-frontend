@@ -23,6 +23,7 @@ import {
   normalizarRuc,
 } from '../../../../personas/shared/services/consulta-ruc.service';
 import { PageResponse } from '../../../../../shared/models/pagination.model';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 export interface FacturaConfirmada {
   idCliente: number;
@@ -39,7 +40,7 @@ const UMBRAL_SCROLL = 48;
 
 @Component({
   selector: 'app-factura-dialog',
-  imports: [ModalComponent, UiButtonComponent, DecimalPipe, ClienteFormComponent],
+  imports: [NotifyErrorComponent, ModalComponent, UiButtonComponent, DecimalPipe, ClienteFormComponent],
   templateUrl: './factura-dialog.component.html',
   styleUrl: './factura-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

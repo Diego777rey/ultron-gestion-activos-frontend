@@ -5,10 +5,11 @@ import { finalize } from 'rxjs';
 import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui-button';
 import { CotizacionService } from '../../services/cotizacion.service';
 import { CotizacionInput, CotizacionOutput } from '../../interfaces/cotizacion.interface';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-cotizacion-form',
-  imports: [ReactiveFormsModule, UiButtonComponent],
+  imports: [NotifyErrorComponent, ReactiveFormsModule, UiButtonComponent],
   templateUrl: './cotizacion-form.component.html',
   styleUrl: './cotizacion-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

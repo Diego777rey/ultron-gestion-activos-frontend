@@ -59,10 +59,7 @@
         Cargando vehículos…
       </p>
     } @else if (estado?.error) {
-      <p class="cliente-vehiculos__status cliente-vehiculos__status--error">
-        <span class="material-icons" aria-hidden="true">error_outline</span>
-        {{ estado?.error }}
-      </p>
+      <app-notify-error [message]="estado?.error" />
     } @else if (estado?.items?.length) {
       <table class="cliente-vehiculos__table">
         <thead>

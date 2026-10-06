@@ -36,12 +36,7 @@
     </header>
 
     <section class="abrir-caja__body">
-      @if (error(); as errMsg) {
-        <div class="status-note status-note--warn" role="alert">
-          <span class="material-icons" aria-hidden="true">error_outline</span>
-          <span>{{ errMsg }}</span>
-        </div>
-      }
+      <app-notify-error [message]="error()" />
 
       @if (currentStep() === 1) {
         <div class="maletin-step">

@@ -6,10 +6,11 @@ import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
 import { CajaOutput } from '../../../cajas/interfaces/caja.interface';
 import { CajaService } from '../../../cajas/services/caja.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-seleccionar-caja-dialog',
-  imports: [UiButtonComponent, EntitySearcherComponent],
+  imports: [NotifyErrorComponent, UiButtonComponent, EntitySearcherComponent],
   templateUrl: './seleccionar-caja-dialog.component.html',
   styleUrl: './seleccionar-caja-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

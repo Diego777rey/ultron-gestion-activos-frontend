@@ -27,10 +27,11 @@ import { VehiculoService } from '../../../vehiculos/services/vehiculo.service';
 import { VehiculoOutput } from '../../../vehiculos/interfaces/vehiculo.interface';
 import { EquipoService } from '../../services/equipo.service';
 import { EquipoInput, EquipoOutput, TIPOS_EQUIPO } from '../../interfaces/equipo.interface';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-equipo-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective, EntitySearcherComponent],
+  imports: [NotifyErrorComponent, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective, EntitySearcherComponent],
   templateUrl: './equipo-form.html',
   styleUrl: '../../../vehiculos/dialogs/vehiculo-form/vehiculo-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -195,6 +196,7 @@ export class EquipoFormComponent implements OnInit {
   }
 
   protected onSubmit(): void {
+    this.error.set(null);
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
