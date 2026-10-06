@@ -17,6 +17,7 @@ import {
 } from '../../../shared/services/consulta-ruc.service';
 import { nombreCompletoPersona } from '../../../shared/nombre-persona';
 import { PersonaOutput } from '../../../funcionarios/interfaces/funcionario.interface';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 /** Resultado de buscar el CI/RUC: base propia, DNIT o carga manual. */
 type Busqueda =
@@ -31,7 +32,7 @@ const TIPO_CLIENTE_DEFAULT = 'Persona Física';
 
 @Component({
   selector: 'app-cliente-form',
-  imports: [ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [NotifyErrorComponent, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './cliente-form.html',
   styleUrl: './cliente-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -238,6 +239,7 @@ export class ClienteFormComponent {
   }
 
   protected onSubmit(): void {
+    this.error.set(null);
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

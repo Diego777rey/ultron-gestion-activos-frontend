@@ -27,6 +27,12 @@ const DEFAULT_TITLES: Record<NotificationType, string> = {
 const MAX_VISIBLE = 5;
 
 /**
+ * Ventana en la que un mismo mensaje de error no se vuelve a mostrar.
+ * Cubre el caso en que la operación y la pantalla avisan el mismo fallo.
+ */
+const DUPLICATE_ERROR_WINDOW_MS = 1500;
+
+/**
  * Servicio genérico de avisos (notificaciones tipo *toast*) para todo el sistema.
  *
  * Cualquier módulo puede inyectarlo y disparar avisos consistentes:
@@ -47,6 +53,7 @@ export class NotificationService {
   readonly hasNotifications = computed(() => this._notifications().length > 0);
 
   private readonly timers = new Map<number, ReturnType<typeof setTimeout>>();
+  private readonly recentErrors = new Map<string, { id: number; at: number }>();
   private sequence = 0;
 
   // ==================== API genérica ====================
@@ -56,9 +63,22 @@ export class NotificationService {
     return this.show('success', message, options);
   }
 
-  /** Muestra un aviso de error. */
+  /** Muestra un aviso de error. Ignora el mismo texto si acaba de mostrarse. */
   error(message: string, options?: NotificationOptions): number {
-    return this.show('error', message, options);
+    const key = message?.trim() ?? '';
+    const now = Date.now();
+    if (key) {
+      const recent = this.recentErrors.get(key);
+      if (recent && now - recent.at < DUPLICATE_ERROR_WINDOW_MS) {
+        return recent.id;
+      }
+    }
+
+    const id = this.show('error', message, options);
+    if (key) {
+      this.recentErrors.set(key, { id, at: now });
+    }
+    return id;
   }
 
   /** Muestra un aviso de advertencia. */

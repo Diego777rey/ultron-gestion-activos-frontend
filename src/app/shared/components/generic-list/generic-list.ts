@@ -8,12 +8,14 @@ import { PaginatorComponent } from '../paginator/paginator';
 import { TableColumn } from '../../models/table-column.model';
 import { PageChange } from '../../models/pagination.model';
 import { ListToolbarAction } from '../../models/list-toolbar-action.model';
+import { NotifyErrorComponent } from '../notify-error/notify-error';
 
 let searchInputCounter = 0;
 
 /**
  * Layout reutilizable para pantallas de listado CRUD.
- * Encapsula filtros, barra de acciones, tabla, paginador y alerta de error.
+ * Encapsula filtros, barra de acciones, tabla y paginador.
+ * Los errores del listado se muestran en el sistema de notificaciones.
  *
  * Proyección de contenido:
  * - `[genericListFilters]` — filtros personalizados (reemplaza el campo de búsqueda por defecto).
@@ -25,7 +27,7 @@ let searchInputCounter = 0;
  */
 @Component({
   selector: 'app-generic-list',
-  imports: [UiButtonComponent, DataTableComponent, PaginatorComponent],
+  imports: [NotifyErrorComponent, UiButtonComponent, DataTableComponent, PaginatorComponent],
   templateUrl: './generic-list.html',
   styleUrl: './generic-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

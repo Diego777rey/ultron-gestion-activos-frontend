@@ -171,6 +171,24 @@ export class OtTicketDialogComponent {
     }));
   }
 
+  protected setServicioOrden(index: number, valor: string): void {
+    this.ticketEquipo.update((t) => ({
+      ...t,
+      serviciosOrden: (t.serviciosOrden ?? []).map((s, i) => (i === index ? valor ?? '' : s)),
+    }));
+  }
+
+  protected agregarServicioOrden(): void {
+    this.ticketEquipo.update((t) => ({ ...t, serviciosOrden: [...(t.serviciosOrden ?? []), ''] }));
+  }
+
+  protected quitarServicioOrden(index: number): void {
+    this.ticketEquipo.update((t) => ({
+      ...t,
+      serviciosOrden: (t.serviciosOrden ?? []).filter((_, i) => i !== index),
+    }));
+  }
+
   protected agregarServicio(): void {
     this.ticketVehiculo.update((t) => ({ ...t, servicios: [...t.servicios, ''] }));
   }
@@ -240,6 +258,7 @@ function ticketEquipoDesdeOrden(orden: OrdenTrabajoOutput): TicketOrdenTrabajo {
     vin: '',
     componentes,
     servicios: SERVICIOS.map((etiqueta): TicketCampo => ({ etiqueta, valor: '' })),
+    serviciosOrden: serviciosDeLaOrden(orden),
   };
 }
 
@@ -257,11 +276,16 @@ function ticketVehiculoDesdeOrden(orden: OrdenTrabajoOutput): TicketOrdenTrabajo
       .filter((c) => !!estado?.[c.campo])
       .map((c): TicketCondicionVehiculo => ({ etiqueta: c.etiqueta, reparado: terminada ? 'SI' : 'PENDIENTE' })),
     observacionesEstado: estado?.observaciones_estado ?? '',
-    servicios: (orden.detalles ?? [])
-      .filter((d) => d.tipo === 'SERVICIO')
-      .map((d) => (d.nombre_servicio || d.descripcion || '').trim())
-      .filter(Boolean),
+    servicios: serviciosDeLaOrden(orden),
   };
+}
+
+/** Nombres de los servicios cargados en la orden. */
+function serviciosDeLaOrden(orden: OrdenTrabajoOutput): string[] {
+  return (orden.detalles ?? [])
+    .filter((d) => d.tipo === 'SERVICIO')
+    .map((d) => (d.nombre_servicio || d.descripcion || '').trim())
+    .filter(Boolean);
 }
 
 /** Tipos marcados en la recepción más los sistemas de los hallazgos del diagnóstico, sin repetir. */

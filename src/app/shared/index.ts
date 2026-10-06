@@ -48,6 +48,7 @@ export * from './components/generic-list/generic-list';
 export * from './components/notification-container/notification-container';
 export * from './components/loading-overlay/loading-overlay';
 export * from './components/error-banner/error-banner';
+export * from './components/notify-error/notify-error';
 export * from './components/pdf-viewer/pdf-viewer.component';
 
 // Utilidades

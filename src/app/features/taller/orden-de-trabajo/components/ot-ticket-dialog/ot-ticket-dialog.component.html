@@ -94,6 +94,26 @@
             </label>
           }
         </fieldset>
+
+        <fieldset>
+          <legend>Servicios de la orden</legend>
+          @for (s of ticketEquipo().serviciosOrden ?? []; track $index; let i = $index) {
+            <div class="ticket-dialog__servicio">
+              <input [ngModel]="s" (ngModelChange)="setServicioOrden(i, $event)" [name]="'servicio-orden-' + i" />
+              <button
+                type="button"
+                class="ticket-dialog__quitar"
+                (click)="quitarServicioOrden(i)"
+                [attr.aria-label]="'Quitar ' + s"
+              >
+                <span class="material-icons" aria-hidden="true">close</span>
+              </button>
+            </div>
+          } @empty {
+            <p class="ticket-dialog__vacio">La orden todavía no tiene servicios cargados.</p>
+          }
+          <app-ui-button label="Agregar servicio" icon="add" variant="ghost" size="sm" (clicked)="agregarServicioOrden()" />
+        </fieldset>
       } @else {
         <fieldset>
           <legend>Tipo de falla</legend>

@@ -1,7 +1,7 @@
 @if (loading() && !transferencia()) {
   <div class="gestion-state">Cargando transferencia…</div>
 } @else if (error() && !transferencia()) {
-  <div class="gestion-state gestion-state--error" role="alert">{{ error() }}</div>
+  <app-notify-error [message]="error()" />
 } @else if (transferencia(); as t) {
   <app-generic-list
     [columns]="columns"

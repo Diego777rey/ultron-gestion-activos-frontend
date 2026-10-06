@@ -18,6 +18,7 @@ import { VehiculoService } from '../../../../activos/vehiculos/services/vehiculo
 import { VehiculoOutput } from '../../../../activos/vehiculos/interfaces/vehiculo.interface';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
 import { nombreCompletoPersona } from '../../../shared/nombre-persona';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 /** Estado de carga de los vehículos asociados a un cliente. */
 interface VehiculosClienteState {
@@ -30,6 +31,7 @@ interface VehiculosClienteState {
   selector: 'app-clientes-list',
   imports: [
     CommonModule,
+    NotifyErrorComponent,
     GenericListComponent,
     TableCellDirective,
     ActionMenuComponent,

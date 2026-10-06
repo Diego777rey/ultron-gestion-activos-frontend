@@ -8,6 +8,7 @@ import { UppercaseDirective } from '../../../../../shared/directives/uppercase.d
 import { CategoriaServicioService, CategoriaServicioInput } from '../../services/categoria-servicio.service';
 import { CategoriaServicioOutput } from '../../interfaces/servicio.interface';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 interface StepDef {
   index: number;
@@ -17,7 +18,7 @@ interface StepDef {
 
 @Component({
   selector: 'app-categoria-servicio-stepper',
-  imports: [CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [NotifyErrorComponent, CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
   templateUrl: './categoria-servicio-stepper.component.html',
   styleUrl: './categoria-servicio-stepper.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

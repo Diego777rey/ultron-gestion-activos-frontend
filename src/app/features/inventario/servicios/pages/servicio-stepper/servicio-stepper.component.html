@@ -23,12 +23,7 @@
     }
   </header>
 
-  @if (error()) {
-    <div class="form-error" role="alert">
-      <span class="material-icons" aria-hidden="true">error_outline</span>
-      <span>{{ error() }}</span>
-    </div>
-  }
+  <app-notify-error [message]="error()" />
 
   <div class="wizard">
     <section class="wizard__main">

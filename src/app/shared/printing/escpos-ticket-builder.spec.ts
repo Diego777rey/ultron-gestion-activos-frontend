@@ -209,6 +209,7 @@ describe('escpos-ticket-builder', () => {
       vin: '',
       componentes: [{ etiqueta: 'ECU', valor: 'SI' }],
       servicios: [{ etiqueta: 'Diagnostico', valor: 'SI' }],
+      serviciosOrden: ['Reparacion de ecu', 'Programacion de llaves'],
       descripcionProblema: 'Arranca pero no comunica',
       pagoRevision: 250000,
       recargoUrgente: 36,
@@ -222,6 +223,8 @@ describe('escpos-ticket-builder', () => {
     expect(text).toContain('\x1bM\x01');
     expect(text).toContain('ORDEN DE TRABAJO');
     expect(text).toContain('ANGEL ARMOA');
+    expect(text).toContain('- REPARACION DE ECU');
+    expect(text).toContain('- PROGRAMACION DE LLAVES');
     expect(text).toContain('250.000 GS.');
     expect(text).toContain('36%');
     expect(text).toContain('FIRMA DEL CLIENTE');

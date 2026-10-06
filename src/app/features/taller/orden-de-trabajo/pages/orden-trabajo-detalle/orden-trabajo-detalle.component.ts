@@ -22,10 +22,11 @@ import { OtEnProcesoStepComponent } from '../../components/ot-en-proceso-step/ot
 import { OtFinalizadaStepComponent } from '../../components/ot-finalizada-step/ot-finalizada-step.component';
 import { OtFacturadoStepComponent } from '../../components/ot-facturado-step/ot-facturado-step.component';
 import { OtTicketDialogComponent } from '../../components/ot-ticket-dialog/ot-ticket-dialog.component';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 @Component({
   selector: 'app-orden-trabajo-detalle',
-  imports: [
+  imports: [NotifyErrorComponent, 
     UiButtonComponent,
     OtStepperHeaderComponent,
     OtRecepcionStepComponent,

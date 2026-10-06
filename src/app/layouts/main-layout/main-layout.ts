@@ -58,9 +58,12 @@ export class MainLayoutComponent implements OnInit {
     {
       label: 'Taller',
       icon: 'construction',
-      requiredPermissions: ['TALLER', 'ORDEN_TRABAJO'],
+      requiredPermissions: ['TALLER', 'ORDEN_TRABAJO', 'VEHICULOS', 'EQUIPOS', 'SERVICIOS'],
       children: [
         { label: 'Orden de Trabajo', icon: 'assignment', route: '/taller/orden-de-trabajo', requiredPermissions: ['ORDEN_TRABAJO'] },
+        { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos', requiredPermissions: ['VEHICULOS'] },
+        { label: 'Equipos', icon: 'memory', route: '/activos/equipos', requiredPermissions: ['EQUIPOS', 'VEHICULOS'] },
+        { label: 'Servicios', icon: 'handyman', route: '/inventario/servicios', requiredPermissions: ['SERVICIOS'] },
       ]
     },
     {
@@ -82,8 +85,6 @@ export class MainLayoutComponent implements OnInit {
         },
       ],
     },
-    { label: 'Vehículos', icon: 'directions_car', route: '/activos/vehiculos', requiredPermissions: ['VEHICULOS'] },
-    { label: 'Equipos', icon: 'memory', route: '/activos/equipos', requiredPermissions: ['EQUIPOS', 'VEHICULOS'] },
     {
       label: 'Financiero',
       icon: 'account_balance',
@@ -96,12 +97,6 @@ export class MainLayoutComponent implements OnInit {
         { label: 'Datos de facturación', icon: 'receipt_long', route: '/financiero/facturacion', requiredPermissions: ['FINANCIERO'] },
         { label: 'Timbrados', icon: 'confirmation_number', route: '/financiero/facturacion/timbrados', requiredPermissions: ['FINANCIERO'] },
       ]
-    },
-    {
-      label: 'Servicios',
-      icon: 'handyman',
-      route: '/inventario/servicios',
-      requiredPermissions: ['SERVICIOS'],
     },
     {
       label: 'Productos',

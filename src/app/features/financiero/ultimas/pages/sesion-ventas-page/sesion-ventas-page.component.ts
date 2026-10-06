@@ -21,6 +21,7 @@ import {
 import { SesionCajaService } from '../../../../ventas/punto-de-venta/services/sesion-caja.service';
 import { VentaOutput } from '../../interfaces/venta.interface';
 import { VentaService } from '../../services/venta.service';
+import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
 interface ConteoLinea {
   valor: number;
@@ -44,7 +45,7 @@ const MONEDA_META: Record<string, { label: string; simbolo: string }> = {
 
 @Component({
   selector: 'app-sesion-ventas-page',
-  imports: [
+  imports: [NotifyErrorComponent, 
     DatePipe,
     DecimalPipe,
     DataTableComponent,

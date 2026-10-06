@@ -208,6 +208,11 @@ export function layoutTicketOrdenTrabajo(ticket: TicketOrdenTrabajo): TicketReng
   t.vacio();
   t.titulo('SERVICIOS');
   for (const s of ticket.servicios ?? []) t.campo(s.etiqueta, s.valor);
+  const cargados = (ticket.serviciosOrden ?? []).map((s) => s.trim()).filter(notBlank);
+  if (cargados.length) {
+    t.vacio();
+    for (const s of cargados) t.linea(`- ${s}`);
+  }
   t.vacio();
   t.descripcionProblema(ticket);
   t.cierre(ticket);

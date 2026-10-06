@@ -21,12 +21,7 @@
     }
   </header>
 
-  @if (error()) {
-    <div class="form-error" role="alert">
-      <span class="material-icons" aria-hidden="true">error_outline</span>
-      <span>{{ error() }}</span>
-    </div>
-  }
+  <app-notify-error [message]="error()" />
 
   <section class="stepper-body">
     <h2 class="stepper-body__title">{{ tituloPaso() }}</h2>
