@@ -1,0 +1,46 @@
+.numero-factura {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cliente-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .nombre {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .ruc {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+}
+
+.monto {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.estado-badge {
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.badge-active {
+  background: var(--success-bg);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
+}
+
+.badge-inactive {
+  background: var(--danger-bg);
+  color: var(--danger-color);
+  border: 1px solid var(--danger-border);
+}

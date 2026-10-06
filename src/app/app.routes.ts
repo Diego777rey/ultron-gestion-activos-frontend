@@ -155,6 +155,14 @@ export const routes: Routes = [
         data: { tabTitle: 'Timbrados' },
       },
       {
+        path: 'financiero/facturas',
+        loadChildren: () =>
+          import('./features/financiero/facturas/facturas.routes').then(
+            (m) => m.FACTURAS_ROUTES
+          ),
+        data: { tabTitle: 'Facturas Legales' },
+      },
+      {
         path: 'inventario/productos',
         loadChildren: () =>
           import('./features/inventario/productos/productos.routes').then(
