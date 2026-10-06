@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { GenericListComponent } from '../../../../../shared/components/generic-list/generic-list';
 import { TableCellDirective } from '../../../../../shared/components/data-table/table-cell.directive';
@@ -9,7 +9,8 @@ import { ListToolbarAction } from '../../../../../shared/models/list-toolbar-act
 import { PageChange } from '../../../../../shared/models/pagination.model';
 import { FacturaService } from '../../services/factura.service';
 import { FacturaOutput } from '../../interfaces/factura.interface';
-import { AuthService } from '../../../../../core/auth/auth.service';
+import { EmpresaService } from '../../../../personas/empresas/services/empresa.service';
+import { EmpresaOutput } from '../../../../personas/empresas/interfaces/empresa.interface';
 
 @Component({
   selector: 'app-facturas-list',
@@ -28,7 +29,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 })
 export class FacturasListComponent {
   private readonly facturaService = inject(FacturaService);
-  private readonly authService = inject(AuthService);
+  private readonly empresaService = inject(EmpresaService);
 
   protected readonly facturas = signal<FacturaOutput[]>([]);
   protected readonly loading = signal(false);
@@ -37,11 +38,7 @@ export class FacturasListComponent {
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
   protected readonly totalElements = signal(0);
-
-  protected readonly idEmpresa = computed(() => {
-    const user = this.authService.currentUser();
-    return user?.id_empresa ?? 1;
-  });
+  protected readonly idEmpresa = signal<number | null>(null);
 
   protected readonly columns: TableColumn<FacturaOutput>[] = [
     { key: 'numero_factura', header: 'Número', width: '160px' },
@@ -63,22 +60,57 @@ export class FacturasListComponent {
   ];
 
   constructor() {
-    this.load();
+    this.cargarEmpresaYFacturas();
+  }
+
+  private cargarEmpresaYFacturas(): void {
+    this.loading.set(true);
+    this.error.set(null);
+    
+    this.empresaService.getEmpresas().subscribe({
+      next: (empresas) => {
+        const empresa = this.resolverEmpresa(empresas);
+        if (!empresa?.id_empresa) {
+          this.error.set('No hay una empresa registrada. Cargala en Datos de facturación.');
+          this.loading.set(false);
+          return;
+        }
+        this.idEmpresa.set(empresa.id_empresa);
+        this.load();
+      },
+      error: (err: Error) => {
+        this.error.set(err.message || 'No se pudo conectar con el servidor');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  private resolverEmpresa(empresas: EmpresaOutput[]): EmpresaOutput | null {
+    if (!empresas || empresas.length === 0) {
+      return null;
+    }
+    const activa = empresas.find((e) => e.activa !== false);
+    return activa || empresas[0];
   }
 
   protected load(): void {
+    const empresaId = this.idEmpresa();
+    if (!empresaId) {
+      return;
+    }
+
     this.loading.set(true);
     this.error.set(null);
 
     const observable = this.search().trim() === ''
       ? this.facturaService.listarFacturasPorEmpresaYEstado(
-          this.idEmpresa(),
+          empresaId,
           'EMITIDA',
           this.pageIndex(),
           this.pageSize()
         )
       : this.facturaService.buscarFacturas(
-          this.idEmpresa(),
+          empresaId,
           this.search(),
           this.pageIndex(),
           this.pageSize()
