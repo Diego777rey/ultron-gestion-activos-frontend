@@ -6,6 +6,7 @@ import { ConfiguracionService } from './configuracion.service';
 import {
   ImpresionResultado,
   PrinterInfo,
+  TicketCierreCaja,
   TicketFactura,
   TicketOrdenTrabajo,
   TicketOrdenTrabajoVehiculo,
@@ -13,6 +14,7 @@ import {
 } from '../models/impresion.model';
 import {
   buildPrueba,
+  buildTicketCierreCaja,
   buildTicketFactura,
   buildTicketOrdenTrabajo,
   buildTicketOrdenTrabajoVehiculo,
@@ -143,7 +145,11 @@ export class ImpresionService {
     ticket: TicketOrdenTrabajo,
     printerName?: string,
   ): Observable<ImpresionResultado> {
-    return this.imprimirOrdenTrabajo(buildTicketOrdenTrabajo(ticket), printerName);
+    return this.imprimirTermica(
+      buildTicketOrdenTrabajo(ticket),
+      'Orden de trabajo enviada a la impresora',
+      printerName,
+    );
   }
 
   /** Ticket de recepción de vehículos. */
@@ -151,10 +157,26 @@ export class ImpresionService {
     ticket: TicketOrdenTrabajoVehiculo,
     printerName?: string,
   ): Observable<ImpresionResultado> {
-    return this.imprimirOrdenTrabajo(buildTicketOrdenTrabajoVehiculo(ticket), printerName);
+    return this.imprimirTermica(
+      buildTicketOrdenTrabajoVehiculo(ticket),
+      'Orden de trabajo enviada a la impresora',
+      printerName,
+    );
   }
 
-  private imprimirOrdenTrabajo(data: Uint8Array, printerName?: string): Observable<ImpresionResultado> {
+  imprimirTicketCierreCaja(ticket: TicketCierreCaja, printerName?: string): Observable<ImpresionResultado> {
+    return this.imprimirTermica(
+      buildTicketCierreCaja(ticket),
+      'Cierre de caja enviado a la impresora',
+      printerName,
+    );
+  }
+
+  private imprimirTermica(
+    data: Uint8Array,
+    successFallback: string,
+    printerName?: string,
+  ): Observable<ImpresionResultado> {
     const name = (printerName ?? this.getConfiguredPrinterName()).trim();
     if (!name) {
       const result = {
@@ -164,7 +186,7 @@ export class ImpresionService {
       this.notifications.warning(result.message, { title: 'Impresora' });
       return of(result);
     }
-    return this.imprimirLocal(name, data, 'Orden de trabajo enviada a la impresora');
+    return this.imprimirLocal(name, data, successFallback);
   }
 
   private canPrintLocal(): boolean {

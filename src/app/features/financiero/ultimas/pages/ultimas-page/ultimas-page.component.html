@@ -94,6 +94,9 @@
   </ng-template>
 
   <ng-template appTableCell="acciones" [appTableCellFrom]="sesiones()" let-item>
-    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, item)" />
+    <app-action-menu
+      [actions]="item.estado === 'CERRADA' ? rowActionsCerrada : rowActions"
+      (actionSelected)="onRowAction($event, item)"
+    />
   </ng-template>
 </app-generic-list>
