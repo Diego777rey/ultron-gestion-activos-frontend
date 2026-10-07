@@ -1,5 +1,6 @@
 import {
   buildPrueba,
+  buildTicketCierreCaja,
   buildTicketFactura,
   buildTicketOrdenTrabajo,
   buildTicketOrdenTrabajoVehiculo,
@@ -8,8 +9,10 @@ import {
   layoutTicketOrdenTrabajo,
   layoutTicketOrdenTrabajoVehiculo,
   sanitize,
+  WIDTH_58MM_FONT_B,
 } from './escpos-ticket-builder';
 import {
+  TicketCierreCaja,
   TicketFactura,
   TicketOrdenTrabajo,
   TicketOrdenTrabajoVehiculo,
@@ -306,6 +309,146 @@ describe('escpos-ticket-builder', () => {
     expect(lineas.every((l) => l.length <= 32)).toBe(true);
     expect(lineas.join(' ')).toBe('El cliente se compromete al pago de revision.');
     expect(renglones.flat().some((s) => s.negrita && s.texto.includes('revision'))).toBe(true);
+  });
+
+  describe('ticket de cierre de caja', () => {
+    const cierre: TicketCierreCaja = {
+      idSesionCaja: 8,
+      caja: 'Caja 1',
+      maletin: 'M-01',
+      cajero: 'Diego Maidana',
+      fechaApertura: '02/10/2026 19:08',
+      fechaCierre: '07/10/2026 19:30',
+      conteoApertura: [
+        {
+          moneda: 'PYG',
+          lineas: [
+            { valor: 1000, cantidad: 3, subtotal: 3000 },
+            { valor: 5000, cantidad: 4, subtotal: 20000 },
+          ],
+          total: 23000,
+        },
+        { moneda: 'BRL', lineas: [], total: 0 },
+        { moneda: 'USD', lineas: [], total: 0 },
+      ],
+      conteoCierre: [
+        { moneda: 'PYG', lineas: [{ valor: 100000, cantidad: 3, subtotal: 300000 }], total: 300000 },
+        { moneda: 'BRL', lineas: [{ valor: 10, cantidad: 2, subtotal: 20 }], total: 20 },
+        { moneda: 'USD', lineas: [], total: 0 },
+      ],
+      cantidadVentas: 4,
+      totalVentasPyg: 256000,
+      ventasPorFormaPago: [
+        { formaPago: 'EFECTIVO', cantidad: 3, total: 200000 },
+        { formaPago: 'TARJETA', cantidad: 1, total: 56000 },
+      ],
+      retiros: [
+        {
+          fecha: '07/10 14:32',
+          moneda: 'PYG',
+          monto: 50000,
+          responsable: 'Carlos Hermosilla',
+          observacion: 'Deposito en el banco por pedido de la administracion central del taller',
+        },
+      ],
+      arqueo: [
+        {
+          moneda: 'PYG', apertura: 23000, cobrosEfectivo: 340000, vueltos: 3000, retiros: 50000,
+          esperado: 310000, contado: 300000, diferencia: -10000,
+        },
+        {
+          moneda: 'BRL', apertura: 0, cobrosEfectivo: 20, vueltos: 0, retiros: 0,
+          esperado: 20, contado: 20, diferencia: 0,
+        },
+        {
+          moneda: 'USD', apertura: 0, cobrosEfectivo: 0, vueltos: 0, retiros: 0,
+          esperado: 0, contado: 0, diferencia: 0,
+        },
+      ],
+      idSesionAnterior: 7,
+      fechaCierreAnterior: '02/10/2026 19:08',
+      diferencias: [
+        { moneda: 'PYG', cierreAnterior: 8000, apertura: 23000, diferencia: 15000 },
+        { moneda: 'BRL', cierreAnterior: 86, apertura: 0, diferencia: -86 },
+        { moneda: 'USD', cierreAnterior: 0, apertura: 0, diferencia: 0 },
+      ],
+    };
+
+    it('lleva logo, conteos, ventas, diferencia y firma', () => {
+      const bytes = buildTicketCierreCaja(cierre);
+      const text = asText(bytes);
+
+      expect(containsLogo(bytes)).toBe(true);
+      expect(containsCut(bytes)).toBe(true);
+      expect(text).toContain('CIERRE DE CAJA');
+      expect(text).toContain('Sesion #8');
+      expect(text).toContain('CONTEO DE APERTURA');
+      expect(text).toContain('Gs. 5.000 x 4');
+      expect(text).toContain('CONTEO DE CIERRE');
+      expect(text).toContain('R$ 10 x 2');
+      expect(text).toMatch(/Tarjeta \(1\) +56\.000/);
+      expect(text).toMatch(/TOTAL VENTAS Gs\. \(4\) +256\.000/);
+      expect(text).toContain('Contra cierre sesion #7');
+      expect(text).toMatch(/Diferencia +\+15\.000/);
+      expect(text).toMatch(/Diferencia +-86,00/);
+      expect(text).toContain('FIRMA DEL CAJERO');
+      expect(text).toContain('FIRMA DE CONTROL');
+      expect(text.indexOf('FIRMA DEL CAJERO')).toBeGreaterThan(text.indexOf('DIFERENCIA DE APERTURA'));
+    });
+
+    it('lista los retiros con responsable y observación', () => {
+      const text = asText(buildTicketCierreCaja(cierre));
+
+      expect(text).toContain('RETIROS');
+      expect(text).toMatch(/07\/10 14:32 +Gs\. 50\.000/);
+      expect(text).toMatch(/Resp\. +Carlos Hermosilla/);
+      expect(text).toContain('Deposito en el banco');
+      expect(text).toContain('central del taller');
+    });
+
+    it('arma el arqueo con esperado, contado y faltante o sobrante', () => {
+      const text = asText(buildTicketCierreCaja(cierre));
+      const arqueo = text.slice(text.indexOf('ARQUEO DE CAJA'), text.indexOf('DIFERENCIA DE APERTURA'));
+
+      expect(arqueo).toMatch(/\+ Cobros en efectivo +340\.000/);
+      expect(arqueo).toMatch(/- Retiros +50\.000/);
+      expect(arqueo).toMatch(/= Esperado +Gs\. 310\.000/);
+      expect(arqueo).toMatch(/Contado +Gs\. 300\.000/);
+      expect(arqueo).toMatch(/FALTANTE +-10\.000/);
+      expect(arqueo).toContain('REALES');
+      expect(arqueo).toContain('SIN DIFERENCIA');
+      expect(arqueo).not.toContain('DOLARES');
+    });
+
+    it('sin retiros lo indica', () => {
+      const text = asText(buildTicketCierreCaja({ ...cierre, retiros: [] }));
+
+      expect(text).toContain('Sin retiros');
+    });
+
+    it('no pasa de 42 columnas por renglón', () => {
+      const lineas = asText(buildTicketCierreCaja(cierre))
+        .replace(/\x1b[aEtMd3][\s\S]/g, '')
+        .split('\n')
+        .filter((l) => /^[\x20-\x7E]+$/.test(l));
+
+      expect(lineas.length).toBeGreaterThan(20);
+      expect(lineas.every((l) => l.length <= WIDTH_58MM_FONT_B)).toBe(true);
+    });
+
+    it('avisa cuando el maletín no tenía cierre anterior', () => {
+      const text = asText(buildTicketCierreCaja({
+        ...cierre,
+        idSesionAnterior: null,
+        ventasPorFormaPago: [],
+        cantidadVentas: 0,
+        totalVentasPyg: 0,
+      }));
+
+      expect(text).toContain('Sin cierre anterior del maletin');
+      expect(text).toContain('Sin ventas');
+      expect(text).not.toContain('Contra cierre sesion');
+    });
   });
 
   it('quita acentos del texto', () => {

@@ -6,12 +6,23 @@
         <p>{{ subtitle() }}</p>
       }
     </div>
-    <app-ui-button
-      label="Volver"
-      icon="arrow_back"
-      variant="ghost"
-      (clicked)="volver()"
-    />
+    <div class="page__actions">
+      @if (sesionVista()?.estado === 'CERRADA') {
+        <app-ui-button
+          label="Imprimir cierre"
+          icon="print"
+          variant="primary"
+          [loading]="imprimiendo()"
+          (clicked)="imprimirCierre()"
+        />
+      }
+      <app-ui-button
+        label="Volver"
+        icon="arrow_back"
+        variant="ghost"
+        (clicked)="volver()"
+      />
+    </div>
   </header>
 
   <div class="page__body">
@@ -64,6 +75,37 @@
               <div><span>Reales</span><strong>R$ {{ nvl(s.montoInicialBrl) | number: '1.2-2' }}</strong></div>
               <div><span>Dólares</span><strong>US$ {{ nvl(s.montoInicialUsd) | number: '1.2-2' }}</strong></div>
             </div>
+            <div class="montos montos--dif">
+              @if (s.idSesionAnterior != null) {
+                <p class="diferencia-ref">
+                  Contra el cierre de la sesión #{{ s.idSesionAnterior }}
+                  ({{ s.fechaCierreAnterior | date: 'dd/MM/yyyy HH:mm' | defaultEmpty }}):
+                  Gs. {{ nvl(s.montoCierreAnteriorPyg) | number: '1.0-0' }} ·
+                  R$ {{ nvl(s.montoCierreAnteriorBrl) | number: '1.2-2' }} ·
+                  US$ {{ nvl(s.montoCierreAnteriorUsd) | number: '1.2-2' }}
+                </p>
+                <div>
+                  <span>Diferencia Gs.</span>
+                  <strong [class.negativo]="nvl(s.diferenciaPyg) < 0" [class.positivo]="nvl(s.diferenciaPyg) > 0">
+                    {{ nvl(s.diferenciaPyg) > 0 ? '+' : '' }}{{ nvl(s.diferenciaPyg) | number: '1.0-0' }}
+                  </strong>
+                </div>
+                <div>
+                  <span>Diferencia R$</span>
+                  <strong [class.negativo]="nvl(s.diferenciaBrl) < 0" [class.positivo]="nvl(s.diferenciaBrl) > 0">
+                    {{ nvl(s.diferenciaBrl) > 0 ? '+' : '' }}{{ nvl(s.diferenciaBrl) | number: '1.2-2' }}
+                  </strong>
+                </div>
+                <div>
+                  <span>Diferencia US$</span>
+                  <strong [class.negativo]="nvl(s.diferenciaUsd) < 0" [class.positivo]="nvl(s.diferenciaUsd) > 0">
+                    {{ nvl(s.diferenciaUsd) > 0 ? '+' : '' }}{{ nvl(s.diferenciaUsd) | number: '1.2-2' }}
+                  </strong>
+                </div>
+              } @else {
+                <p class="diferencia-ref">Sin cierre anterior del maletín para comparar</p>
+              }
+            </div>
             @if (conteosApertura().length) {
               <div class="conteos">
                 @for (grupo of conteosApertura(); track grupo.moneda) {
@@ -104,26 +146,6 @@
                 <div><span>Reales</span><strong>R$ {{ nvl(s.montoFinalBrl) | number: '1.2-2' }}</strong></div>
                 <div><span>Dólares</span><strong>US$ {{ nvl(s.montoFinalUsd) | number: '1.2-2' }}</strong></div>
               </div>
-              <div class="montos montos--dif">
-                <div>
-                  <span>Diferencia Gs.</span>
-                  <strong [class.negativo]="nvl(s.diferenciaPyg) < 0" [class.positivo]="nvl(s.diferenciaPyg) > 0">
-                    {{ nvl(s.diferenciaPyg) | number: '1.0-0' }}
-                  </strong>
-                </div>
-                <div>
-                  <span>Diferencia R$</span>
-                  <strong [class.negativo]="nvl(s.diferenciaBrl) < 0" [class.positivo]="nvl(s.diferenciaBrl) > 0">
-                    {{ nvl(s.diferenciaBrl) | number: '1.2-2' }}
-                  </strong>
-                </div>
-                <div>
-                  <span>Diferencia US$</span>
-                  <strong [class.negativo]="nvl(s.diferenciaUsd) < 0" [class.positivo]="nvl(s.diferenciaUsd) > 0">
-                    {{ nvl(s.diferenciaUsd) | number: '1.2-2' }}
-                  </strong>
-                </div>
-              </div>
               @if (conteosCierre().length) {
                 <div class="conteos">
                   @for (grupo of conteosCierre(); track grupo.moneda) {
@@ -145,6 +167,62 @@
               }
             } @else {
               <p class="resumen__muted">La sesión sigue abierta</p>
+            }
+          </section>
+
+          <section class="resumen__card">
+            <h3>Arqueo de caja</h3>
+            <p class="diferencia-ref">
+              Esperado = apertura + cobros en efectivo − vueltos − retiros.
+              @if (s.estado !== 'CERRADA') {
+                Es lo que debería haber ahora en la caja.
+              }
+            </p>
+            @for (a of arqueoVisible(); track a.moneda) {
+              <div class="arqueo">
+                <header>{{ a.label }}</header>
+                <div class="montos">
+                  <div><span>Apertura</span><strong>{{ a.simbolo }} {{ a.apertura | number: a.formato }}</strong></div>
+                  <div><span>+ Cobros en efectivo</span><strong>{{ a.cobrosEfectivo | number: a.formato }}</strong></div>
+                  <div><span>− Vueltos</span><strong>{{ a.vueltos | number: a.formato }}</strong></div>
+                  <div><span>− Retiros</span><strong>{{ a.retiros | number: a.formato }}</strong></div>
+                  <div class="arqueo__esperado">
+                    <span>Esperado</span><strong>{{ a.simbolo }} {{ a.esperado | number: a.formato }}</strong>
+                  </div>
+                  @if (a.contado != null) {
+                    <div><span>Contado</span><strong>{{ a.simbolo }} {{ a.contado | number: a.formato }}</strong></div>
+                    <div>
+                      <span>{{ etiquetaDiferencia(a.diferencia) }}</span>
+                      <strong [class.negativo]="nvl(a.diferencia) < 0" [class.positivo]="nvl(a.diferencia) > 0">
+                        {{ nvl(a.diferencia) > 0 ? '+' : '' }}{{ nvl(a.diferencia) | number: a.formato }}
+                      </strong>
+                    </div>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <p class="resumen__muted">Calculando arqueo…</p>
+            }
+          </section>
+
+          <section class="resumen__card">
+            <h3>Retiros</h3>
+            @for (r of retiros(); track r.id_retiro_caja) {
+              <div class="retiro">
+                <div class="retiro__cabecera">
+                  <span>{{ r.fecha | date: 'dd/MM HH:mm' | defaultEmpty }}</span>
+                  <strong>{{ simbolo(r.moneda) }} {{ r.monto | number: formato(r.moneda) }}</strong>
+                </div>
+                <p class="retiro__responsable">
+                  Responsable: {{ r.responsableNombre || r.responsableUsuario | defaultEmpty }}
+                  @if (r.registradoPor) {
+                    · Registró: {{ r.registradoPor }}
+                  }
+                </p>
+                <p class="retiro__observacion">{{ r.observacion }}</p>
+              </div>
+            } @empty {
+              <p class="resumen__muted">Sin retiros en esta sesión</p>
             }
           </section>
         </aside>
