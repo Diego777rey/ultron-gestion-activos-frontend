@@ -96,6 +96,7 @@ export class MainLayoutComponent implements OnInit {
         { label: 'Cotización', icon: 'currency_exchange', route: '/financiero/cotizaciones', requiredPermissions: ['COTIZACIONES'] },
         { label: 'Datos de facturación', icon: 'receipt_long', route: '/financiero/facturacion', requiredPermissions: ['FINANCIERO'] },
         { label: 'Timbrados', icon: 'confirmation_number', route: '/financiero/facturacion/timbrados', requiredPermissions: ['FINANCIERO'] },
+        { label: 'Facturas Legales', icon: 'receipt', route: '/financiero/facturas', requiredPermissions: ['FINANCIERO'] },
       ]
     },
     {
@@ -181,6 +182,7 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('ultimas')) return 'Últimas cajas';
     if (url.includes('facturacion/timbrados')) return 'Timbrados';
     if (url.includes('facturacion')) return 'Datos de facturación';
+    if (url.includes('facturas')) return 'Facturas Legales';
     if (url.includes('cotizaciones')) return 'Cotizaciones';
     if (url.includes('cajas')) return 'Cajas';
     if (url.includes('productos/nuevo')) return 'Nuevo Producto';
