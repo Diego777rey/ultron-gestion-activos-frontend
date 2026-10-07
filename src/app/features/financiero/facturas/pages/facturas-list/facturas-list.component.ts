@@ -41,6 +41,7 @@ export class FacturasListComponent {
   protected readonly idEmpresa = signal<number | null>(null);
 
   protected readonly columns: TableColumn<FacturaOutput>[] = [
+    { key: 'id_factura', header: 'Id', width: '80px', align: 'center' },
     { key: 'numero_factura', header: 'Número', width: '160px' },
     { key: 'fecha_emision', header: 'Fecha', width: '140px', align: 'center' },
     { key: 'cliente_nombre', header: 'Cliente', width: '280px' },

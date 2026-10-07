@@ -7,12 +7,11 @@ import { LISTAR_FACTURAS_CON_VENTAS, BUSCAR_FACTURAS, OBTENER_FACTURA_POR_ID } f
 export interface FacturaPageResponse {
   content: FacturaOutput[];
   pageInfo: {
+    pageNumber: number;
+    pageSize: number;
     totalElements: number;
     totalPages: number;
-    currentPage: number;
-    pageSize: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
+    last: boolean;
   };
 }
 
