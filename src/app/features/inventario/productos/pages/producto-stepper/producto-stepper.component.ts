@@ -268,6 +268,51 @@ export class ProductoStepperComponent implements OnInit {
     this.selectedSubcategoria.set(sub);
   }
 
+  protected eliminarCategoria(cat: CategoriaProductoOutput, event: Event): void {
+    event.stopPropagation();
+    if (!cat.id_categoria_producto) {
+      return;
+    }
+    const mensaje = `¿Eliminar la categoría "${cat.nombre}"? Los productos vinculados no se borran. Si tiene subcategorías o productos, no se puede eliminar.`;
+    this.dialogService.confirm(mensaje, 'Eliminar categoría').subscribe((confirmed) => {
+      if (!confirmed || !cat.id_categoria_producto) {
+        return;
+      }
+      this.categoriaService.remove(cat.id_categoria_producto).subscribe({
+        next: () => {
+          if (this.selectedCategoria()?.id_categoria_producto === cat.id_categoria_producto) {
+            this.selectedCategoria.set(null);
+            this.selectedSubcategoria.set(null);
+            this.subcategorias.set([]);
+          }
+          this.loadCategorias();
+        },
+      });
+    });
+  }
+
+  protected eliminarSubcategoria(sub: CategoriaProductoOutput, event: Event): void {
+    event.stopPropagation();
+    const padre = this.selectedCategoria();
+    if (!sub.id_categoria_producto || !padre?.id_categoria_producto) {
+      return;
+    }
+    const mensaje = `¿Eliminar la subcategoría "${sub.nombre}"? Los productos vinculados no se borran. Si tiene productos, no se puede eliminar.`;
+    this.dialogService.confirm(mensaje, 'Eliminar subcategoría').subscribe((confirmed) => {
+      if (!confirmed || !sub.id_categoria_producto || !padre.id_categoria_producto) {
+        return;
+      }
+      this.categoriaService.remove(sub.id_categoria_producto).subscribe({
+        next: () => {
+          if (this.selectedSubcategoria()?.id_categoria_producto === sub.id_categoria_producto) {
+            this.selectedSubcategoria.set(null);
+          }
+          this.loadSubcategorias(padre.id_categoria_producto!);
+        },
+      });
+    });
+  }
+
   protected openNuevaCategoria(): void {
     this.dialogService
       .openForm<CategoriaProductoOutput>(CategoriaRapidaFormComponent, {

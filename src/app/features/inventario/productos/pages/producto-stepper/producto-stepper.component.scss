@@ -214,6 +214,11 @@
   .material-icons {
     font-size: 20px;
   }
+
+  &--danger:hover:not(:disabled) {
+    background: rgba(211, 47, 47, 0.18);
+    color: #ef9a9a;
+  }
 }
 
 .table-wrap {

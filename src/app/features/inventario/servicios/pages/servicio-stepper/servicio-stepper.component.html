@@ -57,14 +57,15 @@
                   <th style="width: 80px;">Id</th>
                   <th>Nombre</th>
                   <th style="width: 100px;">Activo</th>
+                  <th style="width: 56px;"></th>
                 </tr>
               </thead>
               <tbody>
                 @if (loadingCategorias()) {
-                  <tr><td colspan="3" class="table-empty">Cargando categorías...</td></tr>
+                  <tr><td colspan="4" class="table-empty">Cargando categorías...</td></tr>
                 } @else if (categoriasPagina().length === 0) {
                   <tr>
-                    <td colspan="3" class="table-empty">
+                    <td colspan="4" class="table-empty">
                       No hay categorías. Usá el botón + para crear una.
                     </td>
                   </tr>
@@ -77,6 +78,16 @@
                       <td>{{ cat.id_categoria_servicio }}</td>
                       <td>{{ cat.nombre }}</td>
                       <td>{{ cat.estado !== false ? 'Sí' : 'No' }}</td>
+                      <td>
+                        <button
+                          type="button"
+                          class="icon-tool icon-tool--danger"
+                          title="Eliminar categoría"
+                          (click)="eliminarCategoria(cat, $event)"
+                        >
+                          <span class="material-icons">delete</span>
+                        </button>
+                      </td>
                     </tr>
                   }
                 }
@@ -141,14 +152,15 @@
                   <th style="width: 80px;">Id</th>
                   <th>Nombre</th>
                   <th style="width: 100px;">Activo</th>
+                  <th style="width: 56px;"></th>
                 </tr>
               </thead>
               <tbody>
                 @if (loadingSubcategorias()) {
-                  <tr><td colspan="3" class="table-empty">Cargando subcategorías...</td></tr>
+                  <tr><td colspan="4" class="table-empty">Cargando subcategorías...</td></tr>
                 } @else if (subcategoriasPagina().length === 0) {
                   <tr>
-                    <td colspan="3" class="table-empty">
+                    <td colspan="4" class="table-empty">
                       No hay subcategorías. Usá + para crear una, o continuá sin subcategoría.
                     </td>
                   </tr>
@@ -161,6 +173,16 @@
                       <td>{{ sub.id_categoria_servicio }}</td>
                       <td>{{ sub.nombre }}</td>
                       <td>{{ sub.estado !== false ? 'Sí' : 'No' }}</td>
+                      <td>
+                        <button
+                          type="button"
+                          class="icon-tool icon-tool--danger"
+                          title="Eliminar subcategoría"
+                          (click)="eliminarSubcategoria(sub, $event)"
+                        >
+                          <span class="material-icons">delete</span>
+                        </button>
+                      </td>
                     </tr>
                   }
                 }

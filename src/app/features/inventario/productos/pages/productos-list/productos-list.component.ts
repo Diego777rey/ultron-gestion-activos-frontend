@@ -190,7 +190,7 @@ export class ProductosListComponent {
     if (!producto.id_producto) {
       return;
     }
-    const mensaje = `¿Está seguro que desea eliminar el producto "${producto.nombre}"?`;
+    const mensaje = `¿Eliminar el producto "${producto.nombre}"? La categoría vinculada se mantiene. Si ya fue vendido, no se puede borrar.`;
     this.dialogService.confirm(mensaje, 'Eliminar producto').subscribe((confirmed) => {
       if (confirmed && producto.id_producto) {
         this.productoService.remove(producto.id_producto).subscribe({
