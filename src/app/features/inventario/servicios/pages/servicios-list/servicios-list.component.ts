@@ -11,6 +11,7 @@ import { PageChange } from '../../../../../shared/models/pagination.model';
 import { ServicioService } from '../../services/servicio.service';
 import { ServicioOutput } from '../../interfaces/servicio.interface';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
 
 @Component({
   selector: 'app-servicios-list',
@@ -29,6 +30,7 @@ export class ServiciosListComponent {
   private readonly servicioService = inject(ServicioService);
   private readonly router = inject(Router);
   private readonly reporteService = inject(ReporteService);
+  private readonly dialogService = inject(AppDialogService);
 
   protected readonly servicios = signal<ServicioOutput[]>([]);
   protected readonly loading = signal(false);
@@ -59,6 +61,7 @@ export class ServiciosListComponent {
   protected readonly rowActions: MenuAction[] = [
     { id: 'edit', label: 'Editar', icon: 'edit' },
     { id: 'generar', label: 'Reporte', icon: 'picture_as_pdf' },
+    { id: 'delete', label: 'Eliminar', icon: 'delete', dangerous: true },
   ];
 
   constructor() {
@@ -141,6 +144,8 @@ export class ServiciosListComponent {
       this.editarServicio(servicio);
     } else if (actionId === 'generar') {
       this.generarFicha(servicio);
+    } else if (actionId === 'delete') {
+      this.eliminarServicio(servicio);
     }
   }
 
@@ -158,6 +163,20 @@ export class ServiciosListComponent {
       return '';
     }
     return cat.nombre;
+  }
+
+  protected eliminarServicio(servicio: ServicioOutput): void {
+    if (!servicio.id_servicio) {
+      return;
+    }
+    const mensaje = `¿Está seguro que desea eliminar el servicio "${servicio.nombre}"?`;
+    this.dialogService.confirm(mensaje, 'Eliminar servicio').subscribe((confirmed) => {
+      if (confirmed && servicio.id_servicio) {
+        this.servicioService.remove(servicio.id_servicio).subscribe({
+          next: () => this.load(),
+        });
+      }
+    });
   }
 
   protected trackById = (s: ServicioOutput): unknown => s.id_servicio;
