@@ -92,7 +92,7 @@ export class MainLayoutComponent implements OnInit {
       children: [
         { label: 'Maletines', icon: 'business_center', route: '/financiero/maletines', requiredPermissions: ['MALETINES'] },
         { label: 'Cajas', icon: 'account_balance_wallet', route: '/financiero/cajas', requiredPermissions: ['CAJAS'] },
-        { label: 'Últimas cajas', icon: 'history', route: '/financiero/ultimas', requiredPermissions: ['CAJAS'] },
+        { label: 'Control de caja', icon: 'point_of_sale', route: '/financiero/ultimas', requiredPermissions: ['CAJAS'] },
         { label: 'Cotización', icon: 'currency_exchange', route: '/financiero/cotizaciones', requiredPermissions: ['COTIZACIONES'] },
         { label: 'Datos de facturación', icon: 'receipt_long', route: '/financiero/facturacion', requiredPermissions: ['FINANCIERO'] },
         { label: 'Timbrados', icon: 'confirmation_number', route: '/financiero/facturacion/timbrados', requiredPermissions: ['FINANCIERO'] },
@@ -179,7 +179,7 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('empresas')) return 'Empresas';
     if (url.includes('maletines')) return 'Maletines';
     if (url.includes('ultimas') && url.includes('/ventas')) return 'Ventas de la caja';
-    if (url.includes('ultimas')) return 'Últimas cajas';
+    if (url.includes('ultimas')) return 'Control de caja';
     if (url.includes('facturacion/timbrados')) return 'Timbrados';
     if (url.includes('facturacion')) return 'Datos de facturación';
     if (url.includes('facturas')) return 'Facturas Legales';
