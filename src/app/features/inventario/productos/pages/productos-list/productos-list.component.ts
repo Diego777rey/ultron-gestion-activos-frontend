@@ -67,7 +67,7 @@ export class ProductosListComponent {
     { id: 'edit', label: 'Editar', icon: 'edit' },
     { id: 'stock', label: 'Ver Stock', icon: 'inventory_2' },
     { id: 'generar', label: 'Reporte', icon: 'picture_as_pdf' },
-    { id: 'delete', label: 'Eliminar', icon: 'delete', dangerous: true },
+    { id: 'delete', label: 'Eliminar', icon: 'delete', danger: true },
   ];
 
   constructor() {

@@ -63,7 +63,7 @@ export class CategoriaServicioListComponent {
   protected readonly rowActions: MenuAction[] = [
     { id: 'edit', label: 'Editar', icon: 'edit' },
     { id: 'add_sub', label: 'Agregar subcategoría', icon: 'account_tree' },
-    { id: 'delete', label: 'Eliminar', icon: 'delete', dangerous: true },
+    { id: 'delete', label: 'Eliminar', icon: 'delete', danger: true },
   ];
 
   constructor() {
