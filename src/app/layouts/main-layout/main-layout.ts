@@ -53,6 +53,7 @@ export class MainLayoutComponent implements OnInit {
       requiredPermissions: ['VENTAS'],
       children: [
         { label: 'Punto de Venta', icon: 'storefront', route: '/ventas/punto-de-venta', requiredPermissions: ['VENTAS'] },
+        { label: 'Últimas cajas', icon: 'receipt_long', route: '/ventas/ultimas-cajas', requiredPermissions: ['VENTAS'] },
       ]
     },
     {
@@ -178,6 +179,7 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('roles')) return 'Lista de roles';
     if (url.includes('empresas')) return 'Empresas';
     if (url.includes('maletines')) return 'Maletines';
+    if (url.includes('ventas/ultimas-cajas')) return 'Últimas cajas';
     if (url.includes('ultimas') && url.includes('/ventas')) return 'Ventas de la caja';
     if (url.includes('ultimas')) return 'Control de caja';
     if (url.includes('facturacion/timbrados')) return 'Timbrados';

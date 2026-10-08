@@ -71,6 +71,14 @@ export const routes: Routes = [
         data: { tabTitle: 'Punto de Venta', noReuse: true },
       },
       {
+        path: 'ventas/ultimas-cajas',
+        loadComponent: () =>
+          import('./features/ventas/ultimas-cajas/ultimas-cajas.component').then(
+            (m) => m.UltimasCajasComponent
+          ),
+        data: { tabTitle: 'Últimas cajas' },
+      },
+      {
         path: 'taller/orden-de-trabajo',
         loadChildren: () =>
           import('./features/taller/orden-de-trabajo/orden-trabajo.routes').then(
