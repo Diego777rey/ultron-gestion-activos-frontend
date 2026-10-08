@@ -67,6 +67,7 @@ export class ProductosListComponent {
     { id: 'edit', label: 'Editar', icon: 'edit' },
     { id: 'stock', label: 'Ver Stock', icon: 'inventory_2' },
     { id: 'generar', label: 'Reporte', icon: 'picture_as_pdf' },
+    { id: 'delete', label: 'Eliminar', icon: 'delete', danger: true },
   ];
 
   constructor() {
@@ -160,6 +161,8 @@ export class ProductosListComponent {
       this.openStockDialog(producto);
     } else if (actionId === 'generar') {
       this.generarFicha(producto);
+    } else if (actionId === 'delete') {
+      this.eliminarProducto(producto);
     }
   }
 
@@ -181,6 +184,20 @@ export class ProductosListComponent {
       maxWidth: '640px',
       inputs: { producto },
     }).subscribe();
+  }
+
+  protected eliminarProducto(producto: ProductoOutput): void {
+    if (!producto.id_producto) {
+      return;
+    }
+    const mensaje = `¿Está seguro que desea eliminar el producto "${producto.nombre}"?`;
+    this.dialogService.confirm(mensaje, 'Eliminar producto').subscribe((confirmed) => {
+      if (confirmed && producto.id_producto) {
+        this.productoService.remove(producto.id_producto).subscribe({
+          next: () => this.load(),
+        });
+      }
+    });
   }
 
   protected trackById = (p: ProductoOutput): unknown => p.id_producto;

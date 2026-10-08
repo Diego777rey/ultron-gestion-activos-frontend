@@ -63,6 +63,7 @@ export class CategoriaProductoListComponent {
   protected readonly rowActions: MenuAction[] = [
     { id: 'edit', label: 'Editar', icon: 'edit' },
     { id: 'add_sub', label: 'Agregar subcategoría', icon: 'account_tree' },
+    { id: 'delete', label: 'Eliminar', icon: 'delete', danger: true },
   ];
 
   constructor() {
@@ -151,6 +152,8 @@ export class CategoriaProductoListComponent {
       this.router.navigate(['/inventario/productos/categorias', categoria.id_categoria_producto, 'editar']);
     } else if (actionId === 'add_sub') {
       this.agregarSubcategoria(categoria);
+    } else if (actionId === 'delete') {
+      this.eliminarCategoria(categoria);
     }
   }
 
@@ -174,6 +177,34 @@ export class CategoriaProductoListComponent {
   private recargarSubcategorias(idPadre: number): void {
     this.categoriaService.findSubcategorias(idPadre).subscribe({
       next: (subs) => this.subcatMap.update((map) => ({ ...map, [idPadre]: subs })),
+    });
+  }
+
+  protected eliminarCategoria(categoria: CategoriaProductoOutput): void {
+    if (!categoria.id_categoria_producto) {
+      return;
+    }
+    const mensaje = `¿Está seguro que desea eliminar la categoría "${categoria.nombre}"?`;
+    this.dialogService.confirm(mensaje, 'Eliminar categoría').subscribe((confirmed) => {
+      if (confirmed && categoria.id_categoria_producto) {
+        this.categoriaService.remove(categoria.id_categoria_producto).subscribe({
+          next: () => this.load(),
+        });
+      }
+    });
+  }
+
+  protected eliminarSubcategoria(subcategoria: CategoriaProductoOutput, categoriaPadre: CategoriaProductoOutput): void {
+    if (!subcategoria.id_categoria_producto || !categoriaPadre.id_categoria_producto) {
+      return;
+    }
+    const mensaje = `¿Está seguro que desea eliminar la subcategoría "${subcategoria.nombre}" de "${categoriaPadre.nombre}"?`;
+    this.dialogService.confirm(mensaje, 'Eliminar subcategoría').subscribe((confirmed) => {
+      if (confirmed && subcategoria.id_categoria_producto && categoriaPadre.id_categoria_producto) {
+        this.categoriaService.remove(subcategoria.id_categoria_producto).subscribe({
+          next: () => this.recargarSubcategorias(categoriaPadre.id_categoria_producto!),
+        });
+      }
     });
   }
 

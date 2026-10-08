@@ -58,8 +58,18 @@
       <div class="subcat-chips">
         @for (sub of subcategoriasDe(item); track sub.id_categoria_producto) {
           <span class="subcat-chip">
-            {{ sub.nombre }}
-            @if (!sub.estado) { <em>(inactivo)</em> }
+            <span class="subcat-chip__content">
+              {{ sub.nombre }}
+              @if (!sub.estado) { <em>(inactivo)</em> }
+            </span>
+            <button
+              type="button"
+              class="subcat-chip__delete"
+              (click)="eliminarSubcategoria(sub, item)"
+              title="Eliminar subcategoría"
+            >
+              <span class="material-icons">close</span>
+            </button>
           </span>
         }
       </div>
