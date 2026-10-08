@@ -25,7 +25,7 @@ export const FACTURA_SELECTION_SET = `{
 }`;
 
 export const LISTAR_FACTURAS_CON_VENTAS = `
-  query ListarFacturasConVenta($page: Int, $size: Int, $idEmpresa: ID!, $estado: String) {
+  query ListarFacturasConVenta($page: Int, $size: Int, $idEmpresa: ID!, $estado: String!) {
     facturas: facturasConVentaPorEmpresaYEstado(
       idEmpresa: $idEmpresa
       estado: $estado
@@ -34,12 +34,11 @@ export const LISTAR_FACTURAS_CON_VENTAS = `
     ) {
       content ${FACTURA_SELECTION_SET}
       pageInfo {
+        pageNumber
+        pageSize
         totalElements
         totalPages
-        currentPage
-        pageSize
-        hasNext
-        hasPrevious
+        last
       }
     }
   }
@@ -55,12 +54,11 @@ export const BUSCAR_FACTURAS = `
     ) {
       content ${FACTURA_SELECTION_SET}
       pageInfo {
+        pageNumber
+        pageSize
         totalElements
         totalPages
-        currentPage
-        pageSize
-        hasNext
-        hasPrevious
+        last
       }
     }
   }
