@@ -297,4 +297,33 @@ export class SesionCajaService {
       })
       .pipe(map((data) => data.listarSesionesCajaPaginado));
   }
+
+  /** Cierres del cajero logueado (lo resuelve el backend por el token), el más reciente primero. */
+  misSesionesCerradas(
+    page: number,
+    size: number,
+    fechaDesde?: string | null,
+    fechaHasta?: string | null,
+  ): Observable<PageResponse<SesionCajaOutput>> {
+    const document = `query($page: Int!, $size: Int!, $fechaDesde: String, $fechaHasta: String) {
+      listarMisSesionesCajaCerradas(page: $page, size: $size, fechaDesde: $fechaDesde, fechaHasta: $fechaHasta) {
+        content ${SESION_SELECTION}
+        pageInfo {
+          pageNumber
+          pageSize
+          totalElements
+          totalPages
+          last
+        }
+      }
+    }`;
+    return this.gql
+      .query<{ listarMisSesionesCajaCerradas: PageResponse<SesionCajaOutput> }>(document, {
+        page,
+        size,
+        fechaDesde: fechaDesde || null,
+        fechaHasta: fechaHasta || null,
+      })
+      .pipe(map((data) => data.listarMisSesionesCajaCerradas));
+  }
 }
