@@ -184,7 +184,7 @@ export class CategoriaProductoListComponent {
     if (!categoria.id_categoria_producto) {
       return;
     }
-    const mensaje = `¿Está seguro que desea eliminar la categoría "${categoria.nombre}"?`;
+    const mensaje = `¿Eliminar la categoría "${categoria.nombre}"? Los productos vinculados no se borran. Si tiene subcategorías o productos, no se puede eliminar.`;
     this.dialogService.confirm(mensaje, 'Eliminar categoría').subscribe((confirmed) => {
       if (confirmed && categoria.id_categoria_producto) {
         this.categoriaService.remove(categoria.id_categoria_producto).subscribe({
@@ -198,7 +198,7 @@ export class CategoriaProductoListComponent {
     if (!subcategoria.id_categoria_producto || !categoriaPadre.id_categoria_producto) {
       return;
     }
-    const mensaje = `¿Está seguro que desea eliminar la subcategoría "${subcategoria.nombre}" de "${categoriaPadre.nombre}"?`;
+    const mensaje = `¿Eliminar la subcategoría "${subcategoria.nombre}" de "${categoriaPadre.nombre}"? Los productos vinculados no se borran.`;
     this.dialogService.confirm(mensaje, 'Eliminar subcategoría').subscribe((confirmed) => {
       if (confirmed && subcategoria.id_categoria_producto && categoriaPadre.id_categoria_producto) {
         this.categoriaService.remove(subcategoria.id_categoria_producto).subscribe({

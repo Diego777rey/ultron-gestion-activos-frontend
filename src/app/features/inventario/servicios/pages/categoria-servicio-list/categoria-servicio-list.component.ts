@@ -184,7 +184,7 @@ export class CategoriaServicioListComponent {
     if (!categoria.id_categoria_servicio) {
       return;
     }
-    const mensaje = `¿Está seguro que desea eliminar la categoría "${categoria.nombre}"?`;
+    const mensaje = `¿Eliminar la categoría "${categoria.nombre}"? Los servicios vinculados no se borran. Si tiene subcategorías o servicios, no se puede eliminar.`;
     this.dialogService.confirm(mensaje, 'Eliminar categoría').subscribe((confirmed) => {
       if (confirmed && categoria.id_categoria_servicio) {
         this.categoriaService.remove(categoria.id_categoria_servicio).subscribe({
@@ -198,7 +198,7 @@ export class CategoriaServicioListComponent {
     if (!subcategoria.id_categoria_servicio || !categoriaPadre.id_categoria_servicio) {
       return;
     }
-    const mensaje = `¿Está seguro que desea eliminar la subcategoría "${subcategoria.nombre}" de "${categoriaPadre.nombre}"?`;
+    const mensaje = `¿Eliminar la subcategoría "${subcategoria.nombre}" de "${categoriaPadre.nombre}"? Los servicios vinculados no se borran.`;
     this.dialogService.confirm(mensaje, 'Eliminar subcategoría').subscribe((confirmed) => {
       if (confirmed && subcategoria.id_categoria_servicio && categoriaPadre.id_categoria_servicio) {
         this.categoriaService.remove(subcategoria.id_categoria_servicio).subscribe({

@@ -169,7 +169,7 @@ export class ServiciosListComponent {
     if (!servicio.id_servicio) {
       return;
     }
-    const mensaje = `¿Está seguro que desea eliminar el servicio "${servicio.nombre}"?`;
+    const mensaje = `¿Eliminar el servicio "${servicio.nombre}"? La categoría vinculada se mantiene. Si ya fue vendido, no se puede borrar.`;
     this.dialogService.confirm(mensaje, 'Eliminar servicio').subscribe((confirmed) => {
       if (confirmed && servicio.id_servicio) {
         this.servicioService.remove(servicio.id_servicio).subscribe({
