@@ -34,10 +34,12 @@ import {
 import {
   OrdenEstadoVehiculoOutput,
   OrdenTrabajoOutput,
+  equiposDeOrden,
   labelSistemaHallazgo,
   tipoRecepcionDe,
 } from '../../interfaces/orden-trabajo.interface';
 import { nombreCompletoPersona } from '../../../../personas/shared/nombre-persona';
+import { VehiculoOutput } from '../../../../activos/vehiculos/interfaces/vehiculo.interface';
 
 const CONDICIONES_KEY = 'ot-ticket-condiciones';
 
@@ -218,9 +220,13 @@ export class OtTicketDialogComponent {
   }
 }
 
+function vehiculoDeOrden(orden: OrdenTrabajoOutput): VehiculoOutput | null {
+  return orden.vehiculo ?? equiposDeOrden(orden).find((e) => e.vehiculo)?.vehiculo ?? null;
+}
+
 function ticketBaseDesdeOrden(orden: OrdenTrabajoOutput): TicketOrdenTrabajoBase {
   const persona = orden.cliente?.persona;
-  const vehiculo = orden.vehiculo ?? orden.equipo?.vehiculo;
+  const vehiculo = vehiculoDeOrden(orden);
   const fecha = orden.fecha_creacion ? new Date(orden.fecha_creacion) : new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
   const condiciones = leerCondiciones();
@@ -241,16 +247,21 @@ function ticketBaseDesdeOrden(orden: OrdenTrabajoOutput): TicketOrdenTrabajoBase
   };
 }
 
-/** Marca con SI el componente que coincide con el tipo del equipo recepcionado. */
+/** Marca con SI los componentes que coinciden con los tipos de los equipos recepcionados. */
 function ticketEquipoDesdeOrden(orden: OrdenTrabajoOutput): TicketOrdenTrabajo {
-  const vehiculo = orden.vehiculo ?? orden.equipo?.vehiculo;
-  const tipoEquipo = normalizar(orden.equipo?.tipo_equipo);
+  const vehiculo = vehiculoDeOrden(orden);
+  const tipos = new Map<string, string>();
+  for (const equipo of equiposDeOrden(orden)) {
+    const tipo = equipo.tipo_equipo?.trim();
+    if (tipo) tipos.set(normalizar(tipo), tipo);
+  }
   const componentes = COMPONENTES.map((etiqueta): TicketCampo => ({
     etiqueta,
-    valor: tipoEquipo && normalizar(etiqueta) === tipoEquipo ? 'SI' : '',
+    valor: tipos.has(normalizar(etiqueta)) ? 'SI' : '',
   }));
-  if (tipoEquipo && !componentes.some((c) => c.valor === 'SI')) {
-    componentes.push({ etiqueta: orden.equipo!.tipo_equipo!.trim(), valor: 'SI' });
+  const conocidos = new Set(COMPONENTES.map(normalizar));
+  for (const [clave, tipo] of tipos) {
+    if (!conocidos.has(clave)) componentes.push({ etiqueta: tipo, valor: 'SI' });
   }
   return {
     ...ticketBaseDesdeOrden(orden),

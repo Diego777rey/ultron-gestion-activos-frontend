@@ -10,13 +10,24 @@ export function tipoRecepcionDe(orden: Pick<OrdenTrabajoOutput, 'tipo_recepcion'
   return orden?.tipo_recepcion === 'EQUIPO' ? 'EQUIPO' : 'VEHICULO';
 }
 
-/** Lo recepcionado en una línea: "Marca Modelo (CHAPA)", precedido por el equipo si lo hay. */
-export function unidadOrden(orden: Pick<OrdenTrabajoOutput, 'tipo_recepcion' | 'vehiculo' | 'equipo'>): string {
+/** Equipos recepcionados en la orden; vacío si se recepciona un vehículo. */
+export function equiposDeOrden(orden: Pick<OrdenTrabajoOutput, 'tipo_recepcion' | 'equipos'>): EquipoOutput[] {
+  return tipoRecepcionDe(orden) === 'EQUIPO' ? (orden.equipos ?? []) : [];
+}
+
+/** Un equipo con su detalle completo; varios, solo por tipo: "ECU, TABLERO". */
+export function resumenEquipos(equipos: EquipoOutput[]): string {
+  if (equipos.length === 1) return equipoLabel(equipos[0]);
+  return equipos.map((e) => e.tipo_equipo).filter(Boolean).join(', ');
+}
+
+/** Lo recepcionado en una línea: "Marca Modelo (CHAPA)", precedido por los equipos si los hay. */
+export function unidadOrden(orden: Pick<OrdenTrabajoOutput, 'tipo_recepcion' | 'vehiculo' | 'equipos'>): string {
   const v = orden.vehiculo;
   const desc = [v?.marca, v?.modelo].filter(Boolean).join(' ');
   const vehiculo = v?.chapa ? `${desc} (${v.chapa})`.trim() : desc;
-  const equipo = tipoRecepcionDe(orden) === 'EQUIPO' ? equipoLabel(orden.equipo) : '';
-  return [equipo, vehiculo].filter(Boolean).join(' · ');
+  const equipos = resumenEquipos(equiposDeOrden(orden));
+  return [equipos, vehiculo].filter(Boolean).join(' · ');
 }
 
 export interface OrdenRecepcionOutput {
@@ -83,7 +94,7 @@ export interface OrdenTrabajoOutput {
   cliente?: ClienteOutput | null;
   tipo_recepcion?: TipoRecepcion | null;
   vehiculo?: VehiculoOutput | null;
-  equipo?: EquipoOutput | null;
+  equipos?: EquipoOutput[] | null;
   mecanico?: FuncionarioResumen | null;
   mecanicos?: FuncionarioResumen[] | null;
   sector?: SectorResumen | null;
@@ -157,7 +168,7 @@ export interface OrdenTrabajoInput {
   id_cliente?: string | null;
   tipo_recepcion?: TipoRecepcion | null;
   id_vehiculo?: string | null;
-  id_equipo?: string | null;
+  ids_equipos?: string[] | null;
   id_mecanico?: string | null;
   ids_mecanicos?: string[] | null;
   id_caja?: string | null;

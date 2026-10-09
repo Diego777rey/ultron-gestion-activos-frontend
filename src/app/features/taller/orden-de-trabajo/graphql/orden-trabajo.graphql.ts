@@ -23,7 +23,7 @@ export const ORDEN_TRABAJO_SELECTION = `{
     chapa
     tipo_vehiculo
   }
-  equipo {
+  equipos {
     id_equipo
     tipo_equipo
     marca

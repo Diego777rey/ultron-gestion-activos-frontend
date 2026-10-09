@@ -22,7 +22,7 @@ import {
 import { ServicioService } from '../../inventario/servicios/services/servicio.service';
 import { ServicioOutput } from '../../inventario/servicios/interfaces/servicio.interface';
 import { OrdenTrabajoService } from '../../taller/orden-de-trabajo/services/orden-trabajo.service';
-import { OrdenTrabajoOutput } from '../../taller/orden-de-trabajo/interfaces/orden-trabajo.interface';
+import { OrdenTrabajoOutput, equiposDeOrden } from '../../taller/orden-de-trabajo/interfaces/orden-trabajo.interface';
 import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja-dialog.component';
 import { PagoDialogComponent, PagoConfirmado } from './dialogs/pago-dialog/pago-dialog.component';
 import { FacturaDialogComponent, FacturaConfirmada } from './dialogs/factura-dialog/factura-dialog.component';
@@ -762,14 +762,14 @@ export class PuntoDeVentaComponent {
       .join(' ')
       .trim();
     const vehiculo = [orden.vehiculo?.marca, orden.vehiculo?.modelo].filter(Boolean).join(' ').trim();
-    return [cliente || 'Sin cliente', orden.equipo?.tipo_equipo, vehiculo].filter(Boolean).join(' · ');
+    const equipos = equiposDeOrden(orden).map((e) => e.tipo_equipo).filter(Boolean).join(', ');
+    return [cliente || 'Sin cliente', equipos, vehiculo].filter(Boolean).join(' · ');
   }
 
   private textoOrden(orden: OrdenTrabajoOutput): string {
     return [
       orden.numero_orden,
-      orden.equipo?.tipo_equipo,
-      orden.equipo?.numero_serie,
+      ...equiposDeOrden(orden).flatMap((e) => [e.tipo_equipo, e.numero_serie]),
       orden.vehiculo?.chapa,
       orden.vehiculo?.marca,
       orden.vehiculo?.modelo,
