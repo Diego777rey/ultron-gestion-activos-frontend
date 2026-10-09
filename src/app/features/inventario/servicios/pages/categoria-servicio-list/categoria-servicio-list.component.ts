@@ -63,6 +63,7 @@ export class CategoriaServicioListComponent {
   protected readonly rowActions: MenuAction[] = [
     { id: 'edit', label: 'Editar', icon: 'edit' },
     { id: 'add_sub', label: 'Agregar subcategoría', icon: 'account_tree' },
+    { id: 'delete', label: 'Eliminar', icon: 'delete', danger: true },
   ];
 
   constructor() {
@@ -151,6 +152,8 @@ export class CategoriaServicioListComponent {
       this.router.navigate(['/inventario/servicios/categorias', categoria.id_categoria_servicio, 'editar']);
     } else if (actionId === 'add_sub') {
       this.agregarSubcategoria(categoria);
+    } else if (actionId === 'delete') {
+      this.eliminarCategoria(categoria);
     }
   }
 
@@ -174,6 +177,34 @@ export class CategoriaServicioListComponent {
   private recargarSubcategorias(idPadre: number): void {
     this.categoriaService.findSubcategorias(idPadre).subscribe({
       next: (subs) => this.subcatMap.update((map) => ({ ...map, [idPadre]: subs })),
+    });
+  }
+
+  protected eliminarCategoria(categoria: CategoriaServicioOutput): void {
+    if (!categoria.id_categoria_servicio) {
+      return;
+    }
+    const mensaje = `¿Eliminar la categoría "${categoria.nombre}"? Los servicios vinculados no se borran. Si tiene subcategorías o servicios, no se puede eliminar.`;
+    this.dialogService.confirm(mensaje, 'Eliminar categoría').subscribe((confirmed) => {
+      if (confirmed && categoria.id_categoria_servicio) {
+        this.categoriaService.remove(categoria.id_categoria_servicio).subscribe({
+          next: () => this.load(),
+        });
+      }
+    });
+  }
+
+  protected eliminarSubcategoria(subcategoria: CategoriaServicioOutput, categoriaPadre: CategoriaServicioOutput): void {
+    if (!subcategoria.id_categoria_servicio || !categoriaPadre.id_categoria_servicio) {
+      return;
+    }
+    const mensaje = `¿Eliminar la subcategoría "${subcategoria.nombre}" de "${categoriaPadre.nombre}"? Los servicios vinculados no se borran.`;
+    this.dialogService.confirm(mensaje, 'Eliminar subcategoría').subscribe((confirmed) => {
+      if (confirmed && subcategoria.id_categoria_servicio && categoriaPadre.id_categoria_servicio) {
+        this.categoriaService.remove(subcategoria.id_categoria_servicio).subscribe({
+          next: () => this.recargarSubcategorias(categoriaPadre.id_categoria_servicio!),
+        });
+      }
     });
   }
 

@@ -46,6 +46,7 @@ import {
   OrdenTrabajoInput,
   OrdenTrabajoOutput,
   TipoRecepcion,
+  equiposDeOrden,
   tipoRecepcionDe,
 } from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
@@ -110,7 +111,8 @@ export class OtRecepcionStepComponent implements OnInit {
 
   protected readonly selectedCliente = signal<ClienteOutput | null>(null);
   protected readonly selectedVehiculo = signal<VehiculoOutput | null>(null);
-  protected readonly selectedEquipo = signal<EquipoOutput | null>(null);
+  protected readonly selectedEquipos = signal<EquipoOutput[]>([]);
+  protected readonly equipoBusquedaId = signal('');
   protected readonly selectedSector = signal<SectorOutput | null>(null);
   protected readonly selectedUsuario = signal<UsuarioOutput | null>(null);
   protected readonly selectedMecanicos = signal<FuncionarioOutput[]>([]);
@@ -145,7 +147,7 @@ export class OtRecepcionStepComponent implements OnInit {
     id_cliente: ['', Validators.required],
     tipo_recepcion: this.fb.nonNullable.control<TipoRecepcion>('VEHICULO'),
     id_vehiculo: ['', Validators.required],
-    id_equipo: [''],
+    ids_equipos: this.fb.nonNullable.control<string[]>([]),
     id_mecanico: [''],
     ids_mecanicos: this.fb.nonNullable.control<string[]>([], Validators.minLength(1)),
     descripcion_falla: ['', Validators.required],
@@ -222,7 +224,7 @@ export class OtRecepcionStepComponent implements OnInit {
   protected readonly trackHistorial = (orden: OrdenTrabajoOutput): unknown => orden.id_orden_trabajo;
 
   protected readonly statusClienteVehiculo = computed(() =>
-    this.sectionStatus(['id_cliente', 'id_vehiculo', 'id_equipo'])
+    this.sectionStatus(['id_cliente', 'id_vehiculo', 'ids_equipos'])
   );
   protected readonly statusDatos = computed(() =>
     this.sectionStatus(['id_sector', 'id_responsable', 'ids_mecanicos'])
@@ -383,7 +385,7 @@ export class OtRecepcionStepComponent implements OnInit {
       id_cliente: v.id_cliente,
       tipo_recepcion: v.tipo_recepcion,
       id_vehiculo: v.id_vehiculo || null,
-      id_equipo: esEquipo ? v.id_equipo || null : null,
+      ids_equipos: esEquipo ? v.ids_equipos : [],
       id_mecanico: v.ids_mecanicos[0] ?? v.id_mecanico ?? null,
       ids_mecanicos: v.ids_mecanicos,
       recepcion: {
@@ -505,7 +507,6 @@ export class OtRecepcionStepComponent implements OnInit {
       id_cliente: data.cliente?.id_cliente ?? '',
       tipo_recepcion: tipo,
       id_vehiculo: data.vehiculo?.id_bien ?? '',
-      id_equipo: data.equipo?.id_equipo ?? '',
       descripcion_falla: data.recepcion?.descripcion_falla || '',
       falla_mecanica: !!estado?.falla_mecanica,
       falla_electrica: !!estado?.falla_electrica,
@@ -531,9 +532,11 @@ export class OtRecepcionStepComponent implements OnInit {
       this.selectedVehiculo.set(data.vehiculo);
       this.vehiculos.update((list) => this.ensureInList(list, data.vehiculo!, (v) => v.id_bien));
     }
-    if (data.equipo) {
-      this.selectedEquipo.set(data.equipo);
-      this.equipos.update((list) => this.ensureInList(list, data.equipo!, (e) => e.id_equipo));
+    const equipos = equiposDeOrden(data);
+    this.selectedEquipos.set(equipos);
+    this.syncIdsEquipos(false);
+    for (const equipo of equipos) {
+      this.equipos.update((list) => this.ensureInList(list, equipo, (e) => e.id_equipo));
     }
     if (data.sector) {
       const sector = {
@@ -582,8 +585,8 @@ export class OtRecepcionStepComponent implements OnInit {
     this.selectedCliente.set(cliente);
     this.form.controls.id_vehiculo.setValue('');
     this.selectedVehiculo.set(null);
-    this.form.controls.id_equipo.setValue('');
-    this.selectedEquipo.set(null);
+    this.selectedEquipos.set([]);
+    this.syncIdsEquipos(false);
     this.fetchVehiculos(0, 10, '');
     this.fetchEquipos(0, 10, '');
   }
@@ -592,21 +595,21 @@ export class OtRecepcionStepComponent implements OnInit {
     if (this.soloLectura() || this.form.controls.tipo_recepcion.value === tipo) return;
     this.aplicarValidadoresTipo(tipo);
     if (tipo === 'VEHICULO') {
-      this.form.controls.id_equipo.setValue('');
-      this.selectedEquipo.set(null);
+      this.selectedEquipos.set([]);
+      this.syncIdsEquipos(false);
     }
     this.form.controls.tipo_recepcion.setValue(tipo);
     this.form.controls.tipo_recepcion.markAsDirty();
     this.formTick.update((n) => n + 1);
   }
 
-  /** Vehículo: el vehículo es obligatorio. Equipo: el equipo es obligatorio y el vehículo opcional. */
+  /** Vehículo: el vehículo es obligatorio. Equipo: al menos un equipo y el vehículo opcional. */
   private aplicarValidadoresTipo(tipo: TipoRecepcion): void {
-    const { id_vehiculo, id_equipo } = this.form.controls;
+    const { id_vehiculo, ids_equipos } = this.form.controls;
     id_vehiculo.setValidators(tipo === 'VEHICULO' ? Validators.required : null);
-    id_equipo.setValidators(tipo === 'EQUIPO' ? Validators.required : null);
+    ids_equipos.setValidators(tipo === 'EQUIPO' ? Validators.required : null);
     id_vehiculo.updateValueAndValidity({ emitEvent: false });
-    id_equipo.updateValueAndValidity({ emitEvent: false });
+    ids_equipos.updateValueAndValidity({ emitEvent: false });
   }
 
   protected fetchEquipos(page: number, size: number, filter: string): void {
@@ -621,8 +624,11 @@ export class OtRecepcionStepComponent implements OnInit {
           .pipe(map((res) => ({ content: res.content, total: res.pageInfo.totalElements })));
     request.subscribe({
       next: ({ content, total }) => {
-        const selected = this.selectedEquipo();
-        this.equipos.set(selected ? this.ensureInList(content, selected, (e) => e.id_equipo) : content);
+        let list = content;
+        for (const selected of this.selectedEquipos()) {
+          list = this.ensureInList(list, selected, (e) => e.id_equipo);
+        }
+        this.equipos.set(list);
         this.equiposTotal.set(total);
         this.loadingEquipos.set(false);
       },
@@ -630,22 +636,43 @@ export class OtRecepcionStepComponent implements OnInit {
     });
   }
 
-  /** Al elegir un equipo se completa el cliente si faltaba y su vehículo, si tiene. */
+  /**
+   * Agrega el equipo a la orden. Completa el cliente si faltaba y, si todavía no hay
+   * vehículo, toma el vehículo donde está montado el equipo.
+   */
   protected onEquipoSelected(equipo: EquipoOutput | null): void {
-    this.form.controls.id_equipo.setValue(equipo?.id_equipo ?? '');
-    this.form.controls.id_equipo.markAsTouched();
-    this.selectedEquipo.set(equipo);
-    if (!equipo) return;
+    this.equipoBusquedaId.set('');
+    if (!equipo?.id_equipo) return;
+    if (this.selectedEquipos().some((e) => e.id_equipo === equipo.id_equipo)) return;
+    this.selectedEquipos.update((list) => [...list, equipo]);
+    this.equipos.update((list) => this.ensureInList(list, equipo, (e) => e.id_equipo));
+    this.syncIdsEquipos(true);
     if (equipo.cliente?.id_cliente && !this.form.controls.id_cliente.value) {
       this.form.controls.id_cliente.setValue(equipo.cliente.id_cliente);
       this.selectedCliente.set(equipo.cliente);
       this.clientes.update((list) => this.ensureInList(list, equipo.cliente!, (c) => c.id_cliente));
       this.fetchVehiculos(0, 10, '');
     }
-    if (equipo.vehiculo?.id_bien) {
+    if (equipo.vehiculo?.id_bien && !this.form.controls.id_vehiculo.value) {
       this.form.controls.id_vehiculo.setValue(equipo.vehiculo.id_bien);
       this.selectedVehiculo.set(equipo.vehiculo);
       this.vehiculos.update((list) => this.ensureInList(list, equipo.vehiculo!, (v) => v.id_bien));
+    }
+  }
+
+  protected quitarEquipo(equipo: EquipoOutput): void {
+    this.selectedEquipos.update((list) => list.filter((e) => e.id_equipo !== equipo.id_equipo));
+    this.syncIdsEquipos(true);
+  }
+
+  private syncIdsEquipos(markTouched: boolean): void {
+    const ids = this.selectedEquipos()
+      .map((e) => e.id_equipo)
+      .filter((id): id is string => !!id);
+    this.form.controls.ids_equipos.setValue(ids);
+    if (markTouched) {
+      this.form.controls.ids_equipos.markAsTouched();
+      this.form.controls.ids_equipos.markAsDirty();
     }
   }
 

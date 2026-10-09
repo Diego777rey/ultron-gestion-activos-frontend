@@ -15,10 +15,15 @@ import { DefaultEmptyPipe } from '../../../../../shared/pipes/default-empty.pipe
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
 import {
+  ArqueoMoneda,
   ConteoDenominacionOutput,
+  RetiroCajaOutput,
   SesionCajaOutput,
 } from '../../../../ventas/punto-de-venta/interfaces/sesion-caja.interface';
 import { SesionCajaService } from '../../../../ventas/punto-de-venta/services/sesion-caja.service';
+import { RetiroCajaService } from '../../../../ventas/punto-de-venta/services/retiro-caja.service';
+import { TicketCierreCajaService } from '../../../../ventas/punto-de-venta/services/ticket-cierre-caja.service';
+import { formatoMoneda, simboloMoneda } from '../../../../ventas/punto-de-venta/models/monedas';
 import { VentaOutput } from '../../interfaces/venta.interface';
 import { VentaService } from '../../services/venta.service';
 import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
@@ -64,9 +69,14 @@ export class SesionVentasPageComponent {
   private readonly router = inject(Router);
   private readonly sesionCajaService = inject(SesionCajaService);
   private readonly ventaService = inject(VentaService);
+  private readonly ticketCierreCaja = inject(TicketCierreCajaService);
+  private readonly retiroCajaService = inject(RetiroCajaService);
 
   protected readonly detalle = signal<SesionCajaOutput | null>(null);
+  protected readonly arqueo = signal<ArqueoMoneda[]>([]);
+  protected readonly retiros = signal<RetiroCajaOutput[]>([]);
   protected readonly loadingSesion = signal(true);
+  protected readonly imprimiendo = signal(false);
   protected readonly error = signal<string | null>(null);
 
   protected readonly ventas = signal<VentaOutput[]>([]);
@@ -104,6 +114,22 @@ export class SesionVentasPageComponent {
     this.agruparConteos(this.sesionVista()?.conteos ?? [], 'CIERRE'),
   );
 
+  /** Guaraníes siempre; las otras monedas solo si tuvieron efectivo en la sesión. */
+  protected readonly arqueoVisible = computed(() =>
+    this.arqueo()
+      .filter(
+        (a) =>
+          a.moneda === 'PYG' ||
+          [a.apertura, a.cobrosEfectivo, a.vueltos, a.retiros, a.contado].some((v) => !!v && Number(v) !== 0),
+      )
+      .map((a) => ({
+        ...a,
+        label: MONEDA_META[a.moneda]?.label ?? a.moneda,
+        simbolo: simboloMoneda(a.moneda),
+        formato: formatoMoneda(a.moneda),
+      })),
+  );
+
   constructor() {
     const id = Number(this.route.snapshot.paramMap.get('idSesion'));
     if (!Number.isFinite(id) || id <= 0) {
@@ -113,10 +139,20 @@ export class SesionVentasPageComponent {
     }
     this.cargarDetalle(id);
     this.cargarVentas(id);
+    this.cargarArqueo(id);
   }
 
   protected volver(): void {
     this.router.navigate(['/financiero/ultimas']);
+  }
+
+  protected imprimirCierre(): void {
+    const id = this.sesionVista()?.id_sesion_caja;
+    if (id == null || this.imprimiendo()) {
+      return;
+    }
+    this.imprimiendo.set(true);
+    this.ticketCierreCaja.imprimir(id).subscribe(() => this.imprimiendo.set(false));
   }
 
   protected onPageChange(event: PageChange): void {
@@ -178,6 +214,21 @@ export class SesionVentasPageComponent {
     return value ?? 0;
   }
 
+  protected simbolo(moneda: string): string {
+    return simboloMoneda(moneda);
+  }
+
+  protected formato(moneda: string): string {
+    return formatoMoneda(moneda);
+  }
+
+  protected etiquetaDiferencia(diferencia: number | null | undefined): string {
+    if (!diferencia) {
+      return 'Sin diferencia';
+    }
+    return diferencia < 0 ? 'Faltante' : 'Sobrante';
+  }
+
   protected trackVenta = (v: VentaOutput): unknown => v.id_venta;
 
   private cargarDetalle(id: number): void {
@@ -192,6 +243,17 @@ export class SesionVentasPageComponent {
         this.error.set(err.message || 'No se pudo cargar el detalle de la sesión');
         this.loadingSesion.set(false);
       },
+    });
+  }
+
+  private cargarArqueo(idSesionCaja: number): void {
+    this.sesionCajaService.arqueo(idSesionCaja).subscribe({
+      next: (arqueo) => this.arqueo.set(arqueo),
+      error: (err: Error) => this.error.set(err.message || 'No se pudo calcular el arqueo de caja'),
+    });
+    this.retiroCajaService.listarPorSesion(idSesionCaja).subscribe({
+      next: (retiros) => this.retiros.set(retiros),
+      error: (err: Error) => this.error.set(err.message || 'No se pudieron cargar los retiros'),
     });
   }
 

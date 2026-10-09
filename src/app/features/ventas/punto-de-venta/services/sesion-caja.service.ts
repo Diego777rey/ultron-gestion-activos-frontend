@@ -3,8 +3,10 @@ import { Observable, map } from 'rxjs';
 import { GraphqlService } from '../../../../shared/services/graphql.service';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { PageResponse } from '../../../../shared/models/pagination.model';
+import { TicketCierreCaja } from '../../../../shared/models/impresion.model';
 import {
   AbrirCajaInput,
+  ArqueoMoneda,
   CerrarCajaInput,
   SesionCajaOutput,
 } from '../interfaces/sesion-caja.interface';
@@ -64,6 +66,12 @@ const SESION_DETAIL_SELECTION = `{
   diferenciaPyg
   diferenciaUsd
   diferenciaBrl
+  esperadoCierrePyg
+  esperadoCierreUsd
+  esperadoCierreBrl
+  diferenciaArqueoPyg
+  diferenciaArqueoUsd
+  diferenciaArqueoBrl
   totalVentasPyg
   fechaApertura
   fechaCierre
@@ -99,6 +107,66 @@ const SESION_DETAIL_SELECTION = `{
     moneda
     valorDenominacion
     cantidad
+  }
+  idSesionAnterior
+  fechaCierreAnterior
+  montoCierreAnteriorPyg
+  montoCierreAnteriorUsd
+  montoCierreAnteriorBrl
+}`;
+
+const CONTEO_MONEDA_SELECTION = `{
+  moneda
+  lineas {
+    valor
+    cantidad
+    subtotal
+  }
+  total
+}`;
+
+const ARQUEO_SELECTION = `{
+  moneda
+  apertura
+  cobrosEfectivo
+  vueltos
+  retiros
+  esperado
+  contado
+  diferencia
+}`;
+
+const TICKET_CIERRE_SELECTION = `{
+  idSesionCaja
+  caja
+  maletin
+  cajero
+  fechaApertura
+  fechaCierre
+  conteoApertura ${CONTEO_MONEDA_SELECTION}
+  conteoCierre ${CONTEO_MONEDA_SELECTION}
+  cantidadVentas
+  totalVentasPyg
+  ventasPorFormaPago {
+    formaPago
+    cantidad
+    total
+  }
+  retiros {
+    fecha
+    moneda
+    monto
+    responsable
+    observacion
+  }
+  arqueo ${ARQUEO_SELECTION}
+  idSesionAnterior
+  fechaCierreAnterior
+  diferencias {
+    moneda
+    cierreAnterior
+    apertura
+    diferencia
   }
 }`;
 
@@ -158,6 +226,26 @@ export class SesionCajaService {
       .pipe(map((data) => data.buscarSesionCajaPorId ?? null));
   }
 
+  /** Datos del ticket de cierre; la sesión tiene que estar cerrada. */
+  ticketCierre(idSesionCaja: number): Observable<TicketCierreCaja> {
+    const document = `query($idSesionCaja: ID!) {
+      ticketCierreCaja(idSesionCaja: $idSesionCaja) ${TICKET_CIERRE_SELECTION}
+    }`;
+    return this.gql
+      .query<{ ticketCierreCaja: TicketCierreCaja }>(document, { idSesionCaja })
+      .pipe(map((data) => data.ticketCierreCaja));
+  }
+
+  /** Efectivo esperado por moneda (PYG, BRL, USD); cerrada, incluye contado y diferencia. */
+  arqueo(idSesionCaja: number): Observable<ArqueoMoneda[]> {
+    const document = `query($idSesionCaja: ID!) {
+      arqueoSesionCaja(idSesionCaja: $idSesionCaja) ${ARQUEO_SELECTION}
+    }`;
+    return this.gql
+      .query<{ arqueoSesionCaja: ArqueoMoneda[] }>(document, { idSesionCaja })
+      .pipe(map((data) => data.arqueoSesionCaja ?? []));
+  }
+
   findPaginated(
     page: number,
     size: number,
@@ -208,5 +296,34 @@ export class SesionCajaService {
         fechaHasta: extras?.fechaHasta || null,
       })
       .pipe(map((data) => data.listarSesionesCajaPaginado));
+  }
+
+  /** Cierres del cajero logueado (lo resuelve el backend por el token), el más reciente primero. */
+  misSesionesCerradas(
+    page: number,
+    size: number,
+    fechaDesde?: string | null,
+    fechaHasta?: string | null,
+  ): Observable<PageResponse<SesionCajaOutput>> {
+    const document = `query($page: Int!, $size: Int!, $fechaDesde: String, $fechaHasta: String) {
+      listarMisSesionesCajaCerradas(page: $page, size: $size, fechaDesde: $fechaDesde, fechaHasta: $fechaHasta) {
+        content ${SESION_SELECTION}
+        pageInfo {
+          pageNumber
+          pageSize
+          totalElements
+          totalPages
+          last
+        }
+      }
+    }`;
+    return this.gql
+      .query<{ listarMisSesionesCajaCerradas: PageResponse<SesionCajaOutput> }>(document, {
+        page,
+        size,
+        fechaDesde: fechaDesde || null,
+        fechaHasta: fechaHasta || null,
+      })
+      .pipe(map((data) => data.listarMisSesionesCajaCerradas));
   }
 }

@@ -22,11 +22,12 @@ import {
 import { ServicioService } from '../../inventario/servicios/services/servicio.service';
 import { ServicioOutput } from '../../inventario/servicios/interfaces/servicio.interface';
 import { OrdenTrabajoService } from '../../taller/orden-de-trabajo/services/orden-trabajo.service';
-import { OrdenTrabajoOutput } from '../../taller/orden-de-trabajo/interfaces/orden-trabajo.interface';
+import { OrdenTrabajoOutput, equiposDeOrden } from '../../taller/orden-de-trabajo/interfaces/orden-trabajo.interface';
 import { AbrirCajaDialogComponent } from './dialogs/abrir-caja-dialog/abrir-caja-dialog.component';
 import { PagoDialogComponent, PagoConfirmado } from './dialogs/pago-dialog/pago-dialog.component';
 import { FacturaDialogComponent, FacturaConfirmada } from './dialogs/factura-dialog/factura-dialog.component';
 import { ReimprimirTicketDialogComponent } from './dialogs/reimprimir-ticket-dialog/reimprimir-ticket-dialog.component';
+import { RetiroCajaDialogComponent } from './dialogs/retiro-caja-dialog/retiro-caja-dialog.component';
 import { VueltoDialogComponent } from './dialogs/vuelto-dialog/vuelto-dialog.component';
 import { VueltoCalculado } from './interfaces/vuelto.interface';
 import {
@@ -36,6 +37,7 @@ import {
 import { LoadingService } from '../../../shared/services/loading.service';
 import { FileUploadService } from '../../../shared/services/file-upload.service';
 import { SesionCajaService } from './services/sesion-caja.service';
+import { TicketCierreCajaService } from './services/ticket-cierre-caja.service';
 import { VentaPosService } from './services/venta.service';
 import { SesionCajaOutput } from './interfaces/sesion-caja.interface';
 import { CartItem, DetalleVentaInput, FormaPago, VentaOutput } from './interfaces/venta.interface';
@@ -62,6 +64,7 @@ export type PdvNumero = 1 | 2;
     PagoDialogComponent,
     FacturaDialogComponent,
     ReimprimirTicketDialogComponent,
+    RetiroCajaDialogComponent,
     VueltoDialogComponent,
     PresentacionDialogComponent,
     UiButtonComponent,
@@ -85,6 +88,7 @@ export class PuntoDeVentaComponent {
   private readonly sesionCajaService = inject(SesionCajaService);
   private readonly ventaService = inject(VentaPosService);
   private readonly impresion = inject(ImpresionService);
+  private readonly ticketCierreCaja = inject(TicketCierreCajaService);
   private readonly facturaService = inject(FacturaService);
   private readonly auth = inject(AuthService);
   private readonly loading = inject(LoadingService);
@@ -101,6 +105,7 @@ export class PuntoDeVentaComponent {
   readonly vueltoPendiente = signal<{ vuelto: VueltoCalculado; numeroVenta: string } | null>(null);
   readonly facturaDialogOpen = signal(false);
   readonly reimprimirDialogOpen = signal(false);
+  readonly retiroDialogOpen = signal(false);
   readonly maletinVerificado = signal(false);
   readonly cajaAbierta = signal(false);
   readonly sesion = signal<SesionCajaOutput | null>(null);
@@ -216,7 +221,8 @@ export class PuntoDeVentaComponent {
     this.loadServicios();
   }
 
-  onCajaCerrada(): void {
+  onCajaCerrada(cerrada: SesionCajaOutput): void {
+    this.ticketCierreCaja.imprimir(cerrada.id_sesion_caja).subscribe();
     this.sesion.set(null);
     this.cajaAbierta.set(false);
     this.maletinVerificado.set(false);
@@ -516,6 +522,18 @@ export class PuntoDeVentaComponent {
     this.reimprimirDialogOpen.set(false);
   }
 
+  protected abrirRetiroDialog(): void {
+    if (!this.sesion()?.id_sesion_caja) {
+      this.ventaError.set('No hay sesión de caja abierta');
+      return;
+    }
+    this.retiroDialogOpen.set(true);
+  }
+
+  protected cerrarRetiroDialog(): void {
+    this.retiroDialogOpen.set(false);
+  }
+
   protected reimprimirTicket(venta: VentaOutput): void {
     this.reimprimirDialogOpen.set(false);
     this.facturaService.porVenta(venta.id_venta).subscribe({
@@ -744,14 +762,14 @@ export class PuntoDeVentaComponent {
       .join(' ')
       .trim();
     const vehiculo = [orden.vehiculo?.marca, orden.vehiculo?.modelo].filter(Boolean).join(' ').trim();
-    return [cliente || 'Sin cliente', orden.equipo?.tipo_equipo, vehiculo].filter(Boolean).join(' · ');
+    const equipos = equiposDeOrden(orden).map((e) => e.tipo_equipo).filter(Boolean).join(', ');
+    return [cliente || 'Sin cliente', equipos, vehiculo].filter(Boolean).join(' · ');
   }
 
   private textoOrden(orden: OrdenTrabajoOutput): string {
     return [
       orden.numero_orden,
-      orden.equipo?.tipo_equipo,
-      orden.equipo?.numero_serie,
+      ...equiposDeOrden(orden).flatMap((e) => [e.tipo_equipo, e.numero_serie]),
       orden.vehiculo?.chapa,
       orden.vehiculo?.marca,
       orden.vehiculo?.modelo,

@@ -5,7 +5,7 @@ export const ULTIMAS_ROUTES: Routes = [
     path: '',
     loadComponent: () =>
       import('./pages/ultimas-page/ultimas-page.component').then((m) => m.UltimasPageComponent),
-    data: { tabTitle: 'Últimas cajas' },
+    data: { tabTitle: 'Control de caja' },
   },
   {
     path: ':idSesion/ventas',

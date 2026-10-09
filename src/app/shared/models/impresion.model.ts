@@ -128,6 +128,77 @@ export interface TicketOrdenTrabajoVehiculo extends TicketOrdenTrabajoBase {
   servicios: string[];
 }
 
+export interface TicketConteoLinea {
+  valor: number;
+  cantidad: number;
+  subtotal: number;
+}
+
+export interface TicketConteoMoneda {
+  /** PYG, BRL o USD. */
+  moneda: string;
+  /** Solo denominaciones con cantidad, de menor a mayor. */
+  lineas: TicketConteoLinea[];
+  total: number;
+}
+
+export interface TicketVentasFormaPago {
+  formaPago: string;
+  cantidad: number;
+  /** En guaraníes. */
+  total: number;
+}
+
+export interface TicketDiferenciaMoneda {
+  moneda: string;
+  /** Null si el maletín no tenía cierres. */
+  cierreAnterior?: number | null;
+  apertura: number;
+  /** Apertura menos cierre anterior. */
+  diferencia: number;
+}
+
+export interface TicketRetiro {
+  /** dd/MM HH:mm */
+  fecha?: string | null;
+  moneda: string;
+  monto: number;
+  responsable?: string | null;
+  observacion?: string | null;
+}
+
+/** Esperado = apertura + cobros en efectivo − vueltos − retiros; diferencia = contado − esperado. */
+export interface TicketArqueoMoneda {
+  moneda: string;
+  apertura: number;
+  cobrosEfectivo: number;
+  vueltos: number;
+  retiros: number;
+  esperado: number;
+  contado?: number | null;
+  diferencia?: number | null;
+}
+
+/** Ticket de cierre de caja; los datos y cálculos vienen del backend (`ticketCierreCaja`). */
+export interface TicketCierreCaja {
+  idSesionCaja: number;
+  caja?: string | null;
+  maletin?: string | null;
+  cajero?: string | null;
+  fechaApertura?: string | null;
+  fechaCierre?: string | null;
+  conteoApertura: TicketConteoMoneda[];
+  conteoCierre: TicketConteoMoneda[];
+  cantidadVentas: number;
+  totalVentasPyg: number;
+  ventasPorFormaPago: TicketVentasFormaPago[];
+  retiros: TicketRetiro[];
+  arqueo: TicketArqueoMoneda[];
+  idSesionAnterior?: number | null;
+  fechaCierreAnterior?: string | null;
+  diferencias: TicketDiferenciaMoneda[];
+}
+
 export interface TicketSegmento {
   texto: string;
   negrita?: boolean;

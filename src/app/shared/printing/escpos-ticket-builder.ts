@@ -1,5 +1,8 @@
 import {
   EstadoReparacion,
+  TicketArqueoMoneda,
+  TicketCierreCaja,
+  TicketConteoMoneda,
   TicketFactura,
   TicketOrdenTrabajo,
   TicketOrdenTrabajoBase,
@@ -171,6 +174,144 @@ export function buildTicketFactura(ticket: TicketFactura): Uint8Array {
   centrado('IVA INCLUIDO');
   builder.feed(3).cut();
   return builder.toBytes();
+}
+
+const NOMBRE_MONEDA: Record<string, string> = {
+  PYG: 'GUARANIES',
+  BRL: 'REALES',
+  USD: 'DOLARES',
+};
+
+const ETIQUETA_FORMA_PAGO: Record<string, string> = {
+  EFECTIVO: 'Efectivo',
+  TARJETA: 'Tarjeta',
+  TRANSFERENCIA: 'Transferencia',
+};
+
+/** Ticket de cierre de caja: conteos, ventas, retiros, arqueo, diferencia con el cierre anterior y firmas. */
+export function buildTicketCierreCaja(ticket: TicketCierreCaja): Uint8Array {
+  const ancho = WIDTH_58MM_FONT_B;
+  const builder = new EscPosTicketBuilder().init().align(1).logo().feed(1).smallFont(LINE_SPACING_FONT_B);
+  const titulo = (texto: string) => builder.align(1).bold(true).line(texto).bold(false);
+  const regla = () => builder.align(0).line('-'.repeat(ancho));
+  const fila = (izquierda: string, derecha: string, negrita = false) =>
+    builder.align(0).bold(negrita).line(filaTexto(ancho, izquierda, derecha)).bold(false);
+
+  const conteo = (encabezado: string, monedas: TicketConteoMoneda[]) => {
+    titulo(encabezado);
+    for (const m of monedas) {
+      const nombre = NOMBRE_MONEDA[m.moneda] ?? m.moneda;
+      const simbolo = simboloTicket(m.moneda);
+      if (!m.lineas.length) {
+        fila(nombre, `${simbolo} ${montoTicket(m.moneda, m.total)}`);
+        continue;
+      }
+      builder.align(0).bold(true).line(nombre).bold(false);
+      for (const l of m.lineas) {
+        fila(`  ${simbolo} ${formatGs(l.valor)} x ${l.cantidad}`, montoTicket(m.moneda, l.subtotal));
+      }
+      fila(`  Total ${simbolo}`, montoTicket(m.moneda, m.total), true);
+    }
+  };
+
+  titulo('CIERRE DE CAJA');
+  builder.align(1).line(`Sesion #${ticket.idSesionCaja}`);
+  regla();
+  fila('Caja', blankTo(ticket.caja, '-'));
+  fila('Maletin', blankTo(ticket.maletin, '-'));
+  fila('Cajero', blankTo(ticket.cajero, '-'));
+  fila('Apertura', blankTo(ticket.fechaApertura, '-'));
+  fila('Cierre', blankTo(ticket.fechaCierre, '-'));
+  regla();
+  conteo('CONTEO DE APERTURA', ticket.conteoApertura ?? []);
+  regla();
+  conteo('CONTEO DE CIERRE', ticket.conteoCierre ?? []);
+  regla();
+
+  titulo('VENTAS');
+  const ventas = ticket.ventasPorFormaPago ?? [];
+  if (!ventas.length) {
+    builder.align(1).line('Sin ventas');
+  }
+  for (const v of ventas) {
+    fila(`${ETIQUETA_FORMA_PAGO[v.formaPago] ?? v.formaPago} (${v.cantidad})`, formatGs(v.total));
+  }
+  fila(`TOTAL VENTAS Gs. (${ticket.cantidadVentas ?? 0})`, formatGs(ticket.totalVentasPyg), true);
+  regla();
+
+  titulo('RETIROS');
+  const retiros = ticket.retiros ?? [];
+  if (!retiros.length) {
+    builder.align(1).line('Sin retiros');
+  }
+  for (const r of retiros) {
+    fila(blankTo(r.fecha, '-'), `${simboloTicket(r.moneda)} ${montoTicket(r.moneda, r.monto)}`, true);
+    fila('  Resp.', blankTo(r.responsable, '-'));
+    if (notBlank(r.observacion)) {
+      for (const renglon of envolver([{ texto: r.observacion!.trim() }], ancho - 2)) {
+        builder.align(0).segments([{ texto: '  ' }, ...renglon]);
+      }
+    }
+  }
+  regla();
+
+  titulo('ARQUEO DE CAJA');
+  for (const a of (ticket.arqueo ?? []).filter(conMovimiento)) {
+    const s = simboloTicket(a.moneda);
+    builder.align(0).bold(true).line(NOMBRE_MONEDA[a.moneda] ?? a.moneda).bold(false);
+    fila('  Apertura', `${s} ${montoTicket(a.moneda, a.apertura)}`);
+    fila('  + Cobros en efectivo', montoTicket(a.moneda, a.cobrosEfectivo));
+    fila('  - Vueltos', montoTicket(a.moneda, a.vueltos));
+    fila('  - Retiros', montoTicket(a.moneda, a.retiros));
+    fila('  = Esperado', `${s} ${montoTicket(a.moneda, a.esperado)}`, true);
+    if (a.contado != null) {
+      fila('  Contado', `${s} ${montoTicket(a.moneda, a.contado)}`);
+      fila(`  ${etiquetaDiferenciaArqueo(a.diferencia)}`, conSigno(a.moneda, a.diferencia), true);
+    }
+  }
+  regla();
+
+  titulo('DIFERENCIA DE APERTURA');
+  if (ticket.idSesionAnterior == null) {
+    builder.align(1).line('Sin cierre anterior del maletin');
+  } else {
+    builder.align(1).line(`Contra cierre sesion #${ticket.idSesionAnterior}`);
+    if (notBlank(ticket.fechaCierreAnterior)) {
+      builder.line(ticket.fechaCierreAnterior!.trim());
+    }
+    for (const d of ticket.diferencias ?? []) {
+      builder.align(0).bold(true).line(NOMBRE_MONEDA[d.moneda] ?? d.moneda).bold(false);
+      fila('  Cierre anterior', montoTicket(d.moneda, d.cierreAnterior ?? 0));
+      fila('  Apertura', montoTicket(d.moneda, d.apertura));
+      fila('  Diferencia', conSigno(d.moneda, d.diferencia), true);
+    }
+  }
+  regla();
+
+  builder.feed(4);
+  builder.align(1).line('_'.repeat(30));
+  titulo('FIRMA DEL CAJERO');
+  if (notBlank(ticket.cajero)) {
+    builder.line(ticket.cajero!.trim());
+  }
+  builder.feed(4);
+  builder.align(1).line('_'.repeat(30));
+  titulo('FIRMA DE CONTROL');
+  builder.feed(3).cut();
+  return builder.toBytes();
+}
+
+/** Guaraníes siempre; las otras monedas solo si tuvieron efectivo en la sesión. */
+function conMovimiento(a: TicketArqueoMoneda): boolean {
+  return (
+    a.moneda === 'PYG' ||
+    [a.apertura, a.cobrosEfectivo, a.vueltos, a.retiros, a.contado].some((v) => !!v && Number(v) !== 0)
+  );
+}
+
+function etiquetaDiferenciaArqueo(diferencia: number | null | undefined): string {
+  if (!diferencia) return 'SIN DIFERENCIA';
+  return diferencia < 0 ? 'FALTANTE' : 'SOBRANTE';
 }
 
 /** Ticket de recepción de equipos. */
@@ -482,6 +623,16 @@ function simboloTicket(moneda: string | null | undefined): string {
   return SIMBOLOS_TICKET[clave] ?? clave;
 }
 
+/** Guaraníes sin decimales; las otras monedas con dos decimales. */
+function montoTicket(moneda: string | null | undefined, value: number | null | undefined): string {
+  return esGuaraniTicket(moneda) ? formatGs(value) : formatMonedaExtranjera(value);
+}
+
+function conSigno(moneda: string | null | undefined, value: number | null | undefined): string {
+  const monto = montoTicket(moneda, value);
+  return value != null && value > 0 && monto !== montoTicket(moneda, 0) ? `+${monto}` : monto;
+}
+
 /**
  * "Recibido Gs.      600.000" en guaraníes; en otra moneda imprime el importe
  * original y, debajo, su equivalente en guaraníes para que el ticket cierre.
@@ -661,7 +812,12 @@ function montoEnColumna(linea: { subtotal: number; tipoIva: string }, tipo: stri
 }
 
 function filaTotal(ancho: number, etiqueta: string, monto: number): string {
-  const valor = formatGs(monto);
+  return filaTexto(ancho, etiqueta, formatGs(monto));
+}
+
+/** Etiqueta a la izquierda y valor a la derecha en `ancho` columnas. */
+function filaTexto(ancho: number, etiqueta: string, derecha: string): string {
+  const valor = sanitize(derecha);
   const limpio = sanitize(etiqueta);
   if (limpio.length + 1 + valor.length > ancho) {
     return `${limpio.slice(0, Math.max(0, ancho - valor.length - 1))} ${valor}`.slice(0, ancho);

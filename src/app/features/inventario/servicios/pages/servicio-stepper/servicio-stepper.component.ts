@@ -236,6 +236,51 @@ export class ServicioStepperComponent implements OnInit {
     this.selectedSubcategoria.set(sub);
   }
 
+  protected eliminarCategoria(cat: CategoriaServicioOutput, event: Event): void {
+    event.stopPropagation();
+    if (!cat.id_categoria_servicio) {
+      return;
+    }
+    const mensaje = `¿Eliminar la categoría "${cat.nombre}"? Los servicios vinculados no se borran. Si tiene subcategorías o servicios, no se puede eliminar.`;
+    this.dialogService.confirm(mensaje, 'Eliminar categoría').subscribe((confirmed) => {
+      if (!confirmed || !cat.id_categoria_servicio) {
+        return;
+      }
+      this.categoriaService.remove(cat.id_categoria_servicio).subscribe({
+        next: () => {
+          if (this.selectedCategoria()?.id_categoria_servicio === cat.id_categoria_servicio) {
+            this.selectedCategoria.set(null);
+            this.selectedSubcategoria.set(null);
+            this.subcategorias.set([]);
+          }
+          this.loadCategorias();
+        },
+      });
+    });
+  }
+
+  protected eliminarSubcategoria(sub: CategoriaServicioOutput, event: Event): void {
+    event.stopPropagation();
+    const padre = this.selectedCategoria();
+    if (!sub.id_categoria_servicio || !padre?.id_categoria_servicio) {
+      return;
+    }
+    const mensaje = `¿Eliminar la subcategoría "${sub.nombre}"? Los servicios vinculados no se borran. Si tiene servicios, no se puede eliminar.`;
+    this.dialogService.confirm(mensaje, 'Eliminar subcategoría').subscribe((confirmed) => {
+      if (!confirmed || !sub.id_categoria_servicio || !padre.id_categoria_servicio) {
+        return;
+      }
+      this.categoriaService.remove(sub.id_categoria_servicio).subscribe({
+        next: () => {
+          if (this.selectedSubcategoria()?.id_categoria_servicio === sub.id_categoria_servicio) {
+            this.selectedSubcategoria.set(null);
+          }
+          this.loadSubcategorias(padre.id_categoria_servicio!);
+        },
+      });
+    });
+  }
+
   protected openNuevaCategoria(): void {
     this.dialogService
       .openForm<CategoriaServicioOutput>(CategoriaServicioRapidaFormComponent, {

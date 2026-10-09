@@ -14,6 +14,7 @@ import { AppDialogService } from '../../../../../shared/services/app-dialog.serv
 import { CajaOutput } from '../../../cajas/interfaces/caja.interface';
 import { SesionCajaOutput } from '../../../../ventas/punto-de-venta/interfaces/sesion-caja.interface';
 import { SesionCajaService } from '../../../../ventas/punto-de-venta/services/sesion-caja.service';
+import { TicketCierreCajaService } from '../../../../ventas/punto-de-venta/services/ticket-cierre-caja.service';
 import { SeleccionarCajaDialogComponent } from '../../dialogs/seleccionar-caja-dialog/seleccionar-caja-dialog.component';
 import { UltimasStateService } from '../../services/ultimas-state.service';
 
@@ -37,6 +38,7 @@ export class UltimasPageComponent {
   private readonly dialogService = inject(AppDialogService);
   private readonly router = inject(Router);
   private readonly state = inject(UltimasStateService);
+  private readonly ticketCierreCaja = inject(TicketCierreCajaService);
 
   protected readonly cajaSeleccionada = this.state.cajaSeleccionada;
   protected readonly sesiones = signal<SesionCajaOutput[]>([]);
@@ -77,6 +79,11 @@ export class UltimasPageComponent {
 
   protected readonly rowActions: MenuAction[] = [
     { id: 'ventas', label: 'Ver ventas', icon: 'point_of_sale' },
+  ];
+
+  protected readonly rowActionsCerrada: MenuAction[] = [
+    ...this.rowActions,
+    { id: 'imprimir-cierre', label: 'Imprimir cierre', icon: 'print' },
   ];
 
   protected readonly emptyMessage = computed(() =>
@@ -180,6 +187,9 @@ export class UltimasPageComponent {
   protected onRowAction(actionId: string, sesion: SesionCajaOutput): void {
     if (actionId === 'ventas') {
       this.openVentas(sesion);
+    }
+    if (actionId === 'imprimir-cierre' && sesion.id_sesion_caja != null) {
+      this.ticketCierreCaja.imprimir(sesion.id_sesion_caja).subscribe();
     }
   }
 

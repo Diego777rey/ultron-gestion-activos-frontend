@@ -168,6 +168,15 @@
                 <span class="material-icons" aria-hidden="true">receipt_long</span>
                 Factura
               </button>
+              <button
+                type="button"
+                class="pos-chip-btn"
+                [disabled]="!sesion()?.id_sesion_caja"
+                (click)="abrirRetiroDialog()"
+              >
+                <span class="material-icons" aria-hidden="true">outbox</span>
+                Retiro
+              </button>
               <button type="button" class="pos-chip-btn" (click)="onAbrirGestionCaja()">
                 <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
                 Cerrar caja
@@ -359,7 +368,7 @@
     (salir)="onSalirGestionCaja()"
     (maletinConfirmado)="onMaletinConfirmado()"
     (cajaAbiertaConfirmada)="onCajaAbierta($event)"
-    (cajaCerradaConfirmada)="onCajaCerrada()"
+    (cajaCerradaConfirmada)="onCajaCerrada($event)"
   />
 }
 
@@ -394,6 +403,14 @@
     [producto]="producto"
     (cerrar)="cerrarPresentacionDialog()"
     (agregar)="confirmarPresentacion($event)"
+  />
+}
+
+@if (retiroDialogOpen() && sesion()?.id_sesion_caja) {
+  <app-retiro-caja-dialog
+    [idSesionCaja]="sesion()!.id_sesion_caja"
+    (cerrar)="cerrarRetiroDialog()"
+    (registrado)="cerrarRetiroDialog()"
   />
 }
 

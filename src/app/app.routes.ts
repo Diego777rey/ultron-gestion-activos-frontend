@@ -71,6 +71,14 @@ export const routes: Routes = [
         data: { tabTitle: 'Punto de Venta', noReuse: true },
       },
       {
+        path: 'ventas/ultimas-cajas',
+        loadComponent: () =>
+          import('./features/ventas/ultimas-cajas/ultimas-cajas.component').then(
+            (m) => m.UltimasCajasComponent
+          ),
+        data: { tabTitle: 'Últimas cajas' },
+      },
+      {
         path: 'taller/orden-de-trabajo',
         loadChildren: () =>
           import('./features/taller/orden-de-trabajo/orden-trabajo.routes').then(
@@ -153,6 +161,14 @@ export const routes: Routes = [
             (m) => m.TimbradosPageComponent
           ),
         data: { tabTitle: 'Timbrados' },
+      },
+      {
+        path: 'financiero/facturas',
+        loadChildren: () =>
+          import('./features/financiero/facturas/facturas.routes').then(
+            (m) => m.FACTURAS_ROUTES
+          ),
+        data: { tabTitle: 'Facturas Legales' },
       },
       {
         path: 'inventario/productos',

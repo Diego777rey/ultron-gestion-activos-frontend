@@ -88,32 +88,6 @@
               }
             </div>
 
-            @if (tipoRecepcion() === 'EQUIPO') {
-              <div class="ot-field">
-                <label class="ot-field__label-static">Equipo*</label>
-                <app-entity-searcher
-                  [items]="equipos()"
-                  [columns]="equipoColumns"
-                  [totalItems]="equiposTotal()"
-                  [loading]="loadingEquipos()"
-                  [displayFn]="equipoLabelFn"
-                  [keyFn]="equipoKeyFn"
-                  [value]="form.controls.id_equipo.value"
-                  (searchChange)="fetchEquipos(0, 10, $event)"
-                  (pageChange)="fetchEquipos($event.pageIndex, $event.pageSize, '')"
-                  (itemChange)="onEquipoSelected($event)"
-                  [allowAdd]="true"
-                  addLabel="Nuevo equipo"
-                  [backendPagination]="true"
-                  (addClicked)="onAddEquipo()"
-                  label="Buscar equipo..."
-                />
-                @if (form.controls.id_equipo.touched && form.controls.id_equipo.invalid) {
-                  <span class="ot-field__error">Debes seleccionar un equipo</span>
-                }
-              </div>
-            }
-
             <div class="ot-field">
               <label class="ot-field__label-static">
                 {{ tipoRecepcion() === 'EQUIPO' ? 'Vehículo (opcional)' : 'Vehículo*' }}
@@ -138,6 +112,52 @@
                 <span class="ot-field__error">Debes seleccionar un vehículo</span>
               }
             </div>
+
+            @if (tipoRecepcion() === 'EQUIPO') {
+              <div class="ot-field ot-field--full">
+                <label class="ot-field__label-static">Equipos recepcionados*</label>
+                <app-entity-searcher
+                  [items]="equipos()"
+                  [columns]="equipoColumns"
+                  [totalItems]="equiposTotal()"
+                  [loading]="loadingEquipos()"
+                  [displayFn]="equipoLabelFn"
+                  [keyFn]="equipoKeyFn"
+                  [value]="equipoBusquedaId()"
+                  (searchChange)="fetchEquipos(0, 10, $event)"
+                  (pageChange)="fetchEquipos($event.pageIndex, $event.pageSize, '')"
+                  (itemChange)="onEquipoSelected($event)"
+                  [allowAdd]="true"
+                  addLabel="Nuevo equipo"
+                  [backendPagination]="true"
+                  (addClicked)="onAddEquipo()"
+                  label="Agregar equipo..."
+                />
+                @if (selectedEquipos().length) {
+                  <ul class="ot-asignados" aria-label="Equipos recepcionados">
+                    @for (equipo of selectedEquipos(); track equipo.id_equipo) {
+                      <li class="ot-asignado-chip">
+                        <span class="material-icons" aria-hidden="true">memory</span>
+                        <span>{{ equipoLabelFn(equipo) }}</span>
+                        @if (!soloLectura()) {
+                          <button
+                            type="button"
+                            class="ot-asignado-chip__remove"
+                            (click)="quitarEquipo(equipo)"
+                            [attr.aria-label]="'Quitar ' + equipoLabelFn(equipo)"
+                          >
+                            <span class="material-icons" aria-hidden="true">close</span>
+                          </button>
+                        }
+                      </li>
+                    }
+                  </ul>
+                }
+                @if (form.controls.ids_equipos.touched && form.controls.ids_equipos.invalid) {
+                  <span class="ot-field__error">Debes agregar al menos un equipo</span>
+                }
+              </div>
+            }
           </div>
         </div>
       </section>
@@ -224,14 +244,14 @@
                 label="Agregar mecánico..."
               />
               @if (selectedMecanicos().length) {
-                <ul class="ot-mecanico-list">
+                <ul class="ot-asignados">
                   @for (mecanico of selectedMecanicos(); track mecanico.id_funcionario) {
-                    <li class="ot-mecanico-chip">
+                    <li class="ot-asignado-chip">
                       <span class="material-icons" aria-hidden="true">engineering</span>
                       <span>{{ mecanicoLabelFn(mecanico) }}</span>
                       <button
                         type="button"
-                        class="ot-mecanico-chip__remove"
+                        class="ot-asignado-chip__remove"
                         (click)="quitarMecanico(mecanico)"
                         [attr.aria-label]="'Quitar a ' + mecanicoLabelFn(mecanico)"
                       >
