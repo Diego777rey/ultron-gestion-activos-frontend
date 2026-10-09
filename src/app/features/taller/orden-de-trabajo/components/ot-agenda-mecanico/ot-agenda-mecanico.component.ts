@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
+import { OrdenTrabajoOutput, equiposDeOrden } from '../../interfaces/orden-trabajo.interface';
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 
 @Component({
@@ -26,8 +26,8 @@ import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
               <span>
                 <strong>{{ ot.numero_orden }}</strong>
                 · {{ ot.etapa }}
-                @if (ot.equipo?.tipo_equipo) {
-                  · {{ ot.equipo?.tipo_equipo }}
+                @if (tiposEquipos(ot); as tipos) {
+                  · {{ tipos }}
                 }
                 @if (ot.vehiculo?.chapa) {
                   · {{ ot.vehiculo?.chapa }}
@@ -62,6 +62,13 @@ export class OtAgendaMecanicoComponent {
       }
       this.cargar(id);
     });
+  }
+
+  protected tiposEquipos(ot: OrdenTrabajoOutput): string {
+    return equiposDeOrden(ot)
+      .map((e) => e.tipo_equipo)
+      .filter(Boolean)
+      .join(', ');
   }
 
   private cargar(idMecanico: string): void {
