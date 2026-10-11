@@ -13,6 +13,7 @@ const VENDEDOR_CRUD_CONFIG: CrudConfig = {
     proveedor_nombre
     nombre
     apellido
+    documento
     telefono
     email
     celular

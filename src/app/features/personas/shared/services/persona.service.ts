@@ -13,6 +13,7 @@ export class PersonaService {
     const document = `
       query BuscarPersonaPorDocumento($documento: String!) {
         buscarPersonaPorDocumento(documento: $documento) {
+          documento
           nombre
           apellido
           email

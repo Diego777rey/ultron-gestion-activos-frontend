@@ -4,7 +4,7 @@ export const COMPRAS_ROUTES: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./pages/compras-list/compras-list.component').then(
+      import('./pages/compras-list/compras-list').then(
         (m) => m.ComprasListComponent
       ),
     data: { tabTitle: 'Lista de Compras' },
@@ -28,7 +28,7 @@ export const COMPRAS_ROUTES: Routes = [
   {
     path: 'proveedores',
     loadComponent: () =>
-      import('./pages/proveedores-list/proveedores-list.component').then(
+      import('./pages/proveedores-list/proveedores-list').then(
         (m) => m.ProveedoresListComponent
       ),
     data: { tabTitle: 'Proveedores' },
@@ -36,7 +36,7 @@ export const COMPRAS_ROUTES: Routes = [
   {
     path: 'vendedores',
     loadComponent: () =>
-      import('./pages/vendedores-list/vendedores-list.component').then(
+      import('./pages/vendedores-list/vendedores-list').then(
         (m) => m.VendedoresListComponent
       ),
     data: { tabTitle: 'Vendedores' },

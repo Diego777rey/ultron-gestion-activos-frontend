@@ -57,6 +57,7 @@ export interface VendedorOutput {
   proveedor_nombre?: string;
   nombre: string;
   apellido: string;
+  documento?: string;
   telefono?: string;
   email?: string;
   celular?: string;
@@ -72,6 +73,7 @@ export interface VendedorInput {
   idProveedor: number;
   nombre: string;
   apellido: string;
+  documento?: string;
   telefono?: string;
   email?: string;
   celular?: string;

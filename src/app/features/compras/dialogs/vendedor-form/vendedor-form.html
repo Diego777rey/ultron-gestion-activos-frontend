@@ -1,0 +1,97 @@
+<app-notify-error [message]="error()" />
+
+<form class="entity-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="entity-form__grid">
+    <app-entity-searcher
+      class="field--full"
+      [items]="proveedores()"
+      [value]="form.controls.idProveedor.value"
+      (valueChange)="onProveedorChange($event)"
+      [displayFn]="proveedorLabel"
+      [keyFn]="proveedorKey"
+      [searchFn]="proveedorSearch"
+      [columns]="proveedorColumns"
+      [loading]="loadingProveedores()"
+      label="Proveedor*"
+      searchPlaceholder="Buscar por nombre, RUC o ciudad..."
+      [error]="form.controls.idProveedor.touched && form.controls.idProveedor.invalid"
+      errorText="Seleccioná un proveedor"
+      [allowAdd]="true"
+      addLabel="Nuevo proveedor"
+      (addClicked)="onAddProveedor()"
+    />
+
+    <div class="field field--full">
+      <input id="documento" class="field__input" type="text" formControlName="documento" appUppercase placeholder=" " aria-describedby="vendedor-documento-estado" />
+      <label class="field__label" for="documento">CI</label>
+      <div id="vendedor-documento-estado" class="busqueda-estado" aria-live="polite">
+        @if (personaEncontrada()) {
+          <span class="busqueda-estado__item busqueda-estado__item--ok">
+            <span class="material-icons" aria-hidden="true">person_search</span>
+            Datos cargados de tu sistema.
+          </span>
+        }
+      </div>
+    </div>
+
+    <div class="field">
+      <input id="nombre" class="field__input" type="text" formControlName="nombre" appUppercase placeholder=" " />
+      <label class="field__label" for="nombre">Nombre*</label>
+      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <span class="field__error">El nombre es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="apellido" class="field__input" type="text" formControlName="apellido" appUppercase placeholder=" " />
+      <label class="field__label" for="apellido">Apellido*</label>
+      @if (form.controls.apellido.touched && form.controls.apellido.invalid) {
+        <span class="field__error">El apellido es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <input id="cargo" class="field__input" type="text" formControlName="cargo" appUppercase placeholder=" " />
+      <label class="field__label" for="cargo">Cargo</label>
+    </div>
+
+    <div class="field">
+      <input id="telefono" class="field__input" type="text" formControlName="telefono" placeholder=" " />
+      <label class="field__label" for="telefono">Teléfono</label>
+    </div>
+
+    <div class="field">
+      <input id="celular" class="field__input" type="text" formControlName="celular" placeholder=" " />
+      <label class="field__label" for="celular">Celular</label>
+    </div>
+
+    <div class="field">
+      <input id="email" class="field__input" type="email" formControlName="email" placeholder=" " />
+      <label class="field__label" for="email">Email</label>
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <span class="field__error">Ingresá un email válido</span>
+      }
+    </div>
+
+    @if (form.touched && form.hasError('contacto')) {
+      <span class="field__error field--full">Ingresá al menos un teléfono o un celular</span>
+    }
+
+    <div class="field field--checkbox">
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="activo" />
+        <span>Activo</span>
+      </label>
+    </div>
+  </div>
+</form>
+
+<div class="entity-form-footer">
+  <app-ui-button
+    [label]="isEdit() ? 'Guardar Cambios' : 'Registrar Vendedor'"
+    icon="save"
+    variant="primary"
+    [loading]="saving()"
+    (clicked)="onSubmit()"
+  />
+</div>
