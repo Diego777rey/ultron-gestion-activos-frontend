@@ -1,25 +1,11 @@
 <div class="stepper-page">
-  <header class="stepper-header" role="navigation" aria-label="Pasos de categoría">
-    @for (step of steps; track step.index) {
-      <div
-        class="stepper-step"
-        [class.active]="currentStep() === step.index"
-        [class.done]="currentStep() > step.index"
-      >
-        <span class="stepper-step__circle" aria-hidden="true">
-          @if (currentStep() > step.index) {
-            <span class="material-icons">check</span>
-          } @else {
-            <span class="material-icons">{{ step.icon }}</span>
-          }
-        </span>
-        <span class="stepper-step__label">{{ step.label }}</span>
-      </div>
-      @if (!$last) {
-        <span class="stepper-connector" [class.done]="currentStep() > step.index" aria-hidden="true"></span>
-      }
-    }
-  </header>
+  <app-stepper-header
+    [steps]="steps"
+    [currentStep]="currentStep()"
+    [navigable]="false"
+    accent="success"
+    ariaLabel="Pasos de categoría"
+  />
 
   <app-notify-error [message]="error()" />
 
