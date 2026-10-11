@@ -185,6 +185,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'compras',
+        loadChildren: () =>
+          import('./features/compras/compras.routes').then(
+            (m) => m.COMPRAS_ROUTES
+          ),
+      },
+      {
         path: 'sectores',
         loadChildren: () =>
           import('./features/sectores/sectores.routes').then(

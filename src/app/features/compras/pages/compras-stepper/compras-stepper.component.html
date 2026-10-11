@@ -1,0 +1,172 @@
+<div class="stepper-container">
+  <header class="stepper-header">
+    <div class="stepper-header__content">
+      <div class="stepper-header__title">
+        <span class="material-icons">add_shopping_cart</span>
+        <h1>Nueva Compra</h1>
+      </div>
+    </div>
+  </header>
+
+  <div class="stepper-progress">
+    @for (step of steps; track step.index) {
+      <div class="step" [class.active]="step.index === currentStep()" 
+           [class.completed]="step.index < currentStep()"
+           (click)="irAPaso(step.index)">
+        <div class="step__indicator">
+          <span class="material-icons">{{ step.icon }}</span>
+        </div>
+        <div class="step__label">{{ step.label }}</div>
+      </div>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="error-banner">
+      <span class="material-icons">error</span>
+      <p>{{ error() }}</p>
+    </div>
+  }
+
+  <div class="stepper-content">
+    <!-- Step 1: Proveedor -->
+    @if (currentStep() === 1) {
+      <div class="step-content">
+        <h2>Seleccionar Proveedor</h2>
+        <form [formGroup]="proveedorForm">
+          <div class="form-group">
+            <label for="proveedor">Proveedor *</label>
+            <select id="proveedor" formControlName="idProveedor" 
+                    (change)="onProveedorChange()" class="form-control">
+              <option value="0">Selecciona un proveedor</option>
+              @for (proveedor of proveedores(); track proveedor.id_proveedor) {
+                <option [value]="proveedor.id_proveedor">
+                  {{ proveedor.nombre_completo || proveedor.razon_social }}
+                </option>
+              }
+            </select>
+          </div>
+
+          @if (vendedores().length > 0) {
+            <div class="form-group">
+              <label for="vendedor">Vendedor</label>
+              <select id="vendedor" formControlName="idVendedor" class="form-control">
+                <option value="0">Sin vendedor</option>
+                @for (vendedor of vendedores(); track vendedor.id_vendedor) {
+                  <option [value]="vendedor.id_vendedor">
+                    {{ vendedor.nombre_completo || vendedor.nombre + ' ' + vendedor.apellido }}
+                  </option>
+                }
+              </select>
+            </div>
+          }
+        </form>
+      </div>
+    }
+
+    <!-- Step 2: Datos Factura -->
+    @if (currentStep() === 2) {
+      <div class="step-content">
+        <h2>Datos de la Factura</h2>
+        <form [formGroup]="datosForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="numeroFactura">Número de Factura</label>
+              <input id="numeroFactura" type="text" formControlName="numeroFactura" 
+                     class="form-control" placeholder="001-001-0000123">
+            </div>
+            <div class="form-group">
+              <label for="timbrado">Timbrado</label>
+              <input id="timbrado" type="text" formControlName="timbrado" 
+                     class="form-control" placeholder="12345678">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fechaFactura">Fecha de Factura</label>
+              <input id="fechaFactura" type="date" formControlName="fechaFactura" 
+                     class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="formaPago">Forma de Pago *</label>
+              <select id="formaPago" formControlName="formaPago" class="form-control">
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TARJETA">Tarjeta</option>
+                <option value="TRANSFERENCIA">Transferencia</option>
+                <option value="CREDITO">Crédito</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="moneda">Moneda *</label>
+              <select id="moneda" formControlName="moneda" class="form-control">
+                <option value="PYG">Guaraníes (PYG)</option>
+                <option value="USD">Dólares (USD)</option>
+                <option value="BRL">Reales (BRL)</option>
+                <option value="ARS">Pesos (ARS)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="cotizacion">Cotización *</label>
+              <input id="cotizacion" type="number" formControlName="cotizacion" 
+                     class="form-control" step="0.01" min="0">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="observaciones">Observaciones</label>
+            <textarea id="observaciones" formControlName="observaciones" 
+                      class="form-control" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- Step 3: Resumen -->
+    @if (currentStep() === 3) {
+      <div class="step-content">
+        <h2>Resumen de la Compra</h2>
+        <div class="summary-section">
+          <h3>Proveedor</h3>
+          <p>{{ selectedProveedor()?.nombre_completo || selectedProveedor()?.razon_social }}</p>
+          
+          <h3>Datos de Factura</h3>
+          <div class="summary-grid">
+            <div>
+              <strong>Número:</strong> {{ datosForm.get('numeroFactura')?.value || '-' }}
+            </div>
+            <div>
+              <strong>Forma de Pago:</strong> {{ datosForm.get('formaPago')?.value }}
+            </div>
+            <div>
+              <strong>Moneda:</strong> {{ datosForm.get('moneda')?.value }}
+            </div>
+            <div>
+              <strong>Cotización:</strong> {{ datosForm.get('cotizacion')?.value }}
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="stepper-actions">
+    <button type="button" class="btn btn-secondary" (click)="atras()">
+      <span class="material-icons">arrow_back</span>
+      {{ currentStep() === 1 ? 'Cancelar' : 'Atrás' }}
+    </button>
+    <button type="button" class="btn btn-primary" (click)="siguiente()" 
+            [disabled]="!puedeAvanzar() || saving()">
+      @if (saving()) {
+        <span class="material-icons spin">refresh</span>
+        Guardando...
+      } @else {
+        {{ currentStep() === 3 ? 'Guardar Compra' : 'Siguiente' }}
+        <span class="material-icons">arrow_forward</span>
+      }
+    </button>
+  </div>
+</div>
