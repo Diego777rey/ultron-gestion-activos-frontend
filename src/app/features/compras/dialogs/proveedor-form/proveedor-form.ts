@@ -12,6 +12,7 @@ import { ProveedorOutput, ProveedorInput, TipoPersona } from '../../../../shared
 import { ProveedorService } from '../../../../shared/services/proveedor.service';
 import { PersonaService } from '../../../personas/shared/services/persona.service';
 import { PersonaOutput } from '../../../personas/funcionarios/interfaces/funcionario.interface';
+import { nombreCompletoPersona } from '../../../personas/shared/nombre-persona';
 import {
   ConsultaRucService,
   ContribuyenteRuc,
@@ -67,7 +68,6 @@ export class ProveedorFormComponent {
   protected readonly form = this.fb.nonNullable.group({
     tipoPersona: [TipoPersona.JURIDICA, Validators.required],
     nombre: ['', [Validators.maxLength(255)]],
-    apellido: ['', [Validators.maxLength(255)]],
     razonSocial: ['', [Validators.required, Validators.maxLength(255)]],
     nombreComercial: ['', [Validators.maxLength(255)]],
     ruc: ['', [Validators.required, Validators.maxLength(50)]],
@@ -79,7 +79,7 @@ export class ProveedorFormComponent {
   });
 
   /** Para no pisar un nombre que el usuario corrigió a mano. */
-  private autocompletado = { nombre: '', apellido: '', razonSocial: '' };
+  private autocompletado = { nombre: '', razonSocial: '' };
 
   constructor() {
     this.form.controls.tipoPersona.valueChanges.pipe(takeUntilDestroyed()).subscribe((tipo) => {
@@ -188,8 +188,7 @@ export class ProveedorFormComponent {
     this.aplicarValidadores(TipoPersona.FISICA);
     this.form.controls.tipoPersona.setValue(TipoPersona.FISICA, { emitEvent: false });
     this.documento.set(persona.documento?.trim() || normalizarRuc(this.form.controls.ruc.value).replace(/-\d$/, ''));
-    this.asignarAutocompletado('nombre', persona.nombre ?? '');
-    this.asignarAutocompletado('apellido', persona.apellido ?? '');
+    this.asignarAutocompletado('nombre', nombreCompletoPersona(persona));
     this.asignarContacto('telefono', persona.telefono);
     this.asignarContacto('email', persona.email);
     this.asignarContacto('direccion', persona.direccion);
@@ -218,9 +217,7 @@ export class ProveedorFormComponent {
       return;
     }
 
-    const partes = partirNombre(contribuyente.nombre || contribuyente.razonSocial);
-    this.asignarAutocompletado('nombre', partes.nombre);
-    this.asignarAutocompletado('apellido', partes.apellido);
+    this.asignarAutocompletado('nombre', contribuyente.nombre || contribuyente.razonSocial);
   }
 
   /** Se cambió el RUC después de cargar un proveedor existente: vuelve a ser un alta. */
@@ -234,7 +231,7 @@ export class ProveedorFormComponent {
     this.aplicarValidadores(TipoPersona.JURIDICA);
   }
 
-  private asignarAutocompletado(clave: 'nombre' | 'apellido' | 'razonSocial', valor: string): void {
+  private asignarAutocompletado(clave: 'nombre' | 'razonSocial', valor: string): void {
     const control = this.form.controls[clave];
     const actual = control.value.trim();
     if (actual && actual !== this.autocompletado[clave]) {
@@ -246,7 +243,7 @@ export class ProveedorFormComponent {
   }
 
   private limpiarAutocompletado(): void {
-    this.autocompletado = { nombre: '', apellido: '', razonSocial: '' };
+    this.autocompletado = { nombre: '', razonSocial: '' };
   }
 
   private cargarProveedor(proveedor: ProveedorOutput): void {
@@ -257,8 +254,7 @@ export class ProveedorFormComponent {
     this.form.reset(
       {
         tipoPersona: tipo,
-        nombre: proveedor.nombre ?? '',
-        apellido: proveedor.apellido ?? '',
+        nombre: nombreCompletoPersona(proveedor),
         razonSocial: proveedor.razon_social ?? '',
         nombreComercial: proveedor.nombre_comercial ?? '',
         ruc: proveedor.ruc ?? '',
@@ -277,7 +273,6 @@ export class ProveedorFormComponent {
     return {
       tipoPersona: TipoPersona.JURIDICA,
       nombre: '',
-      apellido: '',
       razonSocial: '',
       nombreComercial: '',
       ruc,
@@ -301,7 +296,7 @@ export class ProveedorFormComponent {
     const payload: ProveedorInput = {
       tipoPersona: valor.tipoPersona,
       nombre: fisica ? valor.nombre.trim() : '',
-      apellido: fisica ? valor.apellido.trim() : '',
+      apellido: '',
       razonSocial: fisica ? '' : valor.razonSocial.trim(),
       nombreComercial: fisica ? '' : valor.nombreComercial.trim(),
       ruc: valor.ruc.trim(),
@@ -337,21 +332,8 @@ export class ProveedorFormComponent {
     const nombre = fisica ? [Validators.required, Validators.maxLength(255)] : [Validators.maxLength(255)];
     const razon = fisica ? [Validators.maxLength(255)] : [Validators.required, Validators.maxLength(255)];
     this.form.controls.nombre.setValidators(nombre);
-    this.form.controls.apellido.setValidators(nombre);
     this.form.controls.razonSocial.setValidators(razon);
     this.form.controls.nombre.updateValueAndValidity({ emitEvent: false });
-    this.form.controls.apellido.updateValueAndValidity({ emitEvent: false });
     this.form.controls.razonSocial.updateValueAndValidity({ emitEvent: false });
   }
-}
-
-function partirNombre(completo: string): { nombre: string; apellido: string } {
-  const partes = completo.trim().split(/\s+/).filter(Boolean);
-  if (partes.length <= 1) {
-    return { nombre: partes[0] ?? '', apellido: '' };
-  }
-  return {
-    nombre: partes.slice(0, -1).join(' '),
-    apellido: partes[partes.length - 1],
-  };
 }

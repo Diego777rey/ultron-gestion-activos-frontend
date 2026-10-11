@@ -15,6 +15,7 @@ import { VendedorService } from '../../../../shared/services/vendedor.service';
 import { AppDialogService } from '../../../../shared/services/app-dialog.service';
 import { PersonaService } from '../../../personas/shared/services/persona.service';
 import { normalizarRuc } from '../../../personas/shared/services/consulta-ruc.service';
+import { nombreCompletoPersona } from '../../../personas/shared/nombre-persona';
 import { ProveedorFormComponent } from '../proveedor-form/proveedor-form';
 import { nombreProveedor } from '../../shared/proveedor-presentacion';
 
@@ -66,7 +67,6 @@ export class VendedorFormComponent {
       idProveedor: this.fb.control<number | null>(null, Validators.required),
       documento: this.fb.nonNullable.control('', [Validators.maxLength(30)]),
       nombre: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(255)]),
-      apellido: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(255)]),
       cargo: this.fb.nonNullable.control('', [Validators.maxLength(255)]),
       telefono: this.fb.nonNullable.control('', [Validators.maxLength(50)]),
       celular: this.fb.nonNullable.control('', [Validators.maxLength(50)]),
@@ -105,8 +105,7 @@ export class VendedorFormComponent {
       this.personaEncontrada.set(true);
       this.form.patchValue({
         documento: persona.documento?.trim() || this.form.controls.documento.value,
-        nombre: (persona.nombre ?? '').toUpperCase(),
-        apellido: (persona.apellido ?? '').toUpperCase(),
+        nombre: nombreCompletoPersona(persona).toUpperCase(),
         telefono: persona.telefono?.trim() || this.form.controls.telefono.value,
         email: persona.email?.trim() || this.form.controls.email.value,
       }, { emitEvent: false });
@@ -119,8 +118,7 @@ export class VendedorFormComponent {
         this.form.reset({
           idProveedor: Number(vendedor.id_proveedor),
           documento: vendedor.documento ?? '',
-          nombre: vendedor.nombre ?? '',
-          apellido: vendedor.apellido ?? '',
+          nombre: nombreCompletoPersona(vendedor),
           cargo: vendedor.cargo ?? '',
           telefono: vendedor.telefono ?? '',
           celular: vendedor.celular ?? '',
@@ -135,7 +133,6 @@ export class VendedorFormComponent {
         idProveedor: null,
         documento: '',
         nombre: '',
-        apellido: '',
         cargo: '',
         telefono: '',
         celular: '',
@@ -186,7 +183,7 @@ export class VendedorFormComponent {
     const payload: VendedorInput = {
       idProveedor: Number(valor.idProveedor),
       nombre: valor.nombre.trim(),
-      apellido: valor.apellido.trim(),
+      apellido: '',
       documento: valor.documento.trim(),
       cargo: valor.cargo.trim(),
       telefono: valor.telefono.trim(),
