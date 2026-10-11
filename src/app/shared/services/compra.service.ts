@@ -1,10 +1,14 @@
 import { Injectable, inject } from '@angular/core';
-import { Apollo, gql } from 'apollo-angular';
-import { Observable, map } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
+import { BaseCrudService } from './base-crud.service';
+import { CrudConfig } from '../models/crud-config.model';
 import { CompraOutput, CompraInput, ProductoProveedorOutput, ItemCompraOutput } from '../models/compras.model';
+import { GraphqlService } from './graphql.service';
+import { LoadingService } from './loading.service';
 
-const COMPRA_FIELDS = gql`
-  fragment CompraFields on CompraOutput {
+const COMPRA_CRUD_CONFIG: CrudConfig = {
+  inputTypeName: 'CompraInput',
+  selectionSet: `{
     id_compra
     id_proveedor
     proveedor_nombre
@@ -24,182 +28,90 @@ const COMPRA_FIELDS = gql`
     observaciones
     fecha_registro
     fecha_ultima_modificacion
-  }
-`;
+  }`,
+  operations: {
+    list: 'compras',
+    getById: 'compra',
+    create: 'registrarCompra',
+    update: 'actualizarCompra',
+    remove: 'eliminarCompra',
+  },
+  entity: { label: 'Compra', gender: 'f' },
+};
 
-const ITEM_COMPRA_FIELDS = gql`
-  fragment ItemCompraFields on ItemCompraOutput {
-    id_item_compra
-    id_compra
-    id_producto
-    producto_nombre
-    producto_codigo
-    cantidad
-    precio_costo
-    subtotal
-    tipo_iva
-    iva
-    fecha_vencimiento
-    lote
-    observaciones
-    fecha_registro
-  }
-`;
+@Injectable({ providedIn: 'root' })
+export class CompraService extends BaseCrudService<CompraOutput, CompraInput> {
+  private readonly graphql = inject(GraphqlService);
+  private readonly loadingService = inject(LoadingService);
+  protected readonly config: CrudConfig = COMPRA_CRUD_CONFIG;
 
-const PRODUCTO_PROVEEDOR_FIELDS = gql`
-  fragment ProductoProveedorFields on ProductoProveedorOutput {
-    id_producto_proveedor
-    id_producto
-    producto_nombre
-    producto_codigo
-    id_proveedor
-    proveedor_nombre
-    precio_ultima_compra
-    fecha_ultima_compra
-    observaciones
-    activo
-    fecha_registro
-  }
-`;
-
-@Injectable({
-  providedIn: 'root'
-})
-export class CompraService {
-  private readonly apollo = inject(Apollo);
-
-  listarCompras(): Observable<CompraOutput[]> {
-    return this.apollo.query<{ compras: CompraOutput[] }>({
-      query: gql`
-        ${COMPRA_FIELDS}
-        query {
-          compras {
-            ...CompraFields
-          }
-        }
-      `,
-      fetchPolicy: 'network-only'
-    }).pipe(map(result => result.data.compras));
-  }
-
-  obtenerCompra(id: number): Observable<CompraOutput> {
-    return this.apollo.query<{ compra: CompraOutput }>({
-      query: gql`
-        ${COMPRA_FIELDS}
-        ${ITEM_COMPRA_FIELDS}
-        query($id: ID!) {
-          compra(id: $id) {
-            ...CompraFields
-            items {
-              ...ItemCompraFields
-            }
-          }
-        }
-      `,
-      variables: { id },
-      fetchPolicy: 'network-only'
-    }).pipe(map(result => result.data.compra));
+  protected override resolveEntityName(entity: CompraOutput): string | undefined {
+    return entity.numero_factura || `Compra #${entity.id_compra}`;
   }
 
   listarComprasPorProveedor(idProveedor: number): Observable<CompraOutput[]> {
-    return this.apollo.query<{ comprasPorProveedor: CompraOutput[] }>({
-      query: gql`
-        ${COMPRA_FIELDS}
-        query($idProveedor: ID!) {
-          comprasPorProveedor(idProveedor: $idProveedor) {
-            ...CompraFields
-          }
-        }
-      `,
-      variables: { idProveedor },
-      fetchPolicy: 'network-only'
-    }).pipe(map(result => result.data.comprasPorProveedor));
+    const document = `query($idProveedor: ID!) {
+      comprasPorProveedor(idProveedor: $idProveedor) ${this.config.selectionSet}
+    }`;
+    return this.graphql
+      .query<{ comprasPorProveedor: CompraOutput[] }>(document, { idProveedor })
+      .pipe(map((data) => data.comprasPorProveedor ?? []));
   }
 
   productosDeProveedor(idProveedor: number): Observable<ProductoProveedorOutput[]> {
-    return this.apollo.query<{ productosDeProveedor: ProductoProveedorOutput[] }>({
-      query: gql`
-        ${PRODUCTO_PROVEEDOR_FIELDS}
-        query($idProveedor: ID!) {
-          productosDeProveedor(idProveedor: $idProveedor) {
-            ...ProductoProveedorFields
-          }
-        }
-      `,
-      variables: { idProveedor },
-      fetchPolicy: 'network-only'
-    }).pipe(map(result => result.data.productosDeProveedor));
+    const document = `query($idProveedor: ID!) {
+      productosDeProveedor(idProveedor: $idProveedor) {
+        id_producto_proveedor
+        id_producto
+        producto_nombre
+        producto_codigo
+        id_proveedor
+        proveedor_nombre
+        precio_ultima_compra
+        fecha_ultima_compra
+        observaciones
+        activo
+        fecha_registro
+      }
+    }`;
+    return this.graphql
+      .query<{ productosDeProveedor: ProductoProveedorOutput[] }>(document, { idProveedor })
+      .pipe(map((data) => data.productosDeProveedor ?? []));
   }
 
   historialCompraProducto(idProducto: number, idProveedor: number): Observable<ItemCompraOutput[]> {
-    return this.apollo.query<{ historialCompraProducto: ItemCompraOutput[] }>({
-      query: gql`
-        ${ITEM_COMPRA_FIELDS}
-        query($idProducto: ID!, $idProveedor: ID!) {
-          historialCompraProducto(idProducto: $idProducto, idProveedor: $idProveedor) {
-            ...ItemCompraFields
-          }
-        }
-      `,
-      variables: { idProducto, idProveedor },
-      fetchPolicy: 'network-only'
-    }).pipe(map(result => result.data.historialCompraProducto));
-  }
-
-  registrarCompra(input: CompraInput): Observable<CompraOutput> {
-    return this.apollo.mutate<{ registrarCompra: CompraOutput }>({
-      mutation: gql`
-        ${COMPRA_FIELDS}
-        mutation($input: CompraInput!) {
-          registrarCompra(input: $input) {
-            ...CompraFields
-          }
-        }
-      `,
-      variables: { input },
-      refetchQueries: ['compras']
-    }).pipe(map(result => result.data!.registrarCompra));
-  }
-
-  actualizarCompra(id: number, input: CompraInput): Observable<CompraOutput> {
-    return this.apollo.mutate<{ actualizarCompra: CompraOutput }>({
-      mutation: gql`
-        ${COMPRA_FIELDS}
-        mutation($id: ID!, $input: CompraInput!) {
-          actualizarCompra(id: $id, input: $input) {
-            ...CompraFields
-          }
-        }
-      `,
-      variables: { id, input },
-      refetchQueries: ['compras', 'compra']
-    }).pipe(map(result => result.data!.actualizarCompra));
+    const document = `query($idProducto: ID!, $idProveedor: ID!) {
+      historialCompraProducto(idProducto: $idProducto, idProveedor: $idProveedor) {
+        id_item_compra
+        id_compra
+        id_producto
+        producto_nombre
+        producto_codigo
+        cantidad
+        precio_costo
+        subtotal
+        tipo_iva
+        iva
+        fecha_vencimiento
+        lote
+        observaciones
+        fecha_registro
+      }
+    }`;
+    return this.graphql
+      .query<{ historialCompraProducto: ItemCompraOutput[] }>(document, { idProducto, idProveedor })
+      .pipe(map((data) => data.historialCompraProducto ?? []));
   }
 
   cambiarEstadoCompra(id: number, estado: string): Observable<CompraOutput> {
-    return this.apollo.mutate<{ cambiarEstadoCompra: CompraOutput }>({
-      mutation: gql`
-        ${COMPRA_FIELDS}
-        mutation($id: ID!, $estado: String!) {
-          cambiarEstadoCompra(id: $id, estado: $estado) {
-            ...CompraFields
-          }
-        }
-      `,
-      variables: { id, estado },
-      refetchQueries: ['compras']
-    }).pipe(map(result => result.data!.cambiarEstadoCompra));
-  }
-
-  eliminarCompra(id: number): Observable<boolean> {
-    return this.apollo.mutate<{ eliminarCompra: boolean }>({
-      mutation: gql`
-        mutation($id: ID!) {
-          eliminarCompra(id: $id)
-        }
-      `,
-      variables: { id },
-      refetchQueries: ['compras']
-    }).pipe(map(result => result.data!.eliminarCompra));
+    const document = `mutation($id: ID!, $estado: String!) {
+      cambiarEstadoCompra(id: $id, estado: $estado) ${this.config.selectionSet}
+    }`;
+    return this.loadingService.track(
+      this.graphql
+        .mutate<{ cambiarEstadoCompra: CompraOutput }>(document, { id, estado })
+        .pipe(map((data) => data.cambiarEstadoCompra)),
+      { message: 'Cambiando estado...', errorTitle: 'No se pudo cambiar el estado' }
+    );
   }
 }

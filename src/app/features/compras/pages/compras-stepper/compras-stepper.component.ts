@@ -112,7 +112,8 @@ export class ComprasStepperComponent implements OnInit {
 
   protected puedeAvanzar(): boolean {
     if (this.currentStep() === 1) {
-      return this.proveedorForm.valid && this.proveedorForm.get('idProveedor')?.value > 0;
+      const idProveedor = this.proveedorForm.get('idProveedor')?.value;
+      return this.proveedorForm.valid && (idProveedor ? idProveedor > 0 : false);
     }
     if (this.currentStep() === 2) {
       return this.datosForm.valid;
