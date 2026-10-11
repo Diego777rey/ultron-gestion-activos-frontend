@@ -1,0 +1,159 @@
+:host {
+  display: block;
+}
+
+.entity-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.entity-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.entity-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+
+  > .field--full {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: 16px;
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+}
+
+.field__label {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  pointer-events: none;
+  transition: 0.2s ease all;
+}
+
+.field__input {
+  width: 100%;
+  height: 36px;
+  padding: 8px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  border-radius: 0;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+  color-scheme: dark;
+
+  &:focus {
+    border-bottom: 2px solid var(--primary-color);
+  }
+
+  &:not(:placeholder-shown) ~ .field__label {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+select.field__input {
+  appearance: none;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, #adb5bd 50%),
+    linear-gradient(135deg, #adb5bd 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 2rem;
+}
+
+.field__label--pinned,
+.field__input:not(:placeholder-shown) ~ .field__label--pinned,
+.field__input:focus ~ .field__label--pinned {
+  top: 0;
+  font-size: 12px;
+  opacity: 1;
+  visibility: visible;
+}
+
+.field__error {
+  font-size: 11px;
+  color: #ff6b8b;
+  margin-top: 4px;
+}
+
+.busqueda-estado__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+
+  .material-icons {
+    font-size: 16px;
+  }
+
+  &--ok {
+    color: var(--success-color, #66bb6a);
+  }
+
+  &--alerta {
+    color: #ffb74d;
+  }
+}
+
+.busqueda-estado__spin {
+  animation: busqueda-estado-spin 1s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes busqueda-estado-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.field--checkbox {
+  flex-direction: row;
+  align-items: center;
+  padding-top: 8px;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+
+  input {
+    accent-color: var(--primary-color);
+    width: 16px;
+    height: 16px;
+  }
+}

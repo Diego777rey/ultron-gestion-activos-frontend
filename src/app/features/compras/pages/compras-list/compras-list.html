@@ -1,0 +1,52 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="visibles()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="total()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Proveedor, factura o estado"
+  [searchValue]="search()"
+  (searchValueChange)="onSearchChange($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="No hay compras que coincidan con la búsqueda"
+  [trackBy]="trackById"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0)"
+>
+  <ng-template appTableCell="id" [appTableCellFrom]="visibles()" let-compra>
+    {{ compra.id_compra }}
+  </ng-template>
+
+  <ng-template appTableCell="fecha" [appTableCellFrom]="visibles()" let-compra>
+    {{ fecha(compra.fecha_compra) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="proveedor" [appTableCellFrom]="visibles()" let-compra>
+    {{ compra.proveedor_nombre | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="factura" [appTableCellFrom]="visibles()" let-compra>
+    {{ compra.numero_factura | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="moneda" [appTableCellFrom]="visibles()" let-compra>
+    {{ compra.moneda | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="total" [appTableCellFrom]="visibles()" let-compra>
+    {{ monto(compra.total, compra.moneda) }}
+  </ng-template>
+
+  <ng-template appTableCell="estado" [appTableCellFrom]="visibles()" let-compra>
+    {{ estado(compra.estado) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="visibles()" let-compra>
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, compra)" />
+  </ng-template>
+</app-generic-list>

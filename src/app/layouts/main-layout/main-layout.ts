@@ -113,20 +113,20 @@ export class MainLayoutComponent implements OnInit {
       children: [
         { label: 'Nueva Compra', icon: 'add_shopping_cart', route: '/compras/nueva', requiredPermissions: ['COMPRAS'] },
         { label: 'Lista de Compras', icon: 'receipt_long', route: '/compras', requiredPermissions: ['COMPRAS'] },
+        { label: 'Proveedores', icon: 'store', route: '/compras/proveedores', requiredPermissions: ['COMPRAS'] },
+        { label: 'Vendedores', icon: 'badge', route: '/compras/vendedores', requiredPermissions: ['COMPRAS'] },
       ]
     },
     {
       label: 'R.R.H.H.',
       icon: 'people',
-      requiredPermissions: ['RRHH', 'CLIENTES', 'FUNCIONARIOS', 'USUARIOS', 'ROLES', 'EMPRESAS', 'PROVEEDORES', 'VENDEDORES'],
+      requiredPermissions: ['RRHH', 'CLIENTES', 'FUNCIONARIOS', 'USUARIOS', 'ROLES', 'EMPRESAS'],
       children: [
         { label: 'Clientes', icon: 'groups', route: '/personas/clientes', requiredPermissions: ['CLIENTES'] },
         { label: 'Funcionarios', icon: 'recent_actors', route: '/personas/funcionarios', requiredPermissions: ['FUNCIONARIOS'] },
         { label: 'Usuarios', icon: 'account_circle', route: '/personas/usuarios', requiredPermissions: ['USUARIOS'] },
         { label: 'Roles', icon: 'shield', route: '/personas/roles', requiredPermissions: ['ROLES'] },
         { label: 'Empresas', icon: 'business', route: '/personas/empresas', requiredPermissions: ['EMPRESAS'] },
-        { label: 'Proveedores', icon: 'store', route: '/compras/proveedores', requiredPermissions: ['PROVEEDORES'] },
-        { label: 'Vendedores', icon: 'badge', route: '/compras/vendedores', requiredPermissions: ['VENDEDORES'] },
       ]
     },
     {
