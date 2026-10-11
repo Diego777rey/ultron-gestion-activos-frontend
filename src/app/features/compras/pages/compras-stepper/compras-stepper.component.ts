@@ -72,9 +72,9 @@ export class ComprasStepperComponent implements OnInit {
 
   protected loadProveedores(): void {
     this.loadingProveedores.set(true);
-    this.proveedorService.listarProveedoresActivos().subscribe({
-      next: (data) => {
-        this.proveedores.set(data);
+    this.proveedorService.findAll().subscribe({
+      next: (data: ProveedorOutput[]) => {
+        this.proveedores.set(data.filter(p => p.activo));
         this.loadingProveedores.set(false);
       },
       error: (err: Error) => {
@@ -184,7 +184,7 @@ export class ComprasStepperComponent implements OnInit {
     this.saving.set(true);
     this.error.set(null);
 
-    this.compraService.registrarCompra(input).subscribe({
+    this.compraService.create(input).subscribe({
       next: () => {
         this.saving.set(false);
         this.router.navigate(['/compras']);

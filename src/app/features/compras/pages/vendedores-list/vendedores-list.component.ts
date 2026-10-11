@@ -210,12 +210,12 @@ export class VendedoresListComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(null);
 
-    this.vendedorService.listarVendedores().subscribe({
-      next: (data) => {
+    this.vendedorService.findAll(true).subscribe({
+      next: (data: VendedorOutput[]) => {
         this.vendedores.set(data);
         this.cargando.set(false);
       },
-      error: (err) => {
+      error: (err: Error) => {
         this.error.set('Error al cargar vendedores');
         this.cargando.set(false);
         console.error(err);

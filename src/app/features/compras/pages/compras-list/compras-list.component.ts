@@ -277,12 +277,12 @@ export class ComprasListComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(null);
 
-    this.compraService.listarCompras().subscribe({
-      next: (data) => {
+    this.compraService.findAll(true).subscribe({
+      next: (data: CompraOutput[]) => {
         this.compras.set(data);
         this.cargando.set(false);
       },
-      error: (err) => {
+      error: (err: Error) => {
         this.error.set('Error al cargar compras');
         this.cargando.set(false);
         console.error(err);

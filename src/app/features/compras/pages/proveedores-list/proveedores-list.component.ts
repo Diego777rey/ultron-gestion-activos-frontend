@@ -222,12 +222,12 @@ export class ProveedoresListComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(null);
 
-    this.proveedorService.listarProveedores().subscribe({
-      next: (data) => {
+    this.proveedorService.findAll(true).subscribe({
+      next: (data: ProveedorOutput[]) => {
         this.proveedores.set(data);
         this.cargando.set(false);
       },
-      error: (err) => {
+      error: (err: Error) => {
         this.error.set('Error al cargar proveedores');
         this.cargando.set(false);
         console.error(err);
