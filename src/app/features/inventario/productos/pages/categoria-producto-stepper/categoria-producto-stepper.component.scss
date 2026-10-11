@@ -18,79 +18,8 @@
   background: var(--content-bg);
 }
 
-/* ---------- Header (mismo patrón OT) ---------- */
-.stepper-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+app-stepper-header {
   margin: -24px -32px 0;
-  padding: 18px 32px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: #1a1a1a;
-  flex-wrap: wrap;
-}
-
-.stepper-step {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  opacity: 0.55;
-}
-
-.stepper-step.active,
-.stepper-step.done {
-  opacity: 1;
-}
-
-.stepper-step__circle {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 2px solid rgba(255, 255, 255, 0.22);
-  color: rgba(255, 255, 255, 0.75);
-
-  .material-icons {
-    font-size: 18px;
-  }
-}
-
-.stepper-step.active .stepper-step__circle {
-  background: #43a047;
-  border-color: #43a047;
-  color: #fff;
-  box-shadow: 0 0 0 4px rgba(67, 160, 71, 0.4);
-}
-
-.stepper-step.done .stepper-step__circle {
-  background: #388e3c;
-  border-color: #388e3c;
-  color: #fff;
-}
-
-.stepper-step__label {
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.stepper-step.active .stepper-step__label {
-  color: #43a047;
-  font-weight: 700;
-}
-
-.stepper-connector {
-  width: 48px;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.35);
-
-  &.done {
-    background: #43a047;
-  }
 }
 
 /* ---------- Body / layout OT ---------- */
@@ -502,9 +431,9 @@
     padding: 16px 16px;
   }
 
-  .stepper-header {
+  app-stepper-header {
     margin: -16px -16px 0;
-    padding: 14px 16px 16px;
+    --stepper-header-padding: 14px 16px 16px;
   }
 
   .stepper-footer {

@@ -13,9 +13,9 @@ import { UiButtonComponent } from '../../../../../shared/components/ui-button/ui
 import { OrdenTrabajoService } from '../../services/orden-trabajo.service';
 import { EtapaOrdenTrabajo, OrdenTrabajoOutput } from '../../interfaces/orden-trabajo.interface';
 import {
-  OtStepDef,
-  OtStepperHeaderComponent,
-} from '../../components/ot-stepper-header/ot-stepper-header.component';
+  StepperHeaderComponent,
+  StepperStep,
+} from '../../../../../shared/components/stepper-header/stepper-header';
 import { OtRecepcionStepComponent } from '../../components/ot-recepcion-step/ot-recepcion-step.component';
 import { OtDiagnosticoStepComponent } from '../../components/ot-diagnostico-step/ot-diagnostico-step.component';
 import { OtEnProcesoStepComponent } from '../../components/ot-en-proceso-step/ot-en-proceso-step.component';
@@ -24,11 +24,15 @@ import { OtFacturadoStepComponent } from '../../components/ot-facturado-step/ot-
 import { OtTicketDialogComponent } from '../../components/ot-ticket-dialog/ot-ticket-dialog.component';
 import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
 
+interface OtStepDef extends StepperStep {
+  etapa: EtapaOrdenTrabajo;
+}
+
 @Component({
   selector: 'app-orden-trabajo-detalle',
   imports: [NotifyErrorComponent, 
     UiButtonComponent,
-    OtStepperHeaderComponent,
+    StepperHeaderComponent,
     OtRecepcionStepComponent,
     OtDiagnosticoStepComponent,
     OtEnProcesoStepComponent,

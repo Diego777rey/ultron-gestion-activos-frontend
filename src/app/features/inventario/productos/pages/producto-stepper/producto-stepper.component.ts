@@ -23,12 +23,14 @@ import { CategoriaRapidaFormComponent } from '../../dialogs/categoria-rapida-for
 import { SubcategoriaFormComponent } from '../../dialogs/subcategoria-form/subcategoria-form.component';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
 import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
-
-interface StepDef {
-  index: number;
-  label: string;
-  icon: string;
-}
+import {
+  StepperHeaderComponent,
+  StepperStep,
+} from '../../../../../shared/components/stepper-header/stepper-header';
+import { CategoriaTablaComponent } from '../../../shared/components/categoria-tabla/categoria-tabla.component';
+import { crearListaCategorias } from '../../../shared/components/categoria-tabla/categoria-lista';
+import { FichaLayoutComponent } from '../../../shared/components/ficha-layout/ficha-layout.component';
+import { FichaStatComponent } from '../../../shared/components/ficha-layout/ficha-stat.component';
 
 @Component({
   selector: 'app-producto-stepper',
@@ -40,6 +42,10 @@ interface StepDef {
     UppercaseDirective,
     PresentacionesEditorComponent,
     ImageUploaderComponent,
+    StepperHeaderComponent,
+    CategoriaTablaComponent,
+    FichaLayoutComponent,
+    FichaStatComponent,
   ],
   templateUrl: './producto-stepper.component.html',
   styleUrl: './producto-stepper.component.scss',
@@ -65,7 +71,7 @@ export class ProductoStepperComponent implements OnInit {
   protected readonly imageError = signal<string | null>(null);
   protected readonly editando = computed(() => this.productoId() != null);
 
-  protected readonly steps: StepDef[] = [
+  protected readonly steps: StepperStep[] = [
     { index: 1, label: 'Categoría', icon: 'category' },
     { index: 2, label: 'Subcategoría', icon: 'account_tree' },
     { index: 3, label: 'Datos generales', icon: 'description' },
@@ -81,11 +87,9 @@ export class ProductoStepperComponent implements OnInit {
   protected readonly loadingCategorias = signal(false);
   protected readonly loadingSubcategorias = signal(false);
 
-  protected readonly categoriaSearch = signal('');
-  protected readonly subcategoriaSearch = signal('');
-  protected readonly catPage = signal(0);
-  protected readonly subPage = signal(0);
-  protected readonly pageSize = 15;
+  protected readonly idCategoria = (c: CategoriaProductoOutput) => c.id_categoria_producto;
+  protected readonly categoriasLista = crearListaCategorias(this.categorias, this.idCategoria);
+  protected readonly subcategoriasLista = crearListaCategorias(this.subcategorias, this.idCategoria);
 
   protected readonly selectedCategoria = signal<CategoriaProductoOutput | null>(null);
   protected readonly selectedSubcategoria = signal<CategoriaProductoOutput | null>(null);
@@ -111,52 +115,6 @@ export class ProductoStepperComponent implements OnInit {
     descripcion: [''],
     tipoIva: ['10', Validators.required],
   });
-
-  protected readonly categoriasFiltradas = computed(() => {
-    const q = this.categoriaSearch().trim().toLowerCase();
-    const list = this.categorias().filter((c) => c.estado !== false);
-    if (!q) {
-      return list;
-    }
-    return list.filter(
-      (c) =>
-        c.nombre.toLowerCase().includes(q) ||
-        String(c.id_categoria_producto ?? '').includes(q) ||
-        (c.descripcion ?? '').toLowerCase().includes(q)
-    );
-  });
-
-  protected readonly subcategoriasFiltradas = computed(() => {
-    const q = this.subcategoriaSearch().trim().toLowerCase();
-    const list = this.subcategorias().filter((c) => c.estado !== false);
-    if (!q) {
-      return list;
-    }
-    return list.filter(
-      (c) =>
-        c.nombre.toLowerCase().includes(q) ||
-        String(c.id_categoria_producto ?? '').includes(q) ||
-        (c.descripcion ?? '').toLowerCase().includes(q)
-    );
-  });
-
-  protected readonly categoriasPagina = computed(() => {
-    const start = this.catPage() * this.pageSize;
-    return this.categoriasFiltradas().slice(start, start + this.pageSize);
-  });
-
-  protected readonly subcategoriasPagina = computed(() => {
-    const start = this.subPage() * this.pageSize;
-    return this.subcategoriasFiltradas().slice(start, start + this.pageSize);
-  });
-
-  protected readonly catTotalPages = computed(() =>
-    Math.max(1, Math.ceil(this.categoriasFiltradas().length / this.pageSize))
-  );
-
-  protected readonly subTotalPages = computed(() =>
-    Math.max(1, Math.ceil(this.subcategoriasFiltradas().length / this.pageSize))
-  );
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -246,30 +204,18 @@ export class ProductoStepperComponent implements OnInit {
     });
   }
 
-  protected onCategoriaSearch(value: string): void {
-    this.categoriaSearch.set(value);
-    this.catPage.set(0);
-  }
-
-  protected onSubcategoriaSearch(value: string): void {
-    this.subcategoriaSearch.set(value);
-    this.subPage.set(0);
-  }
-
   protected selectCategoria(cat: CategoriaProductoOutput): void {
     this.selectedCategoria.set(cat);
     this.selectedSubcategoria.set(null);
     this.subcategorias.set([]);
-    this.subcategoriaSearch.set('');
-    this.subPage.set(0);
+    this.subcategoriasLista.reset();
   }
 
   protected selectSubcategoria(sub: CategoriaProductoOutput): void {
     this.selectedSubcategoria.set(sub);
   }
 
-  protected eliminarCategoria(cat: CategoriaProductoOutput, event: Event): void {
-    event.stopPropagation();
+  protected eliminarCategoria(cat: CategoriaProductoOutput): void {
     if (!cat.id_categoria_producto) {
       return;
     }
@@ -291,8 +237,7 @@ export class ProductoStepperComponent implements OnInit {
     });
   }
 
-  protected eliminarSubcategoria(sub: CategoriaProductoOutput, event: Event): void {
-    event.stopPropagation();
+  protected eliminarSubcategoria(sub: CategoriaProductoOutput): void {
     const padre = this.selectedCategoria();
     if (!sub.id_categoria_producto || !padre?.id_categoria_producto) {
       return;
@@ -521,25 +466,5 @@ export class ProductoStepperComponent implements OnInit {
       next: () => this.generando.set(false),
       error: () => this.generando.set(false),
     });
-  }
-
-  protected catRangeLabel(): string {
-    const total = this.categoriasFiltradas().length;
-    if (total === 0) {
-      return '0 - 0 de 0';
-    }
-    const start = this.catPage() * this.pageSize + 1;
-    const end = Math.min((this.catPage() + 1) * this.pageSize, total);
-    return `${start} - ${end} de ${total}`;
-  }
-
-  protected subRangeLabel(): string {
-    const total = this.subcategoriasFiltradas().length;
-    if (total === 0) {
-      return '0 - 0 de 0';
-    }
-    const start = this.subPage() * this.pageSize + 1;
-    const end = Math.min((this.subPage() + 1) * this.pageSize, total);
-    return `${start} - ${end} de ${total}`;
   }
 }

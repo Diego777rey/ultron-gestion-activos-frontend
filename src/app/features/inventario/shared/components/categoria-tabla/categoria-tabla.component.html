@@ -1,0 +1,84 @@
+<div class="table-panel">
+  @if (categoriaPadre() !== undefined) {
+    <p class="step-hint">
+      Categoría seleccionada: <strong>{{ categoriaPadre() }}</strong>.
+      Podés elegir una subcategoría o continuar sin ella.
+    </p>
+  }
+
+  <div class="table-toolbar">
+    <div class="table-search">
+      <span class="material-icons" aria-hidden="true">search</span>
+      <input
+        type="search"
+        [value]="lista().search()"
+        (input)="lista().setSearch($any($event.target).value)"
+        [placeholder]="buscarEtiqueta() + '...'"
+        [attr.aria-label]="buscarEtiqueta()"
+      />
+    </div>
+    <div class="table-toolbar__actions">
+      <button type="button" class="icon-tool" title="Actualizar" (click)="actualizar.emit()">
+        <span class="material-icons">refresh</span>
+      </button>
+      <button type="button" class="table-add" (click)="agregar.emit()">Agregar</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 80px;">Id</th>
+          <th>Nombre</th>
+          <th style="width: 100px;">Activo</th>
+          <th style="width: 56px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (cargando()) {
+          <tr><td colspan="4" class="table-empty">{{ cargandoTexto() }}</td></tr>
+        } @else if (lista().paged().length === 0) {
+          <tr>
+            <td colspan="4" class="table-empty">{{ vacioTexto() }}</td>
+          </tr>
+        } @else {
+          @for (item of lista().paged(); track idDe()(item)) {
+            <tr [class.selected]="seleccionadoId() === idDe()(item)" (click)="seleccionar.emit(item)">
+              <td>{{ idDe()(item) }}</td>
+              <td>{{ item.nombre }}</td>
+              <td>{{ item.estado !== false ? 'Sí' : 'No' }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="icon-tool icon-tool--danger"
+                  [title]="eliminarTitulo()"
+                  (click)="onEliminar(item, $event)"
+                >
+                  <span class="material-icons">delete</span>
+                </button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-footer">
+    <span>{{ lista().rangeLabel() }}</span>
+    <div class="pager">
+      <button type="button" class="icon-tool" [disabled]="lista().pageIndex() === 0" (click)="lista().previousPage()">
+        <span class="material-icons">chevron_left</span>
+      </button>
+      <button
+        type="button"
+        class="icon-tool"
+        [disabled]="lista().pageIndex() >= lista().totalPages() - 1"
+        (click)="lista().nextPage()"
+      >
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+  </div>
+</div>

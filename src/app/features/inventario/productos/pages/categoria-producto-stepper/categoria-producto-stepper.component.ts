@@ -9,16 +9,22 @@ import { CategoriaProductoService, CategoriaProductoInput } from '../../services
 import { CategoriaProductoOutput } from '../../interfaces/producto.interface';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
 import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
-
-interface StepDef {
-  index: number;
-  label: string;
-  icon: string;
-}
+import {
+  StepperHeaderComponent,
+  StepperStep,
+} from '../../../../../shared/components/stepper-header/stepper-header';
 
 @Component({
   selector: 'app-categoria-producto-stepper',
-  imports: [NotifyErrorComponent, CommonModule, ReactiveFormsModule, UiButtonComponent, AutofocusDirective, UppercaseDirective],
+  imports: [
+    NotifyErrorComponent,
+    CommonModule,
+    ReactiveFormsModule,
+    UiButtonComponent,
+    AutofocusDirective,
+    UppercaseDirective,
+    StepperHeaderComponent,
+  ],
   templateUrl: './categoria-producto-stepper.component.html',
   styleUrl: './categoria-producto-stepper.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,7 +37,7 @@ export class CategoriaProductoStepperComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly reporteService = inject(ReporteService);
 
-  protected readonly steps: StepDef[] = [
+  protected readonly steps: StepperStep[] = [
     { index: 1, label: 'Categoría', icon: 'category' },
     { index: 2, label: 'Subcategorías', icon: 'account_tree' },
   ];

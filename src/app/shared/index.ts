@@ -50,8 +50,10 @@ export * from './components/loading-overlay/loading-overlay';
 export * from './components/error-banner/error-banner';
 export * from './components/notify-error/notify-error';
 export * from './components/pdf-viewer/pdf-viewer.component';
+export * from './components/stepper-header/stepper-header';
 
 // Utilidades
 export * from './utils/list-pagination.util';
+export * from './utils/filtered-pagination.util';
 export * from './utils/search.util';
 export * from './utils/loading-error.util';
