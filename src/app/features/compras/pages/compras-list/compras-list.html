@@ -16,7 +16,7 @@
   (pageChange)="onPageChange($event)"
   (retry)="load()"
   (actionClicked)="onToolbarAction($event)"
-  (searchSubmit)="pageIndex.set(0)"
+  (searchSubmit)="pageIndex.set(0); load()"
 >
   <ng-template appTableCell="id" [appTableCellFrom]="visibles()" let-compra>
     {{ compra.id_compra }}

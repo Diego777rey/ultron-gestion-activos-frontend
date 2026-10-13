@@ -38,6 +38,14 @@
     {{ producto.nombre | defaultEmpty }}
   </ng-template>
 
+  <ng-template appTableCell="precioCompra" [appTableCellFrom]="productos()" let-producto>
+    <span class="precio-celda">{{ precio(producto.precioCompra) }}</span>
+  </ng-template>
+
+  <ng-template appTableCell="precioVenta" [appTableCellFrom]="productos()" let-producto>
+    <span class="precio-celda">{{ precio(producto.precioVenta) }}</span>
+  </ng-template>
+
   <ng-template appTableCell="presentaciones" [appTableCellFrom]="productos()" let-producto>
     @if (producto.presentaciones?.length) {
       <ul class="presentaciones-resumen">

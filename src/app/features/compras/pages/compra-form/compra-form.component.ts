@@ -9,7 +9,6 @@ import {
   inject,
   signal,
   viewChild,
-  WritableSignal,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -181,6 +180,11 @@ export class CompraFormComponent implements OnInit {
   private sectoresFiltro = '';
   /** Lugar físico donde entra la mercadería al stock. */
   protected readonly sector = signal<SectorOutput | null>(null);
+  /** Número, aunque GraphQL entregue el ID como string: si no, el buscador no muestra el nombre. */
+  protected readonly sectorId = computed(() => {
+    const sector = this.sector();
+    return sector ? Number(sector.id_sector) : null;
+  });
   /** Al editar, el sector de la compra puede no estar en la página cargada. */
   protected readonly sectoresVisibles = computed(() => {
     const lista = this.sectores().filter((s) => s.estado !== false);
@@ -262,10 +266,7 @@ export class CompraFormComponent implements OnInit {
   protected readonly soloDelProveedor = signal(false);
   protected readonly productosProveedor = signal<ProductoProveedorOutput[]>([]);
   protected readonly loadingProductosProveedor = signal(false);
-  protected readonly asociados = computed(
-    () => new Set(this.productosProveedor().map((pp) => Number(pp.id_producto))),
-  );
-  protected readonly asociando = signal<ReadonlySet<number>>(new Set());
+  private readonly asociando = signal<ReadonlySet<number>>(new Set());
   protected readonly productoProveedorColumns: TableColumn<ProductoProveedorOutput>[] = [
     { key: 'codigo', header: 'Código', width: '140px', value: (pp) => pp.producto_codigo ?? '' },
     { key: 'nombre', header: 'Producto', value: (pp) => pp.producto_nombre ?? '' },
@@ -320,14 +321,10 @@ export class CompraFormComponent implements OnInit {
     { key: 'iva', header: 'IVA', width: '70px', align: 'center' },
     { key: 'vencimiento', header: 'Vence', width: '105px', align: 'center' },
     { key: 'subtotal', header: 'Subtotal', width: '130px', align: 'right' },
-    { key: 'proveedor', header: 'Proveedor', width: '120px', align: 'center' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
   protected readonly lineaKey = (l: LineaCompra): number => Number(l.producto.id_producto);
   protected readonly unidades = computed(() => this.lineas().reduce((acc, l) => acc + (Number(l.cantidad) || 0), 0));
-  protected readonly sinAsociar = computed(() =>
-    this.proveedorId() === null ? [] : this.lineas().filter((l) => !this.asociados().has(Number(l.producto.id_producto))),
-  );
   protected readonly totales = computed(() => calcularTotales(this.lineas(), this.decimales()));
   protected readonly totalEnGuaranies = computed(() =>
     redondear(this.totales().total * this.moneda().cotizacion, 0),
@@ -423,7 +420,7 @@ export class CompraFormComponent implements OnInit {
         this.loadingSectores.set(false);
         const activos = res.content.filter((s) => s.estado !== false);
         if (!this.esEdicion() && this.sector() === null && filtro === '' && res.pageInfo.totalElements === 1 && activos.length === 1) {
-          this.sector.set(activos[0]);
+          this.fijarSector(activos[0]);
         }
       },
       error: () => {
@@ -438,7 +435,15 @@ export class CompraFormComponent implements OnInit {
   }
 
   protected onSectorSeleccionado(sector: SectorOutput | null): void {
-    this.sector.set(sector);
+    this.fijarSector(sector);
+  }
+
+  private fijarSector(sector: SectorOutput | null): void {
+    if (!sector) {
+      this.sector.set(null);
+      return;
+    }
+    this.sector.set({ ...sector, id_sector: Number(sector.id_sector) });
   }
 
   // ==================== Factura y pago ====================
@@ -551,6 +556,7 @@ export class CompraFormComponent implements OnInit {
     } else {
       this.lineas.update((lineas) => [...lineas, linea]);
     }
+    this.asociarAlProveedor(producto);
     this.limpiarLinea();
     this.enfocarDespuesDeRender(() => this.productoCampo()?.nativeElement.querySelector('input'));
   }
@@ -570,17 +576,11 @@ export class CompraFormComponent implements OnInit {
     this.editarLinea(this.indiceDe(linea));
   }
 
-  protected accionesLinea(linea: LineaCompra): MenuAction[] {
-    const acciones: MenuAction[] = [{ id: 'editar', label: 'Modificar', icon: 'edit' }];
-    if (this.proveedorId() !== null) {
-      acciones.push(
-        this.estaAsociado(linea.producto)
-          ? { id: 'desasociar', label: 'Quitar asociación con el proveedor', icon: 'link_off' }
-          : { id: 'asociar', label: 'Asociar al proveedor', icon: 'add_link' },
-      );
-    }
-    acciones.push({ id: 'quitar', label: 'Quitar de la compra', icon: 'delete', danger: true });
-    return acciones;
+  protected accionesLinea(_linea: LineaCompra): MenuAction[] {
+    return [
+      { id: 'editar', label: 'Modificar', icon: 'edit' },
+      { id: 'quitar', label: 'Quitar de la compra', icon: 'delete', danger: true },
+    ];
   }
 
   protected onAccionLinea(accion: string, linea: LineaCompra): void {
@@ -589,12 +589,6 @@ export class CompraFormComponent implements OnInit {
       case 'editar':
         this.editarLinea(index);
         break;
-      case 'asociar':
-        this.asociarProductos([linea.producto]);
-        break;
-      case 'desasociar':
-        this.desasociar(linea.producto);
-        break;
       case 'quitar':
         this.lineas.update((lineas) => lineas.filter((_, i) => i !== index));
         if (this.editandoIndex() === index) {
@@ -602,10 +596,6 @@ export class CompraFormComponent implements OnInit {
         }
         break;
     }
-  }
-
-  protected asociarTodos(): void {
-    this.asociarProductos(this.sinAsociar().map((l) => l.producto));
   }
 
   protected indiceDe(linea: LineaCompra): number {
@@ -623,10 +613,6 @@ export class CompraFormComponent implements OnInit {
 
   protected vencido(linea: LineaCompra): boolean {
     return !!linea.vencimiento && linea.vencimiento < this.hoy;
-  }
-
-  protected estaAsociado(producto: ProductoOutput): boolean {
-    return this.asociados().has(Number(producto.id_producto));
   }
 
   protected monto(valor: number): string {
@@ -772,7 +758,7 @@ export class CompraFormComponent implements OnInit {
           return;
         }
         this.compraEditada.set(compra);
-        this.sector.set(
+        this.fijarSector(
           compra.id_sector ? { id_sector: Number(compra.id_sector), nombre: compra.sector_nombre ?? '' } : null,
         );
         this.seleccionarProveedor(Number(compra.id_proveedor), compra.id_vendedor ? Number(compra.id_vendedor) : null);
@@ -849,50 +835,37 @@ export class CompraFormComponent implements OnInit {
     this.enfocarCantidad();
   }
 
-  private asociarProductos(productos: ProductoOutput[]): void {
+  /** Al confirmar la línea el producto queda ligado al proveedor, sin un paso aparte. */
+  private asociarAlProveedor(producto: ProductoOutput): void {
     const idProveedor = this.proveedorId();
-    const pendientes = productos.filter(
-      (p) => !this.asociados().has(Number(p.id_producto)) && !this.asociando().has(Number(p.id_producto)),
-    );
-    if (idProveedor === null || pendientes.length === 0) return;
-    const ids = pendientes.map((p) => Number(p.id_producto));
-    this.asociando.update((s) => new Set([...s, ...ids]));
-    forkJoin(pendientes.map((p) => this.compraService.asociarProductoProveedor(Number(p.id_producto), idProveedor))).subscribe({
-      next: (asociaciones) => {
-        this.asociando.update((s) => new Set([...s].filter((id) => !ids.includes(id))));
+    const idProducto = Number(producto.id_producto);
+    if (
+      idProveedor === null ||
+      this.productosProveedor().some((pp) => Number(pp.id_producto) === idProducto) ||
+      this.asociando().has(idProducto)
+    ) {
+      return;
+    }
+    this.asociando.update((s) => new Set(s).add(idProducto));
+    this.compraService.asociarProductoProveedor(idProducto, idProveedor).subscribe({
+      next: (asociacion) => {
+        this.asociando.update((s) => {
+          const copia = new Set(s);
+          copia.delete(idProducto);
+          return copia;
+        });
         if (this.proveedorId() !== idProveedor) return;
-        this.productosProveedor.update((lista) => [
-          ...lista,
-          ...asociaciones.filter((a) => !lista.some((x) => Number(x.id_producto) === Number(a.id_producto))),
-        ]);
-        const nombre = this.proveedor() ? nombreProveedor(this.proveedor()!) : 'el proveedor';
-        this.notifications.success(
-          pendientes.length === 1
-            ? `${pendientes[0].nombre} quedó asociado a ${nombre}`
-            : `${pendientes.length} productos quedaron asociados a ${nombre}`,
+        this.productosProveedor.update((lista) =>
+          lista.some((x) => Number(x.id_producto) === idProducto) ? lista : [...lista, asociacion],
         );
       },
       error: (err: Error) => {
-        this.asociando.update((s) => new Set([...s].filter((id) => !ids.includes(id))));
+        this.asociando.update((s) => {
+          const copia = new Set(s);
+          copia.delete(idProducto);
+          return copia;
+        });
         this.error.set(err.message || 'No se pudo asociar el producto al proveedor');
-      },
-    });
-  }
-
-  private desasociar(producto: ProductoOutput): void {
-    const idProveedor = this.proveedorId();
-    const idProducto = Number(producto.id_producto);
-    if (idProveedor === null) return;
-    this.asociando.update((s) => new Set(s).add(idProducto));
-    this.compraService.desasociarProductoProveedor(idProducto, idProveedor).subscribe({
-      next: () => {
-        this.quitarDe(this.asociando, idProducto);
-        this.productosProveedor.update((lista) => lista.filter((x) => Number(x.id_producto) !== idProducto));
-        this.notifications.info(`${producto.nombre} ya no está asociado al proveedor`);
-      },
-      error: (err: Error) => {
-        this.quitarDe(this.asociando, idProducto);
-        this.error.set(err.message || 'No se pudo quitar la asociación');
       },
     });
   }
@@ -923,14 +896,6 @@ export class CompraFormComponent implements OnInit {
       },
       { injector: this.injector },
     );
-  }
-
-  private quitarDe(estado: WritableSignal<ReadonlySet<number>>, id: number): void {
-    estado.update((s) => {
-      const copia = new Set(s);
-      copia.delete(id);
-      return copia;
-    });
   }
 
   private mismaMoneda(a: string | null | undefined, b: string | null | undefined): boolean {

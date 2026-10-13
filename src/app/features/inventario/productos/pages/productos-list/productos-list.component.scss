@@ -20,6 +20,11 @@
   }
 }
 
+.precio-celda {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .presentaciones-resumen {
   margin: 0;
   padding: 0;

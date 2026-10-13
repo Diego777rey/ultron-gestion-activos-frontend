@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs';
 import { GenericListComponent } from '../../../../shared/components/generic-list/generic-list';
 import { TableCellDirective } from '../../../../shared/components/data-table/table-cell.directive';
 import { ActionMenuComponent, MenuAction } from '../../../../shared/components/action-menu/action-menu';
@@ -87,7 +89,20 @@ export class ComprasListComponent {
         this.pageIndex.set(maxPage);
       }
     });
-    this.load();
+    // La lista queda en caché al ir al formulario. Al volver (después de guardar)
+    // hay que volver a pedir las compras.
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        filter((event) => this.esRutaLista(event.urlAfterRedirects)),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.load());
+  }
+
+  private esRutaLista(url: string): boolean {
+    const path = url.split(/[?#]/)[0].replace(/\/+$/, '');
+    return path === '/compras';
   }
 
   protected load(): void {
@@ -119,10 +134,12 @@ export class ComprasListComponent {
     switch (actionId) {
       case 'search':
         this.pageIndex.set(0);
+        this.load();
         break;
       case 'clear':
         this.search.set('');
         this.pageIndex.set(0);
+        this.load();
         break;
       case 'add':
         void this.router.navigate(['/compras/nueva']);

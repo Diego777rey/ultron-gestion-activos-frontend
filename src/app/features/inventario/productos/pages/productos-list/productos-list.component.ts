@@ -50,6 +50,8 @@ export class ProductosListComponent {
   protected readonly columns: TableColumn<ProductoOutput>[] = [
     { key: 'imagen', header: 'Img', width: '80px', align: 'center' },
     { key: 'nombre', header: 'Nombre', width: '280px' },
+    { key: 'precioCompra', header: 'Precio costo', width: '140px', align: 'right' },
+    { key: 'precioVenta', header: 'Precio venta', width: '140px', align: 'right' },
     { key: 'presentaciones', header: 'Presentaciones', width: '360px' },
     { key: 'categoria', header: 'Categoría', width: '180px' },
     { key: 'subcategoria', header: 'Subcategoría', width: '200px' },
@@ -72,6 +74,14 @@ export class ProductosListComponent {
 
   constructor() {
     this.load();
+  }
+
+  protected precio(valor: number | null | undefined): string {
+    if (valor == null) {
+      return '—';
+    }
+    const numero = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(valor);
+    return `${numero} Gs.`;
   }
 
   protected onImagenError(path: string): void {
