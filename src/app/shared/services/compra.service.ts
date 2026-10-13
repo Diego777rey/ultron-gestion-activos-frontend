@@ -14,6 +14,8 @@ const COMPRA_CRUD_CONFIG: CrudConfig = {
     proveedor_nombre
     id_vendedor
     vendedor_nombre
+    id_sector
+    sector_nombre
     numero_factura
     timbrado
     fecha_factura
@@ -101,6 +103,60 @@ export class CompraService extends BaseCrudService<CompraOutput, CompraInput> {
     return this.graphql
       .query<{ historialCompraProducto: ItemCompraOutput[] }>(document, { idProducto, idProveedor })
       .pipe(map((data) => data.historialCompraProducto ?? []));
+  }
+
+  /** Compra con sus ítems, para editarla. */
+  findConItems(id: number): Observable<CompraOutput | null> {
+    const selection = this.config.selectionSet.replace(
+      /}\s*$/,
+      `  items {
+        id_item_compra
+        id_producto
+        producto_nombre
+        producto_codigo
+        cantidad
+        precio_costo
+        subtotal
+        tipo_iva
+        iva
+        fecha_vencimiento
+      }
+    }`,
+    );
+    const document = `query($id: ID!) { compra(id: $id) ${selection} }`;
+    return this.loadingService.pageLoad(
+      this.graphql
+        .query<{ compra: CompraOutput | null }>(document, { id })
+        .pipe(map((data) => data.compra ?? null)),
+      { message: 'Cargando compra…', errorTitle: 'No se pudo cargar la compra' },
+    );
+  }
+
+  asociarProductoProveedor(idProducto: number, idProveedor: number): Observable<ProductoProveedorOutput> {
+    const document = `mutation($idProducto: ID!, $idProveedor: ID!) {
+      asociarProductoProveedor(idProducto: $idProducto, idProveedor: $idProveedor) {
+        id_producto_proveedor
+        id_producto
+        producto_nombre
+        producto_codigo
+        id_proveedor
+        precio_ultima_compra
+        fecha_ultima_compra
+        activo
+      }
+    }`;
+    return this.graphql
+      .mutate<{ asociarProductoProveedor: ProductoProveedorOutput }>(document, { idProducto, idProveedor })
+      .pipe(map((data) => data.asociarProductoProveedor));
+  }
+
+  desasociarProductoProveedor(idProducto: number, idProveedor: number): Observable<boolean> {
+    const document = `mutation($idProducto: ID!, $idProveedor: ID!) {
+      desasociarProductoProveedor(idProducto: $idProducto, idProveedor: $idProveedor)
+    }`;
+    return this.graphql
+      .mutate<{ desasociarProductoProveedor: boolean }>(document, { idProducto, idProveedor })
+      .pipe(map((data) => data.desasociarProductoProveedor ?? false));
   }
 
   cambiarEstadoCompra(id: number, estado: string): Observable<CompraOutput> {

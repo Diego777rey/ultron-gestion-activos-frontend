@@ -90,6 +90,8 @@ export interface CompraOutput {
   proveedor_nombre?: string;
   id_vendedor?: number;
   vendedor_nombre?: string;
+  id_sector?: number;
+  sector_nombre?: string;
   numero_factura?: string;
   timbrado?: string;
   fecha_factura?: string;
@@ -110,6 +112,8 @@ export interface CompraOutput {
 export interface CompraInput {
   idProveedor: number;
   idVendedor?: number;
+  /** Sector donde ingresa la mercadería al stock. */
+  idSector?: number;
   numeroFactura?: string;
   timbrado?: string;
   fechaFactura?: string;
