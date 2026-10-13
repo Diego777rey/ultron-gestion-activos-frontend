@@ -55,7 +55,7 @@
         <div class="search-list">
           @for (item of filteredItems(); track keyFn()(item)) {
             <div class="search-item"
-                 [class.is-selected]="keyFn()(item) === value()"
+                 [class.is-selected]="estaSeleccionado(item)"
                  (click)="selectItem(item)">
               {{ displayFn()(item) }}
             </div>

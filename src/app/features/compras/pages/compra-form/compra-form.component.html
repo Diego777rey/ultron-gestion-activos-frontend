@@ -58,7 +58,7 @@
           <span class="campo__label" title="Lugar físico donde entra la mercadería al stock">Ingresa al sector *</span>
           <app-entity-searcher
             [items]="sectoresVisibles()"
-            [value]="sector()?.id_sector ?? null"
+            [value]="sectorId()"
             (itemChange)="onSectorSeleccionado($event)"
             [displayFn]="sectorLabel"
             [keyFn]="sectorKey"
@@ -313,11 +313,6 @@
               @if (p.stockMinimo) { (mín. {{ p.stockMinimo | number: '1.0-2' }}) }
             </span>
             <span>Costo ref.: <b>Gs. {{ p.precioCompra ?? 0 | number: '1.0-0' }}</b></span>
-            @if (proveedor()) {
-              <span [class.texto-ok]="estaAsociado(p)" [class.texto-alerta]="!estaAsociado(p)">
-                {{ estaAsociado(p) ? 'Asociado al proveedor' : 'No asociado al proveedor' }}
-              </span>
-            }
             @if (pendienteVencido()) {
               <span class="texto-error">La fecha de vencimiento ya pasó</span>
             }
@@ -339,17 +334,6 @@
           (clicked)="guardar()"
         />
       </div>
-      @if (sinAsociar().length > 0) {
-        <div class="action-btn">
-          <app-ui-button
-            [label]="'Asociar ' + sinAsociar().length + ' al proveedor'"
-            icon="link"
-            variant="outline"
-            size="sm"
-            (clicked)="asociarTodos()"
-          />
-        </div>
-      }
       <div class="action-btn">
         <app-ui-button label="Cancelar" icon="close" variant="ghost" size="sm" (clicked)="cancelar()" />
       </div>
@@ -406,16 +390,6 @@
 
         <ng-template appTableCell="subtotal" [appTableCellFrom]="lineas()" let-row>
           <b>{{ subtotal(row) | number: formatoNumero() }}</b>
-        </ng-template>
-
-        <ng-template appTableCell="proveedor" [appTableCellFrom]="lineas()" let-row>
-          @if (proveedor()) {
-            <span class="estado-pill" [class.estado-pill--ok]="estaAsociado(row.producto)" [class.estado-pill--pendiente]="!estaAsociado(row.producto)">
-              {{ estaAsociado(row.producto) ? 'Asociado' : 'No asociado' }}
-            </span>
-          } @else {
-            —
-          }
         </ng-template>
 
         <ng-template appTableCell="acciones" [appTableCellFrom]="lineas()" let-row>

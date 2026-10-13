@@ -314,10 +314,6 @@ select.campo__input {
   color: #fbbf24 !important;
 }
 
-.texto-ok {
-  color: #5eead4;
-}
-
 .texto-error {
   color: #fca5a5;
 }
@@ -414,28 +410,6 @@ select.campo__input {
 
 .celda-acciones {
   display: inline-flex;
-}
-
-.estado-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  background: rgba(148, 163, 184, 0.16);
-  color: #cbd5e1;
-
-  &--ok {
-    background: rgba(20, 184, 166, 0.16);
-    color: #5eead4;
-  }
-
-  &--pendiente {
-    background: rgba(251, 191, 36, 0.16);
-    color: #fbbf24;
-  }
 }
 
 // ================= Totales =================

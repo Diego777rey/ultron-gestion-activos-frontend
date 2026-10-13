@@ -111,7 +111,6 @@ export class MainLayoutComponent implements OnInit {
       icon: 'shopping_cart',
       requiredPermissions: ['COMPRAS'],
       children: [
-        { label: 'Nueva Compra', icon: 'add_shopping_cart', route: '/compras/nueva', requiredPermissions: ['COMPRAS'] },
         { label: 'Lista de Compras', icon: 'receipt_long', route: '/compras', requiredPermissions: ['COMPRAS'] },
         { label: 'Proveedores', icon: 'store', route: '/compras/proveedores', requiredPermissions: ['COMPRAS'] },
         { label: 'Vendedores', icon: 'badge', route: '/compras/vendedores', requiredPermissions: ['COMPRAS'] },

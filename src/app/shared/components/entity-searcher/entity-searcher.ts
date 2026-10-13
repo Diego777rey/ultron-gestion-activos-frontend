@@ -88,6 +88,12 @@ export class EntitySearcherComponent<T> {
     return this.backendPagination() ? this.totalItems() : this.filteredItems().length;
   });
 
+  /**
+   * Texto del ítem elegido, aunque la página actual del backend ya no lo incluya.
+   * GraphQL devuelve los ID como string y `keyFn` suele devolver number.
+   */
+  private readonly seleccionado = signal<{ clave: unknown; texto: string } | null>(null);
+
   protected readonly displayValue = computed(() => {
     // En quickEntry, mientras se escribe se muestra el texto; si no, el ítem seleccionado.
     if (this.quickEntry() && this.quickQuery()) {
@@ -95,13 +101,25 @@ export class EntitySearcherComponent<T> {
     }
     const val = this.value();
     if (val === null || val === undefined || val === '') {
-      return this.quickEntry() ? this.quickQuery() : '';
+      return '';
     }
-    const all = this.items();
     const kfn = this.keyFn();
-    const match = all.find((i) => kfn(i) === val);
-    return match ? this.displayFn()(match) : this.quickEntry() ? this.quickQuery() : '';
+    const match = this.items().find((i) => this.mismaClave(kfn(i), val));
+    if (match) {
+      return this.displayFn()(match);
+    }
+    const elegido = this.seleccionado();
+    return elegido && this.mismaClave(elegido.clave, val) ? elegido.texto : '';
   });
+
+  protected estaSeleccionado(item: T): boolean {
+    return this.mismaClave(this.keyFn()(item), this.value());
+  }
+
+  /** Los ID de GraphQL llegan como string; las claves del buscador suelen ser number. */
+  private mismaClave(a: unknown, b: unknown): boolean {
+    return a === b || (a != null && b != null && String(a) === String(b));
+  }
 
   protected onOuterClick(): void {
     if (!this.quickEntry()) {
@@ -173,6 +191,7 @@ export class EntitySearcherComponent<T> {
 
   protected selectItem(item: T): void {
     const val = this.keyFn()(item);
+    this.seleccionado.set({ clave: val, texto: this.displayFn()(item) });
     this.valueChange.emit(val);
     this.itemChange.emit(item);
     if (this.quickEntry()) {
