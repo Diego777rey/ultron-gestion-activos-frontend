@@ -47,6 +47,8 @@ export class VendedorFormComponent {
   private readonly dialogRef = inject(DialogRef, { optional: true });
 
   readonly vendedor = input<VendedorOutput | null>(null);
+  /** Proveedor preseleccionado al crear un vendedor (p. ej. desde una compra). */
+  readonly proveedorInicial = input<number | null>(null);
   readonly saved = output<void>();
 
   protected readonly proveedores = signal<ProveedorOutput[]>([]);
@@ -130,7 +132,7 @@ export class VendedorFormComponent {
 
       this.isEdit.set(false);
       this.form.reset({
-        idProveedor: null,
+        idProveedor: this.proveedorInicial(),
         documento: '',
         nombre: '',
         cargo: '',

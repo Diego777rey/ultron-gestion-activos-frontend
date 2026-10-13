@@ -12,16 +12,16 @@ export const COMPRAS_ROUTES: Routes = [
   {
     path: 'nueva',
     loadComponent: () =>
-      import('./pages/compras-stepper/compras-stepper.component').then(
-        (m) => m.ComprasStepperComponent
+      import('./pages/compra-form/compra-form.component').then(
+        (m) => m.CompraFormComponent
       ),
     data: { tabTitle: 'Nueva Compra' },
   },
   {
     path: 'editar/:id',
     loadComponent: () =>
-      import('./pages/compras-stepper/compras-stepper.component').then(
-        (m) => m.ComprasStepperComponent
+      import('./pages/compra-form/compra-form.component').then(
+        (m) => m.CompraFormComponent
       ),
     data: { tabTitle: 'Editar Compra' },
   },
