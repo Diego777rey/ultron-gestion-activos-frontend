@@ -11,6 +11,8 @@ import { FacturaService } from '../../services/factura.service';
 import { FacturaOutput } from '../../interfaces/factura.interface';
 import { EmpresaService } from '../../../../personas/empresas/services/empresa.service';
 import { EmpresaOutput } from '../../../../personas/empresas/interfaces/empresa.interface';
+import { ReporteService } from '../../../../../shared/services/reporte.service';
+import { NotificationService } from '../../../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-facturas-list',
@@ -30,9 +32,12 @@ import { EmpresaOutput } from '../../../../personas/empresas/interfaces/empresa.
 export class FacturasListComponent {
   private readonly facturaService = inject(FacturaService);
   private readonly empresaService = inject(EmpresaService);
+  private readonly reporteService = inject(ReporteService);
+  private readonly notifications = inject(NotificationService);
 
   protected readonly facturas = signal<FacturaOutput[]>([]);
   protected readonly loading = signal(false);
+  protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
   protected readonly pageIndex = signal(0);
@@ -54,6 +59,8 @@ export class FacturasListComponent {
   protected readonly toolbarActions: ListToolbarAction[] = [
     { id: 'search', label: 'Buscar' },
     { id: 'clear', label: 'Limpiar Filtro' },
+    { id: 'reporte-pdf', label: 'Reporte PDF', icon: 'picture_as_pdf' },
+    { id: 'reporte-excel', label: 'Reporte Excel', icon: 'table_view' },
   ];
 
   protected readonly rowActions: MenuAction[] = [
@@ -147,7 +154,46 @@ export class FacturasListComponent {
         this.pageIndex.set(0);
         this.load();
         break;
+      case 'reporte-pdf':
+        this.generarReportePdf();
+        break;
+      case 'reporte-excel':
+        this.generarReporteExcel();
+        break;
     }
+  }
+
+  protected generarReportePdf(): void {
+    this.generarReporte('pdf');
+  }
+
+  protected generarReporteExcel(): void {
+    this.generarReporte('excel');
+  }
+
+  private generarReporte(formato: 'pdf' | 'excel'): void {
+    if (this.generando()) {
+      return;
+    }
+    const idEmpresa = this.idEmpresa();
+    if (!idEmpresa) {
+      this.notifications.error('No hay una empresa registrada para generar el reporte.');
+      return;
+    }
+    this.generando.set(true);
+    const opciones = {
+      filtro: this.search(),
+      idEmpresa,
+      titulo: 'Facturas legales',
+    };
+    const observable =
+      formato === 'pdf'
+        ? this.reporteService.generarInventario('factura', opciones)
+        : this.reporteService.descargarExcel('factura', opciones);
+    observable.subscribe({
+      next: () => this.generando.set(false),
+      error: () => this.generando.set(false),
+    });
   }
 
   protected onRowAction(actionId: string, factura: FacturaOutput): void {
