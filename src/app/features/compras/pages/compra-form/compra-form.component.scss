@@ -402,6 +402,10 @@ select.campo__input {
   }
 }
 
+.detalle app-paginator {
+  flex: 0 0 auto;
+}
+
 .celda-editando {
   font-size: 18px;
   color: #fbbf24;

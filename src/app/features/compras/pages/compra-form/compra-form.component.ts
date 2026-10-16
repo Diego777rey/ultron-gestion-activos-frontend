@@ -20,6 +20,7 @@ import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-bu
 import { NotifyErrorComponent } from '../../../../shared/components/notify-error/notify-error';
 import { DataTableComponent } from '../../../../shared/components/data-table/data-table';
 import { TableCellDirective } from '../../../../shared/components/data-table/table-cell.directive';
+import { PaginatorComponent } from '../../../../shared/components/paginator/paginator';
 import { ActionMenuComponent, MenuAction } from '../../../../shared/components/action-menu/action-menu';
 import {
   CompraInput,
@@ -70,8 +71,9 @@ interface LineaCompra {
   vencimiento: string;
 }
 
-const PAGE_SIZE_PRODUCTOS = 10;
+const PAGE_SIZE_PRODUCTOS = 15;
 const PAGE_SIZE_SECTORES = 15;
+const PAGE_SIZE_LINEAS = 15;
 
 /** Campos de la barra de carga, en el orden en que se recorren con Enter. */
 type CampoCarga = 'cantidad' | 'costo' | 'iva' | 'vencimiento';
@@ -98,6 +100,7 @@ function numeroDe(texto: string): number {
     NotifyErrorComponent,
     DataTableComponent,
     TableCellDirective,
+    PaginatorComponent,
     ActionMenuComponent,
   ],
   templateUrl: './compra-form.component.html',
@@ -176,6 +179,7 @@ export class CompraFormComponent implements OnInit {
   protected readonly sectores = signal<SectorOutput[]>([]);
   protected readonly sectoresTotal = signal(0);
   protected readonly sectoresPage = signal(0);
+  protected readonly sectoresPageSize = signal(PAGE_SIZE_SECTORES);
   protected readonly loadingSectores = signal(false);
   private sectoresFiltro = '';
   /** Lugar físico donde entra la mercadería al stock. */
@@ -245,6 +249,7 @@ export class CompraFormComponent implements OnInit {
   protected readonly productos = signal<ProductoOutput[]>([]);
   protected readonly productosTotal = signal(0);
   protected readonly productosPage = signal(0);
+  protected readonly productosPageSize = signal(PAGE_SIZE_PRODUCTOS);
   protected readonly loadingProductos = signal(false);
   private productosFiltro = '';
   protected readonly productoColumns: TableColumn<ProductoOutput>[] = [
@@ -265,7 +270,12 @@ export class CompraFormComponent implements OnInit {
   /** Con esta opción el buscador lista solo los productos asociados al proveedor. */
   protected readonly soloDelProveedor = signal(false);
   protected readonly productosProveedor = signal<ProductoProveedorOutput[]>([]);
+  protected readonly productosProveedorTotal = signal(0);
+  protected readonly productosProveedorPage = signal(0);
+  protected readonly productosProveedorPageSize = signal(PAGE_SIZE_PRODUCTOS);
   protected readonly loadingProductosProveedor = signal(false);
+  private productosProveedorFiltro = '';
+  private productosProveedorPedido = 0;
   private readonly asociando = signal<ReadonlySet<number>>(new Set());
   protected readonly productoProveedorColumns: TableColumn<ProductoProveedorOutput>[] = [
     { key: 'codigo', header: 'Código', width: '140px', value: (pp) => pp.producto_codigo ?? '' },
@@ -280,8 +290,6 @@ export class CompraFormComponent implements OnInit {
   protected readonly productoProveedorLabel = (pp: ProductoProveedorOutput): string =>
     `${pp.producto_codigo ?? ''} - ${pp.producto_nombre ?? ''}`;
   protected readonly productoProveedorKey = (pp: ProductoProveedorOutput): number => Number(pp.id_producto);
-  protected readonly productoProveedorSearch = (pp: ProductoProveedorOutput, consulta: string): boolean =>
-    coincideTexto([pp.producto_codigo, pp.producto_nombre], consulta);
 
   // ---------- Carga de una línea ----------
   protected readonly productoPendiente = signal<ProductoOutput | null>(null);
@@ -311,6 +319,13 @@ export class CompraFormComponent implements OnInit {
 
   // ---------- Detalle ----------
   protected readonly lineas = signal<LineaCompra[]>([]);
+  protected readonly lineasPage = signal(0);
+  protected readonly lineasPageSize = signal(PAGE_SIZE_LINEAS);
+  protected readonly lineasVisibles = computed(() => {
+    const size = Math.max(1, this.lineasPageSize());
+    const start = this.lineasPage() * size;
+    return this.lineas().slice(start, start + size);
+  });
   protected readonly lineasColumns: TableColumn<LineaCompra>[] = [
     { key: 'nro', header: '#', width: '48px', align: 'center' },
     { key: 'codigo', header: 'Código', width: '130px', value: (l) => l.producto.codigo },
@@ -431,6 +446,7 @@ export class CompraFormComponent implements OnInit {
   }
 
   protected onSectoresPage(event: PageChange): void {
+    this.sectoresPageSize.set(event.pageSize);
     this.buscarSectores(event.pageIndex, event.pageSize, this.sectoresFiltro);
   }
 
@@ -473,6 +489,7 @@ export class CompraFormComponent implements OnInit {
   protected buscarProductos(page: number, size: number, filtro: string): void {
     this.productosFiltro = filtro;
     this.productosPage.set(page);
+    this.productosPageSize.set(size);
     this.loadingProductos.set(true);
     this.productoService.findPaginated(page, size, filtro).subscribe({
       next: (res) => {
@@ -486,6 +503,32 @@ export class CompraFormComponent implements OnInit {
 
   protected onProductosPage(event: PageChange): void {
     this.buscarProductos(event.pageIndex, event.pageSize, this.productosFiltro);
+  }
+
+  protected buscarProductosProveedor(page: number, size: number, filtro: string): void {
+    const idProveedor = this.proveedorId();
+    if (idProveedor === null) return;
+    this.productosProveedorFiltro = filtro;
+    this.productosProveedorPage.set(page);
+    this.productosProveedorPageSize.set(size);
+    this.loadingProductosProveedor.set(true);
+    const pedido = ++this.productosProveedorPedido;
+    this.compraService.productosDeProveedorPaginado(idProveedor, page, size, filtro).subscribe({
+      next: (res) => {
+        if (pedido !== this.productosProveedorPedido || this.proveedorId() !== idProveedor) return;
+        this.productosProveedor.set(res?.content ?? []);
+        this.productosProveedorTotal.set(res?.pageInfo?.totalElements ?? 0);
+        this.loadingProductosProveedor.set(false);
+      },
+      error: () => {
+        if (pedido !== this.productosProveedorPedido) return;
+        this.loadingProductosProveedor.set(false);
+      },
+    });
+  }
+
+  protected onProductosProveedorPage(event: PageChange): void {
+    this.buscarProductosProveedor(event.pageIndex, event.pageSize, this.productosProveedorFiltro);
   }
 
   protected onSoloDelProveedorChange(valor: boolean): void {
@@ -553,8 +596,10 @@ export class CompraFormComponent implements OnInit {
     const index = this.editandoIndex();
     if (index !== null) {
       this.lineas.update((lineas) => lineas.map((l, i) => (i === index ? linea : l)));
+      this.mostrarLinea(index);
     } else {
       this.lineas.update((lineas) => [...lineas, linea]);
+      this.mostrarLinea(this.lineas().length - 1);
     }
     this.asociarAlProveedor(producto);
     this.limpiarLinea();
@@ -591,6 +636,7 @@ export class CompraFormComponent implements OnInit {
         break;
       case 'quitar':
         this.lineas.update((lineas) => lineas.filter((_, i) => i !== index));
+        this.ajustarPaginaLineas();
         if (this.editandoIndex() === index) {
           this.limpiarLinea();
         }
@@ -600,6 +646,20 @@ export class CompraFormComponent implements OnInit {
 
   protected indiceDe(linea: LineaCompra): number {
     return this.lineas().findIndex((l) => Number(l.producto.id_producto) === Number(linea.producto.id_producto));
+  }
+
+  protected numeroLinea(indexEnPagina: number): number {
+    return this.lineasPage() * this.lineasPageSize() + indexEnPagina + 1;
+  }
+
+  protected editandoEstaFila(indexEnPagina: number): boolean {
+    return this.editandoIndex() === this.lineasPage() * this.lineasPageSize() + indexEnPagina;
+  }
+
+  protected onLineasPage(event: PageChange): void {
+    this.lineasPageSize.set(event.pageSize);
+    const max = Math.max(0, Math.ceil(this.lineas().length / Math.max(1, event.pageSize)) - 1);
+    this.lineasPage.set(Math.min(event.pageIndex, max));
   }
 
   protected subtotal(linea: LineaCompra): number {
@@ -679,6 +739,9 @@ export class CompraFormComponent implements OnInit {
     this.vendedorId.set(idVendedor);
     this.vendedores.set([]);
     this.productosProveedor.set([]);
+    this.productosProveedorTotal.set(0);
+    this.productosProveedorPage.set(0);
+    this.productosProveedorFiltro = '';
     if (id === null) {
       this.soloDelProveedor.set(false);
       return;
@@ -728,15 +791,8 @@ export class CompraFormComponent implements OnInit {
   }
 
   private cargarProductosProveedor(idProveedor: number): void {
-    this.loadingProductosProveedor.set(true);
-    this.compraService.productosDeProveedor(idProveedor).subscribe({
-      next: (lista) => {
-        if (this.proveedorId() !== idProveedor) return;
-        this.productosProveedor.set(lista);
-        this.loadingProductosProveedor.set(false);
-      },
-      error: () => this.loadingProductosProveedor.set(false),
-    });
+    if (this.proveedorId() !== idProveedor) return;
+    this.buscarProductosProveedor(0, this.productosProveedorPageSize(), '');
   }
 
   private cargarMonedas(): void {
@@ -799,7 +855,10 @@ export class CompraFormComponent implements OnInit {
           })),
         ),
       ),
-    ).subscribe((lineas) => this.lineas.set(lineas));
+    ).subscribe((lineas) => {
+      this.lineas.set(lineas);
+      this.lineasPage.set(0);
+    });
   }
 
   // ==================== Helpers ====================
@@ -832,6 +891,7 @@ export class CompraFormComponent implements OnInit {
     this.costoTexto.set(String(linea.costo));
     this.ivaPendiente.set(linea.tipoIva);
     this.vencimientoPendiente.set(linea.vencimiento);
+    this.mostrarLinea(index);
     this.enfocarCantidad();
   }
 
@@ -848,15 +908,17 @@ export class CompraFormComponent implements OnInit {
     }
     this.asociando.update((s) => new Set(s).add(idProducto));
     this.compraService.asociarProductoProveedor(idProducto, idProveedor).subscribe({
-      next: (asociacion) => {
+      next: () => {
         this.asociando.update((s) => {
           const copia = new Set(s);
           copia.delete(idProducto);
           return copia;
         });
         if (this.proveedorId() !== idProveedor) return;
-        this.productosProveedor.update((lista) =>
-          lista.some((x) => Number(x.id_producto) === idProducto) ? lista : [...lista, asociacion],
+        this.buscarProductosProveedor(
+          this.productosProveedorPage(),
+          this.productosProveedorPageSize(),
+          this.productosProveedorFiltro,
         );
       },
       error: (err: Error) => {
@@ -868,6 +930,17 @@ export class CompraFormComponent implements OnInit {
         this.error.set(err.message || 'No se pudo asociar el producto al proveedor');
       },
     });
+  }
+
+  private mostrarLinea(index: number): void {
+    const size = Math.max(1, this.lineasPageSize());
+    this.lineasPage.set(Math.floor(Math.max(0, index) / size));
+  }
+
+  private ajustarPaginaLineas(): void {
+    const size = Math.max(1, this.lineasPageSize());
+    const max = Math.max(0, Math.ceil(this.lineas().length / size) - 1);
+    if (this.lineasPage() > max) this.lineasPage.set(max);
   }
 
   private enfocarCantidad(): void {
