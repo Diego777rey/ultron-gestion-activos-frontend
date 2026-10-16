@@ -46,16 +46,16 @@
       @if (useTable() && columns().length) {
         <app-data-table
           [columns]="columns()"
-          [data]="filteredItems()"
+          [data]="filas()"
           [loading]="loading()"
           [trackBy]="keyFn()"
           (rowClick)="selectItem($event)"
         />
       } @else {
         <div class="search-list">
-          @for (item of filteredItems(); track keyFn()(item)) {
+          @for (item of filas(); track keyFn()(item)) {
             <div class="search-item"
-                 [class.is-selected]="keyFn()(item) === value()"
+                 [class.is-selected]="estaSeleccionado(item)"
                  (click)="selectItem(item)">
               {{ displayFn()(item) }}
             </div>
@@ -68,12 +68,13 @@
       }
     </div>
 
-    @if (backendPagination() || displayTotal() > pageSize()) {
+    @if (backendPagination() || displayTotal() > tamanoPagina()) {
       <div class="search-paginator-wrapper">
         <app-paginator
           [total]="displayTotal()"
-          [pageIndex]="pageIndex()"
-          [pageSize]="pageSize()"
+          [pageIndex]="pagina()"
+          [pageSize]="tamanoPagina()"
+          [pageSizeOptions]="[10, 15, 25, 50, 100]"
           (pageChange)="onPageChange($event)"
         />
       </div>

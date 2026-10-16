@@ -70,6 +70,9 @@ export class EntitySearcherComponent<T> {
   protected readonly modalOpen = signal(false);
   protected readonly searchQuery = signal('');
   protected readonly quickQuery = signal('');
+  /** Página local cuando el listado no viene paginado del backend. */
+  private readonly localPageIndex = signal(0);
+  private readonly localPageSize = signal<number | null>(null);
 
   protected readonly filteredItems = computed(() => {
     if (this.backendPagination()) return this.items();
@@ -84,9 +87,35 @@ export class EntitySearcherComponent<T> {
     return all.filter((i) => dfn(i).toLowerCase().includes(query));
   });
 
+  protected readonly paginaLocal = computed(() => {
+    const size = Math.max(1, this.localPageSize() ?? this.pageSize());
+    const total = this.filteredItems().length;
+    const maxIndex = Math.max(0, Math.ceil(total / size) - 1);
+    return { index: Math.min(this.localPageIndex(), maxIndex), size };
+  });
+
+  /** Filas de la tabla: la página del backend, o un corte local si la lista es larga. */
+  protected readonly filas = computed(() => {
+    if (this.backendPagination()) return this.items();
+    const { index, size } = this.paginaLocal();
+    const all = this.filteredItems();
+    return all.slice(index * size, index * size + size);
+  });
+
+  protected readonly pagina = computed(() => (this.backendPagination() ? this.pageIndex() : this.paginaLocal().index));
+  protected readonly tamanoPagina = computed(() =>
+    this.backendPagination() ? this.pageSize() : this.paginaLocal().size,
+  );
+
   protected readonly displayTotal = computed(() => {
     return this.backendPagination() ? this.totalItems() : this.filteredItems().length;
   });
+
+  /**
+   * Texto del ítem elegido, aunque la página actual del backend ya no lo incluya.
+   * GraphQL devuelve los ID como string y `keyFn` suele devolver number.
+   */
+  private readonly seleccionado = signal<{ clave: unknown; texto: string } | null>(null);
 
   protected readonly displayValue = computed(() => {
     // En quickEntry, mientras se escribe se muestra el texto; si no, el ítem seleccionado.
@@ -95,13 +124,25 @@ export class EntitySearcherComponent<T> {
     }
     const val = this.value();
     if (val === null || val === undefined || val === '') {
-      return this.quickEntry() ? this.quickQuery() : '';
+      return '';
     }
-    const all = this.items();
     const kfn = this.keyFn();
-    const match = all.find((i) => kfn(i) === val);
-    return match ? this.displayFn()(match) : this.quickEntry() ? this.quickQuery() : '';
+    const match = this.items().find((i) => this.mismaClave(kfn(i), val));
+    if (match) {
+      return this.displayFn()(match);
+    }
+    const elegido = this.seleccionado();
+    return elegido && this.mismaClave(elegido.clave, val) ? elegido.texto : '';
   });
+
+  protected estaSeleccionado(item: T): boolean {
+    return this.mismaClave(this.keyFn()(item), this.value());
+  }
+
+  /** Los ID de GraphQL llegan como string; las claves del buscador suelen ser number. */
+  private mismaClave(a: unknown, b: unknown): boolean {
+    return a === b || (a != null && b != null && String(a) === String(b));
+  }
 
   protected onOuterClick(): void {
     if (!this.quickEntry()) {
@@ -125,11 +166,13 @@ export class EntitySearcherComponent<T> {
 
   protected onSearch(query: string) {
     const upperQuery = query.toUpperCase();
+    this.localPageIndex.set(0);
     this.searchQuery.set(upperQuery);
     this.searchChange.emit(upperQuery);
   }
 
   protected clearSearch(): void {
+    this.localPageIndex.set(0);
     this.searchQuery.set('');
     this.searchChange.emit('');
   }
@@ -139,6 +182,10 @@ export class EntitySearcherComponent<T> {
   }
 
   protected onPageChange(event: PageChange): void {
+    if (!this.backendPagination()) {
+      this.localPageIndex.set(event.pageIndex);
+      this.localPageSize.set(event.pageSize);
+    }
     this.pageChange.emit(event);
   }
 
@@ -148,6 +195,7 @@ export class EntitySearcherComponent<T> {
       this.openModalWithQuery(this.quickQuery());
       return;
     }
+    this.localPageIndex.set(0);
     this.searchQuery.set('');
     this.modalOpen.set(true);
   }
@@ -155,6 +203,7 @@ export class EntitySearcherComponent<T> {
   protected openModalWithQuery(rawQuery: string): void {
     if (this.disabled()) return;
     const query = (rawQuery ?? '').toUpperCase().trim();
+    this.localPageIndex.set(0);
     this.searchQuery.set(query);
     this.searchChange.emit(query);
     this.modalOpen.set(true);
@@ -173,6 +222,7 @@ export class EntitySearcherComponent<T> {
 
   protected selectItem(item: T): void {
     const val = this.keyFn()(item);
+    this.seleccionado.set({ clave: val, texto: this.displayFn()(item) });
     this.valueChange.emit(val);
     this.itemChange.emit(item);
     if (this.quickEntry()) {

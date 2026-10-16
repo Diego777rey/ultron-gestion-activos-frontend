@@ -1,0 +1,41 @@
+<header class="stepper-header" role="navigation" [attr.aria-label]="ariaLabel()">
+  @for (step of steps(); track step.index) {
+    @if (navigable()) {
+      <button
+        type="button"
+        class="stepper-step"
+        [class.active]="currentStep() === step.index"
+        [class.done]="isDone(step.index)"
+        [class.reached]="isReached(step.index)"
+        [disabled]="isLocked(step.index)"
+        [attr.aria-current]="currentStep() === step.index ? 'step' : null"
+        (click)="stepSelect.emit(step.index)"
+      >
+        <ng-container *ngTemplateOutlet="stepContent; context: { $implicit: step }" />
+      </button>
+    } @else {
+      <div
+        class="stepper-step"
+        [class.active]="currentStep() === step.index"
+        [class.done]="isDone(step.index)"
+        [attr.aria-current]="currentStep() === step.index ? 'step' : null"
+      >
+        <ng-container *ngTemplateOutlet="stepContent; context: { $implicit: step }" />
+      </div>
+    }
+    @if (!$last) {
+      <span class="stepper-connector" [class.done]="isConnectorDone(step.index)" aria-hidden="true"></span>
+    }
+  }
+</header>
+
+<ng-template #stepContent let-step>
+  <span class="stepper-step__circle" aria-hidden="true">
+    @if (isDone(step.index)) {
+      <span class="material-icons">check</span>
+    } @else {
+      <span class="material-icons">{{ step.icon }}</span>
+    }
+  </span>
+  <span class="stepper-step__label">{{ step.label }}</span>
+</ng-template>

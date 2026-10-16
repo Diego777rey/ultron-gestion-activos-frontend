@@ -1,0 +1,56 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="visibles()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="total()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Nombre, RUC, teléfono o ciudad"
+  [searchValue]="search()"
+  (searchValueChange)="onSearchChange($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="No hay proveedores que coincidan con la búsqueda"
+  [trackBy]="trackById"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0)"
+>
+  <ng-template appTableCell="id" [appTableCellFrom]="visibles()" let-proveedor>
+    {{ proveedor.id_proveedor }}
+  </ng-template>
+
+  <ng-template appTableCell="tipo" [appTableCellFrom]="visibles()" let-proveedor>
+    {{ tipo(proveedor.tipo_persona) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="nombre" [appTableCellFrom]="visibles()" let-proveedor>
+    {{ nombre(proveedor) }}
+  </ng-template>
+
+  <ng-template appTableCell="ruc" [appTableCellFrom]="visibles()" let-proveedor>
+    {{ proveedor.ruc | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="telefono" [appTableCellFrom]="visibles()" let-proveedor>
+    {{ proveedor.telefono | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="email" [appTableCellFrom]="visibles()" let-proveedor>
+    {{ proveedor.email | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="ciudad" [appTableCellFrom]="visibles()" let-proveedor>
+    {{ proveedor.ciudad | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="estado" [appTableCellFrom]="visibles()" let-proveedor>
+    {{ estado(proveedor.activo) }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="visibles()" let-proveedor>
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, proveedor)" />
+  </ng-template>
+</app-generic-list>

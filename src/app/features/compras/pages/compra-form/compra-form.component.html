@@ -1,0 +1,463 @@
+<app-notify-error [message]="error()" />
+
+<div class="compra">
+  <!-- ================= Cabecera del documento ================= -->
+  <section class="cabecera">
+    <div class="cabecera__body">
+      <div class="cabecera__titulo">
+        <h1>{{ esEdicion() ? 'Editar Compra' : 'Nueva Compra' }}</h1>
+        <p>
+          @if (esEdicion()) {
+            Compra #{{ compraEditada()!.id_compra }} ·
+          }
+          Factura de proveedor · los campos con * son obligatorios
+        </p>
+      </div>
+
+      <div class="cabecera__grid" [formGroup]="facturaForm">
+        <div class="campo col-4">
+          <span class="campo__label">Proveedor *</span>
+          <app-entity-searcher
+            [items]="proveedores()"
+            [value]="proveedorId()"
+            (valueChange)="onProveedorChange($event)"
+            [displayFn]="proveedorLabel"
+            [keyFn]="proveedorKey"
+            [searchFn]="proveedorSearch"
+            [columns]="proveedorColumns"
+            [loading]="loadingProveedores()"
+            label="Buscar proveedor"
+            searchPlaceholder="Buscar por nombre, RUC o ciudad..."
+            [allowAdd]="true"
+            addLabel="Nuevo proveedor"
+            (addClicked)="nuevoProveedor()"
+          />
+        </div>
+
+        <div class="campo col-3">
+          <span class="campo__label">Vendedor {{ vendedorRequerido() ? '*' : '' }}</span>
+          <app-entity-searcher
+            [items]="vendedoresActivos()"
+            [value]="vendedorId()"
+            (valueChange)="onVendedorChange($event)"
+            [displayFn]="vendedorLabel"
+            [keyFn]="vendedorKey"
+            [searchFn]="vendedorSearch"
+            [columns]="vendedorColumns"
+            [loading]="loadingVendedores()"
+            [disabled]="!proveedor() || loadingVendedores()"
+            [label]="!proveedor() ? 'Primero elegí el proveedor' : vendedorRequerido() ? 'Buscar vendedor' : 'Sin vendedores registrados'"
+            searchPlaceholder="Buscar por nombre, cargo o teléfono..."
+            [allowAdd]="!!proveedor()"
+            addLabel="Nuevo vendedor"
+            (addClicked)="nuevoVendedor()"
+          />
+        </div>
+
+        <div class="campo col-3">
+          <span class="campo__label" title="Lugar físico donde entra la mercadería al stock">Ingresa al sector *</span>
+          <app-entity-searcher
+            [items]="sectoresVisibles()"
+            [value]="sectorId()"
+            (itemChange)="onSectorSeleccionado($event)"
+            [displayFn]="sectorLabel"
+            [keyFn]="sectorKey"
+            [columns]="sectorColumns"
+            [backendPagination]="true"
+            [totalItems]="sectoresTotal()"
+            [pageIndex]="sectoresPage()"
+            [pageSize]="sectoresPageSize()"
+            [loading]="loadingSectores()"
+            label="Buscar sector o depósito"
+            searchPlaceholder="Buscar sector..."
+            (searchChange)="buscarSectores(0, sectoresPageSize(), $event)"
+            (pageChange)="onSectoresPage($event)"
+          />
+        </div>
+
+        <div class="campo col-2">
+          <label class="campo__label" for="fechaFactura">Fecha factura</label>
+          <input id="fechaFactura" class="campo__input" type="date" formControlName="fechaFactura" />
+        </div>
+
+        <div class="campo col-2">
+          <label class="campo__label" for="formaPago">Forma de pago *</label>
+          <select id="formaPago" class="campo__input" [value]="formaPago()" (change)="onFormaPagoChange($any($event.target).value)">
+            @for (fp of formasPago; track fp.codigo) {
+              <option [value]="fp.codigo" [selected]="fp.codigo === formaPago()">{{ fp.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="campo col-2">
+          <label class="campo__label" for="numeroFactura">Nº de factura</label>
+          <input id="numeroFactura" class="campo__input" type="text" formControlName="numeroFactura" placeholder="001-001-0000123" />
+        </div>
+
+        <div class="campo col-2">
+          <label class="campo__label" for="timbrado">Timbrado</label>
+          <input id="timbrado" class="campo__input" type="text" inputmode="numeric" formControlName="timbrado" placeholder="12345678" />
+        </div>
+
+        <div class="campo col-2">
+          <label class="campo__label" for="moneda">Moneda *</label>
+          <select id="moneda" class="campo__input" [value]="moneda().codigo" (change)="onMonedaChange($any($event.target).value)">
+            @for (m of monedas(); track m.codigo) {
+              <option [value]="m.codigo" [selected]="m.codigo === moneda().codigo">{{ m.simbolo }} · {{ m.nombre }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="campo col-2">
+          <label class="campo__label" for="cotizacion">Cotización</label>
+          <input
+            id="cotizacion"
+            class="campo__input"
+            type="text"
+            readonly
+            [value]="enGuaranies() ? 'Moneda local' : 'Gs. ' + (moneda().cotizacion | number: '1.0-2')"
+            [title]="
+              enGuaranies()
+                ? 'La compra se registra en guaraníes'
+                : cotizacionRegistrada()
+                  ? 'Cotización con la que se registró la compra'
+                  : 'Cotización activa del sistema' + (moneda().actualizada ? ' (' + fechaCorta(moneda().actualizada) + ')' : '')
+            "
+          />
+        </div>
+
+        <div class="campo col-2">
+          <label class="campo__label" for="observaciones">Observaciones</label>
+          <input id="observaciones" class="campo__input" type="text" formControlName="observaciones" placeholder="Opcional" />
+        </div>
+      </div>
+
+      @if (proveedor(); as p) {
+        <dl class="cabecera__meta">
+          <div>
+            <dt>RUC</dt>
+            <dd>{{ p.ruc || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Ciudad</dt>
+            <dd>{{ p.ciudad || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Teléfono</dt>
+            <dd>{{ p.telefono || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Ingresa al sector</dt>
+            <dd>{{ sector()?.nombre || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Productos asociados</dt>
+            <dd>{{ productosProveedorTotal() }}</dd>
+          </div>
+          <div>
+            <dt>Cotización</dt>
+            <dd>{{ enGuaranies() ? 'Guaraníes' : '1 ' + moneda().simbolo + ' = Gs. ' + (moneda().cotizacion | number: '1.0-2') }}</dd>
+          </div>
+        </dl>
+      }
+
+      <!-- ================= Carga de productos ================= -->
+      <div class="carga" [class.carga--editando]="editandoIndex() !== null">
+        <div class="carga__titulo">
+          <span class="material-icons" aria-hidden="true">{{ editandoIndex() !== null ? 'edit' : 'add_box' }}</span>
+          {{ editandoIndex() !== null ? 'Modificando línea ' + (editandoIndex()! + 1) : 'Agregar producto' }}
+          <span class="carga__ayuda">
+            <kbd>Enter</kbd> pasa al siguiente campo · en Vencimiento agrega la línea
+          </span>
+          <label class="carga__check" [class.carga__check--disabled]="!proveedor()">
+            <input
+              type="checkbox"
+              [checked]="soloDelProveedor()"
+              [disabled]="!proveedor()"
+              (change)="onSoloDelProveedorChange($any($event.target).checked)"
+            />
+            Solo productos del proveedor
+          </label>
+        </div>
+
+        <div class="carga__fila">
+          <div #productoCampo class="campo carga__producto">
+            <span class="campo__label">Producto *</span>
+            @if (soloDelProveedor()) {
+              <app-entity-searcher
+                [items]="productosProveedor()"
+                [value]="productoPendiente()?.id_producto ?? null"
+                [columns]="productoProveedorColumns"
+                [displayFn]="productoProveedorLabel"
+                [keyFn]="productoProveedorKey"
+                [backendPagination]="true"
+                [totalItems]="productosProveedorTotal()"
+                [pageIndex]="productosProveedorPage()"
+                [pageSize]="productosProveedorPageSize()"
+                [loading]="loadingProductosProveedor() || cargandoPendiente()"
+                [quickEntry]="true"
+                label="Código o nombre + Enter"
+                searchPlaceholder="Buscar entre los productos del proveedor..."
+                modalWidth="960px"
+                (searchChange)="buscarProductosProveedor(0, productosProveedorPageSize(), $event)"
+                (pageChange)="onProductosProveedorPage($event)"
+                (itemChange)="onProductoProveedorSeleccionado($event)"
+              />
+            } @else {
+              <app-entity-searcher
+                [items]="productos()"
+                [value]="productoPendiente()?.id_producto ?? null"
+                [columns]="productoColumns"
+                [displayFn]="productoLabel"
+                [keyFn]="productoKey"
+                [backendPagination]="true"
+                [totalItems]="productosTotal()"
+                [pageIndex]="productosPage()"
+                [pageSize]="productosPageSize()"
+                [loading]="loadingProductos()"
+                [quickEntry]="true"
+                label="Código o nombre + Enter"
+                searchPlaceholder="Buscar producto por código o nombre..."
+                modalWidth="960px"
+                (searchChange)="buscarProductos(0, productosPageSize(), $event)"
+                (pageChange)="onProductosPage($event)"
+                (itemChange)="onProductoSeleccionado($event)"
+              />
+            }
+          </div>
+
+          <div class="campo carga__num">
+            <label class="campo__label" for="cantidadNueva">Cantidad *</label>
+            <input
+              #cantidadInput
+              id="cantidadNueva"
+              class="campo__input campo__input--num"
+              type="number"
+              min="0"
+              step="any"
+              [value]="cantidadTexto()"
+              [disabled]="!productoPendiente()"
+              [class.campo__input--error]="productoPendiente() && !(+cantidadTexto() > 0)"
+              (input)="cantidadTexto.set($any($event.target).value)"
+              (keydown.enter)="onEnterCampo($event, 'cantidad')"
+            />
+          </div>
+
+          <div class="campo carga__costo">
+            <label class="campo__label" for="costoNuevo">Costo unit. ({{ moneda().simbolo }}) *</label>
+            <input
+              #costoInput
+              id="costoNuevo"
+              class="campo__input campo__input--num"
+              type="number"
+              min="0"
+              [step]="enGuaranies() ? 1 : 0.01"
+              [value]="costoTexto()"
+              [disabled]="!productoPendiente()"
+              [class.campo__input--error]="productoPendiente() && (costoTexto() === '' || +costoTexto() < 0)"
+              (input)="costoTexto.set($any($event.target).value)"
+              (keydown.enter)="onEnterCampo($event, 'costo')"
+            />
+          </div>
+
+          <div class="campo carga__iva">
+            <label class="campo__label" for="ivaNuevo">IVA</label>
+            <select
+              #ivaSelect
+              id="ivaNuevo"
+              class="campo__input"
+              [disabled]="!productoPendiente()"
+              [value]="ivaPendiente()"
+              (change)="ivaPendiente.set($any($event.target).value)"
+              (keydown.enter)="onEnterCampo($event, 'iva')"
+            >
+              @for (t of tiposIva; track t) {
+                <option [value]="t" [selected]="t === ivaPendiente()">{{ etiquetaIva(t) }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="campo carga__vence">
+            <label class="campo__label" for="venceNuevo">Vencimiento</label>
+            <input
+              #venceInput
+              id="venceNuevo"
+              class="campo__input"
+              type="date"
+              [disabled]="!productoPendiente()"
+              [value]="vencimientoPendiente()"
+              [class.campo__input--error]="pendienteVencido()"
+              [title]="pendienteVencido() ? 'La fecha de vencimiento ya pasó' : 'Opcional · Enter agrega la línea'"
+              (change)="vencimientoPendiente.set($any($event.target).value)"
+              (keydown.enter)="onEnterCampo($event, 'vencimiento')"
+            />
+          </div>
+
+          <div class="campo carga__subtotal">
+            <span class="campo__label">Subtotal</span>
+            <span class="campo__valor">{{ subtotalPendiente() | number: formatoNumero() }}</span>
+          </div>
+
+          <div class="carga__botones">
+            <app-ui-button
+              [label]="editandoIndex() !== null ? 'Actualizar' : 'Agregar'"
+              [icon]="editandoIndex() !== null ? 'check' : 'add'"
+              variant="primary"
+              size="sm"
+              [disabled]="!puedeAgregar()"
+              (clicked)="confirmarLinea()"
+            />
+            @if (productoPendiente()) {
+              <app-ui-button label="Descartar" icon="close" variant="ghost" size="sm" (clicked)="limpiarLinea()" />
+            }
+          </div>
+        </div>
+
+        @if (productoPendiente(); as p) {
+          <div class="carga__info">
+            <span><b>{{ p.codigo }}</b> {{ p.nombre }}</span>
+            <span [class.texto-alerta]="stockBajo(p)">
+              Stock actual: <b>{{ p.stock | number: '1.0-2' }}</b>
+              @if (p.stockMinimo) { (mín. {{ p.stockMinimo | number: '1.0-2' }}) }
+            </span>
+            <span>Costo ref.: <b>Gs. {{ p.precioCompra ?? 0 | number: '1.0-0' }}</b></span>
+            @if (pendienteVencido()) {
+              <span class="texto-error">La fecha de vencimiento ya pasó</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ================= Acciones ================= -->
+    <div class="cabecera__acciones">
+      <div class="action-btn">
+        <app-ui-button
+          [label]="esEdicion() ? 'Guardar cambios' : 'Guardar compra'"
+          icon="save"
+          variant="primary"
+          size="sm"
+          [loading]="saving()"
+          [disabled]="!puedeGuardar()"
+          (clicked)="guardar()"
+        />
+      </div>
+      <div class="action-btn">
+        <app-ui-button label="Cancelar" icon="close" variant="ghost" size="sm" (clicked)="cancelar()" />
+      </div>
+
+      @if (pendientes().length > 0) {
+        <ul class="acciones__pendientes" aria-label="Datos pendientes">
+          @for (p of pendientes(); track p) {
+            <li>{{ p }}</li>
+          }
+        </ul>
+      }
+    </div>
+  </section>
+
+  <!-- ================= Detalle ================= -->
+  <section class="detalle">
+    <div class="table-scroll">
+      <app-data-table
+        [columns]="lineasColumns"
+        [data]="lineasVisibles()"
+        [trackBy]="lineaKey"
+        emptyMessage="Todavía no hay productos en la compra. Buscalos arriba y presioná Agregar."
+        (rowClick)="onLineaClick($event)"
+      >
+        <ng-template appTableCell="nro" [appTableCellFrom]="lineasVisibles()" let-row let-i="index">
+          @if (editandoEstaFila(i)) {
+            <span class="material-icons celda-editando" title="Modificando">edit</span>
+          } @else {
+            {{ numeroLinea(i) }}
+          }
+        </ng-template>
+
+        <ng-template appTableCell="stock" [appTableCellFrom]="lineasVisibles()" let-row>
+          <span [class.texto-alerta]="stockBajo(row.producto)" [title]="'Mínimo: ' + (row.producto.stockMinimo ?? 0)">
+            {{ row.producto.stock | number: '1.0-2' }}
+          </span>
+        </ng-template>
+
+        <ng-template appTableCell="cantidad" [appTableCellFrom]="lineasVisibles()" let-row>
+          {{ row.cantidad | number: '1.0-3' }}
+        </ng-template>
+
+        <ng-template appTableCell="costo" [appTableCellFrom]="lineasVisibles()" let-row>
+          {{ row.costo | number: formatoNumero() }}
+        </ng-template>
+
+        <ng-template appTableCell="iva" [appTableCellFrom]="lineasVisibles()" let-row>
+          {{ etiquetaIva(row.tipoIva) }}
+        </ng-template>
+
+        <ng-template appTableCell="vencimiento" [appTableCellFrom]="lineasVisibles()" let-row>
+          <span [class.texto-error]="vencido(row)">{{ row.vencimiento ? fechaCorta(row.vencimiento) : '—' }}</span>
+        </ng-template>
+
+        <ng-template appTableCell="subtotal" [appTableCellFrom]="lineasVisibles()" let-row>
+          <b>{{ subtotal(row) | number: formatoNumero() }}</b>
+        </ng-template>
+
+        <ng-template appTableCell="acciones" [appTableCellFrom]="lineasVisibles()" let-row>
+          <span class="celda-acciones" (click)="$event.stopPropagation()">
+            <app-action-menu [actions]="accionesLinea(row)" (actionSelected)="onAccionLinea($event, row)" />
+          </span>
+        </ng-template>
+      </app-data-table>
+    </div>
+    <app-paginator
+      [total]="lineas().length"
+      [pageIndex]="lineasPage()"
+      [pageSize]="lineasPageSize()"
+      [pageSizeOptions]="[15, 25, 50, 100]"
+      (pageChange)="onLineasPage($event)"
+    />
+  </section>
+
+  <!-- ================= Totales ================= -->
+  <footer class="totales">
+    <dl class="totales__grid">
+      <div>
+        <dt>Líneas</dt>
+        <dd>{{ lineas().length }}</dd>
+      </div>
+      <div>
+        <dt>Unidades</dt>
+        <dd>{{ unidades() | number: '1.0-3' }}</dd>
+      </div>
+      <div>
+        <dt>Exentas</dt>
+        <dd>{{ totales().exenta | number: formatoNumero() }}</dd>
+      </div>
+      <div>
+        <dt>Gravadas 5%</dt>
+        <dd>{{ totales().gravada5 | number: formatoNumero() }}</dd>
+      </div>
+      <div>
+        <dt>Gravadas 10%</dt>
+        <dd>{{ totales().gravada10 | number: formatoNumero() }}</dd>
+      </div>
+      <div>
+        <dt>IVA 5%</dt>
+        <dd>{{ totales().iva5 | number: formatoNumero() }}</dd>
+      </div>
+      <div>
+        <dt>IVA 10%</dt>
+        <dd>{{ totales().iva10 | number: formatoNumero() }}</dd>
+      </div>
+      <div>
+        <dt>Total IVA</dt>
+        <dd>{{ totales().totalIva | number: formatoNumero() }}</dd>
+      </div>
+    </dl>
+    <div class="totales__total">
+      <span>Total compra</span>
+      <strong>{{ monto(totales().total) }}</strong>
+      @if (!enGuaranies()) {
+        <small>Equivale a Gs. {{ totalEnGuaranies() | number: '1.0-0' }}</small>
+      }
+    </div>
+  </footer>
+</div>

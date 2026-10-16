@@ -21,6 +21,10 @@
   background: var(--content-bg);
 }
 
+app-stepper-header {
+  margin: -24px -32px 0;
+}
+
 .stepper-body {
   display: flex;
   flex-direction: column;

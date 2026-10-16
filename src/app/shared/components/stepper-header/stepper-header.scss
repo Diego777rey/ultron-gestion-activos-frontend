@@ -1,0 +1,116 @@
+:host {
+  display: block;
+  --_padding: 16px 32px 18px;
+  --_idle-opacity: 0.5;
+  --_idle-border: rgba(255, 255, 255, 0.2);
+  --_idle-color: rgba(255, 255, 255, 0.7);
+  --_label-color: rgba(255, 255, 255, 0.9);
+  --_connector: rgba(255, 255, 255, 0.3);
+  --_accent: var(--primary-color);
+  --_accent-glow: rgba(25, 118, 210, 0.35);
+  --_done: #1565c0;
+}
+
+:host(.stepper-header--success) {
+  --_padding: 18px 32px 20px;
+  --_idle-opacity: 0.55;
+  --_idle-border: rgba(255, 255, 255, 0.22);
+  --_idle-color: rgba(255, 255, 255, 0.75);
+  --_label-color: rgba(255, 255, 255, 0.92);
+  --_connector: rgba(255, 255, 255, 0.35);
+  --_accent: #43a047;
+  --_accent-glow: rgba(67, 160, 71, 0.4);
+  --_done: #388e3c;
+}
+
+.stepper-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: var(--stepper-header-padding, var(--_padding));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: #1a1a1a;
+  flex-wrap: wrap;
+}
+
+.stepper-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: var(--_idle-opacity);
+}
+
+button.stepper-step {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    opacity: 1;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.stepper-step.active,
+.stepper-step.done,
+.stepper-step.reached {
+  opacity: 1;
+}
+
+.stepper-step__circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid var(--_idle-border);
+  color: var(--_idle-color);
+
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+.stepper-step.active .stepper-step__circle {
+  background: var(--_accent);
+  border-color: var(--_accent);
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--_accent-glow);
+}
+
+.stepper-step.done .stepper-step__circle,
+.stepper-step.reached .stepper-step__circle {
+  background: var(--_done);
+  border-color: var(--_done);
+  color: #fff;
+}
+
+.stepper-step__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--_label-color);
+}
+
+.stepper-step.active .stepper-step__label {
+  color: var(--_accent);
+  font-weight: 700;
+}
+
+.stepper-connector {
+  width: 48px;
+  height: 2px;
+  background: var(--_connector);
+
+  &.done {
+    background: var(--_accent);
+  }
+}
