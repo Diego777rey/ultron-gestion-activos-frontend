@@ -3,6 +3,7 @@ import { Observable, map, tap } from 'rxjs';
 import { BaseCrudService } from './base-crud.service';
 import { CrudConfig } from '../models/crud-config.model';
 import { CompraOutput, CompraInput, ProductoProveedorOutput, ItemCompraOutput } from '../models/compras.model';
+import { PageResponse } from '../models/pagination.model';
 import { GraphqlService } from './graphql.service';
 import { LoadingService } from './loading.service';
 
@@ -79,6 +80,50 @@ export class CompraService extends BaseCrudService<CompraOutput, CompraInput> {
     return this.graphql
       .query<{ productosDeProveedor: ProductoProveedorOutput[] }>(document, { idProveedor })
       .pipe(map((data) => data.productosDeProveedor ?? []));
+  }
+
+  productosDeProveedorPaginado(
+    idProveedor: number,
+    page: number,
+    size: number,
+    filter?: string,
+  ): Observable<PageResponse<ProductoProveedorOutput>> {
+    const filtro = filter?.trim() ?? '';
+    const hasFilter = filtro !== '';
+    const document = `query($idProveedor: ID!, $page: Int!, $size: Int!${hasFilter ? ', $filter: String' : ''}) {
+      productosDeProveedorPaginado(
+        idProveedor: $idProveedor
+        page: $page
+        size: $size
+        ${hasFilter ? 'filter: $filter' : ''}
+      ) {
+        content {
+          id_producto_proveedor
+          id_producto
+          producto_nombre
+          producto_codigo
+          id_proveedor
+          proveedor_nombre
+          precio_ultima_compra
+          fecha_ultima_compra
+          observaciones
+          activo
+          fecha_registro
+        }
+        pageInfo {
+          pageNumber
+          pageSize
+          totalElements
+          totalPages
+          last
+        }
+      }
+    }`;
+    const variables: Record<string, unknown> = { idProveedor, page, size };
+    if (hasFilter) variables['filter'] = filtro;
+    return this.graphql
+      .query<{ productosDeProveedorPaginado: PageResponse<ProductoProveedorOutput> }>(document, variables)
+      .pipe(map((data) => data.productosDeProveedorPaginado));
   }
 
   historialCompraProducto(idProducto: number, idProveedor: number): Observable<ItemCompraOutput[]> {

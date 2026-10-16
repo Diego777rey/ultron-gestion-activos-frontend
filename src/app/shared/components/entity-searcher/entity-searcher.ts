@@ -70,6 +70,9 @@ export class EntitySearcherComponent<T> {
   protected readonly modalOpen = signal(false);
   protected readonly searchQuery = signal('');
   protected readonly quickQuery = signal('');
+  /** Página local cuando el listado no viene paginado del backend. */
+  private readonly localPageIndex = signal(0);
+  private readonly localPageSize = signal<number | null>(null);
 
   protected readonly filteredItems = computed(() => {
     if (this.backendPagination()) return this.items();
@@ -83,6 +86,26 @@ export class EntitySearcherComponent<T> {
     const dfn = this.displayFn();
     return all.filter((i) => dfn(i).toLowerCase().includes(query));
   });
+
+  protected readonly paginaLocal = computed(() => {
+    const size = Math.max(1, this.localPageSize() ?? this.pageSize());
+    const total = this.filteredItems().length;
+    const maxIndex = Math.max(0, Math.ceil(total / size) - 1);
+    return { index: Math.min(this.localPageIndex(), maxIndex), size };
+  });
+
+  /** Filas de la tabla: la página del backend, o un corte local si la lista es larga. */
+  protected readonly filas = computed(() => {
+    if (this.backendPagination()) return this.items();
+    const { index, size } = this.paginaLocal();
+    const all = this.filteredItems();
+    return all.slice(index * size, index * size + size);
+  });
+
+  protected readonly pagina = computed(() => (this.backendPagination() ? this.pageIndex() : this.paginaLocal().index));
+  protected readonly tamanoPagina = computed(() =>
+    this.backendPagination() ? this.pageSize() : this.paginaLocal().size,
+  );
 
   protected readonly displayTotal = computed(() => {
     return this.backendPagination() ? this.totalItems() : this.filteredItems().length;
@@ -143,11 +166,13 @@ export class EntitySearcherComponent<T> {
 
   protected onSearch(query: string) {
     const upperQuery = query.toUpperCase();
+    this.localPageIndex.set(0);
     this.searchQuery.set(upperQuery);
     this.searchChange.emit(upperQuery);
   }
 
   protected clearSearch(): void {
+    this.localPageIndex.set(0);
     this.searchQuery.set('');
     this.searchChange.emit('');
   }
@@ -157,6 +182,10 @@ export class EntitySearcherComponent<T> {
   }
 
   protected onPageChange(event: PageChange): void {
+    if (!this.backendPagination()) {
+      this.localPageIndex.set(event.pageIndex);
+      this.localPageSize.set(event.pageSize);
+    }
     this.pageChange.emit(event);
   }
 
@@ -166,6 +195,7 @@ export class EntitySearcherComponent<T> {
       this.openModalWithQuery(this.quickQuery());
       return;
     }
+    this.localPageIndex.set(0);
     this.searchQuery.set('');
     this.modalOpen.set(true);
   }
@@ -173,6 +203,7 @@ export class EntitySearcherComponent<T> {
   protected openModalWithQuery(rawQuery: string): void {
     if (this.disabled()) return;
     const query = (rawQuery ?? '').toUpperCase().trim();
+    this.localPageIndex.set(0);
     this.searchQuery.set(query);
     this.searchChange.emit(query);
     this.modalOpen.set(true);

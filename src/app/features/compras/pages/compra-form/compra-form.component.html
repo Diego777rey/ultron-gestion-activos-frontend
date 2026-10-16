@@ -66,10 +66,11 @@
             [backendPagination]="true"
             [totalItems]="sectoresTotal()"
             [pageIndex]="sectoresPage()"
+            [pageSize]="sectoresPageSize()"
             [loading]="loadingSectores()"
             label="Buscar sector o depósito"
             searchPlaceholder="Buscar sector..."
-            (searchChange)="buscarSectores(0, 15, $event)"
+            (searchChange)="buscarSectores(0, sectoresPageSize(), $event)"
             (pageChange)="onSectoresPage($event)"
           />
         </div>
@@ -151,7 +152,7 @@
           </div>
           <div>
             <dt>Productos asociados</dt>
-            <dd>{{ productosProveedor().length }}</dd>
+            <dd>{{ productosProveedorTotal() }}</dd>
           </div>
           <div>
             <dt>Cotización</dt>
@@ -189,11 +190,17 @@
                 [columns]="productoProveedorColumns"
                 [displayFn]="productoProveedorLabel"
                 [keyFn]="productoProveedorKey"
-                [searchFn]="productoProveedorSearch"
+                [backendPagination]="true"
+                [totalItems]="productosProveedorTotal()"
+                [pageIndex]="productosProveedorPage()"
+                [pageSize]="productosProveedorPageSize()"
                 [loading]="loadingProductosProveedor() || cargandoPendiente()"
                 [quickEntry]="true"
                 label="Código o nombre + Enter"
                 searchPlaceholder="Buscar entre los productos del proveedor..."
+                modalWidth="960px"
+                (searchChange)="buscarProductosProveedor(0, productosProveedorPageSize(), $event)"
+                (pageChange)="onProductosProveedorPage($event)"
                 (itemChange)="onProductoProveedorSeleccionado($event)"
               />
             } @else {
@@ -206,12 +213,13 @@
                 [backendPagination]="true"
                 [totalItems]="productosTotal()"
                 [pageIndex]="productosPage()"
+                [pageSize]="productosPageSize()"
                 [loading]="loadingProductos()"
                 [quickEntry]="true"
                 label="Código o nombre + Enter"
                 searchPlaceholder="Buscar producto por código o nombre..."
                 modalWidth="960px"
-                (searchChange)="buscarProductos(0, 10, $event)"
+                (searchChange)="buscarProductos(0, productosPageSize(), $event)"
                 (pageChange)="onProductosPage($event)"
                 (itemChange)="onProductoSeleccionado($event)"
               />
@@ -353,52 +361,59 @@
     <div class="table-scroll">
       <app-data-table
         [columns]="lineasColumns"
-        [data]="lineas()"
+        [data]="lineasVisibles()"
         [trackBy]="lineaKey"
         emptyMessage="Todavía no hay productos en la compra. Buscalos arriba y presioná Agregar."
         (rowClick)="onLineaClick($event)"
       >
-        <ng-template appTableCell="nro" [appTableCellFrom]="lineas()" let-row let-i="index">
-          @if (editandoIndex() === i) {
+        <ng-template appTableCell="nro" [appTableCellFrom]="lineasVisibles()" let-row let-i="index">
+          @if (editandoEstaFila(i)) {
             <span class="material-icons celda-editando" title="Modificando">edit</span>
           } @else {
-            {{ i + 1 }}
+            {{ numeroLinea(i) }}
           }
         </ng-template>
 
-        <ng-template appTableCell="stock" [appTableCellFrom]="lineas()" let-row>
+        <ng-template appTableCell="stock" [appTableCellFrom]="lineasVisibles()" let-row>
           <span [class.texto-alerta]="stockBajo(row.producto)" [title]="'Mínimo: ' + (row.producto.stockMinimo ?? 0)">
             {{ row.producto.stock | number: '1.0-2' }}
           </span>
         </ng-template>
 
-        <ng-template appTableCell="cantidad" [appTableCellFrom]="lineas()" let-row>
+        <ng-template appTableCell="cantidad" [appTableCellFrom]="lineasVisibles()" let-row>
           {{ row.cantidad | number: '1.0-3' }}
         </ng-template>
 
-        <ng-template appTableCell="costo" [appTableCellFrom]="lineas()" let-row>
+        <ng-template appTableCell="costo" [appTableCellFrom]="lineasVisibles()" let-row>
           {{ row.costo | number: formatoNumero() }}
         </ng-template>
 
-        <ng-template appTableCell="iva" [appTableCellFrom]="lineas()" let-row>
+        <ng-template appTableCell="iva" [appTableCellFrom]="lineasVisibles()" let-row>
           {{ etiquetaIva(row.tipoIva) }}
         </ng-template>
 
-        <ng-template appTableCell="vencimiento" [appTableCellFrom]="lineas()" let-row>
+        <ng-template appTableCell="vencimiento" [appTableCellFrom]="lineasVisibles()" let-row>
           <span [class.texto-error]="vencido(row)">{{ row.vencimiento ? fechaCorta(row.vencimiento) : '—' }}</span>
         </ng-template>
 
-        <ng-template appTableCell="subtotal" [appTableCellFrom]="lineas()" let-row>
+        <ng-template appTableCell="subtotal" [appTableCellFrom]="lineasVisibles()" let-row>
           <b>{{ subtotal(row) | number: formatoNumero() }}</b>
         </ng-template>
 
-        <ng-template appTableCell="acciones" [appTableCellFrom]="lineas()" let-row>
+        <ng-template appTableCell="acciones" [appTableCellFrom]="lineasVisibles()" let-row>
           <span class="celda-acciones" (click)="$event.stopPropagation()">
             <app-action-menu [actions]="accionesLinea(row)" (actionSelected)="onAccionLinea($event, row)" />
           </span>
         </ng-template>
       </app-data-table>
     </div>
+    <app-paginator
+      [total]="lineas().length"
+      [pageIndex]="lineasPage()"
+      [pageSize]="lineasPageSize()"
+      [pageSizeOptions]="[15, 25, 50, 100]"
+      (pageChange)="onLineasPage($event)"
+    />
   </section>
 
   <!-- ================= Totales ================= -->
