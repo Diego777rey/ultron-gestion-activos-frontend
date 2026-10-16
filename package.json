@@ -1,6 +1,6 @@
 {
   "name": "ultron-gestion-activos-frontend",
-  "version": "1.77.0",
+  "version": "1.78.0",
   "main": "electron/dist/main.js",
   "description": "CH-SERVICE — aplicación de escritorio para talleres",
   "author": "Ultron Sistemas",
