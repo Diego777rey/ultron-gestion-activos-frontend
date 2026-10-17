@@ -86,4 +86,7 @@ export interface RetiroCajaOutput {
   responsableUsuario: string | null;
   responsableNombre: string | null;
   registradoPor: string | null;
+  idCaja?: number | null;
+  cajaNombre?: string | null;
+  sectorNombre?: string | null;
 }
