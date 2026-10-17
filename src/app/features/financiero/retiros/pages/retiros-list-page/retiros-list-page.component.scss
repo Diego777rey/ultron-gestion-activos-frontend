@@ -1,0 +1,131 @@
+.retiros-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.retiros-filters__group {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-field {
+  min-width: 160px;
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  input,
+  select {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-strong);
+    color: var(--text-primary);
+    padding: 8px 0 6px;
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+
+    &:focus {
+      border-bottom-color: var(--primary-color);
+    }
+  }
+
+  input {
+    text-transform: uppercase;
+  }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    padding-right: 22px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23fff' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 2px center;
+  }
+
+  &--caja {
+    min-width: 140px;
+    max-width: 200px;
+  }
+
+  &--sector {
+    min-width: 160px;
+    max-width: 220px;
+  }
+
+  &--busqueda {
+    min-width: 220px;
+    max-width: 320px;
+  }
+}
+
+.filter-field--dates {
+  flex: 0 0 auto;
+}
+
+.caja-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  text-transform: uppercase;
+
+  &:hover,
+  &:focus-visible {
+    border-bottom-color: var(--primary-color);
+    outline: none;
+  }
+}
+
+.monto-cell {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.observacion-cell {
+  display: block;
+  max-width: 420px;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  .retiros-filters,
+  .retiros-filters__group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .filter-field,
+  .filter-field--caja,
+  .filter-field--sector,
+  .filter-field--busqueda,
+  .filter-field--dates {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .observacion-cell {
+    max-width: none;
+  }
+}
