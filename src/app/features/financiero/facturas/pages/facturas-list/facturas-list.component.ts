@@ -13,6 +13,8 @@ import { EmpresaService } from '../../../../personas/empresas/services/empresa.s
 import { EmpresaOutput } from '../../../../personas/empresas/interfaces/empresa.interface';
 import { ReporteService } from '../../../../../shared/services/reporte.service';
 import { NotificationService } from '../../../../../shared/services/notification.service';
+import { DateRangePickerComponent } from '../../../../../shared/components/date-range-picker/date-range-picker';
+import { DateRangeValue, dateRangeLastDays, toIsoDate } from '../../../../../shared/models/date-range.model';
 
 @Component({
   selector: 'app-facturas-list',
@@ -22,6 +24,7 @@ import { NotificationService } from '../../../../../shared/services/notification
     ActionMenuComponent,
     DefaultEmptyPipe,
     DecimalPipe,
+    DateRangePickerComponent,
   ],
   templateUrl: './facturas-list.component.html',
   styleUrl: './facturas-list.component.scss',
@@ -29,6 +32,8 @@ import { NotificationService } from '../../../../../shared/services/notification
   host: { class: 'app-list-view' },
 })
 export class FacturasListComponent {
+  private static readonly DIAS_POR_DEFECTO = 3;
+
   private readonly facturaService = inject(FacturaService);
   private readonly empresaService = inject(EmpresaService);
   private readonly reporteService = inject(ReporteService);
@@ -39,6 +44,9 @@ export class FacturasListComponent {
   protected readonly generando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly search = signal('');
+  protected readonly dateRange = signal<DateRangeValue>(
+    dateRangeLastDays(FacturasListComponent.DIAS_POR_DEFECTO),
+  );
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(15);
   protected readonly totalElements = signal(0);
@@ -112,18 +120,25 @@ export class FacturasListComponent {
     this.loading.set(true);
     this.error.set(null);
 
+    const rango = this.dateRange();
+    const fechaDesde = toIsoDate(rango.start);
+    const fechaHasta = toIsoDate(rango.end);
     const observable = this.search().trim() === ''
       ? this.facturaService.listarFacturasPorEmpresaYEstado(
           empresaId,
           'EMITIDA',
           this.pageIndex(),
-          this.pageSize()
+          this.pageSize(),
+          fechaDesde,
+          fechaHasta,
         )
       : this.facturaService.buscarFacturas(
           empresaId,
           this.search(),
           this.pageIndex(),
-          this.pageSize()
+          this.pageSize(),
+          fechaDesde,
+          fechaHasta,
         );
 
     observable.subscribe({
@@ -137,6 +152,14 @@ export class FacturasListComponent {
         this.loading.set(false);
       },
     });
+  }
+
+  protected onDateRangeChange(range: DateRangeValue): void {
+    this.dateRange.set(range);
+    if ((range.start && range.end) || (!range.start && !range.end)) {
+      this.pageIndex.set(0);
+      this.load();
+    }
   }
 
   protected onPageChange(event: PageChange): void {
@@ -153,6 +176,7 @@ export class FacturasListComponent {
         break;
       case 'clear':
         this.search.set('');
+        this.dateRange.set(dateRangeLastDays(FacturasListComponent.DIAS_POR_DEFECTO));
         this.pageIndex.set(0);
         this.load();
         break;
@@ -175,10 +199,13 @@ export class FacturasListComponent {
       return;
     }
     this.generando.set(true);
+    const rango = this.dateRange();
     const opciones = {
       filtro: this.search(),
       idEmpresa,
       titulo: 'Facturas legales',
+      fechaDesde: toIsoDate(rango.start),
+      fechaHasta: toIsoDate(rango.end),
     };
     const pedido = formato === 'pdf'
       ? this.reporteService.generarInventario('factura', opciones)

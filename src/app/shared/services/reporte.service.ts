@@ -29,6 +29,8 @@ export interface ReporteOpciones {
   id?: number | null;
   idEmpresa?: number | null;
   titulo?: string | null;
+  fechaDesde?: string | null;
+  fechaHasta?: string | null;
 }
 
 /**
@@ -118,6 +120,12 @@ export class ReporteService {
     }
     if (opciones?.idEmpresa != null) {
       params = params.set('idEmpresa', String(opciones.idEmpresa));
+    }
+    if (opciones?.fechaDesde) {
+      params = params.set('fechaDesde', opciones.fechaDesde);
+    }
+    if (opciones?.fechaHasta) {
+      params = params.set('fechaHasta', opciones.fechaHasta);
     }
 
     const extension = formato === 'excel' ? 'xlsx' : 'pdf';

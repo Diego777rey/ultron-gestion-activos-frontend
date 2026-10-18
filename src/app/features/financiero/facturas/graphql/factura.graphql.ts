@@ -44,10 +44,12 @@ export const FACTURA_SELECTION_SET = `{
 }`;
 
 export const LISTAR_FACTURAS_CON_VENTAS = `
-  query ListarFacturasConVenta($page: Int, $size: Int, $idEmpresa: ID!, $estado: String!) {
+  query ListarFacturasConVenta($page: Int, $size: Int, $idEmpresa: ID!, $estado: String!, $fechaDesde: String, $fechaHasta: String) {
     facturas: facturasConVentaPorEmpresaYEstado(
       idEmpresa: $idEmpresa
       estado: $estado
+      fechaDesde: $fechaDesde
+      fechaHasta: $fechaHasta
       page: $page
       size: $size
     ) {
@@ -64,10 +66,12 @@ export const LISTAR_FACTURAS_CON_VENTAS = `
 `;
 
 export const BUSCAR_FACTURAS = `
-  query BuscarFacturasConVenta($page: Int, $size: Int, $idEmpresa: ID!, $filtro: String!) {
+  query BuscarFacturasConVenta($page: Int, $size: Int, $idEmpresa: ID!, $filtro: String!, $fechaDesde: String, $fechaHasta: String) {
     facturas: buscarFacturasConVenta(
       idEmpresa: $idEmpresa
       filtro: $filtro
+      fechaDesde: $fechaDesde
+      fechaHasta: $fechaHasta
       page: $page
       size: $size
     ) {
