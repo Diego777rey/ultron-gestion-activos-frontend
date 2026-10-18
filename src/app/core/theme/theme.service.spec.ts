@@ -14,11 +14,13 @@ describe('ThemeService', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
-  it('alterna y persiste el modo claro', () => {
+  it('mantiene el modo oscuro mientras el modo claro está deshabilitado', () => {
+    localStorage.setItem('ultron-color-theme', 'light');
     const service = TestBed.inject(ThemeService);
+    expect(service.lightModeEnabled).toBe(false);
+    expect(service.mode()).toBe('dark');
     service.toggle();
-    expect(service.mode()).toBe('light');
-    expect(localStorage.getItem('ultron-color-theme')).toBe('light');
-    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    expect(service.mode()).toBe('dark');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 });

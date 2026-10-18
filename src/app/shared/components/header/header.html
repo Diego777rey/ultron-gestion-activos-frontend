@@ -26,8 +26,9 @@
     type="button"
     class="header-icon-btn theme-toggle-btn"
     (click)="alternarTema()"
-    [attr.aria-label]="theme.toggleLabel()"
-    [attr.title]="theme.toggleLabel()"
+    [disabled]="!theme.lightModeEnabled"
+    [attr.aria-label]="theme.lightModeEnabled ? theme.toggleLabel() : 'Modo claro deshabilitado'"
+    [attr.title]="theme.lightModeEnabled ? theme.toggleLabel() : 'Modo claro deshabilitado'"
   >
     <span class="material-icons" aria-hidden="true">{{ theme.toggleIcon() }}</span>
   </button>

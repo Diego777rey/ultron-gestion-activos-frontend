@@ -3,14 +3,7 @@
 <head>
   <meta charset="utf-8">
   <script>
-    (function () {
-      try {
-        var theme = localStorage.getItem('ultron-color-theme');
-        document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
-      } catch (e) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      }
-    })();
+    document.documentElement.setAttribute('data-theme', 'dark');
   </script>
   <title>CH-SERVICE</title>
   <base href="/">
