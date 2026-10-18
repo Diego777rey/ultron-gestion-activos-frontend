@@ -102,7 +102,6 @@
 
 .observacion-cell {
   display: block;
-  max-width: 420px;
   white-space: normal;
   line-height: 1.35;
 }
@@ -125,7 +124,4 @@
     min-width: 0;
   }
 
-  .observacion-cell {
-    max-width: none;
-  }
 }
