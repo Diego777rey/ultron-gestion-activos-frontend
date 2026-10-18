@@ -1,0 +1,49 @@
+name: Borrar rama mergeada a develop
+
+# Corre solo cuando un pull request se cierra contra develop.
+# Un merge hacia main (por ejemplo develop -> main) no dispara este workflow,
+# así que esa rama de origen se conserva.
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - develop
+
+permissions:
+  contents: write
+
+jobs:
+  borrar-rama:
+    name: Borrar rama de trabajo
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Borrar la rama mergeada
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          case "${BRANCH}" in
+            main|develop|master)
+              echo "Se conserva la rama ${BRANCH}."
+              exit 0
+              ;;
+          esac
+
+          echo "Borrando ${BRANCH} despues del merge a develop."
+          if gh api --method DELETE "repos/${REPO}/git/refs/heads/${BRANCH}"; then
+            echo "Rama ${BRANCH} borrada."
+            exit 0
+          fi
+
+          if gh api "repos/${REPO}/git/refs/heads/${BRANCH}" >/dev/null 2>&1; then
+            echo "::error::No se pudo borrar la rama ${BRANCH}."
+            exit 1
+          fi
+
+          echo "La rama ${BRANCH} ya no existe."
