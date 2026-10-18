@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, DestroyRef, inject, output, signal } from '@angular/core';
 import { APP_VERSION } from '../../../config/app-version';
 import { ConectividadService } from '../../../core/conectividad/conectividad.service';
+import { ThemeService } from '../../../core/theme/theme.service';
 
 @Component({
   selector: 'app-header',
@@ -14,6 +15,7 @@ import { ConectividadService } from '../../../core/conectividad/conectividad.ser
 })
 export class HeaderComponent {
   private readonly conectividad = inject(ConectividadService);
+  protected readonly theme = inject(ThemeService);
   toggleSidebar = output<void>();
   protected readonly version = APP_VERSION;
   protected readonly estadoConexion = this.conectividad.estado;
@@ -56,6 +58,10 @@ export class HeaderComponent {
 
   restablecerZoom(): void {
     void window.ultronDesktop?.resetZoom?.().then((factor) => this.zoomPorcentaje.set(porcentajeZoom(factor)));
+  }
+
+  alternarTema(): void {
+    this.theme.toggle();
   }
 }
 

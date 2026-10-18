@@ -48,20 +48,20 @@ import { TabService } from '../../services/tab.service';
       max-width: 250px;
       height: 48px;
       padding: 0 8px 0 14px;
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--tab-inactive-text);
       background: var(--content-bg);
-      border-right: 1px solid #222;
+      border-right: 1px solid var(--tab-divider);
       border-bottom: 2px solid transparent;
       transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     }
     .tab-label.active {
-      color: #fff;
-      background: #424242;
+      color: var(--text-primary);
+      background: var(--tab-active-bg);
       border-bottom-color: var(--primary-color);
     }
     .tab-label:hover:not(.active) {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      background: var(--tab-hover-bg);
     }
     .tab-title {
       flex: 1;

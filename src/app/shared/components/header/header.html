@@ -22,6 +22,15 @@
 <div class="header-spacer"></div>
 
 <div class="header-right">
+  <button
+    type="button"
+    class="header-icon-btn theme-toggle-btn"
+    (click)="alternarTema()"
+    [attr.aria-label]="theme.toggleLabel()"
+    [attr.title]="theme.toggleLabel()"
+  >
+    <span class="material-icons" aria-hidden="true">{{ theme.toggleIcon() }}</span>
+  </button>
   @if (zoomDisponible) {
     <div class="header-zoom" role="group" aria-label="Zoom de la pantalla">
       <button type="button" class="header-zoom__btn" (click)="alejar()" aria-label="Alejar" title="Alejar (Ctrl −)">−</button>

@@ -14,7 +14,7 @@
   table-layout: fixed;
   font-size: 14px;
   font-family: Roboto, 'Helvetica Neue', sans-serif;
-  background-color: rgb(70, 70, 70);
+  background-color: var(--table-bg);
 }
 
 .data-table__th {
@@ -23,12 +23,12 @@
   text-align: left;
   font-size: 14px;
   font-weight: 500;
-  color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--table-text);
+  border-bottom: 1px solid var(--table-border);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  background: #3c3c3c;
+  background: var(--table-header-bg);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -40,26 +40,26 @@
   transition: background-color 0.15s ease;
 
   &:hover {
-    background: #3b883f !important;
+    background: var(--table-row-hover) !important;
   }
 
   .data-table__td {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid var(--table-border);
   }
 }
 
 .data-table__row--expanded {
-  background: rgba(59, 136, 63, 0.25) !important;
+  background: var(--table-row-expanded-bg) !important;
 
   .data-table__td {
-    border-bottom-color: rgba(59, 136, 63, 0.4);
+    border-bottom-color: var(--table-row-expanded-border);
   }
 }
 
 .data-table__td {
   padding: 0 16px;
   height: 48px;
-  color: #fff;
+  color: var(--table-text);
   vertical-align: middle;
   font-size: 14px;
   text-align: left;
@@ -70,16 +70,16 @@
 
 /* Detail / expanded row */
 .data-table__row--detail {
-  background: #2a2a2a;
+  background: var(--table-detail-bg);
 
   &:hover {
-    background: #2a2a2a !important;
+    background: var(--table-detail-bg) !important;
   }
 }
 
 .data-table__td--detail {
   padding: 0 !important;
-  border-bottom: 2px solid rgba(76, 175, 80, 0.3);
+  border-bottom: 2px solid var(--table-detail-border);
   overflow: visible;
   text-overflow: clip;
   white-space: normal;
@@ -106,7 +106,7 @@
 .data-table__empty {
   padding: 48px 16px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--table-empty-text);
 
   .material-icons {
     display: block;
@@ -126,9 +126,9 @@
   border-radius: 4px;
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.06) 25%,
-    rgba(255, 255, 255, 0.12) 50%,
-    rgba(255, 255, 255, 0.06) 75%
+    var(--table-skeleton-base) 25%,
+    var(--table-skeleton-highlight) 50%,
+    var(--table-skeleton-base) 75%
   );
   background-size: 200% 100%;
   animation: data-table-shimmer 1.3s ease-in-out infinite;
