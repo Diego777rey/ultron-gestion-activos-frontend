@@ -50,13 +50,13 @@ export class RetirosListPageComponent {
   protected readonly totalElements = signal(0);
 
   protected readonly columns: TableColumn<RetiroCajaOutput>[] = [
-    { key: 'monto', header: 'Monto', width: '140px', align: 'right' },
-    { key: 'fecha', header: 'Fecha', width: '150px', align: 'center' },
-    { key: 'caja', header: 'Caja', width: '180px' },
-    { key: 'sector', header: 'Sector', width: '180px' },
-    { key: 'observacion', header: 'Observación', width: '1fr' },
-    { key: 'responsable', header: 'Responsable', width: '200px' },
-    { key: 'registradoPor', header: 'Registró', width: '160px' },
+    { key: 'monto', header: 'Monto', width: '11%', align: 'right' },
+    { key: 'fecha', header: 'Fecha', width: '13%', align: 'center' },
+    { key: 'caja', header: 'Caja', width: '13%' },
+    { key: 'sector', header: 'Sector', width: '15%' },
+    { key: 'observacion', header: 'Observación', width: '18%' },
+    { key: 'responsable', header: 'Responsable', width: '16%' },
+    { key: 'registradoPor', header: 'Registró', width: '14%' },
   ];
 
   protected readonly toolbarActions = computed<ListToolbarAction[]>(() => [
