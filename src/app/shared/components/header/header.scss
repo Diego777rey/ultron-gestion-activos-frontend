@@ -187,6 +187,19 @@
     transform: scale(0.95);
   }
 
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+    transform: none;
+
+    &:hover,
+    &:active {
+      background-color: transparent;
+      color: #fff;
+      transform: none;
+    }
+  }
+
   &.notification-btn {
     .notification-badge {
       position: absolute;
