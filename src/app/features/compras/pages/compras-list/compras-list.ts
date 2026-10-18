@@ -55,14 +55,14 @@ export class ComprasListComponent {
   protected readonly total = computed(() => this.filtrados().length);
 
   protected readonly columns: TableColumn<CompraOutput>[] = [
-    { key: 'id', header: 'Id', width: '80px', align: 'center' },
-    { key: 'fecha', header: 'Fecha', width: '120px' },
-    { key: 'proveedor', header: 'Proveedor' },
-    { key: 'factura', header: 'N° factura', width: '140px' },
-    { key: 'moneda', header: 'Moneda', width: '100px', align: 'center' },
-    { key: 'total', header: 'Total', width: '140px', align: 'right' },
-    { key: 'estado', header: 'Estado', width: '120px', align: 'center' },
-    { key: 'acciones', header: '...', width: '50px', align: 'center' },
+    { key: 'id', header: 'Id', width: '6%', align: 'center' },
+    { key: 'fecha', header: 'Fecha', width: '12%' },
+    { key: 'proveedor', header: 'Proveedor', width: '26%' },
+    { key: 'factura', header: 'N° factura', width: '16%' },
+    { key: 'moneda', header: 'Moneda', width: '10%', align: 'center' },
+    { key: 'total', header: 'Total', width: '14%', align: 'right' },
+    { key: 'estado', header: 'Estado', width: '12%', align: 'center' },
+    { key: 'acciones', header: '...', width: '4%', align: 'center' },
   ];
 
   protected readonly toolbarActions: ListToolbarAction[] = [

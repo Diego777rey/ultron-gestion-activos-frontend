@@ -19,11 +19,15 @@ export type TipoReporteInventario =
   | 'orden_trabajo'
   | 'orden_trabajo_detalle'
   | 'historial'
-  | 'vehiculo';
+  | 'vehiculo'
+  | 'factura';
+
+export type FormatoReporte = 'pdf' | 'excel';
 
 export interface ReporteOpciones {
   filtro?: string | null;
   id?: number | null;
+  idEmpresa?: number | null;
   titulo?: string | null;
 }
 
@@ -62,6 +66,20 @@ export class ReporteService {
     return this.generar(tipo, opciones);
   }
 
+  descargarExcel(tipo: TipoReporteInventario, opciones?: ReporteOpciones): Observable<void> {
+    return this.loading.track(
+      this.obtenerArchivo(tipo, 'excel', opciones).pipe(
+        tap((archivo) => this.descargarBlob(archivo.blob, archivo.filename)),
+        map(() => undefined),
+      ),
+      {
+        message: 'Generando Excel…',
+        notifyError: false,
+        errorTitle: 'No se pudo generar el Excel',
+      },
+    );
+  }
+
   /** Abre cualquier PDF en el visor in-app, aunque no venga de /api/reportes. */
   abrirPdf(opciones: AbrirReporteOpciones): void {
     this.visor.abrir(opciones);
@@ -75,14 +93,22 @@ export class ReporteService {
     tipo: TipoReporteInventario,
     opciones?: ReporteOpciones,
   ): Observable<{ blob: Blob; filename: string; titulo: string | null }> {
-    return this.obtenerPdf(tipo, opciones);
+    return this.obtenerArchivo(tipo, 'pdf', opciones);
   }
 
   private obtenerPdf(
     tipo: TipoReporteInventario,
     opciones?: ReporteOpciones,
   ): Observable<{ blob: Blob; filename: string; titulo: string | null }> {
-    let params = new HttpParams();
+    return this.obtenerArchivo(tipo, 'pdf', opciones);
+  }
+
+  private obtenerArchivo(
+    tipo: TipoReporteInventario,
+    formato: FormatoReporte,
+    opciones?: ReporteOpciones,
+  ): Observable<{ blob: Blob; filename: string; titulo: string | null }> {
+    let params = new HttpParams().set('formato', formato);
     const filtro = opciones?.filtro?.trim();
     if (filtro) {
       params = params.set('filtro', filtro);
@@ -90,6 +116,15 @@ export class ReporteService {
     if (opciones?.id != null) {
       params = params.set('id', String(opciones.id));
     }
+    if (opciones?.idEmpresa != null) {
+      params = params.set('idEmpresa', String(opciones.idEmpresa));
+    }
+
+    const extension = formato === 'excel' ? 'xlsx' : 'pdf';
+    const mimeType =
+      formato === 'excel'
+        ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        : 'application/pdf';
 
     return this.http
       .get(`${API_CONFIG.reportesEndpoint}/${tipo}`, {
@@ -103,17 +138,25 @@ export class ReporteService {
           if (!raw || raw.size === 0) {
             throw new Error('El reporte está vacío');
           }
-          const blob = raw.type === 'application/pdf'
-            ? raw
-            : new Blob([raw], { type: 'application/pdf' });
+          const blob = raw.type === mimeType ? raw : new Blob([raw], { type: mimeType });
           const filename =
             this.filenameFromDisposition(response.headers.get('Content-Disposition')) ??
-            `reporte-${tipo}.pdf`;
+            `reporte-${tipo}.${extension}`;
           const titulo = decodeHeader(response.headers.get(REPORTE_TITULO_HEADER));
           return { blob, filename, titulo };
         }),
         catchError((err: unknown) => this.handleError(err)),
       );
+  }
+
+  private descargarBlob(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.rel = 'noopener';
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   private filenameFromDisposition(header: string | null): string | null {

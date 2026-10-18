@@ -1,3 +1,22 @@
+/** Campos del listado. No pide detalle, cliente ni empresa: eso hacía una consulta por factura. */
+export const FACTURA_LISTADO_SELECTION_SET = `{
+  id_factura
+  numero_factura
+  timbrado
+  fecha_emision
+  cliente_nombre
+  cliente_documento
+  cliente_ruc
+  total_iva_5
+  total_iva_10
+  total_exenta
+  total_iva
+  total
+  forma_pago
+  moneda
+  estado
+}`;
+
 export const FACTURA_SELECTION_SET = `{
   id_factura
   numero_factura
@@ -32,7 +51,7 @@ export const LISTAR_FACTURAS_CON_VENTAS = `
       page: $page
       size: $size
     ) {
-      content ${FACTURA_SELECTION_SET}
+      content ${FACTURA_LISTADO_SELECTION_SET}
       pageInfo {
         pageNumber
         pageSize
@@ -52,7 +71,7 @@ export const BUSCAR_FACTURAS = `
       page: $page
       size: $size
     ) {
-      content ${FACTURA_SELECTION_SET}
+      content ${FACTURA_LISTADO_SELECTION_SET}
       pageInfo {
         pageNumber
         pageSize
