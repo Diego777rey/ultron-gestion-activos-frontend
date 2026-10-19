@@ -4,6 +4,7 @@ import {
   EntityGender,
   EntityNotificationOptions,
   NotificationOptions,
+  NotificationPatch,
   NotificationType,
 } from '../models/notification.model';
 
@@ -104,12 +105,15 @@ export class NotificationService {
       dismissible: options?.dismissible ?? true,
       icon: options?.icon,
       createdAt: Date.now(),
+      actionLabel: options?.actionLabel,
+      action: options?.action,
+      progress: options?.progress,
+      pinned: options?.pinned ?? false,
     };
 
     this._notifications.update((list) => {
       const next = [...list, notification];
-      // Descarta los más antiguos si se supera el máximo visible.
-      return next.length > MAX_VISIBLE ? next.slice(next.length - MAX_VISIBLE) : next;
+      return trimNotifications(next);
     });
 
     if (duration > 0) {
@@ -119,6 +123,30 @@ export class NotificationService {
       );
     }
     return id;
+  }
+
+  /** Actualiza el texto, la acción o el avance de un aviso ya visible. */
+  patch(id: number, changes: NotificationPatch): void {
+    this._notifications.update((list) =>
+      list.map((notification) => {
+        if (notification.id !== id) {
+          return notification;
+        }
+        const clearAction = changes.action === null;
+        return {
+          ...notification,
+          title: changes.title ?? notification.title,
+          message: changes.message ?? notification.message,
+          dismissible: changes.dismissible ?? notification.dismissible,
+          pinned: changes.pinned ?? notification.pinned,
+          action: clearAction ? undefined : (changes.action ?? notification.action),
+          actionLabel: clearAction || changes.actionLabel === null
+            ? undefined
+            : (changes.actionLabel ?? notification.actionLabel),
+          progress: changes.progress === null ? undefined : (changes.progress ?? notification.progress),
+        };
+      }),
+    );
   }
 
   /** Cierra un aviso por su id. */
@@ -187,4 +215,19 @@ export class NotificationService {
       : label;
     return `${article} ${subject} ha sido ${participle} correctamente.`;
   }
+}
+
+function trimNotifications(list: readonly AppNotification[]): readonly AppNotification[] {
+  if (list.length <= MAX_VISIBLE) {
+    return list;
+  }
+  const overflow = list.length - MAX_VISIBLE;
+  let removed = 0;
+  return list.filter((notification) => {
+    if (removed >= overflow || notification.pinned) {
+      return true;
+    }
+    removed += 1;
+    return false;
+  });
 }
