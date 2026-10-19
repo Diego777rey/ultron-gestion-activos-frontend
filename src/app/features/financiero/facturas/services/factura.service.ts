@@ -23,7 +23,9 @@ export class FacturaService {
     idEmpresa: number,
     estado: string,
     page: number,
-    size: number
+    size: number,
+    fechaDesde?: string | null,
+    fechaHasta?: string | null,
   ): Observable<FacturaPageResponse> {
     return this.gql
       .query<{ facturas: FacturaPageResponse }>(LISTAR_FACTURAS_CON_VENTAS, {
@@ -31,6 +33,8 @@ export class FacturaService {
         size,
         idEmpresa,
         estado,
+        fechaDesde,
+        fechaHasta,
       })
       .pipe(map((data) => data.facturas));
   }
@@ -39,7 +43,9 @@ export class FacturaService {
     idEmpresa: number,
     filtro: string,
     page: number,
-    size: number
+    size: number,
+    fechaDesde?: string | null,
+    fechaHasta?: string | null,
   ): Observable<FacturaPageResponse> {
     return this.gql
       .query<{ facturas: FacturaPageResponse }>(BUSCAR_FACTURAS, {
@@ -47,6 +53,8 @@ export class FacturaService {
         size,
         idEmpresa,
         filtro,
+        fechaDesde,
+        fechaHasta,
       })
       .pipe(map((data) => data.facturas));
   }

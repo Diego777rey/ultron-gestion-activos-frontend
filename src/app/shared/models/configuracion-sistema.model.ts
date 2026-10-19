@@ -2,11 +2,15 @@ export interface ConfiguracionPrinters {
   ticket: string;
 }
 
+/** Desarrollo no busca releases. Estable avisa y permite instalar la versión publicada. */
+export type CanalActualizacion = 'desarrollo' | 'estable';
+
 export interface ConfiguracionSistema {
   serverIp: string;
   serverPort: string;
   isConfigured: boolean;
   printers: ConfiguracionPrinters;
+  canalActualizacion: CanalActualizacion;
 }
 
 export const CONFIGURACION_STORAGE_KEY = 'ultron-configuracion-sistema';
@@ -17,7 +21,12 @@ export const DEFAULT_CONFIGURACION: ConfiguracionSistema = {
   serverPort: '8081',
   isConfigured: false,
   printers: { ticket: '' },
+  canalActualizacion: 'desarrollo',
 };
+
+export function normalizeCanalActualizacion(value: unknown): CanalActualizacion {
+  return value === 'estable' ? 'estable' : 'desarrollo';
+}
 
 export function readStoredConfiguracion(): ConfiguracionSistema | null {
   if (typeof localStorage === 'undefined') {
@@ -48,6 +57,7 @@ export function readStoredConfiguracion(): ConfiguracionSistema | null {
       printers: {
         ticket: parsed.printers?.ticket?.trim() ?? '',
       },
+      canalActualizacion: normalizeCanalActualizacion(parsed.canalActualizacion),
     };
   } catch {
     return null;

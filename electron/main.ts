@@ -4,10 +4,12 @@ import * as path from 'node:path';
 import { loadDesktopConfig } from './config';
 import { printRaw } from './raw-printer';
 import { startStaticServer, type StaticServer } from './static-server';
+import { bindUpdateWindow, registerUpdateHandlers } from './updater';
 import { sharePdfOnWhatsApp } from './whatsapp-share';
 
-const DESKTOP_CONFIG = {
+const DESKTOP_CONFIG: { apiBaseUrl: string; isPackaged: boolean } = {
   apiBaseUrl: 'http://localhost:8081',
+  isPackaged: false,
 };
 
 const isDev = !app.isPackaged && process.argv.includes('--dev');
@@ -222,11 +224,16 @@ async function createWindow(): Promise<void> {
   const startUrl = await resolveStartUrl();
   await mainWindow.loadURL(startUrl);
   publishZoom(readSavedZoom());
+  bindUpdateWindow(mainWindow);
 }
 
 function closeStaticServer(): void {
   staticServer?.server.close();
   staticServer = undefined;
+}
+
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.dev.ultron.gestionactivos');
 }
 
 const gotLock = app.requestSingleInstanceLock();
@@ -244,8 +251,9 @@ if (!gotLock) {
   });
 
   app.whenReady().then(async () => {
-    Object.assign(DESKTOP_CONFIG, loadDesktopConfig());
+    Object.assign(DESKTOP_CONFIG, loadDesktopConfig(), { isPackaged: app.isPackaged });
     registerIpc();
+    registerUpdateHandlers();
     await createWindow();
   });
 

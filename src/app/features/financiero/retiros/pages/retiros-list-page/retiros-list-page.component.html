@@ -1,0 +1,92 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="retiros()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions()"
+  emptyMessage="No hay retiros para los filtros seleccionados"
+  [trackBy]="trackById"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()"
+>
+  <div genericListFilters class="retiros-filters">
+    <div class="retiros-filters__group">
+      <div class="filter-field filter-field--caja">
+        <label>Caja</label>
+        <button type="button" class="caja-chip" (click)="openSelectCaja()">
+          {{ cajaSeleccionada()?.nombre || 'Todas' }}
+        </button>
+      </div>
+      <div class="filter-field filter-field--sector">
+        <label for="retiros-sector">Sector</label>
+        <select
+          id="retiros-sector"
+          [value]="idSector()"
+          (change)="onSectorChange($any($event.target).value)"
+        >
+          <option value="">Todos</option>
+          @for (sector of sectores(); track sector.id_sector) {
+            <option [value]="sector.id_sector">{{ sector.nombre }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-field filter-field--busqueda">
+        <label for="retiros-busqueda">Buscar</label>
+        <input
+          id="retiros-busqueda"
+          type="text"
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+          (keydown.enter)="pageIndex.set(0); load()"
+          placeholder="Observación, caja, responsable..."
+        />
+      </div>
+    </div>
+
+    <app-date-range-picker
+      class="filter-field--dates"
+      label="Rango de fecha"
+      [value]="dateRange()"
+      (valueChange)="dateRange.set($event)"
+      (closed)="onDateRangeChange($event)"
+    />
+  </div>
+
+  <ng-template appTableCell="monto" [appTableCellFrom]="retiros()" let-item>
+    <strong class="monto-cell">
+      {{ simbolo(item.moneda) }} {{ item.monto | number: formato(item.moneda) }}
+    </strong>
+  </ng-template>
+
+  <ng-template appTableCell="fecha" [appTableCellFrom]="retiros()" let-item>
+    {{ item.fecha | date: 'dd/MM/yyyy HH:mm' | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="caja" [appTableCellFrom]="retiros()" let-item>
+    {{ item.cajaNombre | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="sector" [appTableCellFrom]="retiros()" let-item>
+    {{ item.sectorNombre | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="observacion" [appTableCellFrom]="retiros()" let-item>
+    <span class="observacion-cell">{{ item.observacion | defaultEmpty }}</span>
+  </ng-template>
+
+  <ng-template appTableCell="responsable" [appTableCellFrom]="retiros()" let-item>
+    {{ responsableLabel(item) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="registradoPor" [appTableCellFrom]="retiros()" let-item>
+    {{ item.registradoPor | defaultEmpty }}
+  </ng-template>
+</app-generic-list>

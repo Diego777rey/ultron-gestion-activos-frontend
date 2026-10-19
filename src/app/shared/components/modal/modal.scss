@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--modal-backdrop);
   backdrop-filter: blur(3px);
   animation: modal-fade 0.2s ease;
 }
@@ -23,7 +23,7 @@
   background: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--modal-shadow);
   overflow: hidden;
   animation: modal-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }

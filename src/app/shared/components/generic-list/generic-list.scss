@@ -5,7 +5,7 @@
   min-height: 0;
   width: 100%;
   overflow: hidden;
-  background-color: rgb(70, 70, 70);
+  background-color: var(--list-surface);
 }
 
 .generic-list {
@@ -24,7 +24,7 @@
   align-items: stretch;
   width: 100%;
   padding: 10px;
-  background-color: rgb(32, 32, 32);
+  background-color: var(--list-filters-bg);
 }
 
 .generic-list__filters-body {
@@ -40,7 +40,7 @@
   label {
     display: block;
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--list-filter-label);
     margin-bottom: 4px;
   }
 
@@ -48,8 +48,8 @@
     width: 90%;
     background: transparent;
     border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.42);
-    color: #fff;
+    border-bottom: 1px solid var(--list-filter-border);
+    color: var(--list-filter-text);
     padding: 8px 0 6px;
     font-family: inherit;
     font-size: 14px;
@@ -61,7 +61,7 @@
     }
 
     &::placeholder {
-      color: rgba(255, 255, 255, 0.35);
+      color: var(--list-filter-placeholder);
       text-transform: none;
     }
   }
@@ -107,7 +107,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color: rgb(70, 70, 70);
+  background-color: var(--list-surface);
 }
 
 .generic-list__table-area {
@@ -116,7 +116,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  background-color: rgb(70, 70, 70);
+  background-color: var(--list-surface);
 }
 
 .table-scroll {
@@ -136,11 +136,11 @@
   }
 
   &::-webkit-scrollbar-track {
-    background: #3c3c3c;
+    background: var(--list-scrollbar-track);
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #555;
+    background: var(--list-scrollbar-thumb);
     border-radius: 4px;
   }
 }

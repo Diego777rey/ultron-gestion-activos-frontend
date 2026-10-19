@@ -139,6 +139,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'financiero/retiros',
+        loadChildren: () =>
+          import('./features/financiero/retiros/retiros.routes').then((m) => m.RETIROS_ROUTES),
+      },
+      {
         path: 'financiero/cotizaciones',
         loadComponent: () =>
           import('./features/financiero/cotizaciones/pages/cotizaciones-page/cotizaciones-page.component').then(

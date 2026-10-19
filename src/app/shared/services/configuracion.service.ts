@@ -7,6 +7,7 @@ import {
   ConfiguracionSistema,
   DEFAULT_CONFIGURACION,
   buildApiBaseUrl,
+  normalizeCanalActualizacion,
   readStoredConfiguracion,
 } from '../models/configuracion-sistema.model';
 import { ConfiguracionSistemaFormComponent } from '../components/configuracion-sistema-form/configuracion-sistema-form.component';
@@ -49,7 +50,7 @@ export class ConfiguracionService {
     return this.dialogs
       .openForm<ConfiguracionSistema | undefined>(ConfiguracionSistemaFormComponent, {
         title: 'Configuración del Sistema',
-        subtitle: 'Servidor backend e impresora térmica',
+        subtitle: 'Servidor, impresora y canal de actualización',
         maxWidth: '640px',
         closeOnBackdrop: false,
         closeOnEscape: false,
@@ -85,6 +86,7 @@ export class ConfiguracionService {
       printers: {
         ticket: config.printers?.ticket?.trim() ?? DEFAULT_CONFIGURACION.printers.ticket,
       },
+      canalActualizacion: normalizeCanalActualizacion(config.canalActualizacion),
     };
   }
 }

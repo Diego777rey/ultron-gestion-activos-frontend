@@ -7,31 +7,65 @@
   [pageIndex]="pageIndex()"
   [pageSize]="pageSize()"
   [pageSizeOptions]="[15, 25, 50]"
-  [searchLabel]="'Buscar por número, cliente o RUC'"
-  [searchValue]="search()"
   [toolbarActions]="toolbarActions"
   [emptyMessage]="'No hay facturas legales registradas'"
   [trackBy]="trackById"
-  (searchValueChange)="search.set($event)"
   (actionClicked)="onToolbarAction($event)"
   (pageChange)="onPageChange($event)"
   (retry)="load()"
 >
+  <div genericListFilters class="factura-filters">
+    <div class="filter-field filter-field--search">
+      <label for="factura-search">Buscar por número, cliente o RUC</label>
+      <input
+        id="factura-search"
+        type="text"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+        (keydown.enter)="pageIndex.set(0); load()"
+      />
+    </div>
+
+    <app-date-range-picker
+      class="filter-field--dates"
+      label="Rango de fecha"
+      [value]="dateRange()"
+      (valueChange)="dateRange.set($event)"
+      (closed)="onDateRangeChange($event)"
+    />
+  </div>
+
   <ng-template appTableCell="numero_factura" [appTableCellFrom]="facturas()" let-item>
     <span class="numero-factura">{{ item.numero_factura | defaultEmpty }}</span>
   </ng-template>
 
   <ng-template appTableCell="fecha_emision" [appTableCellFrom]="facturas()" let-item>
-    {{ item.fecha_emision | date: 'dd/MM/yyyy' | defaultEmpty }}
+    {{ fecha(item.fecha_emision) | defaultEmpty }}
   </ng-template>
 
   <ng-template appTableCell="cliente_nombre" [appTableCellFrom]="facturas()" let-item>
     <div class="cliente-info">
       <div class="nombre">{{ item.cliente_nombre | defaultEmpty }}</div>
-      @if (item.cliente_ruc) {
-        <div class="ruc">RUC: {{ item.cliente_ruc }}</div>
+      @if (item.cliente_ruc || item.cliente_documento) {
+        <div class="ruc">RUC: {{ item.cliente_ruc || item.cliente_documento }}</div>
       }
     </div>
+  </ng-template>
+
+  <ng-template appTableCell="timbrado" [appTableCellFrom]="facturas()" let-item>
+    <span class="numero-factura">{{ item.timbrado | defaultEmpty }}</span>
+  </ng-template>
+
+  <ng-template appTableCell="total_iva_10" [appTableCellFrom]="facturas()" let-item>
+    <span class="monto">{{ item.total_iva_10 | number: '1.0-0' | defaultEmpty }}</span>
+  </ng-template>
+
+  <ng-template appTableCell="total_iva_5" [appTableCellFrom]="facturas()" let-item>
+    <span class="monto">{{ item.total_iva_5 | number: '1.0-0' | defaultEmpty }}</span>
+  </ng-template>
+
+  <ng-template appTableCell="total_exenta" [appTableCellFrom]="facturas()" let-item>
+    <span class="monto">{{ item.total_exenta | number: '1.0-0' | defaultEmpty }}</span>
   </ng-template>
 
   <ng-template appTableCell="total" [appTableCellFrom]="facturas()" let-item>

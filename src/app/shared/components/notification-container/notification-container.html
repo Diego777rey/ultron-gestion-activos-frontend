@@ -5,8 +5,10 @@
     [class.toast--error]="n.type === 'error'"
     [class.toast--warning]="n.type === 'warning'"
     [class.toast--info]="n.type === 'info'"
+    [class.toast--clickable]="!!n.action"
     [attr.role]="roleFor(n.type)"
     [attr.aria-live]="roleFor(n.type) === 'alert' ? 'assertive' : 'polite'"
+    (click)="activar(n, $event)"
   >
     <span class="toast__icon material-icons" aria-hidden="true">{{ iconFor(n) }}</span>
 
@@ -15,13 +17,23 @@
       @if (n.message) {
         <p class="toast__message">{{ n.message }}</p>
       }
+      @if (n.progress != null) {
+        <div class="toast__progress" aria-hidden="true">
+          <span [style.width.%]="n.progress"></span>
+        </div>
+      }
+      @if (n.action && n.actionLabel) {
+        <button type="button" class="toast__action" (click)="activar(n, $event)">
+          {{ n.actionLabel }}
+        </button>
+      }
     </div>
 
     @if (n.dismissible) {
       <button
         type="button"
         class="toast__close"
-        (click)="dismiss(n.id)"
+        (click)="cerrar(n.id, $event)"
         aria-label="Cerrar aviso"
       >
         <span class="material-icons" aria-hidden="true">close</span>

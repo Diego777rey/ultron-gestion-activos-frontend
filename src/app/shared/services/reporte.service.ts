@@ -29,6 +29,8 @@ export interface ReporteOpciones {
   id?: number | null;
   idEmpresa?: number | null;
   titulo?: string | null;
+  fechaDesde?: string | null;
+  fechaHasta?: string | null;
 }
 
 /**
@@ -96,6 +98,13 @@ export class ReporteService {
     return this.obtenerArchivo(tipo, 'pdf', opciones);
   }
 
+  private obtenerPdf(
+    tipo: TipoReporteInventario,
+    opciones?: ReporteOpciones,
+  ): Observable<{ blob: Blob; filename: string; titulo: string | null }> {
+    return this.obtenerArchivo(tipo, 'pdf', opciones);
+  }
+
   private obtenerArchivo(
     tipo: TipoReporteInventario,
     formato: FormatoReporte,
@@ -111,6 +120,12 @@ export class ReporteService {
     }
     if (opciones?.idEmpresa != null) {
       params = params.set('idEmpresa', String(opciones.idEmpresa));
+    }
+    if (opciones?.fechaDesde) {
+      params = params.set('fechaDesde', opciones.fechaDesde);
+    }
+    if (opciones?.fechaHasta) {
+      params = params.set('fechaHasta', opciones.fechaHasta);
     }
 
     const extension = formato === 'excel' ? 'xlsx' : 'pdf';
@@ -140,13 +155,6 @@ export class ReporteService {
         }),
         catchError((err: unknown) => this.handleError(err)),
       );
-  }
-
-  private obtenerPdf(
-    tipo: TipoReporteInventario,
-    opciones?: ReporteOpciones,
-  ): Observable<{ blob: Blob; filename: string; titulo: string | null }> {
-    return this.obtenerArchivo(tipo, 'pdf', opciones);
   }
 
   private descargarBlob(blob: Blob, filename: string): void {
