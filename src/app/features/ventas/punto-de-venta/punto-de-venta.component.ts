@@ -41,6 +41,7 @@ import { TicketCierreCajaService } from './services/ticket-cierre-caja.service';
 import { VentaPosService } from './services/venta.service';
 import { SesionCajaOutput } from './interfaces/sesion-caja.interface';
 import { CartItem, DetalleVentaInput, FormaPago, VentaOutput } from './interfaces/venta.interface';
+import { lineasTicketVenta } from './ticket-venta-lineas';
 import { ImpresionService } from '../../../shared/services/impresion.service';
 import { TicketFactura, TicketVenta } from '../../../shared/models/impresion.model';
 import { FacturaService } from '../../financiero/facturacion/services/factura.service';
@@ -665,12 +666,7 @@ export class PuntoDeVentaComponent {
       fecha: this.formatFechaTicket(venta.fecha),
       cajero: this.auth.currentUsername()?.trim() || null,
       cliente: venta.clienteNombre?.trim() || 'Consumidor final',
-      lineas: (venta.detalles ?? []).map((detalle) => ({
-        descripcion: detalle.productoNombre?.trim() || 'Item',
-        cantidad: Number(detalle.cantidad ?? 1),
-        precioUnitario: Number(detalle.precioUnitario ?? 0),
-        subtotal: Number(detalle.subtotal ?? 0),
-      })),
+      lineas: lineasTicketVenta(venta.detalles),
       descuento: Number(venta.descuento ?? 0),
       total: Number(venta.total ?? 0),
       montoRecibido: venta.montoRecibido != null ? Number(venta.montoRecibido) : null,
