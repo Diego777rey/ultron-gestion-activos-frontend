@@ -24,6 +24,14 @@ export interface VentaInput {
   detalles: DetalleVentaInput[];
 }
 
+/** Servicio o producto de una orden, para imprimirlo en el ticket. */
+export interface LineaOrdenVenta {
+  descripcion?: string | null;
+  cantidad?: number;
+  precioUnitario?: number;
+  subtotal?: number;
+}
+
 export interface DetalleVentaOutput {
   id_detalle_venta?: number;
   idProducto?: number;
@@ -35,6 +43,7 @@ export interface DetalleVentaOutput {
   cantidad: number;
   precioUnitario: number;
   subtotal: number;
+  lineasOrden?: LineaOrdenVenta[] | null;
 }
 
 export interface VentaOutput {

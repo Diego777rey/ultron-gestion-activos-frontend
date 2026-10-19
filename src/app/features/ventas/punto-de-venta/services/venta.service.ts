@@ -71,6 +71,12 @@ const VENTA_SELECTION = `{
     cantidad
     precioUnitario
     subtotal
+    lineasOrden {
+      descripcion
+      cantidad
+      precioUnitario
+      subtotal
+    }
   }
 }`;
 
