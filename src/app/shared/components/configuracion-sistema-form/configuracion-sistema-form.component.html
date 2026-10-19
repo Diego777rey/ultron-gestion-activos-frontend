@@ -99,6 +99,18 @@
     </div>
   </section>
 
+  <section class="config-form__printer">
+    <h3 class="config-form__section-title">Canal de actualización</h3>
+    <div class="field">
+      <label class="field__label" for="canalActualizacion">Canal</label>
+      <select id="canalActualizacion" class="field__input" formControlName="canalActualizacion">
+        <option value="desarrollo">Desarrollo</option>
+        <option value="estable">Producción estable</option>
+      </select>
+    </div>
+    <p class="config-form__hint">{{ canalHint() }}</p>
+  </section>
+
   <p class="config-form__hint">
     Esta configuración se guarda en el equipo y se usa hasta que la cambies manualmente.
   </p>

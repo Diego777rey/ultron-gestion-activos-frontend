@@ -41,7 +41,16 @@ export class NotificationContainerComponent {
     return type === 'error' || type === 'warning' ? 'alert' : 'status';
   }
 
-  protected dismiss(id: number): void {
+  protected activar(notification: AppNotification, event: Event): void {
+    if (!notification.action) {
+      return;
+    }
+    event.stopPropagation();
+    notification.action();
+  }
+
+  protected cerrar(id: number, event: Event): void {
+    event.stopPropagation();
     this.notificationService.dismiss(id);
   }
 

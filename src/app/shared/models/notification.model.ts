@@ -32,6 +32,14 @@ export interface AppNotification {
   readonly icon?: string;
   /** Marca de tiempo de creación (epoch ms). */
   readonly createdAt: number;
+  /** Texto del botón de acción. Junto con `action`, hace que el aviso sea clickeable. */
+  readonly actionLabel?: string;
+  /** Callback al hacer clic en el aviso o en su botón. */
+  readonly action?: () => void;
+  /** Avance de 0 a 100. Si está definido, se muestra una barra. */
+  readonly progress?: number;
+  /** No se descarta cuando hay muchos avisos en pantalla. */
+  readonly pinned?: boolean;
 }
 
 /**
@@ -46,6 +54,25 @@ export interface NotificationOptions {
   dismissible?: boolean;
   /** Icono Material a mostrar. Si se omite, se usa el icono por defecto de la severidad. */
   icon?: string;
+  /** Texto del botón de acción. */
+  actionLabel?: string;
+  /** Callback al hacer clic en el aviso o en su botón. */
+  action?: () => void;
+  /** Avance de 0 a 100. */
+  progress?: number;
+  /** No se descarta cuando hay muchos avisos en pantalla. */
+  pinned?: boolean;
+}
+
+/** Campos que se pueden cambiar en un aviso ya visible. `null` borra el campo. */
+export interface NotificationPatch {
+  title?: string;
+  message?: string;
+  dismissible?: boolean;
+  actionLabel?: string | null;
+  action?: (() => void) | null;
+  progress?: number | null;
+  pinned?: boolean;
 }
 
 /**

@@ -38,6 +38,7 @@ describe('readStoredConfiguracion', () => {
       serverPort: '8081',
       isConfigured: true,
       printers: { ticket: 'TICKET58' },
+      canalActualizacion: 'desarrollo',
     });
   });
 
@@ -52,5 +53,20 @@ describe('readStoredConfiguracion', () => {
     );
 
     expect(readStoredConfiguracion()?.printers).toEqual({ ticket: '' });
+    expect(readStoredConfiguracion()?.canalActualizacion).toBe('desarrollo');
+  });
+
+  it('conserva el canal de producción estable', () => {
+    localStorage.setItem(
+      CONFIGURACION_STORAGE_KEY,
+      JSON.stringify({
+        serverIp: 'localhost',
+        serverPort: '8081',
+        isConfigured: true,
+        canalActualizacion: 'estable',
+      }),
+    );
+
+    expect(readStoredConfiguracion()?.canalActualizacion).toBe('estable');
   });
 });

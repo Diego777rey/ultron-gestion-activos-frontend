@@ -5,8 +5,10 @@ import { DialogRef } from '@angular/cdk/dialog';
 import { debounceTime, startWith } from 'rxjs';
 import { UiButtonComponent } from '../ui-button/ui-button';
 import {
+  CanalActualizacion,
   ConfiguracionSistema,
   DEFAULT_CONFIGURACION,
+  normalizeCanalActualizacion,
 } from '../../models/configuracion-sistema.model';
 import { PrinterInfo } from '../../models/impresion.model';
 import { ImpresionService } from '../../services/impresion.service';
@@ -30,6 +32,8 @@ export class ConfiguracionSistemaFormComponent implements OnInit {
   protected readonly loadingPrinters = signal(false);
   protected readonly testingPrint = signal(false);
   protected readonly platformHint = computed(() => this.resolvePlatformHint());
+  /** Mientras corre en desarrollo no se instala nada, aunque el canal quede en estable. */
+  private readonly enDesarrollo = typeof window === 'undefined' || window.ultronDesktop?.isPackaged !== true;
 
   protected readonly form = this.fb.nonNullable.group({
     serverIp: [DEFAULT_CONFIGURACION.serverIp, [Validators.required, Validators.maxLength(255)]],
@@ -38,7 +42,15 @@ export class ConfiguracionSistemaFormComponent implements OnInit {
       [Validators.required, Validators.pattern(/^\d{2,5}$/)],
     ],
     printerTicket: [DEFAULT_CONFIGURACION.printers.ticket],
+    canalActualizacion: this.fb.nonNullable.control<CanalActualizacion>(DEFAULT_CONFIGURACION.canalActualizacion),
   });
+
+  protected readonly canalActualizacion = toSignal(
+    this.form.controls.canalActualizacion.valueChanges.pipe(
+      startWith(this.form.controls.canalActualizacion.value),
+    ),
+    { initialValue: this.form.controls.canalActualizacion.value },
+  );
 
   protected readonly printerTicketValue = toSignal(
     this.form.controls.printerTicket.valueChanges.pipe(
@@ -57,6 +69,7 @@ export class ConfiguracionSistemaFormComponent implements OnInit {
         serverIp: value.serverIp,
         serverPort: value.serverPort,
         printerTicket: value.printers?.ticket ?? '',
+        canalActualizacion: normalizeCanalActualizacion(value.canalActualizacion),
       });
     });
   }
@@ -125,7 +138,18 @@ export class ConfiguracionSistemaFormComponent implements OnInit {
       printers: {
         ticket: raw.printerTicket.trim(),
       },
+      canalActualizacion: normalizeCanalActualizacion(raw.canalActualizacion),
     });
+  }
+
+  protected canalHint(): string {
+    if (this.enDesarrollo) {
+      return 'En modo desarrollo la aplicación no se actualiza. El canal queda guardado para cuando uses la aplicación instalada.';
+    }
+    if (this.canalActualizacion() === 'estable') {
+      return 'Vas a recibir un aviso cuando haya una versión nueva. Al hacer clic, la aplicación se actualiza y se reinicia.';
+    }
+    return 'No se buscan actualizaciones. Elegí Producción estable para recibir el aviso de una versión nueva.';
   }
 
   protected onCancel(): void {

@@ -16,8 +16,16 @@ export interface DesktopCommandResult {
   message?: string | null;
 }
 
+export interface AppUpdateStatus {
+  phase: 'disponible' | 'descargando' | 'error' | 'inactivo';
+  version: string;
+  percent?: number;
+  message?: string;
+}
+
 export interface UltronDesktopApi {
   readonly apiBaseUrl: string;
+  readonly isPackaged?: boolean;
   readonly platform?: string;
   getPrinters?: () => Promise<DesktopPrinterInfo[]>;
   printRaw?: (printerName: string, data: Uint8Array) => Promise<DesktopPrintResult>;
@@ -27,6 +35,10 @@ export interface UltronDesktopApi {
   zoomOut?: () => Promise<number>;
   resetZoom?: () => Promise<number>;
   onZoomChanged?: (callback: (factor: number) => void) => () => void;
+  onAppUpdate?: (callback: (status: AppUpdateStatus) => void) => () => void;
+  installAppUpdate?: () => Promise<void>;
+  setUpdateChannel?: (channel: 'desarrollo' | 'estable') => Promise<void>;
+  currentAppUpdate?: () => Promise<AppUpdateStatus | null>;
 }
 
 declare global {
