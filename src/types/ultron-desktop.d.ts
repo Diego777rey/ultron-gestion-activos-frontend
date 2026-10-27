@@ -39,6 +39,8 @@ export interface UltronDesktopApi {
   installAppUpdate?: () => Promise<void>;
   setUpdateChannel?: (channel: 'desarrollo' | 'estable') => Promise<void>;
   currentAppUpdate?: () => Promise<AppUpdateStatus | null>;
+  /** Se dispara cuando el sistema operativo despierta o se desbloquea la pantalla. */
+  onSystemResumed?: (callback: () => void) => () => void;
 }
 
 declare global {

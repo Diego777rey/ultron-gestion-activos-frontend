@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, powerMonitor, shell } from 'electron';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { loadDesktopConfig } from './config';
@@ -221,6 +221,8 @@ async function createWindow(): Promise<void> {
     mainWindow?.show();
   });
 
+  bindSystemResumeEvents(mainWindow);
+
   const startUrl = await resolveStartUrl();
   await mainWindow.loadURL(startUrl);
   publishZoom(readSavedZoom());
@@ -230,6 +232,24 @@ async function createWindow(): Promise<void> {
 function closeStaticServer(): void {
   staticServer?.server.close();
   staticServer = undefined;
+}
+
+/** Avisa al frontend cuando la PC despierta (Electron no siempre dispara visibilitychange). */
+function bindSystemResumeEvents(win: BrowserWindow): void {
+  const notificar = (): void => {
+    if (win.isDestroyed()) {
+      return;
+    }
+    win.webContents.send('system:resumed');
+  };
+
+  powerMonitor.on('resume', notificar);
+  powerMonitor.on('unlock-screen', notificar);
+
+  win.on('closed', () => {
+    powerMonitor.removeListener('resume', notificar);
+    powerMonitor.removeListener('unlock-screen', notificar);
+  });
 }
 
 if (process.platform === 'win32') {

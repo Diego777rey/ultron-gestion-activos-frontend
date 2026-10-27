@@ -80,8 +80,35 @@ export class AuthService {
     return localStorage.getItem(AuthService.TOKEN_KEY);
   }
 
+  /** True si el JWT guardado ya venció (con 30 s de tolerancia). */
+  tokenExpirado(): boolean {
+    const token = this.getToken();
+    if (!token) {
+      return false;
+    }
+    const expMs = this.expiracionDesdeToken(token);
+    if (expMs === null) {
+      return false;
+    }
+    return Date.now() >= expMs - 30_000;
+  }
+
   private hasToken(): boolean {
     return !!this.getToken();
+  }
+
+  private expiracionDesdeToken(token: string): number | null {
+    try {
+      const payloadPart = token.split('.')[1];
+      if (!payloadPart) {
+        return null;
+      }
+      const json = atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/'));
+      const payload = JSON.parse(json) as { exp?: number };
+      return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+    } catch {
+      return null;
+    }
   }
 
   private persistUsername(username: string | null | undefined): void {

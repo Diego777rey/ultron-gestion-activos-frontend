@@ -3,6 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CONFIGURACION_STORAGE_KEY } from '../../shared/models/configuracion-sistema.model';
+import { AuthService } from '../auth/auth.service';
+import { LoadingService } from '../../shared/services/loading.service';
 import {
   ConectividadService,
   clasificarErrorDeRed,
@@ -58,7 +60,12 @@ describe('ConectividadService', () => {
       get: () => enLinea,
     });
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: { isAuthenticated: () => false, tokenExpirado: () => false, logout: vi.fn() } },
+        LoadingService,
+      ],
     });
     service = TestBed.inject(ConectividadService);
     http = TestBed.inject(HttpTestingController);
