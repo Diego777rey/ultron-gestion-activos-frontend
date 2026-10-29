@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { CONFIGURACION_STORAGE_KEY } from '../models/configuracion-sistema.model';
 import { FileUploadService } from './file-upload.service';
 
 describe('FileUploadService', () => {
@@ -8,6 +9,7 @@ describe('FileUploadService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
+    localStorage.removeItem(CONFIGURACION_STORAGE_KEY);
     delete window.ultronDesktop;
     window.ultronDesktop = { apiBaseUrl: 'http://167.99.15.121:8081' };
     TestBed.configureTestingModule({
@@ -19,6 +21,7 @@ describe('FileUploadService', () => {
 
   afterEach(() => {
     http.verify();
+    localStorage.removeItem(CONFIGURACION_STORAGE_KEY);
     delete window.ultronDesktop;
   });
 

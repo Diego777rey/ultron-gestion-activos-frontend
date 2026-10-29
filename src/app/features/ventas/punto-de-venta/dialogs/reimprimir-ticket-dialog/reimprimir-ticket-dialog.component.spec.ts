@@ -12,8 +12,9 @@ describe('ReimprimirTicketDialogComponent', () => {
     venta(65, 'VEN-20261004-8-0015', '2026-10-04T21:25:19'),
   ];
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
       providers: [
         {
           provide: VentaPosService,
@@ -24,7 +25,7 @@ describe('ReimprimirTicketDialogComponent', () => {
           useValue: { track: <T>(source: Observable<T>) => source },
         },
       ],
-    });
+    }).compileComponents();
   });
 
   it('muestra la última venta arriba', () => {

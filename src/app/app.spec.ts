@@ -1,10 +1,22 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { App } from './app';
+import { ConectividadService } from './core/conectividad/conectividad.service';
 
 describe('App', () => {
   beforeEach(async () => {
+    await TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: ConectividadService,
+          useValue: { iniciar: () => undefined, reintentar: () => undefined },
+        },
+      ],
     }).compileComponents();
   });
 
