@@ -55,4 +55,9 @@ contextBridge.exposeInMainWorld('ultronDesktop', {
       percent?: number;
       message?: string;
     } | null>,
+  onSystemResumed: (callback: () => void) => {
+    const listener = () => callback();
+    ipcRenderer.on('system:resumed', listener);
+    return () => ipcRenderer.removeListener('system:resumed', listener);
+  },
 });

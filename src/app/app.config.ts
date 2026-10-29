@@ -6,13 +6,14 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { routes } from './app.routes';
 import { AppRouteReuseStrategy } from './shared/strategies/route-reuse.strategy';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { reintentarRedInterceptor } from './core/conectividad/reintentar-red.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideAnimations(),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([reintentarRedInterceptor, authInterceptor])),
     { provide: RouteReuseStrategy, useClass: AppRouteReuseStrategy }
   ]
 };
