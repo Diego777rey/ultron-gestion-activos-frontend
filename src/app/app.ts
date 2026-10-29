@@ -1,6 +1,7 @@
 import { Component, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ActualizacionAppService } from './core/actualizacion/actualizacion-app.service';
+import { ConectividadService } from './core/conectividad/conectividad.service';
 import { NotificationContainerComponent } from './shared/components/notification-container/notification-container';
 import { LoadingOverlayComponent } from './shared/components/loading-overlay/loading-overlay';
 import { LoadingService } from './shared/services/loading.service';
@@ -18,5 +19,6 @@ export class App {
 
   constructor() {
     inject(ActualizacionAppService).iniciar();
+    inject(ConectividadService).iniciar();
   }
 }
