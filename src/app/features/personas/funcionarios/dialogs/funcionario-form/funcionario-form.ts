@@ -37,7 +37,7 @@ export class FuncionarioFormComponent {
     email: ['', [Validators.email]],
     telefono: [''],
     direccion: [''],
-    sueldo: ['', [Validators.min(0)]],
+    sueldo: this.fb.control<number | null>(null, { validators: [Validators.min(0)] }),
     sector: ['', [Validators.maxLength(255)]],
     fechaIngreso: [''],
     facePrueba: [false],
@@ -57,7 +57,7 @@ export class FuncionarioFormComponent {
           email: f.persona?.email ?? '',
           telefono: f.persona?.telefono ?? '',
           direccion: f.persona?.direccion ?? '',
-          sueldo: f.sueldo != null ? String(f.sueldo) : '',
+          sueldo: f.sueldo != null ? Number(f.sueldo) : null,
           sector: f.sector ?? '',
           fechaIngreso: this.toInputDate(f.fechaIngreso),
           facePrueba: f.facePrueba ?? false,
@@ -71,7 +71,7 @@ export class FuncionarioFormComponent {
           email: '',
           telefono: '',
           direccion: '',
-          sueldo: '',
+          sueldo: null,
           sector: '',
           fechaIngreso: this.today(),
           facePrueba: false,
@@ -113,7 +113,7 @@ export class FuncionarioFormComponent {
     }
     const v = this.form.getRawValue();
     const f = this.funcionario();
-    const sueldo = v.sueldo.trim() ? Number(v.sueldo) : null;
+    const sueldo = v.sueldo;
     const payload: FuncionarioInput = {
       persona: {
         nombre: v.nombre.trim(),
