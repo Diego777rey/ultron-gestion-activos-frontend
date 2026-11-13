@@ -52,6 +52,7 @@ export class ProductosListComponent {
     { key: 'nombre', header: 'Nombre', width: '280px' },
     { key: 'precioCompra', header: 'Precio costo', width: '140px', align: 'right' },
     { key: 'precioVenta', header: 'Precio venta', width: '140px', align: 'right' },
+    { key: 'enWeb', header: 'En web', width: '90px', align: 'center' },
     { key: 'presentaciones', header: 'Presentaciones', width: '360px' },
     { key: 'categoria', header: 'Categoría', width: '180px' },
     { key: 'subcategoria', header: 'Subcategoría', width: '200px' },
