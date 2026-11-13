@@ -37,6 +37,8 @@ export interface ProductoOutput {
   ubicacion?: string;
   estado?: boolean;
   imagen?: string;
+  /** Si true, el producto se publica en Red Automotriz (exige foto y precio). */
+  mostrarEnWeb?: boolean;
   /** 10, 5 o EXENTA. */
   tipoIva?: string;
   categoriaProducto?: CategoriaProductoOutput;
@@ -55,6 +57,8 @@ export interface ProductoInput {
   ubicacion?: string;
   estado?: boolean;
   imagen?: string;
+  /** Si true, el producto se publica en Red Automotriz (exige foto y precio). */
+  mostrarEnWeb?: boolean;
   /** 10, 5 o EXENTA. */
   tipoIva?: string;
   idCategoriaProducto: number;

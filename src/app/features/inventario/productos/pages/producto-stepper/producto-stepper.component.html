@@ -96,6 +96,18 @@
                 }
               </div>
             </div>
+            <label class="resumen__campo resumen__campo--switch" for="prod-web">
+              <span>Mostrar producto en página web</span>
+              <input
+                id="prod-web"
+                type="checkbox"
+                formControlName="mostrarEnWeb"
+                class="switch-web"
+              />
+            </label>
+            <p class="resumen__ayuda">
+              Al habilitarlo se exige foto y precio mayor a cero. El producto aparece en Red Automotriz.
+            </p>
           </form>
 
           <app-ficha-stat

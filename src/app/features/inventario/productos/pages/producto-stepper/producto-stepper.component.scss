@@ -42,3 +42,24 @@
     box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.28);
   }
 }
+
+.resumen__campo--switch {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.switch-web {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+.resumen__ayuda {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}

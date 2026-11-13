@@ -114,6 +114,7 @@ export class ProductoStepperComponent implements OnInit {
     nombre: ['', [Validators.required, Validators.maxLength(100)]],
     descripcion: [''],
     tipoIva: ['10', Validators.required],
+    mostrarEnWeb: [false],
   });
 
   ngOnInit(): void {
@@ -141,6 +142,7 @@ export class ProductoStepperComponent implements OnInit {
           nombre: producto.nombre ?? '',
           descripcion: producto.descripcion ?? '',
           tipoIva: producto.tipoIva === '5' || producto.tipoIva === 'EXENTA' ? producto.tipoIva : '10',
+          mostrarEnWeb: !!producto.mostrarEnWeb,
         });
         this.imagePath.set(producto.imagen ?? null);
         this.presentacionesIniciales.set(producto.presentaciones ?? []);
@@ -421,6 +423,16 @@ export class ProductoStepperComponent implements OnInit {
     const v = this.datosForm.getRawValue();
     const presentaciones = editor.toInput();
     const principal = presentaciones[0];
+    if (v.mostrarEnWeb) {
+      if (!this.imagePath()?.trim()) {
+        this.error.set('Para mostrar el producto en la página web tenés que cargar una foto.');
+        return;
+      }
+      if (principal.precio == null || Number(principal.precio) <= 0) {
+        this.error.set('Para mostrar el producto en la página web el precio de venta tiene que ser mayor a cero.');
+        return;
+      }
+    }
     const existente = this.productoActual();
     const payload: ProductoInput = {
       codigo: existente?.codigo?.trim() || principal.codigoBarras.trim(),
@@ -434,6 +446,7 @@ export class ProductoStepperComponent implements OnInit {
       ubicacion: existente?.ubicacion,
       estado: existente?.estado ?? true,
       imagen: this.imagePath() || undefined,
+      mostrarEnWeb: v.mostrarEnWeb,
       tipoIva: v.tipoIva,
       idCategoriaProducto,
       presentaciones,

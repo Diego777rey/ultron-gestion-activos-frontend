@@ -46,6 +46,14 @@
     <span class="precio-celda">{{ precio(producto.precioVenta) }}</span>
   </ng-template>
 
+  <ng-template appTableCell="enWeb" [appTableCellFrom]="productos()" let-producto>
+    @if (producto.mostrarEnWeb) {
+      <span class="en-web en-web--si" title="Visible en Red Automotriz">Sí</span>
+    } @else {
+      <span class="en-web en-web--no">No</span>
+    }
+  </ng-template>
+
   <ng-template appTableCell="presentaciones" [appTableCellFrom]="productos()" let-producto>
     @if (producto.presentaciones?.length) {
       <ul class="presentaciones-resumen">

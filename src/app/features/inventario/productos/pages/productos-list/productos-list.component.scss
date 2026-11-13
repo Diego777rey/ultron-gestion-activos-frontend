@@ -25,6 +25,26 @@
   white-space: nowrap;
 }
 
+.en-web {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &--si {
+    color: var(--success-color);
+    background: var(--success-bg);
+  }
+
+  &--no {
+    color: var(--text-muted);
+  }
+}
+
 .presentaciones-resumen {
   margin: 0;
   padding: 0;
