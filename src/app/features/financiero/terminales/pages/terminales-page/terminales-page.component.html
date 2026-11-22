@@ -1,0 +1,52 @@
+<app-generic-list
+  [columns]="columns"
+  [data]="terminales()"
+  [loading]="loading()"
+  [error]="error()"
+  [total]="totalElements()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [pageSizeOptions]="[15, 25, 50, 100]"
+  searchLabel="Buscar por MAC, hostname, nombre o caja..."
+  [searchValue]="search()"
+  (searchValueChange)="search.set($event)"
+  [toolbarActions]="toolbarActions"
+  emptyMessage="Todavía no hay terminales registradas. Abrí la app de escritorio en cada PC para que se registre sola."
+  [trackBy]="trackById"
+  (pageChange)="onPageChange($event)"
+  (retry)="load()"
+  (actionClicked)="onToolbarAction($event)"
+  (searchSubmit)="pageIndex.set(0); load()"
+>
+  <ng-template appTableCell="nombre" [appTableCellFrom]="terminales()" let-item>
+    {{ (item.nombre || item.hostname) | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="macAddress" [appTableCellFrom]="terminales()" let-item>
+    {{ item.macAddress | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="hostname" [appTableCellFrom]="terminales()" let-item>
+    {{ item.hostname | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="caja" [appTableCellFrom]="terminales()" let-item>
+    {{ cajaLabel(item) }}
+  </ng-template>
+
+  <ng-template appTableCell="ultimaConexion" [appTableCellFrom]="terminales()" let-item>
+    {{ item.ultimaConexion ? (item.ultimaConexion | date: 'dd/MM/yyyy HH:mm') : '—' }}
+  </ng-template>
+
+  <ng-template appTableCell="plataforma" [appTableCellFrom]="terminales()" let-item>
+    {{ item.plataforma | defaultEmpty }}
+  </ng-template>
+
+  <ng-template appTableCell="activa" [appTableCellFrom]="terminales()" let-item>
+    {{ item.activa !== false ? 'Sí' : 'No' }}
+  </ng-template>
+
+  <ng-template appTableCell="acciones" [appTableCellFrom]="terminales()" let-item>
+    <app-action-menu [actions]="rowActions" (actionSelected)="onRowAction($event, item)" />
+  </ng-template>
+</app-generic-list>

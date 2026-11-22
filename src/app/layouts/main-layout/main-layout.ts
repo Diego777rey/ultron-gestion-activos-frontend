@@ -7,6 +7,7 @@ import { SidebarComponent } from '../../shared/components/sidebar/sidebar';
 import { TabsComponent } from '../../shared/components/tabs/tabs.component';
 import { MenuItem } from '../../shared/models/menu-item.model';
 import { TabService } from '../../shared/services/tab.service';
+import { TerminalRegistroService } from '../../shared/services/terminal-registro.service';
 import { PermissionService } from '../../core/auth/permission.service';
 
 @Component({
@@ -45,6 +46,7 @@ export class MainLayoutComponent implements OnInit {
   private tabService = inject(TabService);
   private destroyRef = inject(DestroyRef);
   private permissionService = inject(PermissionService);
+  private terminalRegistro = inject(TerminalRegistroService);
 
   private allMenuItems: MenuItem[] = [
     {
@@ -89,10 +91,11 @@ export class MainLayoutComponent implements OnInit {
     {
       label: 'Financiero',
       icon: 'account_balance',
-      requiredPermissions: ['FINANCIERO', 'MALETINES', 'CAJAS', 'COTIZACIONES'],
+      requiredPermissions: ['FINANCIERO', 'MALETINES', 'CAJAS', 'TERMINALES', 'COTIZACIONES'],
       children: [
         { label: 'Maletines', icon: 'business_center', route: '/financiero/maletines', requiredPermissions: ['MALETINES'] },
         { label: 'Cajas', icon: 'account_balance_wallet', route: '/financiero/cajas', requiredPermissions: ['CAJAS'] },
+        { label: 'Terminales', icon: 'computer', route: '/financiero/terminales', requiredPermissions: ['TERMINALES', 'CAJAS'] },
         { label: 'Control de caja', icon: 'point_of_sale', route: '/financiero/ultimas', requiredPermissions: ['CAJAS'] },
         { label: 'Lista de retiros', icon: 'payments', route: '/financiero/retiros', requiredPermissions: ['CAJAS'] },
         { label: 'Cotización', icon: 'currency_exchange', route: '/financiero/cotizaciones', requiredPermissions: ['COTIZACIONES'] },
@@ -161,6 +164,9 @@ export class MainLayoutComponent implements OnInit {
   menuItems = computed(() => this.filterMenuItems(this.allMenuItems));
 
   ngOnInit(): void {
+    // Al abrir la app en una PC, registra la MAC para asignación remota de caja.
+    void this.terminalRegistro.registrarSiCorresponde();
+
     // Escuchar cambios de ruta para agregar/activar tabs automáticamente
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
@@ -198,6 +204,7 @@ export class MainLayoutComponent implements OnInit {
     if (url.includes('facturacion')) return 'Datos de facturación';
     if (url.includes('facturas')) return 'Facturas Legales';
     if (url.includes('cotizaciones')) return 'Cotizaciones';
+    if (url.includes('terminales')) return 'Terminales';
     if (url.includes('cajas')) return 'Cajas';
     if (url.includes('productos/nuevo')) return 'Nuevo Producto';
     if (url.includes('productos/') && url.includes('/editar')) return 'Editar Producto';

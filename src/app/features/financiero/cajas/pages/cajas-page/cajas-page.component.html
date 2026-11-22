@@ -26,6 +26,10 @@
     {{ item.sector?.nombre | defaultEmpty }}
   </ng-template>
 
+  <ng-template appTableCell="macAddress" [appTableCellFrom]="cajas()" let-item>
+    {{ item.macAddress | defaultEmpty }}
+  </ng-template>
+
   <ng-template appTableCell="terminal" [appTableCellFrom]="cajas()" let-item>
     {{ terminalLabel(item) }}
   </ng-template>

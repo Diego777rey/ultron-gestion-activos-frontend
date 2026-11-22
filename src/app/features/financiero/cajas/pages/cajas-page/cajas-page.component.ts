@@ -39,11 +39,12 @@ export class CajasPageComponent {
   protected readonly totalElements = signal(0);
 
   protected readonly columns: TableColumn<CajaOutput>[] = [
-    { key: 'nombre', header: 'Nombre', width: '180px' },
-    { key: 'sector', header: 'Sector', width: '160px' },
-    { key: 'terminal', header: 'Terminal', width: '220px' },
-    { key: 'saldoActual', header: 'Saldo actual', width: '140px' },
-    { key: 'activa', header: 'Activa', width: '90px' },
+    { key: 'nombre', header: 'Nombre', width: '160px' },
+    { key: 'sector', header: 'Sector', width: '140px' },
+    { key: 'macAddress', header: 'MAC', width: '160px' },
+    { key: 'terminal', header: 'PC / Terminal', width: '180px' },
+    { key: 'saldoActual', header: 'Saldo actual', width: '130px' },
+    { key: 'activa', header: 'Activa', width: '80px' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
 
@@ -133,10 +134,7 @@ export class CajasPageComponent {
     if (!caja.macAddress) {
       return 'Sin vínculo';
     }
-    if (caja.nombreTerminal) {
-      return `${caja.nombreTerminal} (${caja.macAddress})`;
-    }
-    return caja.macAddress;
+    return caja.nombreTerminal?.trim() || 'Vinculada';
   }
 
   protected onRowAction(actionId: string, caja: CajaOutput): void {

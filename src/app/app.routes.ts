@@ -132,6 +132,14 @@ export const routes: Routes = [
         data: { tabTitle: 'Cajas' },
       },
       {
+        path: 'financiero/terminales',
+        loadComponent: () =>
+          import('./features/financiero/terminales/pages/terminales-page/terminales-page.component').then(
+            (m) => m.TerminalesPageComponent
+          ),
+        data: { tabTitle: 'Terminales' },
+      },
+      {
         path: 'financiero/ultimas',
         loadChildren: () =>
           import('./features/financiero/ultimas/ultimas.routes').then(
