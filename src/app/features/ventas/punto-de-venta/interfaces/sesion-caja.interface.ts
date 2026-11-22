@@ -21,6 +21,8 @@ export interface AbrirCajaInput {
   idMaletin: number;
   idPersona?: number | null;
   conteos: ConteoDenominacionInput[];
+  /** MAC de esta PC; requerida si la caja está vinculada. */
+  macAddress?: string | null;
 }
 
 export interface CerrarCajaInput {

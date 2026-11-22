@@ -60,4 +60,6 @@ contextBridge.exposeInMainWorld('ultronDesktop', {
     ipcRenderer.on('system:resumed', listener);
     return () => ipcRenderer.removeListener('system:resumed', listener);
   },
+  getDeviceIdentity: () => ipcRenderer.invoke('device:get-identity'),
+  listNetworkInterfaces: () => ipcRenderer.invoke('device:list-interfaces'),
 });

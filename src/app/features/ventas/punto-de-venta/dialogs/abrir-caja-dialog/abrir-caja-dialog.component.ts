@@ -22,6 +22,7 @@ import {
   SesionCajaOutput,
 } from '../../interfaces/sesion-caja.interface';
 import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
+import { DeviceIdentityService } from '../../../../../shared/services/device-identity.service';
 
 type MonedaCodigo = 'PYG' | 'BRL' | 'USD';
 type TipoConteo = 'apertura' | 'cierre';
@@ -91,6 +92,7 @@ export class AbrirCajaDialogComponent {
   private readonly cajaService = inject(CajaService);
   private readonly maletinService = inject(MaletinService);
   private readonly sesionCajaService = inject(SesionCajaService);
+  private readonly deviceIdentity = inject(DeviceIdentityService);
 
   readonly maletinVerificado = input(false);
   readonly cajaAbierta = input(false);
@@ -123,6 +125,11 @@ export class AbrirCajaDialogComponent {
   protected readonly selectedMaletin = signal<MaletinOutput | null>(null);
   protected readonly loadingCajas = signal(false);
   protected readonly loadingMaletines = signal(false);
+  /** MAC de esta PC (Electron). Null en navegador web. */
+  protected readonly macAddress = signal<string | null>(null);
+  protected readonly nombreTerminal = signal<string | null>(null);
+  /** True cuando esta PC ya tiene una caja asignada (no se puede elegir otra). */
+  protected readonly cajaFijadaPorTerminal = signal(false);
 
   protected readonly cajaColumns: TableColumn<CajaOutput>[] = [
     { key: 'id_caja', header: 'Id', width: '80px' },
@@ -148,6 +155,10 @@ export class AbrirCajaDialogComponent {
 
   protected readonly maletinDeshabilitado = computed(
     () => this.cajaOpen() || this.idCajaSeleccionada() == null
+  );
+
+  protected readonly cajaDeshabilitada = computed(
+    () => this.cajaOpen() || this.cajaFijadaPorTerminal()
   );
 
   protected readonly mismoSector = computed(() =>
@@ -180,22 +191,7 @@ export class AbrirCajaDialogComponent {
   protected readonly monedasCierre = signal<MonedaConfig[]>(crearMonedasVacias());
 
   constructor() {
-    this.loadCatalogos();
-    queueMicrotask(() => {
-      this.maletinOk.set(this.maletinVerificado());
-      this.cajaOpen.set(this.cajaAbierta());
-      this.currentStep.set(this.initialStep());
-      const sesion = this.sesionActual();
-      if (sesion?.caja) {
-        this.selectedCaja.set(sesion.caja);
-        this.idCajaSeleccionada.set(sesion.caja.id_caja);
-      }
-      if (sesion?.maletin) {
-        this.selectedMaletin.set(sesion.maletin);
-        this.idMaletinSeleccionado.set(sesion.maletin.id_maletin);
-      }
-      this.loadMaletinesDisponibles();
-    });
+    void this.initTerminalYCatalogos();
   }
 
   protected readonly tituloPaso = computed(() => {
@@ -342,6 +338,7 @@ export class AbrirCajaDialogComponent {
         idCaja,
         idMaletin,
         conteos: this.buildConteos(this.monedasApertura()),
+        macAddress: this.macAddress(),
       })
       .subscribe({
         next: (sesion) => {
@@ -432,21 +429,71 @@ export class AbrirCajaDialogComponent {
     return `${moneda.simbolo} ${valor.toLocaleString('es-PY')}`;
   }
 
-  private loadCatalogos(): void {
+  private async initTerminalYCatalogos(): Promise<void> {
+    try {
+      const identity = await this.deviceIdentity.getIdentity();
+      this.macAddress.set(identity?.macAddress ?? null);
+      this.nombreTerminal.set(identity?.hostname ?? null);
+    } catch {
+      this.macAddress.set(null);
+      this.nombreTerminal.set(null);
+    }
+
+    this.maletinOk.set(this.maletinVerificado());
+    this.cajaOpen.set(this.cajaAbierta());
+    this.currentStep.set(this.initialStep());
+    const sesion = this.sesionActual();
+    if (sesion?.caja) {
+      this.selectedCaja.set(sesion.caja);
+      this.idCajaSeleccionada.set(sesion.caja.id_caja);
+      if (sesion.caja.macAddress && this.macAddress()) {
+        this.cajaFijadaPorTerminal.set(true);
+      }
+    }
+    if (sesion?.maletin) {
+      this.selectedMaletin.set(sesion.maletin);
+      this.idMaletinSeleccionado.set(sesion.maletin.id_maletin);
+    }
+
     this.fetchCajas();
+    this.loadMaletinesDisponibles();
   }
 
   private fetchCajas(): void {
     this.loadingCajas.set(true);
-    this.cajaService.findDisponibles().subscribe({
+    const mac = this.macAddress();
+    this.cajaService.findDisponibles(mac).subscribe({
       next: (items) => {
         const sesion = this.sesionActual();
-        const list = items.filter((c) => c.activa !== false);
+        let list = items.filter((c) => c.activa !== false);
         if (sesion?.caja && !list.some((c) => c.id_caja === sesion.caja?.id_caja)) {
-          this.cajas.set([sesion.caja, ...list]);
-        } else {
-          this.cajas.set(list);
+          list = [sesion.caja, ...list];
         }
+        this.cajas.set(list);
+        this.aplicarCajaPorDefecto(list);
+
+        // Si esta PC tiene caja vinculada pero no aparece (p. ej. ya abierta), informar.
+        if (mac && list.length === 0 && !sesion?.caja) {
+          this.cajaService.findByMac(mac).subscribe({
+            next: (vinculada) => {
+              if (vinculada) {
+                this.cajaFijadaPorTerminal.set(true);
+                this.selectedCaja.set(vinculada);
+                this.idCajaSeleccionada.set(vinculada.id_caja);
+                this.cajas.set([vinculada]);
+                this.error.set(
+                  `La caja ${vinculada.nombre} está vinculada a esta PC pero no está disponible (puede estar abierta).`,
+                );
+              }
+              this.loadingCajas.set(false);
+            },
+            error: () => {
+              this.loadingCajas.set(false);
+            },
+          });
+          return;
+        }
+
         this.loadingCajas.set(false);
       },
       error: () => {
@@ -454,6 +501,35 @@ export class AbrirCajaDialogComponent {
         this.loadingCajas.set(false);
       },
     });
+  }
+
+  /** Preselecciona la caja de esta PC y bloquea el selector si corresponde. */
+  private aplicarCajaPorDefecto(disponibles: CajaOutput[]): void {
+    if (this.cajaOpen() || this.sesionActual()?.caja) {
+      return;
+    }
+    const mac = this.macAddress();
+    if (!mac) {
+      return;
+    }
+
+    const vinculada =
+      disponibles.find((c) => (c.macAddress ?? '').toUpperCase() === mac.toUpperCase()) ?? null;
+
+    if (vinculada) {
+      this.cajaFijadaPorTerminal.set(true);
+      this.selectedCaja.set(vinculada);
+      this.idCajaSeleccionada.set(vinculada.id_caja);
+      this.loadMaletinesDisponibles();
+      return;
+    }
+
+    // PC sin caja propia: solo ve cajas sin vínculo; si hay una sola, la sugiere.
+    if (disponibles.length === 1) {
+      this.selectedCaja.set(disponibles[0]);
+      this.idCajaSeleccionada.set(disponibles[0].id_caja);
+      this.loadMaletinesDisponibles();
+    }
   }
 
   private loadMaletinesDisponibles(): void {

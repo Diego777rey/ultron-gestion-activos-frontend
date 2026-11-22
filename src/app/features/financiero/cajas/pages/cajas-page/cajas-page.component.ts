@@ -39,10 +39,11 @@ export class CajasPageComponent {
   protected readonly totalElements = signal(0);
 
   protected readonly columns: TableColumn<CajaOutput>[] = [
-    { key: 'nombre', header: 'Nombre', width: '220px' },
-    { key: 'sector', header: 'Sector', width: '200px' },
-    { key: 'saldoActual', header: 'Saldo actual', width: '160px' },
-    { key: 'activa', header: 'Activa', width: '100px' },
+    { key: 'nombre', header: 'Nombre', width: '180px' },
+    { key: 'sector', header: 'Sector', width: '160px' },
+    { key: 'terminal', header: 'Terminal', width: '220px' },
+    { key: 'saldoActual', header: 'Saldo actual', width: '140px' },
+    { key: 'activa', header: 'Activa', width: '90px' },
     { key: 'acciones', header: '...', width: '50px', align: 'center' },
   ];
 
@@ -103,8 +104,8 @@ export class CajasPageComponent {
     this.dialogService
       .openForm(CajaFormComponent, {
         title: 'Nueva Caja',
-        subtitle: 'Registrá una caja asociada a un sector (ubicación física)',
-        maxWidth: '640px',
+        subtitle: 'Registrá una caja, su sector y opcionalmente la PC (MAC) vinculada',
+        maxWidth: '720px',
       })
       .subscribe((saved) => {
         if (saved) {
@@ -117,8 +118,8 @@ export class CajasPageComponent {
     this.dialogService
       .openForm(CajaFormComponent, {
         title: 'Editar Caja',
-        subtitle: 'Modificá los datos de la caja y su sector',
-        maxWidth: '640px',
+        subtitle: 'Modificá datos, sector o mudá la caja a otra terminal (MAC)',
+        maxWidth: '720px',
         inputs: { caja },
       })
       .subscribe((saved) => {
@@ -126,6 +127,16 @@ export class CajasPageComponent {
           this.load();
         }
       });
+  }
+
+  protected terminalLabel(caja: CajaOutput): string {
+    if (!caja.macAddress) {
+      return 'Sin vínculo';
+    }
+    if (caja.nombreTerminal) {
+      return `${caja.nombreTerminal} (${caja.macAddress})`;
+    }
+    return caja.macAddress;
   }
 
   protected onRowAction(actionId: string, caja: CajaOutput): void {

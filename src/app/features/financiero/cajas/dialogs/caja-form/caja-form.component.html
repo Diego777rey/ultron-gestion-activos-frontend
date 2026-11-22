@@ -44,6 +44,82 @@
         Activa
       </label>
     </div>
+
+    <section class="terminal-bind field--full" aria-labelledby="terminal-bind-title">
+      <h3 id="terminal-bind-title" class="terminal-bind__title">Terminal (PC)</h3>
+      <p class="terminal-bind__help">
+        Vinculá esta caja a la dirección MAC de una PC. Solo esa terminal podrá abrirla
+        y esa PC no podrá abrir otras cajas. Para mudar la caja a otra PC, leé la MAC
+        desde esa máquina o ingresala manualmente y guardá.
+      </p>
+
+      <div class="terminal-bind__fields">
+        <div class="field">
+          <input
+            id="macAddress"
+            class="field__input"
+            type="text"
+            formControlName="macAddress"
+            placeholder=" "
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <label class="field__label" for="macAddress">Dirección MAC</label>
+          <span class="field__hint">Formato AA:BB:CC:DD:EE:FF. Vacío = sin vínculo.</span>
+        </div>
+
+        <div class="field">
+          <input
+            id="nombreTerminal"
+            class="field__input"
+            type="text"
+            formControlName="nombreTerminal"
+            placeholder=" "
+          />
+          <label class="field__label" for="nombreTerminal">Nombre de la PC</label>
+          <span class="field__hint">Opcional (hostname u otro nombre legible).</span>
+        </div>
+      </div>
+
+      <div class="terminal-bind__actions">
+        @if (desktopDisponible) {
+          <app-ui-button
+            label="Usar MAC de esta PC"
+            icon="computer"
+            variant="outline"
+            [loading]="loadingMac()"
+            (clicked)="usarMacDeEstaPc()"
+          />
+        } @else {
+          <span class="terminal-bind__note">
+            Abrí este formulario en la app de escritorio para leer la MAC automáticamente.
+          </span>
+        }
+        <app-ui-button
+          label="Desvincular"
+          icon="link_off"
+          variant="ghost"
+          (clicked)="desvincularTerminal()"
+        />
+      </div>
+
+      @if (interfaces().length > 1) {
+        <div class="terminal-bind__ifaces" role="list" aria-label="Interfaces de red de esta PC">
+          <span class="terminal-bind__ifaces-label">Elegí interfaz si hay más de una:</span>
+          @for (iface of interfaces(); track iface.mac + iface.name) {
+            <button
+              type="button"
+              class="iface-chip"
+              role="listitem"
+              (click)="elegirInterfaz(iface)"
+            >
+              <strong>{{ iface.mac }}</strong>
+              <small>{{ iface.name }} · {{ iface.address }}</small>
+            </button>
+          }
+        </div>
+      }
+    </section>
   </div>
 </form>
 

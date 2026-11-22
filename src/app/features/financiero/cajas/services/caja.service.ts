@@ -13,10 +13,23 @@ export class CajaService extends BaseCrudService<CajaOutput, CajaInput> {
     return entity.nombre?.trim() || undefined;
   }
 
-  findDisponibles(): Observable<CajaOutput[]> {
-    const document = `query { listarCajasDisponibles ${this.config.selectionSet} }`;
+  findDisponibles(macAddress?: string | null): Observable<CajaOutput[]> {
+    const document = `query($macAddress: String) {
+      listarCajasDisponibles(macAddress: $macAddress) ${this.config.selectionSet}
+    }`;
     return this.gql
-      .query<{ listarCajasDisponibles: CajaOutput[] }>(document)
+      .query<{ listarCajasDisponibles: CajaOutput[] }>(document, {
+        macAddress: macAddress?.trim() || null,
+      })
       .pipe(map((data) => data.listarCajasDisponibles ?? []));
+  }
+
+  findByMac(macAddress: string): Observable<CajaOutput | null> {
+    const document = `query($macAddress: String!) {
+      buscarCajaPorMac(macAddress: $macAddress) ${this.config.selectionSet}
+    }`;
+    return this.gql
+      .query<{ buscarCajaPorMac: CajaOutput | null }>(document, { macAddress })
+      .pipe(map((data) => data.buscarCajaPorMac ?? null));
   }
 }
