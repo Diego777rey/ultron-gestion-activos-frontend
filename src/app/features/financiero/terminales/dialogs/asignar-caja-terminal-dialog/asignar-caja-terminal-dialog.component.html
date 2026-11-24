@@ -1,0 +1,34 @@
+<app-notify-error [message]="error()" />
+
+<p class="hint">
+  Al confirmar, la MAC <strong>{{ terminal().macAddress }}</strong> queda guardada en la caja
+  seleccionada. Solo esa PC podrá abrirla.
+</p>
+
+<app-entity-searcher
+  [items]="cajas()"
+  [value]="selectedCaja()?.id_caja ?? null"
+  (itemChange)="onCajaSelected($event)"
+  [displayFn]="cajaLabelFn"
+  [keyFn]="cajaKeyFn"
+  [columns]="cajaColumns"
+  [backendPagination]="true"
+  [totalItems]="total()"
+  [pageIndex]="pageIndex()"
+  [pageSize]="pageSize()"
+  [loading]="loading()"
+  (searchChange)="onSearchChange($event)"
+  (pageChange)="onPageChange($event)"
+  label="Caja a habilitar*"
+  searchPlaceholder="Buscar caja por nombre..."
+/>
+
+<div class="footer">
+  <app-ui-button
+    label="Habilitar caja"
+    icon="link"
+    variant="primary"
+    [loading]="saving()"
+    (clicked)="confirmar()"
+  />
+</div>

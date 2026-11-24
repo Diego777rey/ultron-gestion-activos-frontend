@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, powerMonitor, shell } from 'electron
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { loadDesktopConfig } from './config';
+import { getDeviceIdentity, listNetworkInterfaces } from './device-identity';
 import { printRaw } from './raw-printer';
 import { startStaticServer, type StaticServer } from './static-server';
 import { bindUpdateWindow, registerUpdateHandlers } from './updater';
@@ -137,6 +138,9 @@ function registerIpc(): void {
       return { success: false, message };
     }
   });
+
+  ipcMain.handle('device:get-identity', () => getDeviceIdentity());
+  ipcMain.handle('device:list-interfaces', () => listNetworkInterfaces());
 }
 
 function toPrintBuffer(data: unknown): Buffer | null {

@@ -15,6 +15,9 @@ export interface CajaOutput {
   responsable?: PersonaResumen | null;
   sector?: SectorOutput | null;
   activa?: boolean;
+  /** MAC de la PC vinculada (AA:BB:CC:DD:EE:FF). Null = sin vínculo. */
+  macAddress?: string | null;
+  nombreTerminal?: string | null;
 }
 
 export interface CajaInput {
@@ -24,4 +27,7 @@ export interface CajaInput {
   idResponsable?: number | null;
   idSector: number;
   activa?: boolean;
+  /** Vacío o null desvincula la terminal. */
+  macAddress?: string | null;
+  nombreTerminal?: string | null;
 }

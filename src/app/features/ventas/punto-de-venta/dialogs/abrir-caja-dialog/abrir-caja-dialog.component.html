@@ -50,6 +50,18 @@
                 Seleccioná la caja y el maletín, confirmá físicamente el contenido y
                 continuá al conteo de apertura.
               </p>
+              @if (macAddress()) {
+                <p class="terminal-hint">
+                  Terminal
+                  @if (nombreTerminal()) {
+                    <strong>{{ nombreTerminal() }}</strong>
+                  }
+                  · MAC {{ macAddress() }}
+                  @if (cajaFijadaPorTerminal() && selectedCaja(); as caja) {
+                    · caja fijada: <strong>{{ caja.nombre }}</strong>
+                  }
+                </p>
+              }
             </div>
           </div>
 
@@ -63,7 +75,7 @@
               [searchFn]="cajaSearchFn"
               [columns]="cajaColumns"
               [loading]="loadingCajas()"
-              [disabled]="cajaOpen()"
+              [disabled]="cajaDeshabilitada()"
               label="Caja"
               searchPlaceholder="Buscar por nombre o id..."
             />

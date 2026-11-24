@@ -23,6 +23,21 @@ export interface AppUpdateStatus {
   message?: string;
 }
 
+export interface DesktopNetworkInterface {
+  name: string;
+  mac: string;
+  family: 'IPv4' | 'IPv6';
+  address: string;
+  internal: boolean;
+}
+
+export interface DesktopDeviceIdentity {
+  macAddress: string | null;
+  hostname: string;
+  platform: string;
+  interfaces: DesktopNetworkInterface[];
+}
+
 export interface UltronDesktopApi {
   readonly apiBaseUrl: string;
   readonly isPackaged?: boolean;
@@ -41,6 +56,9 @@ export interface UltronDesktopApi {
   currentAppUpdate?: () => Promise<AppUpdateStatus | null>;
   /** Se dispara cuando el sistema operativo despierta o se desbloquea la pantalla. */
   onSystemResumed?: (callback: () => void) => () => void;
+  /** Identidad de esta PC (MAC principal + hostname). Solo Electron. */
+  getDeviceIdentity?: () => Promise<DesktopDeviceIdentity>;
+  listNetworkInterfaces?: () => Promise<DesktopNetworkInterface[]>;
 }
 
 declare global {

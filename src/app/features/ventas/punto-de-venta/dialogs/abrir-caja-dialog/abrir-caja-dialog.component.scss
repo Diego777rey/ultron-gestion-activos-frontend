@@ -139,6 +139,18 @@
     color: var(--text-secondary);
   }
 
+  .terminal-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+
+    strong {
+      margin: 0;
+      font-size: inherit;
+      color: var(--text-primary);
+    }
+  }
+
   .material-icons {
     font-size: 26px;
     color: var(--primary-color);

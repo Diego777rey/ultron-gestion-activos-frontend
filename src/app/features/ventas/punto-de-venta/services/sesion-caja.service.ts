@@ -37,6 +37,8 @@ const SESION_SELECTION = `{
     nombre
     saldoActual
     activa
+    macAddress
+    nombreTerminal
     sector {
       id_sector
       nombre
@@ -86,6 +88,8 @@ const SESION_DETAIL_SELECTION = `{
     nombre
     saldoActual
     activa
+    macAddress
+    nombreTerminal
     sector {
       id_sector
       nombre

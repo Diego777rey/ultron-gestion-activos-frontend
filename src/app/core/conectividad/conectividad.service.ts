@@ -7,6 +7,7 @@ import { ConfiguracionService } from '../../shared/services/configuracion.servic
 import { LoadingService } from '../../shared/services/loading.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { AuthService } from '../auth/auth.service';
+import { TerminalRegistroService } from '../../shared/services/terminal-registro.service';
 
 /** Cada cuánto se vuelve a preguntar si el servidor sigue respondiendo. */
 const INTERVALO_MS = 15_000;
@@ -72,6 +73,7 @@ export class ConectividadService {
   private readonly loading = inject(LoadingService);
   private readonly auth = inject(AuthService);
   private readonly notifications = inject(NotificationService);
+  private readonly terminalRegistro = inject(TerminalRegistroService);
   private readonly disparo = new Subject<void>();
   private sondeo: ReturnType<typeof setInterval> | null = null;
   private desregistrarDesktop: (() => void) | undefined;
@@ -96,6 +98,7 @@ export class ConectividadService {
         this.estado.set(estado);
         if (estado === 'en-linea') {
           this.ultimaComunicacionOk = Date.now();
+          void this.terminalRegistro.registrarSiCorresponde();
         }
       });
   }

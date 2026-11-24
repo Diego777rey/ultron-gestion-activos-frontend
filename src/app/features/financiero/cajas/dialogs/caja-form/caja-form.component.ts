@@ -17,16 +17,19 @@ import { UppercaseDirective } from '../../../../../shared/directives/uppercase.d
 import { TableColumn } from '../../../../../shared/models/table-column.model';
 import { PageChange } from '../../../../../shared/models/pagination.model';
 import { AppDialogService } from '../../../../../shared/services/app-dialog.service';
+import { DeviceIdentityService } from '../../../../../shared/services/device-identity.service';
 import { SectorOutput } from '../../../../sectores/interfaces/sector.interface';
 import { SectorService } from '../../../../sectores/services/sector.service';
 import { SectorFormComponent } from '../../../../sectores/dialogs/sector-form/sector-form.component';
 import { CajaInput, CajaOutput } from '../../interfaces/caja.interface';
 import { CajaService } from '../../services/caja.service';
 import { NotifyErrorComponent } from '../../../../../shared/components/notify-error/notify-error';
+import { DesktopNetworkInterface } from '../../../../../../types/ultron-desktop';
 
 @Component({
   selector: 'app-caja-form',
-  imports: [NotifyErrorComponent, 
+  imports: [
+    NotifyErrorComponent,
     ReactiveFormsModule,
     UiButtonComponent,
     AutofocusDirective,
@@ -42,6 +45,7 @@ export class CajaFormComponent {
   private readonly cajaService = inject(CajaService);
   private readonly sectorService = inject(SectorService);
   private readonly dialogService = inject(AppDialogService);
+  private readonly deviceIdentity = inject(DeviceIdentityService);
   private readonly dialogRef = inject(DialogRef, { optional: true });
 
   readonly caja = input<CajaOutput | null>(null);
@@ -58,6 +62,9 @@ export class CajaFormComponent {
   protected readonly sectoresPageSize = signal(15);
   protected readonly sectoresFilter = signal('');
   protected readonly loadingSectores = signal(false);
+  protected readonly loadingMac = signal(false);
+  protected readonly interfaces = signal<DesktopNetworkInterface[]>([]);
+  protected readonly desktopDisponible = this.deviceIdentity.disponible;
 
   protected readonly sectorColumns: TableColumn<SectorOutput>[] = [
     { key: 'id_sector', header: 'Id', width: '80px' },
@@ -79,10 +86,15 @@ export class CajaFormComponent {
     saldoActual: [0, [Validators.min(0)]],
     activa: [true],
     idSector: [null as number | null, [Validators.required]],
+    macAddress: ['', [Validators.maxLength(17)]],
+    nombreTerminal: ['', [Validators.maxLength(255)]],
   });
 
   constructor() {
     this.fetchSectoresPage(0, this.sectoresPageSize());
+    if (this.desktopDisponible) {
+      void this.cargarInterfacesLocales();
+    }
 
     effect(() => {
       const c = this.caja();
@@ -96,6 +108,8 @@ export class CajaFormComponent {
           saldoActual: c.saldoActual ?? 0,
           activa: c.activa ?? true,
           idSector: c.sector?.id_sector ?? null,
+          macAddress: c.macAddress ?? '',
+          nombreTerminal: c.nombreTerminal ?? '',
         });
       } else {
         this.isEdit = false;
@@ -105,6 +119,8 @@ export class CajaFormComponent {
           saldoActual: 0,
           activa: true,
           idSector: null,
+          macAddress: '',
+          nombreTerminal: '',
         });
       }
     });
@@ -159,6 +175,40 @@ export class CajaFormComponent {
   protected readonly sectorLabelFn = (s: SectorOutput) => s.nombre ?? `Sector #${s.id_sector}`;
   protected readonly sectorKeyFn = (s: SectorOutput) => s.id_sector;
 
+  protected async usarMacDeEstaPc(): Promise<void> {
+    if (!this.desktopDisponible) {
+      this.error = 'La MAC solo se puede leer desde la aplicación de escritorio (Windows/Linux).';
+      return;
+    }
+    this.loadingMac.set(true);
+    this.error = null;
+    try {
+      const identity = await this.deviceIdentity.getIdentity();
+      if (!identity?.macAddress) {
+        this.error = 'No se detectó una dirección MAC en esta PC.';
+        return;
+      }
+      this.form.controls.macAddress.setValue(identity.macAddress);
+      if (!this.form.controls.nombreTerminal.value.trim()) {
+        this.form.controls.nombreTerminal.setValue(identity.hostname || '');
+      }
+      this.interfaces.set(identity.interfaces ?? []);
+    } catch {
+      this.error = 'No se pudo leer la identidad de esta PC.';
+    } finally {
+      this.loadingMac.set(false);
+    }
+  }
+
+  protected elegirInterfaz(iface: DesktopNetworkInterface): void {
+    this.form.controls.macAddress.setValue(iface.mac);
+  }
+
+  protected desvincularTerminal(): void {
+    this.form.controls.macAddress.setValue('');
+    this.form.controls.nombreTerminal.setValue('');
+  }
+
   protected onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -166,11 +216,14 @@ export class CajaFormComponent {
     }
 
     const v = this.form.getRawValue();
+    const mac = v.macAddress.trim().toUpperCase();
     const payload: CajaInput = {
       nombre: v.nombre.trim(),
       saldoActual: v.saldoActual,
       activa: v.activa,
       idSector: Number(v.idSector),
+      macAddress: mac,
+      nombreTerminal: v.nombreTerminal.trim(),
     };
 
     this.saving = true;
@@ -192,5 +245,14 @@ export class CajaFormComponent {
         this.error = err.message || 'No se pudo guardar la caja';
       },
     });
+  }
+
+  private async cargarInterfacesLocales(): Promise<void> {
+    try {
+      const list = await this.deviceIdentity.listInterfaces();
+      this.interfaces.set(list);
+    } catch {
+      this.interfaces.set([]);
+    }
   }
 }

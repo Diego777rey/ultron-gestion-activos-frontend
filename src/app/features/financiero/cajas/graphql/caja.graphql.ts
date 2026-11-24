@@ -8,6 +8,8 @@ export const CAJA_CRUD_CONFIG: CrudConfig = {
     saldoActual
     idEmpresa
     activa
+    macAddress
+    nombreTerminal
     responsable {
       id_persona
       nombre
